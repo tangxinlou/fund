@@ -1,0 +1,1038 @@
+"设置标志位
+let mapleader = ","
+"设置作者和版权信息{{{{
+map <F6> :call TitleDet()<cr>
+function! AddTitle()
+    call append(0,"/*******************************************************")
+    call append(1,"$ Author       : 唐新楼 ")
+    call append(2,"$ Last modified: ".strftime("%Y-%m-%d %H:%M"))
+    call append(3,"$ Email        : **************")
+    call append(4,"$ blog         : https://blog.csdn.net/daweigongting")
+    call append(5,"$ Filename     : ".expand("%:t"))
+    call append(6,"$ Description  : ")
+    call append(7,"*******************************************************/")
+    echohl WarningMsg | echo "Successful in adding copyright." | echohl None
+endfunction
+function! UpdateTitle()
+     normal m'
+     execute '/$ Last modified/s@:.*$@\=strftime(":\t%Y-%m-%d %H:%M")@'
+     normal ''
+     normal mk
+     execute '/$ Filename/s@:.*$@\=":\t".expand("%:t")@'
+     execute "noh"
+     normal 'k
+     echohl WarningMsg | echo "Successful in updating the copyright." | echohl None
+endfunction
+function! TitleDet()
+    let n=1
+    while n < 10
+        let line = getline(n)
+        if line =~ '^\$\s*\S*Last\smodified\S*.*$'
+            call UpdateTitle()
+            return
+        endif
+        let n = n + 1
+    endwhile
+    call AddTitle()
+endfunction
+"}}}}
+"vimdiff 颜色配置{{{
+ if &diff
+"    colorscheme evening
+ endif
+"}}}
+"设置屏幕效果按za打开折叠{{{{
+"设置折叠的颜色
+hi Folded term=standout ctermfg=darkcyan ctermbg=NONE guifg=Black guibg=#e3c1a5
+set nocompatible
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+set fileencodings=utf-8,gb2312,gbk,gb18030,big5
+set fenc=utf-8
+set enc=utf-8
+set hlsearch
+set incsearch
+set number
+set modifiable
+set ignorecase
+set ruler
+set magic
+set fileformats=unix
+set fileformats=dos
+set laststatus=2
+set statusline=%F
+set statusline+=%=
+set statusline+=%l
+set statusline+=/
+set statusline+=%v
+set statusline+=/
+set statusline+=%L
+"set statusline=%f
+set foldenable
+set foldmethod=syntax
+set foldlevel=99
+set foldignore=
+"set foldmethod=marker
+"set mouse=nv
+syntax on
+"set showmode
+set nowrap
+"set wrap
+set ve=all
+set smartindent
+set backspace=2
+"set spell
+"colorscheme peachpuff
+set browsedir=current
+set scrollbind
+set scrollopt=hor
+"set snoscrollbind
+set scrolloff=7
+set shortmess=a
+set cmdheight=2
+"}}}}}
+"abbr 缩写{{{{
+"iabbrev com tangxinlou@wingtech.com
+iabbrev txl tangxinlou
+iabbrev find find -iname
+iabbrev grep grep -Esinr
+iabbrev vimg vimgrep! //j %:p
+"iabbrev bt ap/android/vendor/qcom/opensource/commonsys
+"iabbrev vendor ap/android/vendor/qcom/proprietary/bluetooth/
+"iabbrev fram ap/android/frameworks/base/core/java/android/bluetooth
+"}}}
+"git 命令{{{
+"}}}}
+"禁止用的键{{{
+"nnoremap <c--> <nop>
+"inoremap <esc> <nop>
+"}}}
+"auto command自动命令{{{
+     "创建空文件和自动注释
+     "设置折叠
+augroup filetype_vim
+     autocmd FileType vim  setlocal foldmethod=marker
+augroup END
+     "保存文件打印
+augroup testgroup
+     "清除组命令
+     autocm!
+     "保存文件是自动打印
+     autocmd BufWrite * :echom "cat"
+augroup END
+"}}}
+"简单的映射i{{{
+     "保存
+noremap <leader>w :write<cr>
+noremap <leader>q :q!<cr>
+   "插入模式<esc>
+inoremap <leader>k <esc>
+     "可视模式<esc>
+vnoremap <leader>k <esc>
+     "所有模式<esc>,我换输入法后这条命令失效
+noremap  <leader>k <esc>
+     "按,v进入可视模式
+inoremap  <leader>v <esc>v
+     "切换tab标签
+nnoremap <c-n>  :tabn<cr>
+nnoremap <c-p>  :tabp<cr>
+     "切换搜索结果
+nnoremap <leader>cn :cn<cr>
+nnoremap <leader>cp :cn<cr>
+     "切换打开的buffer
+nnoremap <leader>bn :bn!<cr>
+nnoremap <leader>bp :bp!<cr>
+nnoremap <leader>tab :tabnew<cr>
+     "分割终端
+nnoremap <leader>sp :split
+nnoremap <leader>vsp :vsplit
+    "外部ls命令
+nnoremap <leader>ls :copen<cr>:set modifiable<cr>:r!ls<cr><c-w>H
+     "外部wc命令
+nnoremap <leader>lr :copen<cr>:set modifiable<cr>:r!ls -lR \| wc -l<cr>
+     "内部ls命令
+nnoremap <leader>ll :ls<cr>
+     "外部tree命令
+nnoremap <leader>tree   :copen<cr>:set modifiable<cr>:r!tree<cr><c-w>H
+     "改变分割的终端窗口的尺寸
+nnoremap +  <c-w>+ 5
+nnoremap -  <c-w>- 5
+nnoremap <  <c-w>< 10
+nnoremap >  <c-w>> 10
+     "内部cd命令
+nnoremap cd :cd
+vnoremap g y
+nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>
+"nnoremap <leader>wc :tabnew<cr>:!ls -lR |grep "^-"
+"nnoremap <leader>f viwyq:ig/<esc>pa/p<cr>
+inoremap <C-h> <Left>
+inoremap <C-j> <Down>
+inoremap <C-k> <Up>
+inoremap <C-l> <Right>
+"inoremap <bs> <bs>
+"inoremap <leader>java <cr><bs><cr><esc>ki<tab><tab>
+inoremap {} {}<esc>i<cr><esc>O
+inoremap "" ""<esc>i
+"inoremap `` ``<esc>i
+inoremap '' ''<esc>i
+inoremap () ()<esc>i
+inoremap [] []<esc>i
+nnoremap <leader>d q:ig/<esc>pa/d<cr>
+"在log文件中批量删除某些行
+"nnoremap rr :tabnew<cr>:e ~/tang1.txt<cr>$a:g/<esc>pa/d<<esc>acr><esc>:wq<cr>
+"在log文件中查找多个字符串
+nnoremap <leader>rr :tabnew<cr>:e ~/tang1.txt<cr>$pa\<bar><esc>:wq<cr>
+nnoremap zr zR
+nnoremap zm zM
+"删除log文件中的杂乱log
+nnoremap <leader>rep     :g/audio_hw_primary:/d<cr>:g/ANDR-PERF-LM:/d<cr>:g/ANDR-PERF-JNI:/d<cr>:g/msm8974_platform:/d<cr>:g/hardware_info:/d<cr>:g/soundtrigger:/d<cr>:g/audio_route:/d<cr>:g/audio_hw_utils:/d<cr>:g/ACDB-LOADER:/d<cr>:g/ANDR-IOP:/d<cr>:g/CompatibilityInfo:/d<cr>:g/Activity:/d<cr>:g/audio_hw_extn:/d<cr>:g/        :/d<cr>:g/ActivityTrigger:/d<cr>:g/ShellView:/d<cr>:g/system_server:/d<cr>:g/PrefCtrlListHelper:/d<cr>:g/InstrumentedPrefFrag:/d<cr>:g/TileUtils:/d<cr>:g/TopLevelSettings:/d<cr>:g/BatteryExternalStatsWorker:/d<cr>:g/statsd  :/d<cr>:g/FaceService:/d<cr>:g/hwservicemanager:/d<cr>:g/PackageManagerEx:/d<cr>:g/WosPackageSettingBase:/d<cr>:g/WosPackageManagerService:/d<cr>:g/WosPackageSettingBase:/d<cr>:g/WosPackageManagerService:/d<cr>:g/KernelCpuSpeedReader:/d<cr>:g/netd    :/d<cr>:g/CpuPowerCalculator:/d<cr>:g/BatteryInfo:/d<cr>:g/BatteryInfo:/d<cr>:g/AvatarViewMixin:/d<cr>:g/StatusBar:/d<cr>:g/AdrenoGLES:/d<cr>:g/RenderThread:/d<cr>:g/AdrenoUtils:/d<cr>:g/BatteryTipLoader:/d<cr>:g/Gralloc3:/d<cr>:g/PmsExtImpl:/d<cr>:g/BatteryTipLoader:/d<cr>:g/audio_hw_hfp:/d<cr>:g/linker  :/d<cr>:g/ServiceManagement:/d<cr>:g/SupportService:/d<cr>:g/QDMA_UI :/d<cr>:g/SubSettings:/d<cr>:g/ConnectedDeviceFrag:/d<cr>:g/chatty  :/d<cr>:g/SliceManager:/d<cr>:g/OpenGLRenderer:/d<cr>:g/ActivityThread:/d<cr>:g/UserRestrictionsUtils:/d<cr>:g/MediaRouter:/d<cr>:g/TaskPersister:/d<cr>:g/System  :/d<cr>:g/Zygote  :/d<cr>:g/droid.bluetoot:/d<cr>:g/Perf    :/d<cr>:g/AdapterServiceConfig:/d<cr>:g/Perf    : /d<cr>:g/bt_device_interop:  /d<cr>:g/SDM/d<cr>:g/PowerManagerService:/d<cr>:g/UsageStatsService:/d<cr>:g/DreamManagerService:/d<cr>:g/DreamController:/d<cr>:g/ActivityManager:/d<cr>:g/WingOsSystemUI/d<cr>:g/DreamManagerService: /d<cr>:g/KeyguardViewMediator:/d<cr>:g/AutofillManagerService: /d<cr>:g/WosQSHeaderImpl:/d<cr>:g/ QSAnimator: /d<cr>:g/CmFireWallManager: /d<cr>:g/LightsService:/d<cr>:g/ DisplayPowerController/d<cr>:g/sensors-hal:/d<cr>:g/KeyguardUpdateMonitor: /d<cr>:g/vol.Events:/d<cr>:g/WhiteListUtil:/d<cr>:g/ConnectivityManager:/d<cr>:g/MobileDataTile: /d<cr>:g/ DisplayPowerController:/d<cr>:g/ProximityListener:/d<cr>:g/sensors-hal: /d<cr>:g/libEGL  : /d<cr>:g/SurfaceFlinger: /d<cr>:g/CarrierTextController:/d<cr>:g/LockWpUtils: /d<cr>:g/LockWpUtils:/d<cr>:g/View    : /d<cr>:g/QC-time-services: /d<cr>:g/QTI PowerHAL: /d<cr>:g/SurfaceControl:/d<cr>:g/WosNotificationService:/d<cr>:g/ AlarmManager: /d<cr>:g/DPMJ    : /d<cr>:g/SUI_svcsock:/d<cr>:g/ FpcExtension: /d<cr>:g/qdlights: /d<cr>:g/sound_trigger_hw:/d<cr>:g/wt_audio_cust:/d<cr>:g/NfcService:/d<cr>:g/vol.Events:/d<cr>:g/PowerGuruService:/d<cr>:g/fpc_fingerprint_hal:/d<cr>:g/KeyguardClockSwitch:/d<cr>:g/DisplayDevice:/d<cr>:g/DisplayManagerService:/d<cr>:g/KeyguardStatusView:/d<cr>:g/libnfc_nci:/d<cr>:g/AlarmAlignHelper:/d<cr>:g/KeyguardClockSwitch:/d<cr>:g/NetspeedView:/d<cr>:g/DisplayManagerService:/d<cr>:g/StackScroller:/d<cr>:g/KeyguardStatusView:/d<cr>:g/libnfc_nci:/d<cr>:g/AlarmAlignHelper: /d<cr>:g/fpc_fingerprint_hal:/d<cr>:g/AlarmAlignHelper:/d<cr>:g/WosPhoneWindowManager:/d<cr>:g/SecondUIViewManager:/d<cr>:g/KeyguardUsbWaterView:/d<cr>:g/BatteryService:/d<cr>:g/libprocessgroup:/d<cr>:g/AudioService.PlaybackActivityMonitor:/d<cr>:g/AndroidRuntime:/d<cr>:g/WindowManager:/d<cr>:g/QMI_FW  :/d<cr>:g/KeyguardSecurityView:/d<cr>:g/QISL    :/d<cr>:g/vold    :/d<cr>:g/Zygote32Timing:/d<cr>:g/Zygote64Timing:/d<cr>:g/irsc_util:/d<cr>:g/TLOC    :/d<cr>:g/PackageParser:/d<cr>:g/ContextImpl:/d<cr>:g/storaged:/d<cr>:g/HealthServiceWrapper:/d<cr>:g/EntropyMixer:/d<cr>:g/SettingsState:/d<cr>:g/SystemServerTiming:/d<cr>:g/InputManager:/d<cr>:g/WatchlistSettings:/d<cr>:g/WatchlistLoggingHandler:/d<cr>:g/ZygoteInitTiming_lazy:/d<cr>:g/DropBoxManagerService:/d<cr>:g/SystemServerTimingAsync:/d<cr>:g/SystemServerInitThreadPool:/d<cr>:g/imsrcsd :/d<cr>:g/Looper  :/d<cr>:g/UsageStatsDatabase:/d<cr>:g/Watchdog:/d<cr>:g/PersistentDataBlockService:/d<cr>:g/OemLock :/d<cr>:g/Looper  :/d<cr>:g/NsdService:/d<cr>
+"获取当前文件名及目录
+nnoremap <leader>n :let @" = expand("%:p").':'.line(".").':'<cr>
+"复制到系统黏贴板
+vnoremap <leader>m "+y
+"删除window下添加^M
+nnoremap <leader>vm :%s/<c-v><c-M>/<cr>/g
+"自动复制文本所在的当前行及文件名
+vnoremap <leader>a "dy<esc>:let @c= expand("%:p").':'.line(".").':'<cr>
+"复制文本及当前行
+"nnoremap <leader>p i```c<cr>```<esc>O<esc>0"cpli<cr><esc>0"dp
+ nnoremap <leader>p i<cr>```c<cr><cr>```<esc>O<cr><esc>k0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
+nnoremap <leader>txl :tabnew<cr>:e ~/tang1.txt<cr>
+"nnoremap <leader>co :copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>co :call <SID>QuckfixToggle()<cr>
+nnoremap <leader>br :vsplit<cr>:browse e<cr>
+nnoremap <leader>viff :diffthis<cr><c-w>l:diffthis<cr><c-w>h
+"添加uml
+nnoremap <leader>uml i```mermaid<esc>osequenceDiagram<esc>o```<esc>O
+"markdown 注释多余的#
+nnoremap <leader>map :%g/^#[a-z]\{1,3\}/normal 0i//<esc>
+"nnoremap <leader>h1 yiwq:i:2match DiffChange /\<<c-r>"\>/<CR>
+nnoremap <leader>h1 yiwkq:i:/\<<c-r>"\>/<CR>
+nnoremap <leader>/  q:i/<esc>p<cr>
+"}}}
+"取消的映射{{{{
+"nnoremap b :normal!  yt|
+"nnoremap bn :normal! yi|
+      "黏贴
+"noremap <a-r>v :execute "normal! p"
+     "得到文件名
+"nnoremap <leader>t :%p<cr>
+"nnoremap <leader>tt  :%:p:hp<cr>
+     "按,gsn后没有感叹号会跳转到第一个结果的文件中来,用cn和cp可以切换文件
+"nnoremap <leader>gsn :execute "grep -R" "something" "."<cr>
+     "按,vjcn后可以跳转到第一个结果的文件中来,用cn和cp切换源文件
+"nnoremap <leader>vjcn :execute "vim" shellescape(expand("<cword>"))"**/*.java"<cr>
+     "按,gcn后可以跳转到第一个结果中来,并用cn和cp切换文件
+"nnoremap <leader>gcn :execute "grep -R " shellescape(expand("<cword>"))
+"."<cr>
+      "将本行下移动一行
+"noremap - ddjp
+"augroup bufnefile
+"     autocmd!
+"     autocmd bufNewFile *.txt :write
+"     autocmd FileType vim  nnoremap <buffer> <leader>c //<esc>
+"augroup END
+      "按,<c-d>后在插入模式删除一行
+"inoremap <leader><c-d> <esc>ddi
+     "按,<c-u>后在插入模式将光标变大写
+"inoremap <leader><c-u> <esc>lviwUi
+     "按,<c-j>后在插入模式将光标下单词变小写
+"inoremap <leader><c-j> <esc>lviwui
+"}}}}
+"编辑vimrc文件{{{
+     "编辑vimrc文件
+nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
+nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
+     "加载vimrc文件
+nnoremap <leader>sv :source $MYVIMRC<cr>
+nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+""}}}
+"搜索命令{{{{
+"第一个搜索映射,搜索something:会在搜索到something后用一个新的修改区保起来
+     "grep!没有感叹号就会跳转第一个结果中,有了感叹号就会直接调到新的修改区,
+     "但是这个也有好处可以直接来到相应的文件中看代码,用cn和cp切换代码文件
+     "按,gs后可以搜索something出现的个数和文件位置用一个新的修改区保存下来
+"nnoremap <leader>gs :execute "grep! -R" "something" "."<cr>:copen<cr>
+"nnoremap <leader>gs q:ir!find -iname  <esc>pa .<cr>:copen<cr><c-w>H<esc><cr>
+nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>
+"按,vjc后可以使用vim内置的grep在java文件中搜索光标下的单词的个数和文件位置用新的修改区保存起来
+nnoremap <leader>vjc :execute "vim!" shellescape(expand("<cword>"))"**/*.java"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+"nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@)) "%:p"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+"在vimrc文件中|不可以映射，可以使用<bar>代替|
+"nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
+"nnoremap <leader>ff   :tabnew<cr>:e ~/tang1.txt<cr>0wv$3hy:q!<cr>:tabm 0<cr>q:ivimgrep! /<esc>pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
+nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
+"按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
+nnoremap <leader>gc :execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>vhc :execute "vim!" shellescape(expand("<cword>"))"**/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+"执行命令
+nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr>
+""}}}}
+"文件路径切换{{{{
+     "更改到当前文件所在的目录
+nnoremap <leader>lcd :lcd %:p:h
+     "打开选中的的文件,并新开一个tap
+"omap i:  f:lvf:h
+nnoremap <leader>y :normal! yt:<cr>
+nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
+nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>
+nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>
+"打开find搜索的文件
+nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
+"}}}}
+"函数{{{{
+nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
+vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
+function! s:GrepOperator(type)
+let saved_unnamed_register = @@
+if a:type ==# 'v'
+normal! `<v`>y
+elseif a:type ==# 'char'
+normal! `[v`]y
+else
+return
+endif
+silent execute "grep! -EsinR " . shellescape(@@) . " ."
+copen
+set modifiable
+silent execute "!clear"
+silent execute "normal! \<c-w>H"
+"execute "normal! 'q:i!clear<cr>:copen<cr>:set modifiable<cr><c-w>H<esc>'"
+let @@ = saved_unnamed_register
+endfunction
+let g:quickfix_is_open = 0
+function! s:QuckfixToggle()
+    if g:quickfix_is_open
+        cclose
+        let g:quickfix_is_open = 0
+    else
+        copen
+        set modifiable
+        silent execute "normal! \<c-w>H"
+        let g:quickfix_is_open = 1
+    endif
+endfunction
+let g:tang = 1
+function! s:MarkdownPreview()
+    if g:tang
+        MarkdownPreview
+        let g:tang = 0
+    else
+        MarkdownPreviewStop
+        let g:tang = 1
+        echom "markdown stop"
+    endif
+endfunction
+"}}}}
+"{{{{有意思的代码
+function! s:getchar()
+    let c = getchar()
+    if c =~ '^\d\+$'
+        let c = nr2char(c)
+    endif
+    return c
+endfunction
+" Interactively change the window size
+function! InteractiveWindow()
+    let char = "s"
+    while char =~ '^\w$'
+    echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
+    let char = s:getchar()
+    if char == "h" | call SetWindowSize("incr" ,-5 ,0) | endif
+    if char == "j" | call SetWindowSize("incr" ,0 ,5) | endif
+    if char == "k" | call SetWindowSize("incr" ,0 ,-5) | endif
+    if char == "l" | call SetWindowSize("incr" ,5 ,0) | endif
+    if char == "a" | call SetWindowSize("abs" ,0 ,0) | endif
+    redraw
+    endwhile
+endfunction
+"}}}}
+"{{{{{自动提交命令
+"{{{{{2  GitStatus()
+function! GitStatus()
+    let Gitstatus = "tangxinlou"
+    let Preadd = []
+    let idx1 = 0
+    "echom Gitstatus
+    let isstatus = IsStatus()
+    if  "not a respository" ==#  isstatus
+        echom isstatus
+        return
+    endif
+    let Gitstatus = system("git status . \| grep -v -Esi \"branch|Changes not|use.*git|Untracked files:|^$|Changes to be\"")
+    call setline(line('.'),Gitstatus)
+    let Preadd = split(Gitstatus,"\x00 ")
+    call append(line('.'),Preadd)
+    call cursor(line('.') + len(Preadd),0)
+    while idx1 < len(Preadd)
+        if "modified:" ==# matchstr(Preadd[idx1],"modified:")
+            let idx1 += 2
+        elseif "deleted:" ==# matchstr(Preadd[idx1],"deleted:")
+            let idx1 += 2
+        else
+            if ".sw" ==# matchstr(Preadd[idx1],".sw")
+                "Preadd->remove(idx1)
+                call remove(Preadd,idx1)
+                let idx1 = 0
+            endif
+            let idx1 += 1
+        endif
+    endwhile
+    call append(line('.'),Preadd)
+    call cursor(line('.') + len(Preadd),0)
+    return Preadd
+endfunction
+"}}}}
+"{{{{2  GitAdd()
+function! GitAdd()
+    let Gitadd1 = "tangxinlou"
+    let Precommit = []
+    let idx2 = 0
+    let isempty = 0
+    let isstatus = ""
+    let isstatus = IsStatus()
+    if  "is modified" ==#  isstatus
+        echom isstatus
+    elseif  "is added file" ==#  isstatus
+        echom isstatus
+    else
+        return
+    endif
+    let Precommit = GitStatus()
+    let isempty = empty(Precommit)
+    echom "tangxinlou" isempty
+    if  1 ==#  isempty
+        echom "list is null"
+        return
+    endif
+    while idx2 < len(Precommit)
+        if "modified:" ==# matchstr(Precommit[idx2],"modified:")
+            call system("git add " . Precommit[idx2 + 1])
+            let idx2 += 2
+        elseif "deleted:" ==# matchstr(Precommit[idx2],"deleted:")
+            call system("git rm " . Precommit[idx2 + 1])
+            let idx2 += 2
+        else
+            call system("git add " . Precommit[idx2])
+            let idx2 += 1
+        endif
+    endwhile
+endfunction
+"}}}}
+"{{{{2  IsStatus()
+function! IsStatus()
+    let isstatus = "tangxinlou"
+    let isstatus = system("git status .")
+    if "Changes to be committed:" ==# matchstr(isstatus,"Changes to be committed:")
+        let  isstatus = "is added"
+    elseif "no changes added to commit" ==# matchstr(isstatus ,"no changes added to commit")
+        let  isstatus = "is modified"
+    elseif "nothing added to commit but untracked files present" ==# matchstr(isstatus ,"nothing added to commit but untracked files present")
+        let  isstatus = "is added file"
+    elseif "nothing to commit, working tree clean" ==# matchstr(isstatus ,"nothing to commit, working tree clean")
+        let  isstatus = "is no changes"
+    elseif "not a git repository" ==# matchstr(isstatus ,"not a git repository")
+        let  isstatus = "not a respository"
+    else
+        return
+    endif
+    return  isstatus
+endfunction
+"}}}}
+"{{{{2  GitCommit()
+function! GitCommit()
+    let iscommit = "tangxinlou"
+    call GitAdd()
+    "silent call system("git commit")
+    silent !git commit
+    "silent let iscommit =  system("git push origin master")
+    call append(line('.'),iscommit)
+endfunction
+"}}}}
+"{{{{2  GitBranch()
+function! GitBranch()
+    let GitBranch = "tangxinlou"
+    let Prebranch = []
+    let Prebranch1 = []
+    let Prebranch2 = []
+    let idx1 = 0
+    let idx2 = 0
+    "echom GitBranch
+    let isstatus = IsStatus()
+    if  "not a respository" ==#  isstatus
+        echom isstatus
+        return
+    endif
+    let GitBranch  = system("git branch -a  \| grep -v -Esi \"^$\"")
+    "call setline(line('.'),GitBranch)
+    let Prebranch = split(GitBranch,"\x00 ")
+    "call append(line('.'),Prebranch)
+    "call cursor(line('.') + len(Prebranch),0)
+    while idx1 < len(Prebranch)
+        if ("HEAD" ==# matchstr(Prebranch[idx1],"HEAD"))
+            "Prebranch->remove(idx1)
+            call remove(Prebranch,idx1,idx1 + 2)
+            let idx1 = 0
+        endif
+        let idx1 += 1
+    endwhile
+    let idx1 = 0
+    while idx1 < len(Prebranch)
+        let Prebranch2 = split(Prebranch[idx1],"/")
+        let idx2 = len(Prebranch2)
+        if idx2 > 1
+            let  Prebranch[idx1]  = Prebranch2[2]
+        endif
+        let idx1 += 1
+    endwhile
+    let Prebranch1 = copy(Prebranch)
+    let idx1 = 0
+    while idx1 < len(Prebranch1)
+        let GitBranch = join([idx1,Prebranch1[idx1]," "])
+        let Prebranch1[idx1]  = GitBranch
+        let idx1 += 1
+    endwhile
+    "call append(line('.'),Prebranch1)
+    "call cursor(line('.') + len(Prebranch1),0)
+    return Prebranch
+endfunction
+"}}}}
+"{{{{2  GitCheckout(...) 
+function! GitCheckout(...)
+    let GitCheckout = "tangxinlou"
+    let ischeckout1 = "tangxinlou"
+    let Precheckout = []
+    let isstatus = IsStatus()
+    let len = 0
+    let idx1 = 0
+    if  "not a respository" ==#  isstatus
+        echom isstatus
+        return
+    endif
+    let Precheckout =  GitBranch()
+    call append(line('.'),Precheckout)
+    call cursor(line('.') + len(Precheckout),0)
+    if a:0 > 1
+        return
+    elseif a:0 ==# 0
+        let GitCheckout = input("请输入分支\n")
+        let len = strlen(GitCheckout)
+        if len <= 2
+            echom Precheckout[GitCheckout]
+            if  IsBranch() !=#  Precheckout[GitCheckout]
+                silent let ischeckout1  = system("git checkout " . Precheckout[GitCheckout])
+                call append(line('.'),ischeckout1)
+                call cursor(line('.') + 1,0)
+            endif
+            return
+        else
+            for i in Precheckout
+                if  IsBranch() !=#  GitCheckout
+                    if GitCheckout ==# i
+                        silent let ischeckout1  = system("git checkout " . GitCheckout)
+                        call append(line('.'),ischeckout1)
+                        call cursor(line('.') + 1,0)
+                        return
+                    endif
+                endif
+            endfor
+        endif
+        echom "分支不存在"
+    endif
+    for i in Precheckout
+        if i ==# a:1
+            if  IsBranch() !=# a:1
+                silent let ischeckout1  = system("git checkout " . a:1)
+                call append(line('.'),ischeckout1)
+                call cursor(line('.') + 1,0)
+                return
+            endif
+        endif
+    endfor
+    echom "分支不存在"
+endfunction
+"}}}}
+"{{{{2  GitPatch()
+function! GitPatch()
+    let ispatch = "tangxinlou"
+    let Prepatch = []
+    let Prepatch1 = []
+    let idx1 = 0
+    let idx2 = 0
+    silent let Prepatch = readfile("/d/work/2.txt")
+    while idx1 < len(Prepatch)
+        silent let Prepatch[idx1] =  join(split(Prepatch[idx1]),"\x00")
+        silent let Prepatch1 = split(Prepatch[idx1],";")
+        if  IsBranch() ==#  Prepatch1[1]
+            silent let ispatch =  system("patch -p1 < /d/work/4.txt ")
+            call GitCommit()
+            let idx1 +=1
+        else
+            silent    call GitCheckout(Prepatch1[1])
+            silent let ispatch =  system("patch -p1 < /d/work/4.txt ")
+            call GitCommit()
+            let idx1 +=1
+        endif
+    endwhile
+endfunction
+"}}}}
+"{{{{  IsBranch()
+function! IsBranch()
+    let IsBranch = "tangxinlou"
+    let CurBranch = []
+    let IsBranch = system("git status . \| grep -Esi \"On branch\"")
+    let CurBranch = split(IsBranch)
+    if "On branch" ==# matchstr(IsBranch,"On branch")
+        "echom CurBranch[2]
+    else
+        return
+    endif
+    return  CurBranch[2]
+endfunction
+"}}}}
+"{{{{2  GetKey()
+function GetKey()
+  let c = getchar()
+  while c == "\<CursorHold>"
+    let c = getchar()
+  endwhile
+  return c
+endfunction
+"}}}}
+"{{{{{2 function! FunList() 目前实现的函数
+nnoremap <F4> :call FunList()<cr>
+function! FunList()
+    let funname = "tangxinlou"
+    let idx1 = 0
+    let curfunname = []
+    let curfunname3 = []
+    let curfunname1 = []
+    let curfunname = split(system("grep -Esin \"^function\" ~/.vimrc"),"\n")
+    let curfunname1 = copy(curfunname)
+    call AddNumber(curfunname)
+    let char = 0
+    while 1  "char =~ '^\d\+$'
+        echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
+        let char = str2nr(Getchar())
+        if char  ==# 'q'
+            return
+        endif
+        echo type(char)
+        "let idx1 = char
+        echo len(curfunname)
+        echo (idx1 < len(curfunname))
+        if char   <  len(curfunname)
+            let char = split(split(split(curfunname[char],"!")[1],"(")[0],"\x00")[0]
+            call call(char,curfunname3)
+        else
+            break
+        endif
+        redraw
+    endwhile
+endfunction
+"}}}}}
+ "{{{{{2 function! AddNumber() 在列表最后一个成员每项前加个标号并打印出来,第二次调用时会原处刷新，如果打印需要保留需要将光标下移
+function! AddNumber(...)
+    let isnumber = "tangxinlou"
+    let isnumber2 = []
+    let isnumber3 = []
+    execute "normal! $lvG$d0"
+    if a:0 ==# 1 && 3 ==# type(a:1)
+        let isnumber2 = a:1
+        let idx1 = 0
+        while idx1 < len(isnumber2)
+            let isnumber3 = split(isnumber2[idx1], "/")
+            let GitBranch = join([idx1,isnumber3[len(isnumber3) - 1]," "])
+            let isnumber2[idx1]  = GitBranch
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+        "while idx1 < len(isnumber2)
+        "    echo isnumber2[idx1]
+        "    let idx1 += 1
+        "endwhile
+        call append(line('.'),isnumber2)
+        "call cursor(line('.') + len(isnumber2),0)
+        redraw
+    endif
+    return
+endfunction
+"}}}}}
+"{{{{2
+ function! Getchar()
+    let c = ''
+    let b = ""
+    while 1
+        let c = getchar()
+        if c =~ '^\d\+$'
+            if c ==# 13
+                break
+            endif
+            let c = nr2char(c)
+            let b = b . c
+        endif
+    endwhile
+    return b
+endfunction
+"}}}}
+"{{{{2  Gettt()
+function! Gettt()
+    let char = ""
+    let list = []
+    let char = "InteractiveWindow"
+    "let Char1 = function(char,list)
+    call call(char,list)
+    "call Char1
+endfunction
+"}}}}
+"}}}}
+
+"{{{{{ fund
+"{{{{2  GetFundValue() 通过xml获取元数据
+"noremap <F4> :call  GetFundValue(...)
+"<div class="ttype">.*class="row normal bg-low">.\{,241}class="row normal bg-mid">
+"class="row normal bg-mid"><div class="ttype".*class="row normal bg-mid">.\{,241}class="row normal bg-high">
+"class="row normal bg-mid">.*.\{,241}class="row normal bg-high">
+"class="row normal bg-mid">.*.\{,241}class="row normal bg-high">
+"class="row normal bg-mid"><div class="ttype">.*row normal bg-mid.\{,250}row normal bg-high
+ "/h1>.\{,20}<\/h1
+function! GetFundValue(...)
+    let fundfilename = "2022-02-17.html"
+    let fundtitle = "指数名称,指数类型,PE,PE%,PB,PB%,股息率,ROE,预测PEG"
+    let fundnamelow = ""
+    let fundnamemid = "1"
+    let fundnamehign = ""
+    let fundnameunsort = ""
+    let fundvaluelow = ""
+    let fundvaluemid = ""
+    let fundvaluehigh = ""
+    let fundvalueunsort = ""
+    let fundvalues = [1,2,3,4,5,6,7,8,]
+    let fundvalues1 = [1,2,3,4,]
+    let logtime = "指数估值,2022-02-17"
+    let loglow = "指数低估"
+    let logmid = "指数正常"
+    let loghigh = "指数高估"
+    let logunsort = "指数未定义"
+    let idx1 = 1
+    let fundvalue = []
+    if  a:0 ==# 1
+        let fundfilename = a:1
+        let fundvalue = readfile(fundfilename)
+    else
+        let fundvalue = readfile(fundfilename)
+    endif
+    let logtime =  matchstr(fundvalue[2],"<title>.*<\/title>")
+    let fundnamelow =  matchstr(fundvalue[2],"div class=\"con\".*class=\"color-bar low\"")
+    let fundnamemid =  matchstr(fundvalue[2],"color-bar low.\\{,300}color-bar mid.*class=\"color-bar mid\"")
+    let fundnamehigh =  matchstr(fundvalue[2],"color-bar mid.\\{,300}color-bar high.*class=\"color-bar high\"")
+    let fundnameunsort =  matchstr(fundvalue[2],"color-bar high.\\{,300}color-bar unsort.*class=\"color-bar unsort\"")
+    let fundvaluelow =  matchstr(fundvalue[2],"<div class=\"ttype\">.*class=\"row normal bg-low\">.\\{,300}class=\"row normal bg-mid\">")
+    let fundvaluemid =  matchstr(fundvalue[2],"class=\"row normal bg-mid\"><div class=\"ttype\">.*row normal bg-mid.\\{,300}row normal bg-high")
+    let fundvaluehigh =  matchstr(fundvalue[2],"class=\"row normal bg-high\"><div class=\"ttype\">.*row normal bg-high.\\{,300}row normal bg-unsort")
+    let fundvalueunsort =  matchstr(fundvalue[2],"class=\"row normal bg-unsort\"><div class=\"ttype\">.*row normal bg-unsort.\\{,300}tip-box")
+    let fundnamelow =  join(split(join(split(join(split(join(split(fundnamelow,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar low\""),"\x00"),"div class.*h1>"),"\x00"),","),",")
+    let fundnamemid =  join(split(join(split(join(split(join(split(fundnamemid,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar mid\""),"\x00"),"color-bar low.*h1>"),"\x00"),","),",")
+    let fundnamehigh =  join(split(join(split(join(split(join(split(fundnamehigh,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar high\""),"\x00"),"color-bar mid.*h1>"),"\x00"),","),",")
+    let fundnameunsort =  join(split(join(split(join(split(join(split(fundnameunsort,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar unsort\""),"\x00"),"color-bar high.*h1>"),"\x00"),","),",")
+    let fundvaluelow =  join(split(join(split(join(split(fundvaluelow,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"<div class.*pe\">"),"\x00")
+    let fundvaluemid =  join(split(join(split(join(split(join(split(fundvaluemid,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*bg-high"),"\x00")
+    let fundvaluehigh = join(split(join(split(join(split(join(split(fundvaluehigh,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*bg-unsort"),"\x00")
+    let fundvalueunsort = join(split(join(split(join(split(join(split(fundvalueunsort,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*box"),"\x00")
+    let logtime = join(split(join(split(join(split(logtime,"<title>"),"\x00"),")<\/title>"),"\x00"),"("),",")
+    "let fundvaluelow =  join(split(join(split(fundvaluelow,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),",")
+    let fundvalues[0] = fundnamelow
+    let fundvalues[1] = fundnamemid
+    let fundvalues[2] = fundnamehigh
+    let fundvalues[3] = fundnameunsort
+    let fundvalues[4] = fundvaluelow
+    let fundvalues[5] = fundvaluemid
+    let fundvalues[6] = fundvaluehigh
+    let fundvalues[7] = fundvalueunsort
+    "call append(line('.'),fundvalues)
+    let idx1 = 0
+    while idx1 < 4
+        let fundvalues1[idx1] = ConnecTwoList(split(fundvalues[idx1],","),split(fundvalues[idx1 + 4],"%%"))
+        let idx1 += 1
+        "let list2 =  split(list[idx1],",")
+        "let list3 =  split(list[idx1 + 4],"%%")
+        "let list1[idx1] = ConnecTwoList(list2,list3)
+        "let idx1 += 1
+    endwhile
+    call insert(fundvalues1[0],loglow)
+    call insert(fundvalues1[0],fundtitle)
+    call insert(fundvalues1[0],logtime)
+    call insert(fundvalues1[1],logmid)
+    call insert(fundvalues1[2],loghigh)
+    call insert(fundvalues1[3],logunsort)
+    return fundvalues1
+endfunction
+"}}}}}
+"{{{{{2   SetCharNull(...) 补空格
+function! SetCharNull(...) 
+    let char = " "
+    let char2 = ""
+    let idx1 = 0
+    let list = []
+    if a:0 ==# 2
+        let char = " "
+        let idx1 = a:2
+        let char2 = a:1
+        let char2 = char2 . repeat(char,idx1 - strwidth(char2) - 1) . '|'
+    endif
+    return char2
+endfunction
+"}}}}}
+"{{{{2  List2Format(...)    把字符后面补空格 
+function! List2Format(...)
+    let list2fmt = []
+    let list2fmt1 = []
+    let idx1 = 0
+    let idx2 = 0
+    if a:0 ==# 1
+        let list2fmt = a:1
+        "echo  list2fmt
+        while idx1 < len(list2fmt)
+            let idx2 = 0
+            let list2fmt1 = split(list2fmt[idx1],",")
+            "echo list2fmt1
+            while idx2 < len(list2fmt1)
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    "echo list2fmt1[idx2]
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],10)
+                    "echo list2fmt1[idx2]
+                endif
+                let idx2 += 1
+            endwhile
+            let list2fmt[idx1] = join(list2fmt1,"\x00")
+            let idx1 += 1
+        endwhile
+    endif
+    return list2fmt
+endfunction
+"}}}}
+"{{{{2  DictTest()   测试字典 
+"noremap <F4> :call  DictTest()
+function! DictTest()
+    let char1 = "aaaaaaaa"
+    let char2 = "指数名称"
+    let list = ['a', 'b', 'c', 'd', 'e']
+    let char = {'a': 1, 100: 'foo',1001:list}
+    let char = {5:1}
+    echo list
+    echo list[0:3]
+    echo len(char1)
+    echo strlen(char1)
+    echo strchars(char1)
+    echo strwidth(char1)
+    echo len(char2)
+    echo strlen(char2)
+    echo strchars(char2)
+    echo strwidth(char2)
+    echo len(char)
+    echo keys(char)
+    echo values(char)
+    echo items(char)
+endfunction
+"}}}}
+"{{{{{2   WriteFile(...)  获取指数源数据写入fund文件 
+noremap <F5> :call  WriteFile()
+function! WriteFile(...)
+    let idx1 = 0
+    let filenumber = 0
+    let fundfilename = "指数估值(2022-02-18).html"
+    let fundfilename1 = []
+    let templist = []
+    let lists = []
+    let list = []
+    let list1 = [1,2,3,4,]
+    let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
+    let fundfilename = split(fundfilename,"\n")
+    let fundfilename1 = copy(fundfilename)
+    call AddNumber(fundfilename1)
+    let filenumber = input("请输入待输入指数文件")
+    let lists = readfile("fund.txt")
+    let list1 = GetFundValue(fundfilename[filenumber])
+    if len(list1) ==# 0
+        return 
+    endif
+    let list =  SplicingData(list1)
+    call append(line('.'),list)
+    echo "lists len " . len(lists)
+    if len(lists) ==# 1
+        echo "tangxinlou"
+        let idx1 = 1
+        let lists = copy(list)
+        call insert(lists,idx1)
+        call writefile(lists,"fund.txt")
+    else
+        echo "tangxinlou1"
+        let idx1 = 0
+        while idx1 < len(lists)
+            let templist = split(lists[idx1],"|")
+            if len(templist) ==# 2
+                echo templist
+                echo split(list[0],"|")[1]
+                if templist[1] ==# split(list[0],"|")[1]
+                    echo "tangxinlou2"
+                    return
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+        let lists[0]  += 1
+        let lists = extend(lists,list)
+        call writefile(lists,"fund.txt")
+    endif
+endfunction
+"}}}}}
+"{{{{{2   ConnecTwoList(...)   连接数据和指数名字  
+"noremap <F4> :call  ConnecTwoList()
+function! ConnecTwoList(...)
+    let char = " "
+    let list = ['a','b']
+    let list1 = ['c','d']
+    let list2 = []
+    let idx1 = 0
+    if a:0 ==# 2
+        let list = a:1
+        let list1 = a:2
+        let list2 = list
+        if len(list) ==# len(list1)
+            while idx1 <len(list)
+                let list2[idx1] = join([list[idx1],list1[idx1]],",")
+                "echo list2[idx1]
+                let idx1 += 1
+            endwhile
+        else
+            return
+        endif
+    endif
+    return list2
+endfunction
+"}}}}}
+"{{{{{2   ParseFund(...)  解析fund数据 
+"noremap <F4> :call  ParseFund()
+function! ParseFund(...)
+    let time = " "
+    let dict = {}
+    let int = 0
+    let src = 0
+    let tail = 0
+    let idx1 = 0
+    let idj1 = 0
+    let list = ["a"]
+    let lists = []
+    let lists = readfile("fund.txt")
+    let int = lists[0]
+    echo int
+    let list =  repeat(list,int)
+    while idx1 < len(lists)
+        if idx1 ==# len(lists) - 1
+            let list[idj1] = lists[src:idx1]
+            echo idx1
+            echo idj1
+            echo src
+        endif 
+        if len(split(lists[idx1],"|")) ==# 2
+            if src ==# 0
+                let src = idx1
+            else
+                let tail = idx1
+               let list[idj1] = lists[src:tail - 1]
+               let tail = 0
+               let src = idx1
+               echo src
+               let idj1 +=1
+           endif
+        endif
+        let idx1 += 1
+    endwhile
+    call append(line('.'),list[0])
+    let idx1 = 0
+    while idx1 < len(list)
+        let list[idx1] = CutData(list[idx1])
+        let idx1 += 1
+    endwhile
+    let idx1 = 0
+    while idx1 < len(list)
+        let time = split(list[idx1][0][0],"|")[1]
+        echo time
+        let dict[time] = list[idx1]
+        let idx1 += 1
+    endwhile
+    echo keys(dict)[2]
+    call append(line('.'),dict[keys(dict)[2]][1])
+    return list
+endfunction
+"}}}}}
+"{{{{{2   SplicingData(...)  将四个等级数据list整合成一个
+function! SplicingData(...)
+    let list1 = [1,2,3,4,]
+    let list2 = []
+    let lists = []
+    let idx1 = 0
+    let list1 = a:1
+    while idx1 < 4
+        let list2 = list1[idx1]
+        "echo list2
+        let list1[idx1] = List2Format(list2)
+        let idx1 += 1
+    endwhile
+    "echo list1
+    let idx1 = 0
+    while idx1 < 4
+        let lists = extend(lists,list1[idx1])
+        let idx1 += 1
+    endwhile
+    return lists
+endfunction
+"}}}}}
+"{{{{{2   CutData(...)  将fund 分割成  [[[2.22],[low],[mid],[high],[unsort]],[[2.21],[low],[mid],[high],[unsort]]] 
+function! CutData(...)
+    let list1 = []
+    let list2 = []
+    let lists = [1,2,3,4,5]
+    let idx1 = 0
+    let intlow = 0
+    let intmid = 0
+    let inthigh = 0
+    let intunsort = 0
+    let list2 = a:1
+    "echo len(list2)
+    while idx1 < len(list2)
+        let list1 = split(list2[idx1],"|")
+        if len(list1) ==# 1
+           if split(list1[0]," \\{3,5}")[0] ==# "指数低估"
+               let intlow = idx1
+               "echo "low"
+           elseif split(list1[0]," \\{3,5}")[0] ==# "指数正常"
+               let intmid = idx1
+               "echo "mid"
+           elseif split(list1[0]," \\{3,5}")[0] ==# "指数高估"
+               let inthigh = idx1
+               "echo "high"
+           elseif split(list1[0]," \\{3,5}")[0] ==# "指数未定义"
+               let intunsort = idx1
+               "echo "unsort"
+           else
+           endif
+        endif
+        let idx1 += 1
+    endwhile
+    let lists[0] = list2[:intlow - 1]
+    let lists[1] = list2[intlow + 1:intmid -1]
+    let lists[2] = list2[intmid + 1:inthigh -1]
+    let lists[3] = list2[inthigh + 1:intunsort -1]
+    let lists[4] = list2[intunsort + 1:]
+    "echo lists[4]
+    return lists
+endfunction
+"}}}}}
+"}}}}}
