@@ -60,7 +60,7 @@ set ignorecase
 set ruler
 set magic
 set fileformats=unix
-set fileformats=dos
+"set fileformats=dos
 set laststatus=2
 set statusline=%F
 set statusline+=%=
@@ -1035,4 +1035,62 @@ function! CutData(...)
     return lists
 endfunction
 "}}}}}
+"{{{{{2   WriteFund2Index(...) 格式化fund2index
+function! WriteFund2Index(...) 
+    let list2fmt = []
+    let list2fmt1 = []
+    let idx1 = 0
+    let idx12 = 0
+    let char = ""
+    let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2")
+    if char ==# "1"
+        let list2fmt = readfile("fund2index.txt")
+    elseif char ==# "2" 
+        let list2fmt = readfile("index.txt")
+    endif 
+    while idx1 < len(list2fmt)
+        let idx2 = 0
+        let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
+        while idx2 < len(list2fmt1)
+            if char ==# "1"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
+                endif
+            elseif char ==# "2"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],10)
+                endif 
+            endif
+            let idx2 += 1
+        endwhile
+        let list2fmt[idx1] = join(list2fmt1,"\x00")
+        let idx1 += 1
+    endwhile
+    "call append(line('.'),list2fmt)
+    if char ==# "1"
+        call writefile(list2fmt,"fund2index.txt")
+    elseif char ==# "2" 
+        call writefile(list2fmt,"index.txt")
+    endif
+endfunction
+"}}}}} 
+"{{{{{2   CalculateAmount(...) 补空格
+function! CalculateAmount(...) 
+    let char = " "
+    let char2 = ""
+    let idx1 = 0
+    let list = []
+    if a:0 ==# 2
+        let char = " "
+        let idx1 = a:2
+        let char2 = a:1
+        let char2 = char2 . repeat(char,idx1 - strwidth(char2) - 1) . '|'
+    endif
+    return char2
+endfunction
+"}}}}}          
 "}}}}}
