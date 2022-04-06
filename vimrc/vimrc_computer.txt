@@ -1198,28 +1198,28 @@ function! CalculateAmount(...)
                 let amountmid1 = IsContain(tmpfund2indexname,a:3[2])
                 let amounthigh1 = IsContain(tmpfund2indexname,a:3[3])
                 let amountunsort1 = IsContain(tmpfund2indexname,a:3[4])
-                if amountlow1 != "null"
+                if amountlow1 != ""
                     let PE = split(split(amountlow1,"|")[2]," \\{3,30}")[0]
                     let initailPE = split(split(a:1[idx1],"|")[3]," \\{3,30}")[0]
                     let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(PE) ,2)
                     let amount = float2nr(amount)
                     let amount = join([a:1[idx1] , amount ,"(low)", " |"],"\x00")
                     call insert(amountlow,amount)
-                elseif amountmid1 != "null"
+                elseif amountmid1 != ""
                     let PE = split(split(amountmid1,"|")[2]," \\{3,30}")[0]
                     let initailPE = split(split(a:1[idx1],"|")[3]," \\{3,30}")[0]
                     let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(PE) ,2)
                     let amount = float2nr(amount)
                     let amount = join([a:1[idx1] , amount ,"(mid)" ," |"],"\x00")
                     call insert(amountmid,amount) 
-                elseif amounthigh1 != "null"
+                elseif amounthigh1 != ""
                     let PE = split(split(amounthigh1,"|")[2]," \\{3,30}")[0]
                     let initailPE = split(split(a:1[idx1],"|")[3]," \\{3,30}")[0]
                     let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(PE) ,2)
                     let amount = float2nr(amount)
                     let amount = join([a:1[idx1] , amount ,"(high)", " |"],"\x00")
                     call insert(amounthigh,amount) 
-                elseif amountunsort1 != "null"
+                elseif amountunsort1 != ""
                     let PE = split(split(amountunsort1,"|")[2]," \\{3,30}")[0]
                     let initailPE = split(split(a:1[idx1],"|")[3]," \\{3,30}")[0]
                     let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(PE) ,2)
@@ -1270,7 +1270,6 @@ endfunction
 "{{{{{2   ConsolidateData(...) 整合index 文件，使数据化
 noremap <F5> :call  ConsolidateData()
 function! ConsolidateData(...) 
-    let indexall = []
     let fund2indexall = []
     let indexfilelist = [] 
     let list2fmt1 = []
@@ -1282,11 +1281,10 @@ function! ConsolidateData(...)
     let fundkeys = sort(keys(indexdict),"MyCompare1")
     echo fundkeys
     let indexidx1 = input("输入需要计算的日期")
-    let indexall = indexdict[fundkeys[indexidx1]]
     let fund2indexall  = readfile("fund2index.txt")
     let indexfilelist = readfile("index.txt")
     let indexfilelist = SumInvest(indexfilelist,1)
-    "let indexfilelist = CalculateProfit(indexfilelist,fund2indexall,indexall,fundkeys[indexidx1])
+    "let indexfilelist = CalculateProfit(indexfilelist,fund2indexall,indexdict,fundkeys,indexidx1)
     while idx1 < len(indexfilelist)
         let idx2 = 0
         let list2fmt1 = split(join(split(indexfilelist[idx1],"|")))
@@ -1337,7 +1335,93 @@ endfunction
 "}}}}}
 "{{{{{2   CalculateProfit(...) 计算各个的盈利
 function! CalculateProfit(...) 
+    let investall = a:1
+    let fund2indexall = a:2
+    let funddictall = a:3
+    let fundkeys = a:4
+    let curtimenumber = a:5
+    let amounthead = a:1[0]
+    let tempinvest = []
+    let tmpfundname = ""
+    let tmpfund2index = ""
+    let tmpindexname = "" 
+    let curtime = ""
+    let pretime = ""
+    let curfundlist = []
+    let prefundlist = []
+    let curPE = 0
+    let prePE = 0
+    let idx1 = 1
+    let curtime = fundkeys[curtimenumber]
+    let amounthead = split(amounthead,"|")
+    let curfundlist = funddictall[curtime]
+    while idx1 < len(amounthead)
+        let tempinvest = split(investall[idx1],"|")
+        let tmpfundname = split(tempinvest[0]," \\{3,30}")[0]
+        let tmpfund2index =  IsContain(tmpfundname,fund2indexall)
+        let  tmpindexname = split(split(tmpfund2index,"|")[0]," \\{3,30}")[0]
+
+
+        let idx1 += 1
+    endwhile
+
     
 endfunction
+
+
+
 "}}}
 
+"{{{{{2   IsContainPE(...) list 基金指数名 返回对应PE
+function! IsContainPE(...) 
+    let indexname = ""
+    let curindexdata = []
+    let tempcurindexdata = []
+    let idx1 = 0
+    let indexname = a:1
+    let curindexdata = a:2
+    let indexdatastring = ""
+    while idx1 < len(curindexdata)
+        let tempcurindexdata = extend(tempcurindexdata,curindexdata[idx1])
+        let idx1 += 1
+    endwhile
+    let indexdatastring = IsContain(indexname,tempcurindexdata)
+    if indexdatastring ==# ""
+    endif
+
+    
+endfunction
+"}}}}} 
+"{{{{{2   CalculateAnalyze(...) 计算投资
+noremap <F5> :call  CalculateAnalyze()
+function! CalculateAnalyze(...) 
+    let idx1 = 0
+    let indexdict = {}
+    let indexall = []
+    let analyzeall = []
+    let curanalyze = []
+    let curanalyzes = []
+    let fund2indexall = []
+    let fundkeys = []
+    let indexidx1 = ""
+    let indexdict = ParseFund()
+    let fundkeys = sort(keys(indexdict),"MyCompare1")
+    echo fundkeys
+    let indexidx1 = input("输入需要计算的日期")
+    let indexall = indexdict[fundkeys[indexidx1]]
+    "call append(line('.'),indexall[0]) 
+    let fund2indexall  = readfile("fund2index.txt")
+    let analyzeall = readfile("analyze.txt") 
+    let curanalyze = CalculateAmount(analyzeall ,fund2indexall,indexall,fundkeys[indexidx1])
+    let idx1 = 0
+    while idx1 < len(curanalyze)
+        let curanalyzes = extend(curanalyzes,curanalyze[idx1])
+        let idx1 += 1
+    endwhile
+    call append(line('.'),curanalyzes)
+    redraw
+    if "yes" ==# input("是否写入")
+        call writefile(curanalyzes,"analyze.txt")
+    endif
+endfunction
+"}}}}}            
