@@ -1,3 +1,59 @@
 基金开发计划书
 # 从蛋卷基金网站下载市盈率解析出指数信息
 # 通过市盈率计算出当前需要定投的金额
+
+
+# 已经实现的函数
+
+- function! WriteFile(...) 
+将某个日期的html中的数据解析出来并加入到fund.txt 中
+- 函数具体实现逻辑
+无函数参数
+从指定路径读取有哪些html，并打印到屏幕
+通过调用 GetFundValue获取指定日期的市盈率list
+通过调用SplicingData把返回的list中的4个子list拼接
+无返回值，把最总list写入fund.txt 
+
+
+
+- function! GetFundValue(...)
+通过从蛋卷基金上下载指数估值的html，解析出每个指数的市盈率等信息放到一个list 里面
+- 函数具体实现逻辑
+函数的参数：html的名字和路径 
+读取html全部内容到一个list
+从全部内容中提取指数名字，分别按照 low mid high unsort 分别保存到四个变量里面
+从全部内容中提取指数数据，分别按照 low mid high unsort 分别保存到四个变量里面 
+通过调用ConnecTwoList连接指数名字和指数数据
+函数返回值：一个四位list 分别保存 low mid high unsort "指数名称,指数类型,PE,PE%,PB,PB%,股息率,ROE,预测PEG"
+
+
+- function! CalculateAmount(...)   
+通过市盈率计算应该投资的金额 
+函数参数: 基金信息文件index.txt 数据里面有基金名和对应日期投资金额 ,指数信息文件fund2index.txt数据里面有对应指数有哪些基金, 某一日指数数据list,需要计算的日期
+- 函数具体实现逻辑
+计算公式：定投金额*初始pe
+function! SetCharNull(...)   
+function! List2Format(...)  
+function! DictTest()  
+
+function! ConnecTwoList(...)  
+function! ParseFund(...)  
+- function! SplicingData(...)  
+把参数中的四个子list拼接成一个list，每个子字符串都按照指定格式填充空格，以便更好阅读
+函数参数: GetFundValue函数的返回值
+- 函数实现逻辑
+通过循环调用List2Format对每个字串填充格式
+通过extend拼接四个list
+function! CutData(...)  
+function! WriteFund2Index(...)   
+function! CalculateInvest(...)   
+function! MyCompare(i1, i2)   
+function! IsNeedCalculate(...)   
+
+
+function! IsContain(...)   
+function! ConsolidateData(...)   
+function! SumInvest(...)   
+function! CalculateProfit(...)   
+function! IsContainPE(...)   
+function! CalculateAnalyze(...)    
