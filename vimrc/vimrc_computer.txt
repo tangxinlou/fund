@@ -898,6 +898,7 @@ function! WriteFile(...)
         if len(lists) < 5
             return
         endif
+        redraw
         if "yes" ==# input("是否写入")
             call writefile(lists,"fund.txt")
         endif
@@ -1175,11 +1176,6 @@ func MyCompare1(i1, i2)
     return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
 endfunc
 "}}}}}
-"{{{{{2   IsNeedCalculate(...) 补空格
-function! IsNeedCalculate(...)
-
-endfunction
-"}}}}}
 "{{{{{2   CalculateAmount(...) investall , fund2indexall,indexall ,time  flag 计算金额
 function! CalculateAmount(...)
     let amounthead = ""
@@ -1320,7 +1316,8 @@ function! ConsolidateData(...)
     let indexfilelist = readfile("index.txt")
     let indexfilelist = SumInvest(indexfilelist,1,0)
     let indexfilelist = CalculateProfit(indexfilelist,2)
-    let indexfilelist = SumInvest(indexfilelist,2,1)
+    let indexfilelist = SumInvest(indexfilelist,2,0)
+    let indexfilelist = SumColumn(indexfilelist,0)
     while idx1 < len(indexfilelist)
         let idx2 = 0
         let list2fmt1 = split(join(split(indexfilelist[idx1],"|")))
@@ -1328,7 +1325,7 @@ function! ConsolidateData(...)
             if idx2 ==# 0
                 let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
             elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
-                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
+                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],20)
             else
                 let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
             endif
@@ -1340,7 +1337,7 @@ function! ConsolidateData(...)
     call append(line('.'),indexfilelist)
 endfunction
 "}}}}}
-"{{{{{2   SumInvest(...) 求和invest 项
+"{{{{{2   SumInvest(...) index.txt , 1-2   1 求和投资金额，2 求和盈利 , 0-1 1 没有买的也计算收益虚拟收益，0 只有买了的才有收益真实收益
 function! SumInvest(...)
     let totalinvestment = 5
     let indexhead = []
@@ -1356,6 +1353,7 @@ function! SumInvest(...)
         let indexlist = split(indexinvestlist[idx1],"|")
         let idx2 = 4
         let totalinvestment = indexlist[investment] - 1 + 1
+        let indexlist[investment] = 0
         while idx2 < len(indexlist)
             if  investment ==# 1
             if "low" ==# matchstr(indexlist[idx2],"low") || "Y" ==# matchstr(indexlist[idx2],"Y")
@@ -1364,11 +1362,11 @@ function! SumInvest(...)
         elseif  investment ==# 2
             if sumVorR ==# 0 
                 if "(R)" ==# matchstr(indexlist[idx2],"(R)")
-                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[1]
+                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
                 endif
             elseif sumVorR ==# 1
                 if "(R)" ==# matchstr(indexlist[idx2],"(R)") || "(V)" ==# matchstr(indexlist[idx2],"(V)")
-                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[1]
+                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
                 endif
             endif
         endif
@@ -1394,6 +1392,7 @@ function! CalculateProfit(...)
     let investvalue = ""
     let investhead = []
     let tmpchar = ""
+    let tmpchar1 = ""
     let time1 = ""
     let PEsrc = 0
     let PEcur = 0
@@ -1415,6 +1414,8 @@ function! CalculateProfit(...)
         let indexlist = split(indexinvestlist[idx1],"|")
         let tmpinvestname =  split(indexlist[0]," \\{3,30}")[0]
         let idx2 = 4
+        let tmpchar1  = split(indexlist[3]," \\{3,30}")[0]
+        let PEcur = IsContainPE(tmpfund2indexname,time)
         if  tmpinvestname != "汇添富中证生物科技A"
             while idx2 < len(indexlist)
                 let tmpchar = split(indexlist[idx2]," \\{3,30}")[0]
@@ -1436,6 +1437,7 @@ function! CalculateProfit(...)
                 endif
                 let idx2 += 1
             endwhile
+            let indexlist[3] = join([tmpchar1,")(",PEcur,")(R)"],"\x00")
         endif
         let indexinvestlist[idx1] = join(indexlist,"|")
         let idx1 += 1
@@ -1481,7 +1483,7 @@ function! RestoreOrder(...)
     let fundfilename = split(fundfilename,"\n")
     let fundfilename1 = copy(fundfilename)
     call AddNumber(fundfilename1)
-    let filenumber = input("请输入待输入指数文件")
+    let filenumber = input("请输入排序的文件")
     let list1 = GetFundValue(fundfilename[filenumber])
     let list1 =  SplicingData(list1)
     let idx2 = len(list)
@@ -1497,6 +1499,53 @@ function! RestoreOrder(...)
         let idx1 += 1
     endwhile
     return list3
+endfunction
+"}}}}}
+"{{{{{2   SumColumn(...) 列求和
+function! SumColumn(...)
+    let indexinvestlist = a:1
+    let investnum = a:2
+    let idx1 = 2
+    let idx2 = 1
+    let value = 0
+    let value1 = 0
+    let investcolumn = []
+    let tmpinvestname = ""
+    let investtail = split(indexinvestlist[1],"|")
+    let investtail[0] = "统计" 
+    while  idx1 < len(indexinvestlist )
+        let investcolumn = split(indexinvestlist[idx1],"|")
+        let tmpinvestname =  split(investcolumn[0]," \\{3,30}")[0]
+        let idx2 = 1
+        while idx2 < len(investcolumn)
+            if idx2 ==# 3
+                let investtail[idx2] = "null" 
+            elseif idx2 ==# 1 
+                if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
+                    let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                    let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
+                    let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                endif
+            elseif idx2 ==# 2
+                    let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                    let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
+                    let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
+            elseif idx2 > 3 
+                if  tmpinvestname !=# "汇添富中证生物科技A"
+                    if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
+                        let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                        let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[2]
+                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                    endif
+                endif
+            endif
+            let idx2 += 1
+        endwhile
+        let idx1 += 1
+endwhile 
+let investtail = join(investtail,"|")
+    let indexinvestlist = add(indexinvestlist,investtail) 
+    return   indexinvestlist
 endfunction
 "}}}}}
 
