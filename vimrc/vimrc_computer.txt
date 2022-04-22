@@ -1389,6 +1389,7 @@ endfunction
 function! CalculateProfit(...)
     let investmentsrc = 5
     let investmentcur = 5
+    let investmentinit = 5
     let investvalue = ""
     let investhead = []
     let tmpchar = ""
@@ -1396,6 +1397,7 @@ function! CalculateProfit(...)
     let time1 = ""
     let PEsrc = 0
     let PEcur = 0
+    let PEinit = 0
     let iscontain = ""
     let tmpfund2indexname = ""
     let indexlist = []
@@ -1426,7 +1428,7 @@ function! CalculateProfit(...)
                 let PEcur = IsContainPE(tmpfund2indexname,time)
                 let investmentsrc =  1 - 1 + indexlist[idx2]
                 let investmentcur =  investmentsrc / (PEsrc / PEcur)
-                let investvalue = float2nr(investmentsrc - investmentcur)
+                let investvalue = float2nr(investmentcur - investmentsrc)
                 if "low" ==# matchstr(tmpchar,"low") || "Y" ==# matchstr(tmpchar,"Y")
                     let indexlist[idx2] = join([tmpchar,"(",investvalue,")(R)"],"\x00")
                 else
@@ -1437,7 +1439,12 @@ function! CalculateProfit(...)
                 endif
                 let idx2 += 1
             endwhile
+            let PEinit = IsContainPE(tmpfund2indexname,"2022-02-25")
             let indexlist[3] = join([tmpchar1,")(",PEcur,")(R)"],"\x00")
+            let investmentinit =  1 - 1 + indexlist[2] +  indexlist[1]
+            let investmentcur =  investmentinit / (PEinit / PEcur)
+            let investvalue = float2nr(investmentcur - indexlist[1])
+            let indexlist[2] = investvalue 
         endif
         let indexinvestlist[idx1] = join(indexlist,"|")
         let idx1 += 1
