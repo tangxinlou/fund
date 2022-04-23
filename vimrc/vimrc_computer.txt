@@ -1539,11 +1539,19 @@ function! SumColumn(...)
                     let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
             elseif idx2 > 3 
                 if  tmpinvestname !=# "汇添富中证生物科技A"
+                    if idx1 ==# 2
                     if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
                         let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
                         let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[2]
                         let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
                     endif
+                else
+                    if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
+                        let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                        let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[1]
+                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                    endif
+                endif
                 endif
             endif
             let idx2 += 1
