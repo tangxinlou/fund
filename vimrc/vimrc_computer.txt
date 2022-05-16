@@ -103,8 +103,6 @@ iabbrev vimg vimgrep! //j %:p
 "iabbrev vendor ap/android/vendor/qcom/proprietary/bluetooth/
 "iabbrev fram ap/android/frameworks/base/core/java/android/bluetooth
 "}}}
-"git 命令{{{
-"}}}}
 "禁止用的键{{{
 "nnoremap <c--> <nop>
 "inoremap <esc> <nop>
@@ -1429,6 +1427,11 @@ function! CalculateProfit(...)
                 let investmentsrc =  1 - 1 + indexlist[idx2]
                 let investmentcur =  investmentsrc / (PEsrc / PEcur)
                 let investvalue = float2nr(investmentcur - investmentsrc)
+                "debug
+                if "广发中证养老" ==#  tmpinvestname
+                    if time1 ==# "2022-04-18"  
+                    endif
+                endif
                 if "low" ==# matchstr(tmpchar,"low") || "Y" ==# matchstr(tmpchar,"Y")
                     let indexlist[idx2] = join([tmpchar,"(",investvalue,")(R)"],"\x00")
                 else
@@ -1471,6 +1474,11 @@ function! IsContainPE(...)
         let idx1 = index(listhead,indextime)
         let PE =  split(listcur[idx1]," \\{3,30}")[0]
         let PE =  str2float(PE)
+        "debug
+        if indextime ==# "2022-04-18" 
+            if indexname ==# "养老产业"
+            endif
+        endif
         return PE
     else 
         return 0
