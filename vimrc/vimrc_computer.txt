@@ -701,6 +701,12 @@ endfunction
 "}}}}
 "}}}}
 
+
+"每次需要调用 24 WriteFile 把新的数据写到fund中
+"需要调用 31  CalculateInvest 选2  把pe写到analyze
+"把pe写到analyze,调用30 WriteFund2Index 选3把analyze格式化
+"调用  31CalculateInvest 金额，选1 把金额写到index中
+"调用  30 WriteFund2Index 选2把index格式化
 "{{{{ fund
 "{{{{2  GetFundValue() 通过xml获取元数据
 function! GetFundValue(...)
@@ -737,7 +743,7 @@ function! GetFundValue(...)
     let fundvaluelow =  matchstr(fundvalue[2],"<div class=\"ttype\">.*class=\"row normal bg-low\">.\\{,300}class=\"row normal bg-mid\">")
     let fundvaluemid =  matchstr(fundvalue[2],"class=\"row normal bg-mid\"><div class=\"ttype\">.*row normal bg-mid.\\{,300}row normal bg-high")
     let fundvaluehigh =  matchstr(fundvalue[2],"class=\"row normal bg-high\"><div class=\"ttype\">.*row normal bg-high.\\{,300}row normal bg-unsort")
-    let fundvalueunsort =  matchstr(fundvalue[2],"class=\"row normal bg-unsort\"><div class=\"ttype\">.*row normal bg-unsort.\\{,300}tip-box")
+    let fundvalueunsort =  matchstr(fundvalue[2],"class=\"row normal bg-unsort\"><div class=\"ttype\">.*row normal bg-unsort.\\{,400}footer")
     let fundnamelow =  join(split(join(split(join(split(join(split(fundnamelow,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar low\""),"\x00"),"div class.*h1>"),"\x00"),","),",")
     let fundnamemid =  join(split(join(split(join(split(join(split(fundnamemid,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar mid\""),"\x00"),"color-bar low.*h1>"),"\x00"),","),",")
     let fundnamehigh =  join(split(join(split(join(split(join(split(fundnamehigh,"<\/h1>.\\{,300}<h1>"),","),"<\/h1>.*color-bar high\""),"\x00"),"color-bar mid.*h1>"),"\x00"),","),",")
@@ -745,7 +751,7 @@ function! GetFundValue(...)
     let fundvaluelow =  join(split(join(split(join(split(fundvaluelow,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"<div class.*pe\">"),"\x00")
     let fundvaluemid =  join(split(join(split(join(split(join(split(fundvaluemid,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*bg-high"),"\x00")
     let fundvaluehigh = join(split(join(split(join(split(join(split(fundvaluehigh,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*bg-unsort"),"\x00")
-    let fundvalueunsort = join(split(join(split(join(split(join(split(fundvalueunsort,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*box"),"\x00")
+    let fundvalueunsort = join(split(join(split(join(split(join(split(fundvalueunsort,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),"%%"),"class=\"row.*pe\">"),"\x00"),"<div class.*footer"),"\x00")
     let logtime = join(split(join(split(join(split(logtime,"<title>"),"\x00"),")<\/title>"),"\x00"),"("),",")
     "let fundvaluelow =  join(split(join(split(fundvaluelow,"<\/div><div class.\\{,10}>"),","),"<\/div.\\{,100}>"),",")
     let fundvalues[0] = fundnamelow
@@ -820,7 +826,7 @@ function! List2Format(...)
     return list2fmt
 endfunction
 "}}}}
-"{{{{2  DictTest()   测试字典
+"{{{{2  DictTest()   测试字典    
 "noremap <F4> :call  DictTest()
 function! DictTest()
     let char1 = "aaaaaaaa"
@@ -857,6 +863,8 @@ function! WriteFile(...)
     let list1 = [1,2,3,4,]
     let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
     let fundfilename = split(fundfilename,"\n")
+    echo fundfilename
+    let fundfilename = reverse(fundfilename)
     let fundfilename1 = copy(fundfilename)
     call AddNumber(fundfilename1)
     let filenumber = input("请输入待输入指数文件")
@@ -1112,6 +1120,85 @@ function! WriteFund2Index(...)
         if "yes" ==# input("是否写入")
             call writefile(list2fmt,"analyze.txt")
         endif
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2   WriteFund2Index1(...) 格式化fund2index
+function! WriteFund2Index1(...)
+    let list2fmt = []
+    let list2fmt1 = []
+    let list2fmt2 = []
+    let idx1 = 0
+    let idx12 = 0
+    let char = ""
+    let list2fmt =  a:1
+    let char = 4
+    if a:0 ==# 0
+        let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2 analyze.txt 选3, ")
+        if char ==# "1"
+            let list2fmt = readfile("fund2index.txt")
+        elseif char ==# "2"
+            let list2fmt = readfile("index.txt")
+        elseif char ==# "3"
+            let list2fmt = readfile("analyze.txt")
+        endif
+    endif
+    while idx1 < len(list2fmt)
+        let idx2 = 0
+        if char ==# 4
+            let list2fmt1 = split(list2fmt[idx1],"|")
+        else
+            let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
+        endif
+        while idx2 < len(list2fmt1)
+            if char ==# "1"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
+                endif
+            elseif char ==# "2"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
+                elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
+                endif
+            elseif char ==# "3"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
+                endif
+            elseif char ==# 4
+                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],60)
+            endif
+            let idx2 += 1
+        endwhile
+        let list2fmt[idx1] = join(list2fmt1,"\x00")
+        let idx1 += 1
+    endwhile
+    if char ==# "1"
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"fund2index.txt")
+        endif
+    elseif char ==# "2"
+        let list2fmt2 = copy(list2fmt)
+        call sort(list2fmt2,"MyCompare")
+        call append(line('.'),list2fmt2)
+        redraw
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"index.txt")
+        endif
+    elseif char ==# "3"
+        let list2fmt = RestoreOrder(list2fmt)
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"analyze.txt")
+        endif
+    elseif char ==# "4"
+        return list2fmt
     endif
 endfunction
 "}}}}}
@@ -1496,6 +1583,7 @@ function! RestoreOrder(...)
     let iscontain = ""
     let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
     let fundfilename = split(fundfilename,"\n")
+    let fundfilename = reverse(fundfilename)
     let fundfilename1 = copy(fundfilename)
     call AddNumber(fundfilename1)
     let filenumber = input("请输入排序的文件")
@@ -1571,5 +1659,423 @@ let investtail = join(investtail,"|")
     return   indexinvestlist
 endfunction
 "}}}}}
+"{{{{2  InputData()   一键输入数据   
+"noremap <F4> :call  InputData()
+function! InputData()
+    call WriteFile()
+    echo "选择1"
+    call CalculateInvest()
+    echo "选择2"
+    call WriteFund2Index()
+
+endfunction
+"}}}} 
+"{{{{2  ObtainAmount()   一键计算金额   
+"noremap <F4> :call  ObtainAmount()
+function! ObtainAmount()
+    echo "选择1"
+    call CalculateInvest()
+    echo "选择2"
+    call WriteFund2Index()
+
+endfunction
+"}}}}
 
 "}}}
+
+"{{{{{{1 code
+
+"{{{{2  ParseCode()   解析code
+function! ParseCode(...) "文件内容列表，解析的标志
+    let sourcecode = a:1
+    let codeflag = split(a:2,"|")
+    let idx1 = 0
+    let idj1 = 0
+    let src = 0
+    let tail = 0
+    let cmpcount = 0
+    let coutchapter = 0
+    let targetcode = ["1"]
+    let matchstr = ""
+    let line = 0
+    "寻找函数指针的过程
+    let isignore = 0
+    "寻找到的函数指针
+    let isaddflag = 0 
+    if len(codeflag) ==# 1  " flag 只有1个
+        echo "tangxinlou1"
+        if codeflag[0] ==# "# "
+            let matchstr = "^# "
+        elseif codeflag[0] ==# "## "
+            let matchstr = "^## "
+        elseif codeflag[0] ==# "### "
+            let matchstr = "^### "
+        endif
+        let cmpcount = GetMatchNumber(sourcecode,codeflag[0])
+        let coutchapter = count(sourcecode,"```c") 
+        let targetcode =  repeat(targetcode,cmpcount)
+        echo  cmpcount   len(targetcode)
+        while idx1 < len(sourcecode)
+            if idx1 ==# len(sourcecode) - 1
+                if src != 0
+                    let targetcode[idj1] = sourcecode[src:idx1]
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2)
+                endif
+            endif
+            if codeflag[0] ==# matchstr(sourcecode[idx1], matchstr)
+                echo "tangxinlou23"
+                if src ==# 0
+                    let src = idx1
+                else
+                    let tail = idx1
+                    echo idx1 idj1 src tail codeflag[0]  sourcecode[idx1]
+                    let targetcode[idj1] = sourcecode[src:tail - 1]
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (src + 1)
+                    let tail = 0
+                    let src = idx1
+                    "echo src
+                    let idj1 +=1
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    else
+        let cmpcount = count(sourcecode,codeflag[0])
+        let targetcode =  repeat(targetcode ,cmpcount)
+        if "|" ==# matchstr(sourcecode[0],"|")
+            let line = split(sourcecode[0],"|")[1]
+            echo cmpcount  codeflag[0] line
+        else 
+            let line = cmpcount * 2 + 2 + 1
+            echo "no chapter"
+        endif
+        while idx1 < len(sourcecode)
+            if codeflag[0] ==# matchstr(sourcecode[idx1], "```c$") 
+                let src = idx1
+            endif
+            if "```d" ==# matchstr(sourcecode[idx1], "```d$") 
+                let isignore = 1
+                let isaddflag = 1
+            endif
+            if codeflag[1] ==# matchstr(sourcecode[idx1], "```$")
+                if isignore ==# 0
+                    let tail = idx1
+                    if idj1 < cmpcount
+                        let targetcode[idj1]  = sourcecode[src:tail] 
+                        if isaddflag ==# 1
+                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1) . " point"
+                            let isaddflag = 0 
+                        else
+                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1)
+                        endif
+                    endif
+                    let idj1 += 1
+                else
+                    let isignore = 0
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+        let targetcode[0][0] = targetcode[0][0] . "|" .  cmpcount
+    endif
+    if cmpcount ==# 0 
+        return 0
+    else
+        return targetcode
+    endif
+endfunction
+
+
+
+"}}}}
+
+"{{{{{  AnalyzeCode()  分析code
+nnoremap <F11>  :call AnalyzeCode()<cr>
+function! AnalyzeCode()
+   let targetcode = [] 
+   let codedict = {}
+   let tempdictlist = []
+   let numberfunc = []
+   let src = 0
+   let tail = 0 
+   let idx1 = 0
+   let idj1 = 0
+   let codefile = readfile(expand("%:p")) 
+   if count(codefile,"<<<<<<<<<<<<<<<<") && count(codefile,">>>>>>>>>>>>>>>")
+       echo "之前修改过"
+       let src = index(codefile,"<<<<<<<<<<<<<<<<")
+       let tail = index(codefile,">>>>>>>>>>>>>>>")
+       call remove(codefile,src,tail)
+       echo src tail
+   endif
+   let targetcode =  ParseCode(codefile,"# ")
+   if type(targetcode) ==# 3
+       while idx1 < len(targetcode)
+           echo targetcode[idx1][0]
+           let codedict[idx1 . "|"  . targetcode[idx1][0]] = targetcode[idx1]
+           "let codedict[idx1] = targetcode[idx1]
+           let idx1 += 1
+       endwhile 
+       let dictkeys =  sort(keys(codedict))
+       let numberfunc = copy(dictkeys)
+       echo dictkeys
+       "echo codedict
+       let idx1 = 0
+       while idx1 < len(dictkeys)
+           let codedict[dictkeys[idx1]] = ParseCode(codedict[dictkeys[idx1]],"```c|```")
+           let idx1 += 1
+       endwhile
+       "call writefile(codedict[dictkeys[4]],"/opt6/tangxinlouosc/txl/parse")
+       let idx1 = 0
+       while idx1 < len(dictkeys)
+           let tempdictlist = codedict[dictkeys[idx1]]
+           let idj1 = 0
+
+           while idj1 < len(tempdictlist)
+               if idj1 ==# 0
+                   let numberfunc[idx1] = split(tempdictlist[0][0],"|")[2]
+               endif
+               "debug
+               "echo idx1 idj1 
+               let tempdictlist[idj1] =  ListKeyWords(tempdictlist[idj1])
+               let idj1 += 1
+           endwhile
+           let codedict[dictkeys[idx1]] = tempdictlist
+           let idx1 += 1
+       endwhile
+       let idx1 = 0
+       while idx1 < len(dictkeys)
+           let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
+           let codedict[dictkeys[idx1]] =  WriteFund2Index(codedict[dictkeys[idx1]])
+           let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",idx1 + 1,"章节流程图"]))
+           let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
+           let idx1 += 1
+       endwhile
+       echo numberfunc 
+       let idx1 = 0
+       let tempdictlist = []
+       while idx1 < len(dictkeys)
+           let tempdictlist = extend(tempdictlist,codedict[dictkeys[idx1]])
+           let idx1 += 1
+       endwhile
+       let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
+       let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
+ "      call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
+       call extend(codefile,tempdictlist,8)
+       call writefile(codefile,expand("%:p"))
+   else
+       let codedict = ParseCode(codefile,"```c|```")
+       let idj1 = 0
+       while idj1 < len(codedict)
+           let codedict[idj1] =  ListKeyWords(codedict[idj1])
+           let idj1 += 1
+       endwhile
+       let codedict =  DrawTimingDiagram(codedict)
+       let codedict =  WriteFund2Index(codedict)
+       let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
+       let codedict = add(codedict,">>>>>>>>>>>>>>>")
+ "      call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
+       call extend(codefile,codedict,8)
+       call writefile(codefile,expand("%:p"))
+   endif
+endfunction 
+"}}}}}
+
+"{{{{{  ListKeyWords()  获取关键词
+function! ListKeyWords(...)
+    let listwords = a:1
+    let idx1 = 0
+    let line = ""
+    let codeline = 0
+    let filename = ""
+    let keywords = ""
+    let filenameidx1 = 0
+    let templist = []
+    let isstorage = 0
+    let isreturn = 0
+    let listkeywords = ""
+    let notes = ""
+    let returnkeywords = ['void',
+                \ 'int',
+                \ 'char',
+                \ 'long',
+                \ 'Return<void>',
+                \ 'bool',
+                \ 'size_t',
+                \ 'hci_t*',
+                \ 'Uri',
+                \ 'BluetoothOppReceiveFileInfo',
+                \ 'interface',
+                \ 'boolean',
+                \ 'uint16_t',
+                \ 'uint8_t',
+                \ 'tBTA_STATUS',
+                \ 'jint']
+    let storagekeywords = ['auto',
+                \ 'static',
+                \ 'extern',
+                \ 'register',
+                \ 'const',
+                \ 'private',
+                \ 'public']
+    while idx1 < len(listwords)
+        if "" != matchstr(listwords[idx1],"\/work.*\/.*\/")
+            let filename = split(split(listwords[idx1],":")[0],"/")
+            let filename = filename[len(filename) - 1]
+            let line = split(listwords[idx1],":")[1]
+            let filenameidx1 = idx1
+        endif
+        let idx1 += 1
+    endwhile
+    let codeline = split(listwords[0],"|")[1]
+    "找到了文件名，刷选文件名下一行的关键词
+    let templist = split(listwords[filenameidx1 + 1],"\x00")
+    echo templist
+    if count(storagekeywords,templist[0])
+        let isstorage = 1
+        if count(returnkeywords,templist[1])
+            let isreturn = 2
+        elseif count(storagekeywords,templist[1])
+            let isstorage = 2
+            if count(returnkeywords,templist[2])
+                let isreturn = 3
+            endif
+        endif
+    elseif  count(returnkeywords,templist[0])
+        let isreturn = 1
+    endif
+
+
+    if isstorage ==# 1 && isreturn ==# 2
+        "echo templist filename filenameidx1 line     debug
+        let keywords = split(templist[2],"(")[0]
+    elseif isstorage ==# 0 && isreturn ==# 1
+        let keywords = split(templist[1],"(")[0]
+    elseif  isstorage ==# 2 && isreturn ==# 3
+        let keywords = split(templist[3],"(")[0]
+    else
+        let keywords = join(templist)
+        if "(" ==# matchstr(keywords,"(")
+        let keywords = split(keywords,"(")[0]
+        endif
+    endif
+
+    if count(templist,"class")
+        if count(templist,"private") || count(templist,"public")
+            let keywords =  templist[index(templist,"class") + 1]
+        endif
+    endif
+    if count(templist,"const")
+        if count(templist,"=")
+            let idx1 = index(templist,"=")
+            let keywords = templist[idx1 - 1]
+        endif
+    endif
+
+    if count(templist,"#define")
+        let idx1 = index(templist,"#define")
+        let keywords = templist[idx1 + 1]
+    endif
+
+    if count(templist,"=") && len(templist) ==# 3
+        let idx1 = index(templist,"=")
+        let keywords = templist[idx1 + 1]
+    endif
+
+    if "::" ==# matchstr(keywords,"::")
+        let keywords = split(keywords,"::")[1]
+    endif
+
+    if count(templist,"if") || count(templist,"else")
+        let keywords =  "if()"
+    endif
+
+    "let listkeywords[0] = filename
+    "let listkeywords[1] = keywords
+    let notes = listwords[filenameidx1 - 1] . " "
+    let keywords = keywords . ":" . codeline
+    let listkeywords = filename . "|" . keywords . "|" . notes
+    return listkeywords
+endfunction
+"}}}}}
+
+"{{{{{  DrawTimingDiagram()  画时序图
+function! DrawTimingDiagram(...)
+   let drawcode = a:1
+   let drawlist = [" "]
+   let idx1 = 0
+   let tempindex = 0
+   let prvindex = 0
+   let drawhead = []
+   let templist = []
+   let tempnotes = []
+   let tempcodelist = []
+   let drawlist =  repeat(drawlist,len(drawcode) * 2)
+   while idx1 < len(drawcode)
+       let templist = split(drawcode[idx1],"|")         
+       if 0 ==# count(drawhead,templist[0])
+           let drawhead = add(drawhead,templist[0])
+       endif
+       let idx1 += 1
+   endwhile
+   let drawhead = add(drawhead," ")
+   let drawhead = insert(drawhead," ")
+   let idx1 = len(drawcode) 
+   while idx1 > 0
+       let templist = [" "]         
+       let tempnotes = [" "]         
+       let templist =  repeat(templist,len(drawhead))
+       let tempnotes =  repeat(tempnotes,len(drawhead))
+       let tempcodelist = split(drawcode[idx1 - 1],"|")         
+       let tempindex = index(drawhead,tempcodelist[0])
+       let templist[tempindex] = tempcodelist[1]
+       let tempnotes[tempindex] = tempcodelist[2]
+       if idx1 < len(drawcode)
+           if prvindex > tempindex
+               let templist[tempindex  + 1] = ">>>>"
+           elseif prvindex ==# tempindex
+               let templist[tempindex  + 1] = "V"
+           elseif  prvindex <  tempindex
+               let templist[tempindex  - 1] = "<<<<"
+           endif
+       endif
+       let drawlist[idx1 * 2 - 1] = templist
+       let drawlist[idx1 * 2 - 2] = tempnotes
+       let prvindex = tempindex
+       let idx1 -= 1
+   endwhile
+   let drawlist = insert(drawlist,drawhead)
+   let idx1 = 0 
+   while idx1 < len(drawlist)
+       let drawlist[idx1] = join(drawlist[idx1],"|")
+       let idx1 += 1
+   endwhile 
+   return drawlist
+endfunction 
+"}}}}}
+
+"{{{{{  GetMatchNumber()  获取匹配次数
+function! GetMatchNumber(...)
+    let matchlist = a:1
+    let matchstr = a:2
+    let idx1 = 0
+    let matchcount = 0
+    if matchstr ==# "# "
+        let matchstr = "^# "
+    elseif matchstr ==# "## "
+        let matchstr = "^## "
+    elseif matchstr ==# "### "
+        let matchstr = "^### "
+    endif
+    echo matchstr
+    while idx1 < len(matchlist)
+        if a:2  ==# matchstr(matchlist[idx1], matchstr)
+            let matchcount += 1
+        endif
+        let idx1 += 1
+    endwhile
+    return matchcount
+endfunction
+"}}}}} 
+
+"}}}}
