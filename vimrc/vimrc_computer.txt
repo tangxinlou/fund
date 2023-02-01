@@ -863,7 +863,6 @@ function! WriteFile(...)
     let list1 = [1,2,3,4,]
     let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
     let fundfilename = split(fundfilename,"\n")
-    echo fundfilename
     let fundfilename = reverse(fundfilename)
     let fundfilename1 = copy(fundfilename)
     call AddNumber(fundfilename1)
@@ -1663,9 +1662,9 @@ endfunction
 "noremap <F4> :call  InputData()
 function! InputData()
     call WriteFile()
-    echo "选择1"
-    call CalculateInvest()
     echo "选择2"
+    call CalculateInvest()
+    echo "选择3"
     call WriteFund2Index()
 
 endfunction
