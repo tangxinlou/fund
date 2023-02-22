@@ -826,7 +826,7 @@ function! List2Format(...)
     return list2fmt
 endfunction
 "}}}}
-"{{{{2  DictTest()   测试字典    
+"{{{{2  DictTest()   测试字典
 "noremap <F4> :call  DictTest()
 function! DictTest()
     let char1 = "aaaaaaaa"
@@ -1444,7 +1444,7 @@ function! SumInvest(...)
                 let indexlist[investment] = indexlist[investment] + indexlist[idx2]
             endif
         elseif  investment ==# 2
-            if sumVorR ==# 0 
+            if sumVorR ==# 0
                 if "(R)" ==# matchstr(indexlist[idx2],"(R)")
                     let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
                 endif
@@ -1515,7 +1515,7 @@ function! CalculateProfit(...)
                 let investvalue = float2nr(investmentcur - investmentsrc)
                 "debug
                 if "广发中证养老" ==#  tmpinvestname
-                    if time1 ==# "2022-04-18"  
+                    if time1 ==# "2022-04-18"
                     endif
                 endif
                 if "low" ==# matchstr(tmpchar,"low") || "Y" ==# matchstr(tmpchar,"Y")
@@ -1523,23 +1523,31 @@ function! CalculateProfit(...)
                 else
                     if  investment ==# 2
                         let indexlist[idx2] = join([tmpchar,"(",investvalue,")(V)"],"\x00")
-                    else 
+                    else
                     endif
                 endif
                 let idx2 += 1
             endwhile
             let PEinit = IsContainPE(tmpfund2indexname,"2022-02-25")
             let indexlist[3] = join([tmpchar1,")(",PEcur,")(R)"],"\x00")
-            let investmentinit =  1 - 1 + indexlist[2] +  indexlist[1]
+            let investmentinit =  1 - 1 + indexlist[1] -  indexlist[2]
             let investmentcur =  investmentinit / (PEinit / PEcur)
             let investvalue = float2nr(investmentcur - indexlist[1])
-            let indexlist[2] = investvalue 
+            if "天弘恒生科技指数A" ==#  tmpinvestname
+                echo investmentinit  indexlist[2]   indexlist[1]    PEinit  PEcur  investmentcur   investvalue
+                call input("2222")
+            endif
+            let indexlist[2] = join([indexlist[2],")(",investvalue,")(R)"],"\x00")
+            if "天弘恒生科技指数A" ==#  tmpinvestname
+                echo  indexlist[2]
+                call input("1111")
+            endif
         endif
         let indexinvestlist[idx1] = join(indexlist,"|")
         let idx1 += 1
     endwhile
     "call append(line('.'),indexinvestlist)
-    return  indexinvestlist 
+    return  indexinvestlist
 endfunction
 
 
@@ -1561,12 +1569,12 @@ function! IsContainPE(...)
         let PE =  split(listcur[idx1]," \\{3,30}")[0]
         let PE =  str2float(PE)
         "debug
-        if indextime ==# "2022-04-18" 
+        if indextime ==# "2022-04-18"
             if indexname ==# "养老产业"
             endif
         endif
         return PE
-    else 
+    else
         return 0
     endif
 endfunction
@@ -1614,37 +1622,37 @@ function! SumColumn(...)
     let investcolumn = []
     let tmpinvestname = ""
     let investtail = split(indexinvestlist[1],"|")
-    let investtail[0] = "统计" 
+    let investtail[0] = "统计"
     while  idx1 < len(indexinvestlist )
         let investcolumn = split(indexinvestlist[idx1],"|")
         let tmpinvestname =  split(investcolumn[0]," \\{3,30}")[0]
         let idx2 = 1
         while idx2 < len(investcolumn)
             if idx2 ==# 3
-                let investtail[idx2] = "null" 
-            elseif idx2 ==# 1 
+                let investtail[idx2] = "null"
+            elseif idx2 ==# 1
                 if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
                     let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
                     let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
-                    let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                    let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
                 endif
             elseif idx2 ==# 2
                     let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
                     let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
                     let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
-            elseif idx2 > 3 
+            elseif idx2 > 3
                 if  tmpinvestname !=# "汇添富中证生物科技A"
                     if idx1 ==# 2
                     if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
                         let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
                         let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[2]
-                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
                     endif
                 else
                     if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
                         let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
                         let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[1]
-                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00") 
+                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
                     endif
                 endif
                 endif
@@ -1652,13 +1660,13 @@ function! SumColumn(...)
             let idx2 += 1
         endwhile
         let idx1 += 1
-endwhile 
+endwhile
 let investtail = join(investtail,"|")
-    let indexinvestlist = add(indexinvestlist,investtail) 
+    let indexinvestlist = add(indexinvestlist,investtail)
     return   indexinvestlist
 endfunction
 "}}}}}
-"{{{{2  InputData()   一键输入数据   
+"{{{{2  InputData()   一键输入数据
 "noremap <F4> :call  InputData()
 function! InputData()
     call WriteFile()
@@ -1668,8 +1676,8 @@ function! InputData()
     call WriteFund2Index()
 
 endfunction
-"}}}} 
-"{{{{2  ObtainAmount()   一键计算金额   
+"}}}}
+"{{{{2  ObtainAmount()   一键计算金额
 "noremap <F4> :call  ObtainAmount()
 function! ObtainAmount()
     echo "选择1"
@@ -1700,7 +1708,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
     "寻找函数指针的过程
     let isignore = 0
     "寻找到的函数指针
-    let isaddflag = 0 
+    let isaddflag = 0
     if len(codeflag) ==# 1  " flag 只有1个
         echo "tangxinlou1"
         if codeflag[0] ==# "# "
@@ -1711,7 +1719,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
             let matchstr = "^### "
         endif
         let cmpcount = GetMatchNumber(sourcecode,codeflag[0])
-        let coutchapter = count(sourcecode,"```c") 
+        let coutchapter = count(sourcecode,"```c")
         let targetcode =  repeat(targetcode,cmpcount)
         echo  cmpcount   len(targetcode)
         while idx1 < len(sourcecode)
@@ -1744,15 +1752,15 @@ function! ParseCode(...) "文件内容列表，解析的标志
         if "|" ==# matchstr(sourcecode[0],"|")
             let line = split(sourcecode[0],"|")[1]
             echo cmpcount  codeflag[0] line
-        else 
+        else
             let line = cmpcount * 2 + 2 + 1
             echo "no chapter"
         endif
         while idx1 < len(sourcecode)
-            if codeflag[0] ==# matchstr(sourcecode[idx1], "```c$") 
+            if codeflag[0] ==# matchstr(sourcecode[idx1], "```c$")
                 let src = idx1
             endif
-            if "```d" ==# matchstr(sourcecode[idx1], "```d$") 
+            if "```d" ==# matchstr(sourcecode[idx1], "```d$")
                 let isignore = 1
                 let isaddflag = 1
             endif
@@ -1760,10 +1768,10 @@ function! ParseCode(...) "文件内容列表，解析的标志
                 if isignore ==# 0
                     let tail = idx1
                     if idj1 < cmpcount
-                        let targetcode[idj1]  = sourcecode[src:tail] 
+                        let targetcode[idj1]  = sourcecode[src:tail]
                         if isaddflag ==# 1
                             let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1) . " point"
-                            let isaddflag = 0 
+                            let isaddflag = 0
                         else
                             let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1)
                         endif
@@ -1777,7 +1785,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
         endwhile
         let targetcode[0][0] = targetcode[0][0] . "|" .  cmpcount
     endif
-    if cmpcount ==# 0 
+    if cmpcount ==# 0
         return 0
     else
         return targetcode
@@ -1791,15 +1799,15 @@ endfunction
 "{{{{{  AnalyzeCode()  分析code
 nnoremap <F11>  :call AnalyzeCode()<cr>
 function! AnalyzeCode()
-   let targetcode = [] 
+   let targetcode = []
    let codedict = {}
    let tempdictlist = []
    let numberfunc = []
    let src = 0
-   let tail = 0 
+   let tail = 0
    let idx1 = 0
    let idj1 = 0
-   let codefile = readfile(expand("%:p")) 
+   let codefile = readfile(expand("%:p"))
    if count(codefile,"<<<<<<<<<<<<<<<<") && count(codefile,">>>>>>>>>>>>>>>")
        echo "之前修改过"
        let src = index(codefile,"<<<<<<<<<<<<<<<<")
@@ -1814,7 +1822,7 @@ function! AnalyzeCode()
            let codedict[idx1 . "|"  . targetcode[idx1][0]] = targetcode[idx1]
            "let codedict[idx1] = targetcode[idx1]
            let idx1 += 1
-       endwhile 
+       endwhile
        let dictkeys =  sort(keys(codedict))
        let numberfunc = copy(dictkeys)
        echo dictkeys
@@ -1835,7 +1843,7 @@ function! AnalyzeCode()
                    let numberfunc[idx1] = split(tempdictlist[0][0],"|")[2]
                endif
                "debug
-               "echo idx1 idj1 
+               "echo idx1 idj1
                let tempdictlist[idj1] =  ListKeyWords(tempdictlist[idj1])
                let idj1 += 1
            endwhile
@@ -1850,7 +1858,7 @@ function! AnalyzeCode()
            let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
            let idx1 += 1
        endwhile
-       echo numberfunc 
+       echo numberfunc
        let idx1 = 0
        let tempdictlist = []
        while idx1 < len(dictkeys)
@@ -1877,7 +1885,7 @@ function! AnalyzeCode()
        call extend(codefile,codedict,8)
        call writefile(codefile,expand("%:p"))
    endif
-endfunction 
+endfunction
 "}}}}}
 
 "{{{{{  ListKeyWords()  获取关键词
@@ -2011,7 +2019,7 @@ function! DrawTimingDiagram(...)
    let tempcodelist = []
    let drawlist =  repeat(drawlist,len(drawcode) * 2)
    while idx1 < len(drawcode)
-       let templist = split(drawcode[idx1],"|")         
+       let templist = split(drawcode[idx1],"|")
        if 0 ==# count(drawhead,templist[0])
            let drawhead = add(drawhead,templist[0])
        endif
@@ -2019,13 +2027,13 @@ function! DrawTimingDiagram(...)
    endwhile
    let drawhead = add(drawhead," ")
    let drawhead = insert(drawhead," ")
-   let idx1 = len(drawcode) 
+   let idx1 = len(drawcode)
    while idx1 > 0
-       let templist = [" "]         
-       let tempnotes = [" "]         
+       let templist = [" "]
+       let tempnotes = [" "]
        let templist =  repeat(templist,len(drawhead))
        let tempnotes =  repeat(tempnotes,len(drawhead))
-       let tempcodelist = split(drawcode[idx1 - 1],"|")         
+       let tempcodelist = split(drawcode[idx1 - 1],"|")
        let tempindex = index(drawhead,tempcodelist[0])
        let templist[tempindex] = tempcodelist[1]
        let tempnotes[tempindex] = tempcodelist[2]
@@ -2044,13 +2052,13 @@ function! DrawTimingDiagram(...)
        let idx1 -= 1
    endwhile
    let drawlist = insert(drawlist,drawhead)
-   let idx1 = 0 
+   let idx1 = 0
    while idx1 < len(drawlist)
        let drawlist[idx1] = join(drawlist[idx1],"|")
        let idx1 += 1
-   endwhile 
+   endwhile
    return drawlist
-endfunction 
+endfunction
 "}}}}}
 
 "{{{{{  GetMatchNumber()  获取匹配次数
@@ -2075,6 +2083,6 @@ function! GetMatchNumber(...)
     endwhile
     return matchcount
 endfunction
-"}}}}} 
+"}}}}}
 
 "}}}}
