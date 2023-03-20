@@ -15,10 +15,10 @@ function! AddTitle()
 endfunction
 function! UpdateTitle()
     normal m'
-    execute '/$ Last modified/s@:.*$@\=strftime(":\t%Y-%m-%d %H:%M")@'
+    execute '/$Last modified/s@:.*$@\=strftime(":\t%Y-%m-%d %H:%M")@'
     normal ''
     normal mk
-    execute '/$ Filename/s@:.*$@\=":\t".expand("%:t")@'
+    execute '/$Filename/s@:.*$@\=":\t".expand("%:t")@'
     execute "noh"
     normal 'k
     echohl WarningMsg | echo "Successful in updating the copyright." | echohl None
@@ -27,7 +27,7 @@ function! TitleDet()
     let n=1
     while n < 10
         let line = getline(n)
-        if line =~ '^\$\s*\S*Last\smodified\S*.*$'
+        if line =~ '^\$*\S*Last\smodified\S*.*$'
             call UpdateTitle()
             return
         endif
@@ -36,12 +36,6 @@ function! TitleDet()
     call AddTitle()
 endfunction
 "}}}}
-"vimdiff 颜色配置{{{
-if &diff
-    "    colorscheme evening
-    syntax off
-endif
-"}}}
 "设置屏幕效果按za打开折叠{{{{
 "设置折叠的颜色
 hi Folded term=standout ctermfg=darkcyan ctermbg=NONE guifg=Black guibg=#e3c1a5
@@ -61,7 +55,6 @@ set ignorecase
 set ruler
 set magic
 set fileformats=unix
-"set fileformats=dos
 set laststatus=2
 set statusline=%F
 set statusline+=%=
@@ -71,48 +64,82 @@ set statusline+=%v
 set statusline+=/
 set statusline+=%L
 "set statusline=%f
-set foldenable
+"set foldenable
 set foldmethod=syntax
-set foldlevel=99
-set foldignore=
+set foldlevel=100
+"set foldignore=
 "set foldmethod=marker
 "set mouse=nv
 syntax on
-"set showmode
+set showmode
 set nowrap
-"set wrap
 set ve=all
 set smartindent
+"set cindent
+"set autoindent
+"set indentexpr
 set backspace=2
 "set spell
 "colorscheme peachpuff
 set browsedir=current
-set scrollbind
-set scrollopt=hor
-"set snoscrollbind
-set scrolloff=7
+"diff 模式忽略空格的改变
+"set diffopt+=icase
+"set diffopt+=iwhite
+"set diffexpr=""
 set shortmess=a
 set cmdheight=2
+"vimscript 语言代码不能格式化
+filetype indent on
+set cursorline cursorcolumn
+set guioptions=mrb
+set diffopt=context:3
+
 "}}}}}
-"abbr 缩写{{{{
+ "vimdiff 颜色配置{{{
+if &diff
+    "colorscheme morning
+    "colorscheme industry
+    "set diffopt-=internal
+    "set diffopt+=iwhite
+    syntax off "diff模式关闭颜色高亮
+    colorscheme default
+endif
+"}}}
+"快捷输入{{{{
 "iabbrev com tangxinlou@wingtech.com
 iabbrev txl tangxinlou
+"iabbrev r r!
 iabbrev find find -iname
 iabbrev grep grep -Esinr
 iabbrev vimg vimgrep! //j %:p
-"iabbrev bt ap/android/vendor/qcom/opensource/commonsys
-"iabbrev vendor ap/android/vendor/qcom/proprietary/bluetooth/
-"iabbrev fram ap/android/frameworks/base/core/java/android/bluetooth
-"}}}
-"禁止用的键{{{
-"nnoremap <c--> <nop>
-"inoremap <esc> <nop>
+iabbrev gitstatus git status .
+iabbrev gitreflog git reflog
+"git log --graph --pretty=oneline --abbrev-commit --decorate
+"查看这个commit 在哪些分支合入了
+iabbrev gitbranch git branch -a --contains
+"iabbrev gitlog git log --graph --oneline  --decorate
+iabbrev gitlog  git log --graph --oneline  --decorate  --pretty=format:"\%cr \%cn \%H \%s"
+iabbrev gitcherrypick  git cherry-pick
+iabbrev gitlogbranch git log --graph --decorate --oneline --all
+iabbrev gitfile git log  --pretty=oneline
+iabbrev gitchange git  log --oneline  --decorate --pretty=format:"\%cr \%cn \%H \%s" --all  --grep
+iabbrev gittime git reflog show --date=iso
+iabbrev gitcfg git config my.log-compliance-check false
 "}}}
 "auto command自动命令{{{
 "创建空文件和自动注释
 "设置折叠
 augroup filetype_vim
     autocmd FileType vim  setlocal foldmethod=marker
+augroup END
+augroup filetype_make
+    autocmd FileType make  setlocal  noexpandtab
+augroup END
+augroup filetype_markdown
+    autocmd FileType markdown  setlocal foldmethod=indent
+augroup END
+augroup filetype_dts
+    autocmd FileType dts  setlocal foldmethod=indent
 augroup END
 "保存文件打印
 augroup testgroup
@@ -138,8 +165,8 @@ inoremap  <leader>v <esc>v
 nnoremap <c-n>  :tabn<cr>
 nnoremap <c-p>  :tabp<cr>
 "切换搜索结果
-nnoremap <leader>cn :cn<cr>
-nnoremap <leader>cp :cn<cr>
+"nnoremap <leader>cn :cn<cr>
+"nnoremap <leader>cp :cn<cr>
 "切换打开的buffer
 nnoremap <leader>bn :bn!<cr>
 nnoremap <leader>bp :bp!<cr>
@@ -166,79 +193,77 @@ vnoremap g y
 nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>
 "nnoremap <leader>wc :tabnew<cr>:!ls -lR |grep "^-"
 "nnoremap <leader>f viwyq:ig/<esc>pa/p<cr>
-inoremap <C-h> <Left>
-inoremap <C-j> <Down>
-inoremap <C-k> <Up>
-inoremap <C-l> <Right>
+"inoremap <C-h> <Left>
+nnoremap <C-h> 60h
+nnoremap <C-l> 60l
+"inoremap <C-j> <Down>
+"inoremap <C-k> <Up>
+"inoremap <C-l> <Right>
 "inoremap <bs> <bs>
 "inoremap <leader>java <cr><bs><cr><esc>ki<tab><tab>
 inoremap {} {}<esc>i<cr><esc>O
+"inoremap {} {}<esc>i<cr><esc>V<O
 inoremap "" ""<esc>i
 "inoremap `` ``<esc>i
 inoremap '' ''<esc>i
 inoremap () ()<esc>i
-inoremap [] []<esc>i
-nnoremap <leader>d q:ig/<esc>pa/d<cr>
-"在log文件中批量删除某些行
-"nnoremap rr :tabnew<cr>:e ~/tang1.txt<cr>$a:g/<esc>pa/d<<esc>acr><esc>:wq<cr>
-"在log文件中查找多个字符串
-nnoremap <leader>rr :tabnew<cr>:e ~/tang1.txt<cr>$pa\<bar><esc>:wq<cr>
 nnoremap zr zR
 nnoremap zm zM
 "删除log文件中的杂乱log
-nnoremap <leader>rep     :g/audio_hw_primary:/d<cr>:g/ANDR-PERF-LM:/d<cr>:g/ANDR-PERF-JNI:/d<cr>:g/msm8974_platform:/d<cr>:g/hardware_info:/d<cr>:g/soundtrigger:/d<cr>:g/audio_route:/d<cr>:g/audio_hw_utils:/d<cr>:g/ACDB-LOADER:/d<cr>:g/ANDR-IOP:/d<cr>:g/CompatibilityInfo:/d<cr>:g/Activity:/d<cr>:g/audio_hw_extn:/d<cr>:g/        :/d<cr>:g/ActivityTrigger:/d<cr>:g/ShellView:/d<cr>:g/system_server:/d<cr>:g/PrefCtrlListHelper:/d<cr>:g/InstrumentedPrefFrag:/d<cr>:g/TileUtils:/d<cr>:g/TopLevelSettings:/d<cr>:g/BatteryExternalStatsWorker:/d<cr>:g/statsd  :/d<cr>:g/FaceService:/d<cr>:g/hwservicemanager:/d<cr>:g/PackageManagerEx:/d<cr>:g/WosPackageSettingBase:/d<cr>:g/WosPackageManagerService:/d<cr>:g/WosPackageSettingBase:/d<cr>:g/WosPackageManagerService:/d<cr>:g/KernelCpuSpeedReader:/d<cr>:g/netd    :/d<cr>:g/CpuPowerCalculator:/d<cr>:g/BatteryInfo:/d<cr>:g/BatteryInfo:/d<cr>:g/AvatarViewMixin:/d<cr>:g/StatusBar:/d<cr>:g/AdrenoGLES:/d<cr>:g/RenderThread:/d<cr>:g/AdrenoUtils:/d<cr>:g/BatteryTipLoader:/d<cr>:g/Gralloc3:/d<cr>:g/PmsExtImpl:/d<cr>:g/BatteryTipLoader:/d<cr>:g/audio_hw_hfp:/d<cr>:g/linker  :/d<cr>:g/ServiceManagement:/d<cr>:g/SupportService:/d<cr>:g/QDMA_UI :/d<cr>:g/SubSettings:/d<cr>:g/ConnectedDeviceFrag:/d<cr>:g/chatty  :/d<cr>:g/SliceManager:/d<cr>:g/OpenGLRenderer:/d<cr>:g/ActivityThread:/d<cr>:g/UserRestrictionsUtils:/d<cr>:g/MediaRouter:/d<cr>:g/TaskPersister:/d<cr>:g/System  :/d<cr>:g/Zygote  :/d<cr>:g/droid.bluetoot:/d<cr>:g/Perf    :/d<cr>:g/AdapterServiceConfig:/d<cr>:g/Perf    : /d<cr>:g/bt_device_interop:  /d<cr>:g/SDM/d<cr>:g/PowerManagerService:/d<cr>:g/UsageStatsService:/d<cr>:g/DreamManagerService:/d<cr>:g/DreamController:/d<cr>:g/ActivityManager:/d<cr>:g/WingOsSystemUI/d<cr>:g/DreamManagerService: /d<cr>:g/KeyguardViewMediator:/d<cr>:g/AutofillManagerService: /d<cr>:g/WosQSHeaderImpl:/d<cr>:g/ QSAnimator: /d<cr>:g/CmFireWallManager: /d<cr>:g/LightsService:/d<cr>:g/ DisplayPowerController/d<cr>:g/sensors-hal:/d<cr>:g/KeyguardUpdateMonitor: /d<cr>:g/vol.Events:/d<cr>:g/WhiteListUtil:/d<cr>:g/ConnectivityManager:/d<cr>:g/MobileDataTile: /d<cr>:g/ DisplayPowerController:/d<cr>:g/ProximityListener:/d<cr>:g/sensors-hal: /d<cr>:g/libEGL  : /d<cr>:g/SurfaceFlinger: /d<cr>:g/CarrierTextController:/d<cr>:g/LockWpUtils: /d<cr>:g/LockWpUtils:/d<cr>:g/View    : /d<cr>:g/QC-time-services: /d<cr>:g/QTI PowerHAL: /d<cr>:g/SurfaceControl:/d<cr>:g/WosNotificationService:/d<cr>:g/ AlarmManager: /d<cr>:g/DPMJ    : /d<cr>:g/SUI_svcsock:/d<cr>:g/ FpcExtension: /d<cr>:g/qdlights: /d<cr>:g/sound_trigger_hw:/d<cr>:g/wt_audio_cust:/d<cr>:g/NfcService:/d<cr>:g/vol.Events:/d<cr>:g/PowerGuruService:/d<cr>:g/fpc_fingerprint_hal:/d<cr>:g/KeyguardClockSwitch:/d<cr>:g/DisplayDevice:/d<cr>:g/DisplayManagerService:/d<cr>:g/KeyguardStatusView:/d<cr>:g/libnfc_nci:/d<cr>:g/AlarmAlignHelper:/d<cr>:g/KeyguardClockSwitch:/d<cr>:g/NetspeedView:/d<cr>:g/DisplayManagerService:/d<cr>:g/StackScroller:/d<cr>:g/KeyguardStatusView:/d<cr>:g/libnfc_nci:/d<cr>:g/AlarmAlignHelper: /d<cr>:g/fpc_fingerprint_hal:/d<cr>:g/AlarmAlignHelper:/d<cr>:g/WosPhoneWindowManager:/d<cr>:g/SecondUIViewManager:/d<cr>:g/KeyguardUsbWaterView:/d<cr>:g/BatteryService:/d<cr>:g/libprocessgroup:/d<cr>:g/AudioService.PlaybackActivityMonitor:/d<cr>:g/AndroidRuntime:/d<cr>:g/WindowManager:/d<cr>:g/QMI_FW  :/d<cr>:g/KeyguardSecurityView:/d<cr>:g/QISL    :/d<cr>:g/vold    :/d<cr>:g/Zygote32Timing:/d<cr>:g/Zygote64Timing:/d<cr>:g/irsc_util:/d<cr>:g/TLOC    :/d<cr>:g/PackageParser:/d<cr>:g/ContextImpl:/d<cr>:g/storaged:/d<cr>:g/HealthServiceWrapper:/d<cr>:g/EntropyMixer:/d<cr>:g/SettingsState:/d<cr>:g/SystemServerTiming:/d<cr>:g/InputManager:/d<cr>:g/WatchlistSettings:/d<cr>:g/WatchlistLoggingHandler:/d<cr>:g/ZygoteInitTiming_lazy:/d<cr>:g/DropBoxManagerService:/d<cr>:g/SystemServerTimingAsync:/d<cr>:g/SystemServerInitThreadPool:/d<cr>:g/imsrcsd :/d<cr>:g/Looper  :/d<cr>:g/UsageStatsDatabase:/d<cr>:g/Watchdog:/d<cr>:g/PersistentDataBlockService:/d<cr>:g/OemLock :/d<cr>:g/Looper  :/d<cr>:g/NsdService:/d<cr>
+nnoremap <leader>rep     :g/audio_hw_primary:/d<cr>:g/ANDR-PERF-LM:
 "获取当前文件名及目录
 nnoremap <leader>n :let @" = expand("%:p").':'.line(".").':'<cr>
 "复制到系统黏贴板
-vnoremap <leader>m "+y
+"vnoremap <leader>m "+y
 "删除window下添加^M
 nnoremap <leader>vm :%s/<c-v><c-M>/<cr>/g
 "自动复制文本所在的当前行及文件名
 vnoremap <leader>a "dy<esc>:let @c= expand("%:p").':'.line(".").':'<cr>
 "复制文本及当前行
 "nnoremap <leader>p i```c<cr>```<esc>O<esc>0"cpli<cr><esc>0"dp
-nnoremap <leader>p i<cr>```c<cr><cr>```<esc>O<cr><esc>k0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
+nnoremap <leader>p i<cr>```c<cr><cr><cr>```<esc>O<cr><esc>kkk"7pjj0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
 nnoremap <leader>txl :tabnew<cr>:e ~/tang1.txt<cr>
 "nnoremap <leader>co :copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>co :call <SID>QuckfixToggle()<cr>
 nnoremap <leader>br :vsplit<cr>:browse e<cr>
-nnoremap <leader>viff :diffthis<cr><c-w>l:diffthis<cr><c-w>h
+nnoremap <leader>viff :diffthis<cr><c-w>l:diffthis<cr><c-w>h:syntax off<cr>
 "添加uml
 nnoremap <leader>uml i```mermaid<esc>osequenceDiagram<esc>o```<esc>O
 "markdown 注释多余的#
 nnoremap <leader>map :%g/^#[a-z]\{1,3\}/normal 0i//<esc>
-"nnoremap <leader>h1 yiwq:i:2match DiffChange /\<<c-r>"\>/<CR>
-nnoremap <leader>h1 yiwkq:i:/\<<c-r>"\>/<CR>
-nnoremap <leader>/  q:i/<esc>p<cr>
+nnoremap <leader>h1 yiwq:i:2match DiffChange /\<<c-r>"\>/<CR>
+"nnoremap <leader>h1 yiwkq:i:/\<<c-r>"\>/<CR>
+"nnoremap <leader>/ q:i/<esc>p<CR>
+"vnoremap <leader>/ yq:i/<esc>p<CR>
+nnoremap <leader>fold  :set foldmethod=indent
+"nnoremap  <leader>key   ^hi<<<>>><esc>hhikeycode<esc>
+nnoremap  <leader>key   0i<<<>>><esc>hhikeycode<esc>
+"批量改文件名 find -iname . -name '*.XXX' | awk -F "." '{print $2}' | xargs -i -t mv  {} {}.bck
+nnoremap  <Down> ]c
+nnoremap  <Up>   [c
+"cherry pick 后解冲突
+nnoremap <leader>cn /<<<<<<<<cr>v/=====<cr>$ddd/>>>>>>><cr>v$ddd
+nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo tangxinlou modify for B211201-1894 end<esc>Oif (Log.isHostLoggable && Log.isLoggableModel) {}<esc>i<cr><esc>O<esc>p?//vivo tangxinlou<cr>v/// vivo tangaolin add .*end<cr>=
+inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
+"早期debug 映射
+nnoremap <leader>rm :echom "hello"
 "}}}
-"取消的映射{{{{
-"nnoremap b :normal!  yt|
-"nnoremap bn :normal! yi|
-"黏贴
-"noremap <a-r>v :execute "normal! p"
-"得到文件名
-"nnoremap <leader>t :%p<cr>
-"nnoremap <leader>tt  :%:p:hp<cr>
-"按,gsn后没有感叹号会跳转到第一个结果的文件中来,用cn和cp可以切换文件
-"nnoremap <leader>gsn :execute "grep -R" "something" "."<cr>
-"按,vjcn后可以跳转到第一个结果的文件中来,用cn和cp切换源文件
-"nnoremap <leader>vjcn :execute "vim" shellescape(expand("<cword>"))"**/*.java"<cr>
-"按,gcn后可以跳转到第一个结果中来,并用cn和cp切换文件
-"nnoremap <leader>gcn :execute "grep -R " shellescape(expand("<cword>"))
-"."<cr>
-"将本行下移动一行
-"noremap - ddjp
-"augroup bufnefile
-"     autocmd!
-"     autocmd bufNewFile *.txt :write
-"     autocmd FileType vim  nnoremap <buffer> <leader>c //<esc>
-"augroup END
-"按,<c-d>后在插入模式删除一行
-"inoremap <leader><c-d> <esc>ddi
-"按,<c-u>后在插入模式将光标变大写
-"inoremap <leader><c-u> <esc>lviwUi
-"按,<c-j>后在插入模式将光标下单词变小写
-"inoremap <leader><c-j> <esc>lviwui
+"画图{{{{
+"inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
+inoremap  <c-k>  <esc>ki^<esc>lvdi<esc>ki^<esc>lvdi<esc>ki^<esc>lvdi
+inoremap  <c-j>  <esc>jiv<esc>lvdi<esc>jiv<esc>lvdi<esc>jiv<esc>lvdi
+"inoremap  <c-h>  <---<esc>hhhhvhhhdi
+inoremap  <c-l>  ---><esc>lvllldi
+inoremap  <c-k>k <esc>jli\<esc>lvdi<esc>jli\<esc>lvdi<esc>jli\<esc>lvdi
+inoremap  <c-j>j <esc>jhi/<esc>lvdi<esc>jhi/<esc>lvdi<esc>jhi/<esc>lvdi
+"inoremap  <c-h>h <esc>khi\<esc>lvdi<esc>khi\<esc>lvdi<esc>khi\<esc>lvdi
+inoremap  <c-l>l <esc>kli/<esc>lvdi<esc>kli/<esc>lvdi<esc>kli/<esc>lvdi
+"}}}}
+"markdown{{{{
+inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkkl<c-v>lljjjdvlldjvdki
+
+
+
 "}}}}
 "编辑vimrc文件{{{
 "编辑vimrc文件
@@ -249,27 +274,17 @@ nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
 ""}}}
 "搜索命令{{{{
-"第一个搜索映射,搜索something:会在搜索到something后用一个新的修改区保起来
-"grep!没有感叹号就会跳转第一个结果中,有了感叹号就会直接调到新的修改区,
-"但是这个也有好处可以直接来到相应的文件中看代码,用cn和cp切换代码文件
-"按,gs后可以搜索something出现的个数和文件位置用一个新的修改区保存下来
-"nnoremap <leader>gs :execute "grep! -R" "something" "."<cr>:copen<cr>
-"nnoremap <leader>gs q:ir!find -iname  <esc>pa .<cr>:copen<cr><c-w>H<esc><cr>
-nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>
-"按,vjc后可以使用vim内置的grep在java文件中搜索光标下的单词的个数和文件位置用新的修改区保存起来
-nnoremap <leader>vjc :execute "vim!" shellescape(expand("<cword>"))"**/*.java"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-"nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@)) "%:p"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/tang.txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>:tabm<cr>
 nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 "在vimrc文件中|不可以映射，可以使用<bar>代替|
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
-"nnoremap <leader>ff   :tabnew<cr>:e ~/tang1.txt<cr>0wv$3hy:q!<cr>:tabm 0<cr>q:ivimgrep! /<esc>pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
-nnoremap <leader>gc :execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>vhc :execute "vim!" shellescape(expand("<cword>"))"**/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 "执行命令
-nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr>
+nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 ""}}}}
 "文件路径切换{{{{
 "更改到当前文件所在的目录
@@ -278,12 +293,13 @@ nnoremap <leader>lcd :lcd %:p:h
 "omap i:  f:lvf:h
 nnoremap <leader>y :normal! yt:<cr>
 nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
-nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>
-nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>
+nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
+nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 "打开find搜索的文件
 nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
+"{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
 function! s:GrepOperator(type)
@@ -303,6 +319,42 @@ function! s:GrepOperator(type)
     "execute "normal! 'q:i!clear<cr>:copen<cr>:set modifiable<cr><c-w>H<esc>'"
     let @@ = saved_unnamed_register
 endfunction
+"}}}}}
+"{{{{{2 function! s:Copy2file(type)              拷贝内容到本地                可视模式下逗号 + m 调用
+"powershell -command "Get-Clipboard" > Z:\tangxinlou\transplant.txt  这个命令会在windows 环境拷贝剪贴板的内容到transplant.txt
+vnoremap <leader>m :<c-u>call <SID>Copy2file(visualmode())<cr>
+function! s:Copy2file(type)
+    let saved_unnamed_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    let idx1 = 0
+    let templist = []
+    let tempchar = ""
+    let tempchar = @@
+    let templist = split(tempchar,"\n")
+    if  @@ ==# " "
+        let templist = readfile("/opt6/tangxinlouosc/txl/transplant.txt")
+        echo "复制公共文件到本地"
+        while idx1 < len(templist)
+            call append(line('.'), templist[idx1])
+            call cursor(line('.') + 1,0)
+            let idx1 += 1
+        endwhile
+    else
+        echo "复制到公共文件"
+        call writefile(templist,"/opt6/tangxinlouosc/txl/transplant.txt")
+    endif
+    "silent execute "grep! -EsinR " . shellescape(@@) . " ."
+
+    let @@ = saved_unnamed_register
+endfunction
+"}}}}}
+"{{{{{2  s:QuckfixToggle()  早期第一次写的函数
 let g:quickfix_is_open = 0
 function! s:QuckfixToggle()
     if g:quickfix_is_open
@@ -315,6 +367,8 @@ function! s:QuckfixToggle()
         let g:quickfix_is_open = 1
     endif
 endfunction
+"}}}}}
+"{{{{{2 function! s:MarkdownPreview()            markdown 模式切换 现在不用了
 let g:tang = 1
 function! s:MarkdownPreview()
     if g:tang
@@ -326,32 +380,504 @@ function! s:MarkdownPreview()
         echom "markdown stop"
     endif
 endfunction
-"}}}}
-"{{{{有意思的代码
-function! s:getchar()
-    let c = getchar()
-    if c =~ '^\d\+$'
-        let c = nr2char(c)
+"}}}}}
+"{{{{{2 function! s:Shellfunc(type)              批量删除文件                  可视模式下 逗号 + sh 调用
+"nnoremap <leader>sh :set operatorfunc=<SID>Shellfunc<cr>g@
+vnoremap <leader>sh :<c-u>call <SID>Shellfunc(visualmode())<cr>
+function! s:Shellfunc(type)
+    let saved_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
     endif
-    return c
+    let a:Order = split(@@)
+    let a:instruction = a:Order[0]
+    let a:parameter = a:Order[1]
+    let a:len = a:Order[2]
+    let c = a:Order[2]
+    let a:instruc = join([a:Order[0],a:Order[1]]," ")
+    echom a:instruction a:parameter a:len  a:Order[3]
+    while c <= a:Order[3]
+        call cursor(c,1)
+        silent execute "normal! ^v$hy"
+        silent call system(a:instruc . " " . @@)
+        let c += 1
+    endwhile
+    let @@ = saved_register
 endfunction
-" Interactively change the window size
-function! InteractiveWindow()
-    let char = "s"
-    while char =~ '^\w$'
-        echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
-        let char = s:getchar()
-        if char == "h" | call SetWindowSize("incr" ,-5 ,0) | endif
-        if char == "j" | call SetWindowSize("incr" ,0 ,5) | endif
-        if char == "k" | call SetWindowSize("incr" ,0 ,-5) | endif
-        if char == "l" | call SetWindowSize("incr" ,5 ,0) | endif
-        if char == "a" | call SetWindowSize("abs" ,0 ,0) | endif
-        redraw
+"}}}}}
+"{{{{{2 function! s:HighLightSearch(type)        高亮搜索                      可视模式下逗号 + 下划线 调用
+"vnoremap <leader> yq:i/<esc>p<CR>
+vnoremap <leader>/ :<c-u>call <SID>HighLightSearch(visualmode())<cr>
+function! s:HighLightSearch(type)
+    let saved_unnamed_register = @@
+    let idx1 = 0
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    let searchchar = @@
+    let searchchar = split(searchchar,"\n")
+    if len(searchchar) ==# 1
+        let searchchar = searchchar[0]
+        let searchchar = join(split(searchchar,"\x00"),'.*')
+    else
+        while idx1 < len(searchchar)
+            let searchchar[idx1] = join(split(join(split(searchchar[idx1],'*'),'.*'),"\x00"),'.*')
+            let idx1 += 1
+        endwhile
+        let searchchar = join(searchchar,'.*\n.*')
+    endif
+    let @@ = searchchar
+    let @/ = searchchar
+    let @@ = saved_unnamed_register
+endfunction
+"}}}}}
+"{{{{{2 function! MakeCompressedPackage()        制作push压缩包
+function! MakeCompressedPackage()
+    "{{{{{{3 定义变量
+    let curpath = ""
+    let intentpath = "/opt6/tangxinlouosc/copy/cp"
+    let batfile = "cp64.host.R.bat"
+    let command = ""
+    let iscopyconf = ""
+    let iscopyapk = ""
+    let iscopyso = ""
+    let templist = []
+    "}}}}}
+    let command = "pwd"
+    let iscopyconf = input("是否打包conf 文件")
+    let iscopyapk = input("是否打包apk 文件")
+    let iscopyso = input("是否打包so 文件")
+
+    let curpath = system(command)
+    call system("cp -rf " . intentpath . " ./ ")
+    call system("rm *.tar")
+    let batfile = readfile("./cp/cp64.host.R.bat")
+
+    if iscopyso ==# "yes"
+        let command = "cp -rf libbluetooth_jni.so libbluetooth.so ./cp/cp/system/lib64 "
+        call system(command)
+        let templist = join(split(batfile[9])[1:])
+        let batfile[9] = templist
+        let templist = join(split(batfile[10])[1:])
+        let batfile[10] = templist
+    endif
+
+    if iscopyapk ==# "yes"
+        let command = "cp -rf Bluetooth.apk  ./cp/cp/system/app "
+        call system(command)
+        let templist = join(split(batfile[8])[1:])
+        let batfile[8] = templist
+    endif
+
+    if iscopyconf ==# "yes"
+        let command = "cp -rf interop_database.conf  ./cp/cp/system "
+        call system(command)
+        let templist = join(split(batfile[11])[1:])
+        let batfile[11] = templist
+    endif
+    call writefile(batfile,"./cp/cp64.host.R.bat")
+    call append(line("."),batfile)
+    call system("tar -cvf copyfile.tar ./cp")
+endfunction
+"}}}}}
+"{{{{{2   IsContain(...) string list返回对应 列表项
+function! IsContain(...)
+    let string = ""
+    let char = ""
+    let list = []
+    let idx1 = 0
+    let string = a:1
+    let list = a:2
+    while idx1 < len(list)
+        let char = matchstr(list[idx1],string)
+        if matchstr(list[idx1],string) != ""
+            return list[idx1]
+        endif
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}
+"{{{{{2   SetCharNull(...) 补空格
+function! SetCharNull(...)
+    let char = " "
+    let char2 = ""
+    let idx1 = 0
+    let list = []
+    if a:0 ==# 2
+        let char = " "
+        let idx1 = a:2
+        let char2 = a:1
+        let char2 = char2 . repeat(char,idx1 - strwidth(char2) - 1) . '|'
+    endif
+    return char2
+endfunction
+"}}}}}
+"{{{{2  List2Format(...)    把字符串|竖线之间补空格后面补空格
+function! List2Format(...)
+    let list2fmt = []
+    let list2fmt1 = []
+    let idx1 = 0
+    let idx2 = 0
+    if a:0 ==# 1
+        let list2fmt = a:1
+        "echo  list2fmt
+        while idx1 < len(list2fmt)
+            let idx2 = 0
+            let list2fmt1 = split(list2fmt[idx1],",")
+            "echo list2fmt1
+            while idx2 < len(list2fmt1)
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    "echo list2fmt1[idx2]
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],10)
+                    "echo list2fmt1[idx2]
+                endif
+                let idx2 += 1
+            endwhile
+            let list2fmt[idx1] = join(list2fmt1,"\x00")
+            let idx1 += 1
+        endwhile
+    endif
+    return list2fmt
+endfunction
+"}}}}
+"{{{{2 function! DictTest()                      测试字典
+"noremap <F4> :call  DictTest()
+function! DictTest()
+    let char1 = "aaaaaaaa"
+    let char2 = "指数名称"
+    let char3 = {5:1,6:3}
+    let list = ['a', 'b', 'c', 'd', 'e']
+    let list1 = ['1', '2', '3']
+    let char = {'a': 1, 100: 'foo',1001:list,1002:char3}
+    let char[1003] = "txlws"
+    echo list
+    echo list[0:3]
+    echo len(char1)
+    echo strlen(char1)
+    echo strchars(char1)
+    echo strwidth(char1)
+    echo len(char2)
+    echo strlen(char2)
+    echo strchars(char2)
+    echo strwidth(char2)
+    echo "tangxinlou"
+    echo  char
+    echo len(char)
+    echo keys(char)
+    echo values(char)
+    echo len(values(char))
+    echo char[1002]
+    echo char[3]
+    echo "tangxinlou"
+    highlight MyGroup ctermbg=green guibg=green
+    let m = matchaddpos("MyGroup", [[24, 24], 34])
+    echo items(char)
+    let char = "/opt5/caizheng/Codes/ard10.0/android_system_bt/bta/hh/bta_hh_main.cc:71:"
+    let char = split(char,":")[0]
+    echo char
+    let @l = char
+    echo expand("%:p")
+    echo expand("l:h")
+    echo @l
+    echo @%
+    call extend(list,list1,2)
+    echo list
+    call remove(list,3,5)
+    echo list
+    echo matchstr(char2, "指数")
+    if "" ==#  matchstr(char2, "tang")
+        echo "tangxinlou1"
+    else
+        echo "tangxinlou2"
+    endif
+    echo matchstr(char2, "tang")
+    let cparefile = ""
+    let cparefile = readfile("cpareversion.txt")
+    let filelen = len(cparefile)
+    echo cparefile
+    let idex = 0
+    while  idex < filelen
+        let cparefile[idex] = matchstr(cparefile[idex],"\\d\\{0,4}\\.\\d\\{1,2}\\.\\d\\{1,2}")
+        echo cparefile[idex]
+        let idex += 1
+    endwhile
+    let list = split(cparefile[0],"\\.")
+    echo list
+    echo cparefile
+
+    let biger = "12.1.7.4"
+    let smaller = "13.1.8"
+    let smaller = split(smaller,"\\.")
+    let biger = split(biger,"\\.")
+    let smallerlen = (len(biger) >= len(smaller)) ?  len(smaller) : len(biger)
+    echo smallerlen
+    let idex = 0
+    while idex < smallerlen
+        echo biger[idex]  . " " .  smaller[idex]
+        if biger[idex] > smaller[idex]
+            echo "biger 大于 smaller"
+        elseif  biger[idex] < smaller[idex]
+            echo "smaller 大于biger"
+        elseif  biger[idex] == smaller[idex]
+        endif
+        let idex += 1
     endwhile
 endfunction
 "}}}}
-"{{{{{自动提交命令
-"{{{{{2  GitStatus()
+"}}}}
+"{{{{vmake 命令
+
+
+"{{{{{2 function! VmakeChange()                  格式化vmake 命令，在vmake 命令标记分支，时间  普通模式下逗号 + ch 调用
+"nnoremap <leader>ch 03f"lvllllly05f"lvlllllp015f"ci"<esc>:r!pwd<cr>0v$hdk015f"p0jddk
+"使用execute 和normal!特殊字符需要加\
+"nnoremap <leader>ch :call fun#VmakeChange()<cr>
+nnoremap <leader>ch :call VmakeChange()<cr>
+
+"silent call append(line('.'), system("git status . \| grep  \"On branch\""))
+"echo matchstr(MyGroup, "On branch")
+function! VmakeChange()
+    let i = 0
+    let pdname = ""
+    let a:MyGroup1 = ""
+    let a:MyGroup5 = ""
+    let a:MyGroup2 = ""
+    let a:MyGroup3 = []
+    let a:MyGroup4 = []
+    let a:MyGroup6 = []
+    let a:MyGroup7 = []
+    let curversion = []
+    let a:MyGroup4 = IsCfgfile(input("请输入编译的项目"))
+    let a:MyGroup7 = copy(a:MyGroup4)
+    call AddNumber2(a:MyGroup7)
+    let a:MyGroup5 = input("请输入xml")
+    let curversion = IsVersion(a:MyGroup4[a:MyGroup5])
+    let a:MyGroup6 = split(a:MyGroup4[a:MyGroup5],"/")
+    let  @u = a:MyGroup6[len(a:MyGroup6) - 1]
+    "execute "normal! $a 2>&1 | tee builglog1.txt\<esc>"
+    execute "normal! 03f\"ci\"\<esc>\"up"
+    execute "normal! 03f\"lvllllly05f\"lvlllllp015f\"ci\"\<esc>:r!pwd\<cr>0v$hdk015f\"p0jddk"
+    " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
+    execute "normal! 011f\"ci\"../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar ../../../../make_*_images.log ../../../../out/build*.log"
+    execute "normal! 03f\"lvfAhh\"uy"
+    echo "tangxinlou"
+    if  "ard_12.0" ==#  curversion[len(curversion) - 3]
+        let pdname = @u
+        let @u = join([pdname,"_","12.0"],"\x00")
+    else
+        if "ROM13" ==#  curversion[len(curversion) - 2] || "ROM12" ==#  curversion[len(curversion) - 2]
+            let pdname = @u
+            let @u = join([pdname,"_",curversion[len(curversion) - 2]],"\x00")
+        endif
+    endif
+    execute "normal! 05f\"ci\"\<esc>\"up"
+    execute "normal! 09f\"ci\"yes\<esc>"
+    execute "normal! 013f\"ci\"yes\<esc>"
+    if input("此版本是否第一次编译? 回答yes or no") == "no"
+        execute "normal! 09f\"ci\"no\<esc>"
+        execute "normal! 013f\"ci\"no\<esc>"
+    endif
+    execute "normal! 03f\"yi\""
+    execute "normal! 017f\"yi\""
+    let a:pathh = split(@@)
+    execute "normal! :r!date\<cr>"
+    if len(a:pathh) > 1
+        echo "tangxinlou len >1"
+        while i < len(a:pathh)
+            silent let a:MyGroup1 = system("cd "  . a:pathh[i] . "; git status . \| grep  \"On branch\"")
+            if "No such file or directory" !=# matchstr(a:MyGroup1, "No such file or directory")
+                let a:MyGroup1 = join(split(a:MyGroup1))
+                silent let a:MyGroup2 = join([a:pathh[i],a:MyGroup1]," ")
+                silent call add(a:MyGroup3,a:MyGroup2)
+                "silent let a:MyGroup2 = join(a:MyGroup3," ")
+                "silent call append(line('.'), a:MyGroup2)
+            endif
+            let i += 1
+        endwhile
+        silent call append(line('.'), join(a:MyGroup3," "))
+        call cursor(line('.') + 1,0)
+    else
+        echom "tangxinlou len <1"
+        silent let a:MyGroup =  system("git status . \| grep  \"On branch\"")
+        let  a:MyGroup = join(split(a:MyGroup))
+        if "On branch" ==# matchstr(a:MyGroup, "On branch")
+            silent call append(line('.'), a:MyGroup)
+            call cursor(line('.') + 1,0)
+        endif
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2  IsCfgfile(a,b)查找a目录b文件，返回文件列表带绝对路径
+function! IsCfgfile(...) "1 项目 2路径 3 安卓版本
+    let iscfgfile = "tangxinlou"
+    let iscfgpath = "tangxinlou"
+    let androidversion = "tangxinlou"
+    let isfiles = "tangxinlou"
+    let isfiles1 = []
+    let CurBranch = []
+    if a:0 ==# 0
+        let iscfgpath = "~/ftp"
+        let iscfgfile = "PD*"
+        let isfiles = system("find " . iscfgpath . " -iname " . "'*" . iscfgfile ."*" . "vivo" ."*'")
+    elseif a:0 ==# 1
+        let iscfgpath = "~/ftp"
+        let iscfgfile = a:1
+        let isfiles = system("find " . iscfgpath . " -iname " . "'*" . iscfgfile . "*" . "vivo" . "*'")
+    elseif a:0 ==# 3
+        let iscfgpath = a:2
+        let iscfgfile = a:1
+        let androidversion = a:3
+        let isfiles = system("find " . iscfgpath . " -iname " . "'*" . iscfgfile . "*" . "_" . androidversion . "*vivo" . "*'")
+    else
+        return
+    endif
+    let isfiles1 = split(isfiles)
+    call sort(isfiles1,"MyCompareVersion")
+    return isfiles1
+endfunction
+"}}}}
+
+"{{{{{2  AddNumber() 列表中的绝对路径取文件，添加标号
+function! AddNumber(...)
+    let isnumber = "tangxinlou"
+    let isnumber2 = []
+    let isnumber3 = []
+    execute "normal! $lvG$d0"
+    if a:0 ==# 1 && 3 ==# type(a:1)
+        let isnumber2 = a:1
+        let idx1 = 0
+        while idx1 < len(isnumber2)
+            let isnumber3 = split(isnumber2[idx1], "/")
+            let GitBranch = join([idx1,isnumber3[len(isnumber3) - 1]," "])
+            let isnumber2[idx1]  = GitBranch
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+        "while idx1 < len(isnumber2)
+        "    echo isnumber2[idx1]
+        "    let idx1 += 1
+        "endwhile
+        call append(line('.'),isnumber2)
+        "call cursor(line('.') + len(isnumber2),0)
+        redraw
+    endif
+    return
+endfunction
+"}}}}}
+
+"{{{{{2  AddNumber1() 列表中绝对路径前加标号，并打印
+function! AddNumber1(...)
+    let isnumber = "tangxinlou"
+    let isnumber2 = []
+    execute "normal! $lvG$d0"
+    if a:0 ==# 1 && 3 ==# type(a:1)
+        let isnumber2 = a:1
+        let idx1 = 0
+        while idx1 < len(isnumber2)
+            let isnumber = join([idx1,isnumber2[idx1]," "])
+            let isnumber2[idx1]  = isnumber
+            let idx1 += 1
+        endwhile
+        call append(line('.'),isnumber2)
+        redraw
+    endif
+    return
+endfunction
+"}}}}}
+
+"{{{{{2  AddNumber2() 列表中绝对路径取文件，添加标号，用echo 打印
+function! AddNumber2(...)
+    let isnumber = "tangxinlou"
+    let isnumber2 = []
+    let isnumber3 = []
+    "execute "normal! $lvG$d0"
+    if a:0 ==# 1 && 3 ==# type(a:1)
+        let isnumber2 = a:1
+        let idx1 = 0
+        while idx1 < len(isnumber2)
+            let isnumber3 = split(isnumber2[idx1], "/")
+            let GitBranch = join([idx1,isnumber3[len(isnumber3) - 1]," "])
+            let isnumber2[idx1]  = GitBranch
+            echo isnumber2[idx1]
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+    endif
+    return
+endfunction
+"}}}}}
+"}}}}
+"{{{{实践 vim
+"call append(line('.'), readfile("1.txt"))
+"call setline(line('.'), readfile("1.txt"))
+"call setline(5, ['aaa', 'bbb', 'ccc'])
+"call writefile(["tangxinlog"], "1.txt", "a")
+"echo matchstr("testing", "ing", 5)
+"if input("Coffee or beer? ") == "beer"
+"   echom "Cheers!"
+"else
+"   echom "tangxinlou"
+"endif
+"}}}}
+"{{{{{ 有意思的代码
+"{{{{{2  s:getchar()
+"function! s:getchar()
+"    let c = getchar()
+"    if c =~ '^\d\+$'
+"        let c = nr2char(c)
+"    endif
+"    return c
+"endfunction
+"nnoremap <F4> :echo  Getchar()
+function! Getchar()
+    let c = ''
+    let b = ""
+    while 1
+        let c = getchar()
+        if c =~ '^\d\+$'
+            if c ==# 13
+                break
+            endif
+            let c = nr2char(c)
+            let b = b . c
+        endif
+    endwhile
+    return b
+endfunction
+"}}}}}
+
+" Interactively change the window size
+"{{{{{2  InteractiveWindow()  循环输入选择项
+function! InteractiveWindow()
+    let char = "s"
+    call append(line('.'),"tanxinlou")
+    while char =~ '^\w$'
+        echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
+        let char = s:getchar()
+        "if char == "a"
+        "    call SetWindowSize("abs" ,0 ,0)
+        "endif
+        echom "1"
+        redraw
+    endwhile
+endfunction
+"}}}}}
+
+
+"}}}}}
+"{{{{{涉及git的函数
+"{{{{{2  GitStatus()  git status  找到需要提交的文件，把临时文件去掉，为git add 做准备
 function! GitStatus()
     let Gitstatus = "tangxinlou"
     let Preadd = []
@@ -362,31 +888,32 @@ function! GitStatus()
         echom isstatus
         return
     endif
-    let Gitstatus = system("git status . \| grep -v -Esi \"branch|Changes not|use.*git|Untracked files:|^$|Changes to be\"")
+    let Gitstatus = system("git status . \| grep -v -Esi \"branch|Changes not|use.*git|Untracked files:|^$|a sparse checkout|Changes to be\"")
     call setline(line('.'),Gitstatus)
     let Preadd = split(Gitstatus,"\x00 ")
-    call append(line('.'),Preadd)
-    call cursor(line('.') + len(Preadd),0)
+    "call append(line('.'),Preadd)
+    "call cursor(line('.') + len(Preadd),0)
     while idx1 < len(Preadd)
         if "modified:" ==# matchstr(Preadd[idx1],"modified:")
             let idx1 += 2
         elseif "deleted:" ==# matchstr(Preadd[idx1],"deleted:")
             let idx1 += 2
         else
-            if ".sw" ==# matchstr(Preadd[idx1],".sw")
+            if ".sw" ==# matchstr(Preadd[idx1],".sw") || ".patch" ==# matchstr(Preadd[idx1],".patch") || "out_" ==# matchstr(Preadd[idx1],"out_") || "buildconfig.ini" ==# matchstr(Preadd[idx1],"buildconfig.ini") || "tangxinlouosc_buildurl.txt" ==# matchstr(Preadd[idx1],"tangxinlouosc_buildurl.txt") || "build.log" ==# matchstr(Preadd[idx1],"build.log")
                 "Preadd->remove(idx1)
                 call remove(Preadd,idx1)
                 let idx1 = 0
+            else
+                let idx1 += 1
             endif
-            let idx1 += 1
         endif
     endwhile
-    call append(line('.'),Preadd)
-    call cursor(line('.') + len(Preadd),0)
+    "call append(line('.'),Preadd)
+    "call cursor(line('.') + len(Preadd),0)
     return Preadd
 endfunction
-"}}}}
-"{{{{2  GitAdd()
+"}}}}}
+"{{{{{2 function! GitAdd()                       git add 为git commit 做准备
 function! GitAdd()
     let Gitadd1 = "tangxinlou"
     let Precommit = []
@@ -422,7 +949,7 @@ function! GitAdd()
     endwhile
 endfunction
 "}}}}
-"{{{{2  IsStatus()
+"{{{{{2  IsStatus() 显示当前仓在什么状态，modified added commited
 function! IsStatus()
     let isstatus = "tangxinlou"
     let isstatus = system("git status .")
@@ -442,7 +969,7 @@ function! IsStatus()
     return  isstatus
 endfunction
 "}}}}
-"{{{{2  GitCommit()
+"{{{{{2 function! GitCommit()                    git comit 之后可以在这个函数添加push的指令
 function! GitCommit()
     let iscommit = "tangxinlou"
     call GitAdd()
@@ -452,7 +979,7 @@ function! GitCommit()
     call append(line('.'),iscommit)
 endfunction
 "}}}}
-"{{{{2  GitBranch()
+"{{{{{2  GitBranch()  返回当前分支列表
 function! GitBranch()
     let GitBranch = "tangxinlou"
     let Prebranch = []
@@ -488,19 +1015,11 @@ function! GitBranch()
         endif
         let idx1 += 1
     endwhile
-    let Prebranch1 = copy(Prebranch)
-    let idx1 = 0
-    while idx1 < len(Prebranch1)
-        let GitBranch = join([idx1,Prebranch1[idx1]," "])
-        let Prebranch1[idx1]  = GitBranch
-        let idx1 += 1
-    endwhile
-    "call append(line('.'),Prebranch1)
-    "call cursor(line('.') + len(Prebranch1),0)
+
     return Prebranch
 endfunction
-"}}}}
-"{{{{2  GitCheckout(...)
+"}}}}}
+"{{{2 function! GitCheckout()                    checkout 切换分支 既可以从列表选一个分支，也可以切换到a分支
 function! GitCheckout(...)
     let GitCheckout = "tangxinlou"
     let ischeckout1 = "tangxinlou"
@@ -554,8 +1073,8 @@ function! GitCheckout(...)
     endfor
     echom "分支不存在"
 endfunction
-"}}}}
-"{{{{2  GitPatch()
+"}}}
+"{{{{{2 function! GitPatch()                     可以 批量切换2.txt 文件中的分支，然后分别打patch commit
 function! GitPatch()
     let ispatch = "tangxinlou"
     let Prepatch = []
@@ -578,12 +1097,18 @@ function! GitPatch()
         endif
     endwhile
 endfunction
-"}}}}
-"{{{{  IsBranch()
-function! IsBranch()
+"}}}}}
+"{{{{{2  IsBranch(...) 显示当前分支名
+function! IsBranch(...)
     let IsBranch = "tangxinlou"
+    let IsBranch1 = "tangxinlou"
     let CurBranch = []
-    let IsBranch = system("git status . \| grep -Esi \"On branch\"")
+    if  a:0 ==# 1
+        let IsBranch1 = a:1
+        let IsBranch = system("cd " . IsBranch1 . "; git status . \| grep -Esi \"On branch\"")
+    else
+        let IsBranch = system("git status . \| grep -Esi \"On branch\"")
+    endif
     let CurBranch = split(IsBranch)
     if "On branch" ==# matchstr(IsBranch,"On branch")
         "echom CurBranch[2]
@@ -592,17 +1117,235 @@ function! IsBranch()
     endif
     return  CurBranch[2]
 endfunction
-"}}}}
-"{{{{2  GetKey()
-function GetKey()
-    let c = getchar()
-    while c == "\<CursorHold>"
-        let c = getchar()
+"}}}}}
+"{{{{{2  IsVersion(...)  列出某个manifest 常用仓的分支和commit
+function! IsVersion(...)
+    let isversion = "tangxinlou"
+    let string = ""
+    let list1 = []
+    let idx1 = 0
+    let idx2 = 0
+    let listlen = 0
+    let projectlist = ['vendor_vivo_bluetoothInteropConf',
+                \ 'android_packages_apps_Bluetooth',
+                \ 'android_system_bt',
+                \ 'android_frameworks_base',
+                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+                \ 'android_device_mediatek_vendor_common',
+                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+                \ "android_kernel-4.14",
+                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+                \ "android_packages_modules_Bluetooth",
+                \ "android_prebuilts_module_sdk_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
+                \ "vendor_vivo_source_frameworks_services",
+                \ "android_cts",
+                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+                \ "android_vendor_mediatek_proprietary_tinysys_common",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+
+    let lenproject = len(projectlist)
+    let branchandcommit = ["1"]
+    let branchandcommit =  repeat(branchandcommit,lenproject * 2 + 2)
+    let listlen = len(branchandcommit)
+    let curversion = []
+    let curversion1 = []
+    let curversion2 = []
+    let curversion3 = []
+    if a:0 ==# 0
+        let curversion = IsCfgfile(input("请输入需要打开的项目"))
+        let curversion2 = copy(curversion)
+        call AddNumber(curversion2)
+        let isversion = input("请输入xml")
+        let curversion1 = readfile(curversion[isversion])
+        let string = curversion[isversion]
+    else
+        let curversion1 = readfile(a:1)
+        let string = a:1
+    endif
+    while  idx1 < len(curversion1)
+        let curversion2 = split(curversion1[idx1],"\"")
+        if  len(curversion2) > 8
+            let idx2 = 0
+            while idx2 <  lenproject
+                if projectlist[idx2] ==# matchstr(curversion2[1],projectlist[idx2])
+                    let branchandcommit[idx2 * 2] =  curversion2[5]
+                    let branchandcommit[idx2 * 2 + 1] =  curversion2[7]
+                    if idx2 ==# 2
+                        if  "ROM13" ==# matchstr(curversion2[7],"ROM13")
+                            let branchandcommit[listlen -1] = "ROM13"
+                        elseif  "ROM12" ==# matchstr(curversion2[7],"ROM12")
+                            let branchandcommit[listlen -1] = "ROM12"
+                        else
+                            let branchandcommit[listlen -1] = "null"
+                        endif
+                        let curversion3 = split(curversion2[1],"/")
+                        let branchandcommit[listlen -2] = curversion3[0]
+                    elseif idx2 ==# 11
+                        if  "ROM13" ==# matchstr(curversion2[7],"ROM13")
+                            let branchandcommit[listlen -1] = "ROM13"
+                        elseif  "ROM12" ==# matchstr(curversion2[7],"ROM12")
+                            let branchandcommit[listlen -1] = "ROM12"
+                        else
+                            let branchandcommit[listlen -1] = "null"
+                        endif
+                        let curversion3 = split(curversion2[1],"/")
+                        let branchandcommit[listlen -2] = curversion3[0]
+                    endif
+                endif
+                let idx2 += 1
+            endwhile
+        endif
+        let idx1 += 1
     endwhile
-    return c
+    let list1 =  split(string,"/")
+    let string = list1[len(list1) - 1]
+    let branchandcommit = add(branchandcommit ,string)
+    "call append(line('.'),curversion1)
+    return  branchandcommit
 endfunction
-"}}}}
-"{{{{{2 function! FunList() 目前实现的函数
+"}}}}}
+"{{{{{2 function! IsUpdate()                     把当前目录下的几个仓切换到xx manifest 版本状态,且把之前的修改保存起来
+function! IsUpdate()
+    let isupdate = "tangxinlou"
+    let isupdate1 = "tangxinlou"
+    let isupdate2 = "tangxinlou"
+    let isupdate3 = "tangxinlou"
+    let isupdate4 = "tangxinlou"
+    let isupdate5 = "tangxinlou"
+    let isupdate6 = "tangxinlou"
+    let idx1 = 0
+    let idx2 = 0
+    let projectlist = ['vendor_vivo_bluetoothInteropConf',
+                \ 'android_packages_apps_Bluetooth',
+                \ 'android_system_bt',
+                \ 'android_frameworks_base',
+                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+                \ 'android_device_mediatek_vendor_common',
+                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+                \ "android_kernel-4.14",
+                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+                \ "android_packages_modules_Bluetooth",
+                \ "android_prebuilts_module_sdk_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
+                \ "vendor_vivo_source_frameworks_services",
+                \ "android_cts",
+                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+                \ "android_vendor_mediatek_proprietary_tinysys_common",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+    let lenproject = len(projectlist)
+    let curpath = []
+    let curpath1 = []
+    let curpath2 = []
+    let curxmlfile = []
+    let isupdate = system("ls -F \| grep -Esi \"/$\"")
+    let curpath = split(join(split(isupdate),"\x00"),"/")
+    "echo curpath
+
+    let idx1 = 0
+    let curpath1 = copy(curpath)
+    if len(curpath1) > 15
+        echo "路径错误"
+        return
+    endif
+    call AddNumber(curpath1)
+    call cursor(line('.') + len(curpath1) + 1,0)
+    let curxmlfile = IsVersion()
+    while 1
+        echo "当前xml是" . curxmlfile[len(curxmlfile) - 3]
+        if "yes" ==# input("是否重新选择")
+            let curxmlfile = IsVersion()
+
+        else
+            if "yes" ==# input("是否打开")
+                break
+            endif
+        endif
+    endwhile
+    execute "normal! Go\<esc>"
+    call append(line('.'),curxmlfile)
+    redraw
+    let isupdate1 = input("请输入需要重置的路径编号，或者全部更新选a")
+    if isupdate1 ==# 'a'
+        while idx1 < len(curpath)
+            let curpath2 = split(curpath[idx1],"/")
+            let isupdate5 = IsBranch(curpath2[len(curpath2) - 1])
+            "echo curpath2[len(curpath2) - 1]
+            echo isupdate5
+            let isupdate4 =  join([join(split(strftime("%Y-%m-%d %H:%M")),"\x00"),isupdate5,".patch"],"\x00")
+            let idx2 = 0
+            while idx2 <  lenproject
+                if projectlist[idx2] ==# matchstr(curpath[idx1],projectlist[idx2])
+                    silent let isupdate3  = join(split(join(["cd"," ",curpath[idx1]])))
+                    echo curpath[idx1]
+                    silent let isupdate2  = system(isupdate3)
+                    if "No such file or directory" !=# matchstr(isupdate2, "No such file or directory")
+                        let isupdate2 =   system(isupdate3 . " ; git diff  -U9 > " . isupdate4 . "  ; git checkout . ")
+                        "echo isupdate2
+                        let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 * 2 + 1])
+                        "echo isupdate2
+                        let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2 * 2])
+                        "echo isupdate2
+                        let isupdate6 = join([join(split(curpath2[len(curpath2) - 1],"\x00")),'/',isupdate4],"\x00")
+                        echo "tangxinlou1"   curxmlfile[idx2 * 2 + 1] curxmlfile[idx2 * 2]
+                        echo  getfsize(isupdate6)
+                        if  getfsize(isupdate6) ==# 0
+                            echo "tangxinlou2"
+                            call delete(isupdate6)
+                        endif
+                        echo isupdate6
+                        echo "tangxinlou3"
+                    endif
+                endif
+                let idx2 += 1
+            endwhile
+            let idx1 += 1
+        endwhile
+    else
+        silent let isupdate  = join(split(join(["cd"," ",curpath[isupdate1]])))
+        silent let isupdate2  = system(isupdate)
+        if "No such file or directory" !=# matchstr(isupdate2, "No such file or directory")
+            if "vendor_vivo_bluetoothInteropConf" ==# matchstr(curpath[isupdate1],"vendor_vivo_bluetoothInteropConf")
+                let isupdate3 = 0
+            elseif  "android_packages_apps_Bluetooth" ==# matchstr(curpath[isupdate1],"android_packages_apps_Bluetooth")
+                let isupdate3 = 2
+            elseif   "android_system_bt" ==# matchstr(curpath[isupdate1],"android_system_bt")
+                let isupdate3 = 4
+            elseif   "android_frameworks_base" ==# matchstr(curpath[isupdate1],"android_frameworks_base")
+                let isupdate3 = 6
+            elseif   "android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch" ==# matchstr(curpath[isupdate1],"android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch")
+                let isupdate3 = 8
+            else
+            endif
+
+            let isupdate2 =  system(isupdate . " ; git diff  -U9 > " . isupdate4 . " ; git checkout . ")
+            "echo isupdate2
+            let isupdate2 =   system(isupdate . " ; git fetch ; git pull --rebase ; git checkout " . curxmlfile[isupdate3 + 1])
+            "echo isupdate2
+            let isupdate2 =   system(isupdate  . " ; git reset --hard  " . curxmlfile[isupdate3])
+            echo isupdate2
+        endif
+    endif
+    call system("touch 1.txt")
+    let idx1 = 0
+    while idx1 < len(projectlist)
+        if curxmlfile[idx1 * 2]  != "1"
+            let  curxmlfile[idx1 * 2] =  curxmlfile[idx1 * 2] . " " .  projectlist[idx1]
+        endif
+        let idx1 += 1
+    endwhile
+    call writefile(curxmlfile,"1.txt")
+endfunction
+"}}}}}
+"{{{{{2 function! FunList()                      目前实现的函数                普通模式<F4>调用
 nnoremap <F4> :call FunList()<cr>
 function! FunList()
     let funname = "tangxinlou"
@@ -610,7 +1353,8 @@ function! FunList()
     let curfunname = []
     let curfunname3 = []
     let curfunname1 = []
-    let curfunname = split(system("grep -Esin \"^function\" ~/.vimrc"),"\n")
+    let curfunname = split(system("grep -Esin \"^\\\"{{.*function!\" ~/.vimrc"),"\n")
+    "let curfunname = split(system("grep -Esin \"^function!\" ~/.vimrc"),"\n")
     let curfunname1 = copy(curfunname)
     call AddNumber(curfunname)
     let char = 0
@@ -620,95 +1364,603 @@ function! FunList()
         let char1 = Getchar()
         let char = str2nr(char1)
         if char ==# 0 && char1 != "0"
-            if char1  ==# 'q'
+            let char = char1
+            if char  ==# 'q'
                 return
             endif
-            if char1  ==# 'k'
-                execute "normal! \<c-u>"
-            endif
-            if char1  ==# 'j'
+            if char  ==# 'j'
                 execute "normal! \<c-f>"
             endif
-            redraw
+            if char  ==# 'k'
+                execute "normal! \<c-u>"
+            endif
         else
             echo type(char)
             echo len(curfunname)
-            echo char
-            if char < len(curfunname)
+            echo (idx1 < len(curfunname))
+            if char  <  len(curfunname)
+                echo (char < len(curfunname))
+                echo "tangxinlou"
                 let char = split(split(split(curfunname[char],"!")[1],"(")[0],"\x00")[0]
                 call call(char,curfunname3)
             else
                 break
             endif
-            redraw
         endif
-
+        redraw
     endwhile
 endfunction
 "}}}}}
-"{{{{{2 function! AddNumber() 在列表最后一个成员每项前加个标号并打印出来,第二次调用时会原处刷新，如果打印需要保留需要将光标下移
-function! AddNumber(...)
-    let isnumber = "tangxinlou"
-    let isnumber2 = []
-    let isnumber3 = []
-    execute "normal! $lvG$d0"
-    if a:0 ==# 1 && 3 ==# type(a:1)
-        let isnumber2 = a:1
-        let idx1 = 0
-        while idx1 < len(isnumber2)
-            let isnumber3 = split(isnumber2[idx1], "/")
-            let GitBranch = join([idx1,isnumber3[len(isnumber3) - 1]," "])
-            let isnumber2[idx1]  = GitBranch
+"{{{{{2 function! IsAddDiff()                    动态添加需要比较的文件
+function! Isadddiff()
+    let isadddiff = "tangxinlou"
+    let isadddiff1 = "tangxinlou"
+    let tempchar = ""
+    let isdiffpatch = "/opt6/tangxinlouosc/txl/1.txt"
+    let idx1 = 0
+    let idx2 = 0
+    let curadddiff = []
+    let curadddiff1 = []
+    let curadddiff2 = []
+    let isadddiff = system("pwd")
+    let isadddiff = join(split(isadddiff,"\x00"))
+    let curadddiff = readfile("/opt6/tangxinlouosc/txl/1.txt")
+    let curadddiff1 = copy(curadddiff)
+    call AddNumber1(curadddiff1)
+    let curadddiff2 = split(curadddiff[len(curadddiff) - 1],"")
+    if 2 ==# len(curadddiff2)
+        let tempchar = input("是否选择文件比较no 选择左边文件，yes选择文件")
+        if "no" ==# tempchar
+            let curadddiff = add(curadddiff,isadddiff)
+            call writefile(curadddiff,isdiffpatch)
+            echo "选择左边文件\n"
+        elseif  "yes" ==# tempchar
+            let idx2 = input("请输入编号")
+            let curadddiff2 = split(curadddiff[idx2],"")
+            "echo curadddiff2
+            let isadddiff1 = join(["~/txl/diffdir.sh" , " " , curadddiff2[1] ," ", curadddiff2[0]])
+            execute "!" .  isadddiff1
+        endif
+    elseif 1 ==# len(curadddiff2)
+        if "yes" ==# input("是否选择右边文件")
+            let curadddiff[len(curadddiff) - 1] = join([curadddiff[len(curadddiff) - 1] ," " ,isadddiff])
+            call writefile(curadddiff,isdiffpatch)
+            echo "选择右边文件\n"
+        endif
+    else
+        return
+    endif
+    let curadddiff1 = copy(curadddiff)
+    call AddNumber1(curadddiff1)
+    redraw
+endfunction
+
+"}}}}}
+"{{{{{2  IsRepositoryName(...) 返回仓库名 目前没有使用
+function! IsRepositoryName(...)
+    let repositoryname = "tangxinlou"
+    let repositorynumber = 0
+    let repositoryname1 = "tangxinlou"
+    let CurBranch = []
+    if  a:0 ==# 1
+        let repositorynumber = a:1
+        let repositorynumber = repositorynumber / 2
+        if  repositorynumber ==# 0
+            return  "vendor_vivo_bluetoothInteropConf"
+        elseif  repositorynumber ==# 1
+            return   "android_packages_apps_Bluetooth"
+        elseif  repositorynumber ==# 2
+            return "android_system_bt"
+        elseif  repositorynumber ==# 3
+            return "android_frameworks_base"
+        elseif  repositorynumber ==# 4
+            return "android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch"
+        else
+        endif
+    else
+    endif
+endfunction
+"}}}}}
+"{{{{{2 function! GitBlame()                     当前文件gitblame              普通模式下 <F7> 调用
+nnoremap <F7> :call GitBlame()<cr>
+function! GitBlame()
+    let isblame = "tangxinlou"
+    let isblame1 = []
+    let line = 0
+    let line = line('.')
+    echo line
+    let isblame = @%
+    echo isblame
+    execute "normal! ggvG$d0"
+    let isblame1 = system("git blame -l  " . isblame)
+    let isblame1 = split(isblame1,"\n")
+    call append(line('.'),isblame1)
+    execute "normal! dd"
+    call cursor(line,0)
+endfunction
+"}}}}
+"{{{{{2 function! CompareVersion()               比较两个版本
+function! CompareVersion()
+    let leftversion = []
+    let rightversion = []
+    let projectlist = ['vendor_vivo_bluetoothInteropConf',
+                \ 'android_packages_apps_Bluetooth',
+                \ 'android_system_bt',
+                \ 'android_frameworks_base',
+                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+                \ 'android_device_mediatek_vendor_common',
+                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+                \ "android_kernel-4.14",
+                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+                \ "android_packages_modules_Bluetooth",
+                \ "android_prebuilts_module_sdk_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
+                \ "vendor_vivo_source_frameworks_services",
+                \ "android_cts",
+                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+                \ "android_vendor_mediatek_proprietary_tinysys_common",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+    let lenproject = len(projectlist)
+    let cmplist = []
+    let isupdate = system("ls -F \| grep -Esi \"/$\"")
+    let curpath = split(join(split(isupdate)),"/")
+    let curpath1 = copy(curpath)
+    let versiondiff = []
+    let versionstring = ""
+    if len(curpath1) > 15
+        echo "路径错误"
+        return
+    endif
+    call AddNumber(curpath1)
+    execute "normal! Go\<esc>"
+    let leftversion  = IsVersion()
+    let rightversion = IsVersion()
+    let idx1 = 0
+    let idx2 = 0
+    if rightversion[len(rightversion) - 3] !=  leftversion[len(leftversion) - 3]
+        echo  rightversion[len(rightversion) - 3] " anroid版本不等于 "  leftversion[len(leftversion) - 3]
+        return
+    endif
+    if "yes" ==# input("是否指定version")
+        let curxmlfile =  rightversion "大
+        let curxmlfile1 =  leftversion "小
+        echo  curxmlfile1[len(curxmlfile1) - 1]  . " 小 " .  curxmlfile[len(curxmlfile) - 1] . " 大"
+    else
+        let cmplist = add(cmplist ,rightversion[len(rightversion) - 1])
+        let cmplist = add(cmplist ,leftversion[len(leftversion) - 1])
+        call writefile(cmplist,"/opt6/tangxinlouosc/txl/version")
+        let cmplist =  split(system("sort -V /opt6/tangxinlouosc/txl/version"),"\n")
+        echo cmplist
+        if  cmplist[1] ==#  rightversion[len(rightversion) - 1]
+            let curxmlfile =  rightversion "大
+            let curxmlfile1 =  leftversion "小
+        else
+            let curxmlfile1 =  rightversion "小
+            let curxmlfile =  leftversion "大
+        endif
+    endif
+    "比较两个版本号大小
+
+    let isupdate1 = input("请输入需要重置的路径编号，或者全部更新选a")
+    if isupdate1 ==# 'a'
+        while idx1 < len(curpath)
+            let curpath2 = split(curpath[idx1],"/")
+            let isupdate5 = IsBranch(curpath2[len(curpath2) - 1])
+            let isupdate4 =  join([join(split(strftime("%Y-%m-%d %H:%M")),"\x00"),isupdate5,".patch"],"\x00")
+            let idx2 = 0
+            while idx2 <  lenproject
+                if projectlist[idx2] ==# matchstr(curpath[idx1],projectlist[idx2])
+                    silent let isupdate3  = join(split(join(["cd"," ",curpath[idx1]])))
+                    silent let isupdate2  = system(isupdate3)
+                    if "No such file or directory" !=# matchstr(isupdate2, "No such file or directory") &&  curxmlfile[idx2 * 2  + 1] != "1" &&  curxmlfile[idx2 * 2  + 1] != "1"
+                        let versiondiff = add(versiondiff ,join(['"','{','{','{','{',curpath[idx1]],"\x00"))
+                        let isupdate2 =   system(isupdate3 . " ; git diff  -U9 > " . isupdate4 . "  ; git checkout . ")
+                        let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 * 2  + 1])
+                        let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2 * 2])
+                        let isupdate6 = join([join(split(curpath2[len(curpath2) - 1],"\x00")),'/',isupdate4],"\x00")
+                        echo  getfsize(isupdate6)
+                        if  getfsize(isupdate6) ==# 0
+                            call delete(isupdate6)
+                        endif
+                        "system("git log    --pretty=format:\"\%cr \%cn \%h \%s\"  1e8dda8d1caa5d3d8d72ab8fce7948ade13d9b61..9ab432d70e6ca30d4795d8177a9d56efe719117c")
+                        if curxmlfile1[idx2 * 2 + 1] ==# curxmlfile[idx2 * 2 + 1]
+                            echo "tangxinlou1"
+                            let versionstring = system(isupdate3 . "; git log    --pretty=format:\"\%cr \%cn \%h \%s\" " . curxmlfile1[idx2 * 2] . ".." . curxmlfile[idx2 * 2])
+                            if  versionstring ==# ""
+                                let isupdate2 =   system(isupdate3 . " ; git diff -U9  > " . isupdate4 . "  ; git checkout . ")
+                                let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile1[idx2 * 2  + 1])
+                                let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile1[idx2 * 2])
+                                let versionstring = system(isupdate3 . "; git log    --pretty=format:\"\%cr \%cn \%h \%s\" " . curxmlfile[idx2 * 2] . ".." . curxmlfile1[idx2 * 2])
+                                if  versionstring ==# ""
+                                    let versionstring = "仓库报错 或者commit 相同" .  projectlist[idx2]
+                                else
+                                    let versiondiff = add(versiondiff ,curxmlfile1[len(curxmlfile1) - 1] . " 大于 " . curxmlfile[len(curxmlfile) - 1])
+                                endif
+                            else
+                                let versiondiff = add(versiondiff ,curxmlfile[len(curxmlfile) - 1] . " 大于 " . curxmlfile1[len(curxmlfile1) - 1])
+                            endif
+                            let versiondiff = add(versiondiff ,"<<<<<<<<<代码仓开始<<<<<<<<")
+                            let versionstring = split(versionstring,"\n")
+                            let versionstring = add(versionstring,join(['"','}','}','}','}',">>>>>>>>>>>代码仓修改结尾>>>>>>>>"],"\x00"))
+                            let versiondiff = extend(versiondiff ,versionstring)
+                            echo curxmlfile[idx2 * 2]   curxmlfile1[idx2 * 2]  "分支相同" projectlist[idx2]
+                        else
+                            echo "tangxinlou2"
+                            let versiondiff = add(versiondiff ,"<<<<<<<<<代码仓开始<<<<<<<<")
+                            let versionstring = CompareversionBranch(isupdate3,curxmlfile,curxmlfile1,idx2 * 2)
+                            let versionstring = add(versionstring,join(['"','}','}','}','}',">>>>>>>>>>>代码仓修改结尾>>>>>>>>"],"\x00"))
+                            let versiondiff = extend(versiondiff ,versionstring)
+                        endif
+                    endif
+                endif
+                let idx2 += 1
+            endwhile
             let idx1 += 1
         endwhile
         let idx1 = 0
-        "while idx1 < len(isnumber2)
-        "    echo isnumber2[idx1]
-        "    let idx1 += 1
-        "endwhile
-        call append(line('.'),isnumber2)
-        "call cursor(line('.') + len(isnumber2),0)
-        redraw
-    endif
-    return
-endfunction
-"}}}}}
-"{{{{2
-function! Getchar()
-    let c = ''
-    let b = ""
-    while 1
-        let c = getchar()
-        if c =~ '^\d\+$'
-            if c ==# 13
-                break
+        while idx1 < len(projectlist)
+            if leftversion[idx1 * 2]  != "1"
+                let  leftversion[idx1 * 2] =  leftversion[idx1 * 2] . "    " .  projectlist[idx1]
             endif
-            let c = nr2char(c)
-            let b = b . c
+            let idx1 += 1
+        endwhile
+        let versiondiff = extend(versiondiff ,leftversion)
+        let idx1 = 0
+        while idx1 < len(projectlist)
+            if rightversion[idx1 * 2]  != "1"
+                let  rightversion[idx1 * 2] =  rightversion[idx1 * 2] . "    " .  projectlist[idx1]
+            endif
+            let idx1 += 1
+        endwhile
+        let versiondiff = extend(versiondiff ,rightversion)
+        call writefile(versiondiff,"version.vim")
+    endif
+endfunction
+"}}}}
+"{{{{{2  CompareversionBranch(...) 比较两个分支
+function! CompareversionBranch(...)
+    let version1 = []
+    let version2 = []
+    let isupdate2 = ""
+    let isupdate3 = a:1
+    let curxmlfile = a:2
+    let curxmlfile1 = a:3
+    let idx2 = a:4
+    let idx1 = 0
+    let length = len(curxmlfile1) -1
+    "let isupdate2 =   system(" git fetch ; git checkout tag_PD2069_ROM13_5.0.0")
+    "let isupdate2 =   system(" git pull --rebase ; git reset --hard  1f81f7d4231609e4e0a38e061fde0fbb97862065")
+    let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 + 1])
+    let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2])
+    let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+    "let isupdate2 =   system(" git fetch ; git checkout tag_PD2069_ROM13_5.0.0")
+    "let isupdate2 =   system(" git pull --rebase ; git reset --hard  87acb2a52f65fd97318943152abac894f1c2fa75")
+    let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile1[idx2 + 1])
+    let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile1[idx2])
+    let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+
+    echo  curxmlfile[idx2]  curxmlfile1[idx2]  "分支不同 " isupdate3
+    let version1 = split(version1,"\n")
+    let version1 = reverse(version1)
+    let version2 = split(version2,"\n")
+    let version2 = reverse(version2)
+    echo  len(version1)  len(version2)
+    "echo version1
+    "echo version2
+    echo  curxmlfile[idx2]
+    echo curxmlfile1[idx2]
+    if len(version1) > len(version2)
+        echo "1"
+        while idx1 < len(version2)
+            if version1[idx1] ==# version2[idx1]
+                call remove(version1,idx1)
+                call remove(version2,idx1)
+                let idx1 = 0
+            else
+                let idx1 += 1
+            endif
+        endwhile
+        if len(version2) ==# 0
+            if  curxmlfile1[idx2] ==# curxmlfile[idx2]
+                let version1 = insert(version1,"<<<<<<<<<两个版本相同<<<<<<<<")
+            else
+                let version1 = insert(version1,"<<<<<<<<<" . curxmlfile[length] . " 比 " . curxmlfile1[length] . "多如下提交<<<<<<<<")
+            endif
+            let version1 = add(version1,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            return version1
+        else
+            let version1 = insert(version1,"两个版本分支各不相同，分别有如下提交不同")
+            let version1 = insert(version1,"<<<<<<<<<<第一个版本有这些提交<<<<<<<<<<")
+            let version1 = insert(version1,curxmlfile[length])
+            let version1 = add(version1,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            let version2 = insert(version2,"<<<<<<<<<<第二个版本有这些提交<<<<<<<<<<")
+            let version2 = insert(version2,curxmlfile1[length])
+            let version2 = insert(version2,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            let version1 = extend(version1 ,version2)
+            return version1
         endif
+    else
+        echo "2"
+        while idx1 < len(version1)
+            if version1[idx1] ==# version2[idx1]
+                call remove(version1,idx1)
+                call remove(version2,idx1)
+                let idx1 = 0
+            else
+                let idx1 += 1
+            endif
+        endwhile
+        if len(version1) ==# 0
+            if  curxmlfile1[idx2] ==# curxmlfile[idx2]
+                let version2 = insert(version2,"<<<<<<<<<两个版本commit相同<<<<<<<<")
+            else
+                let version2 = insert(version2,"<<<<<<<<<" . curxmlfile1[length] . " 比 " . curxmlfile[length] . "多如下提交<<<<<<<<")
+            endif
+            let version2 = insert(version2,curxmlfile1[length])
+            let version2 = add(version2,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            return version2
+        else
+            let version1 = insert(version1,"两个版本分支各不相同，分别有如下提交不同")
+            let version1 = insert(version1,"<<<<<<<<<<第一个版本有这些提交<<<<<<<<<<")
+            let version1 = insert(version1,curxmlfile[length])
+            let version1 = add(version1,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            let version2 = insert(version2,"<<<<<<<<<<第二个版本有这些提交<<<<<<<<<<")
+            let version2 = insert(version2,curxmlfile1[length])
+            let version2 = add(version2,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            let version1 = extend(version1 ,version2)
+            return version1
+        endif
+    endif
+endfunction
+
+"}}}}
+"{{{{{2  GetMainLine() 获取主线  当前未使用
+function! GetMainLine()
+    let isblame = "tangxinlou"
+    let isblame1 = []
+    let line = 0
+    let line = line('.')
+    echo line
+    let isblame = @%
+    echo isblame
+    execute "normal! ggvG$d0"
+    let isblame1 = system("git blame -l" . isblame)
+    let isblame1 = split(isblame1,"\n")
+    call append(line('.'),isblame1)
+    execute "normal! dd"
+    call cursor(line,0)
+endfunction
+"}}}}
+"{{{{{2 function! DynamicDiff()                  DynamicDiff 动态选择内容比较  可视模式下逗号 + d 调用
+vnoremap <leader>d :<c-u>call <SID>DynamicDiff(visualmode())<cr>
+function! s:DynamicDiff(type)
+    let saved_unnamed_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    let tempchar = @@
+    let templist = split(tempchar,"\n")
+
+    let templeft = readfile("/opt6/tangxinlouosc/txl/left")
+    let tempright = readfile("/opt6/tangxinlouosc/txl/right")
+
+    if len(templeft) != 0 &&  len(tempright) != 0
+        if "yes" ==# input("是否比较")
+            call system("diff -Naur  /opt6/tangxinlouosc/txl/left /opt6/tangxinlouosc/txl/right > /opt6/tangxinlouosc/txl/1.patch ")
+            silent tabnew   /opt6/tangxinlouosc/txl/right
+            silent vsplit   /opt6/tangxinlouosc/txl/left
+            if "yes" ==# input("是否清空两个文件，yes 是清空")
+                call writefile([],"/opt6/tangxinlouosc/txl/left")
+                call writefile([],"/opt6/tangxinlouosc/txl/right")
+            endif
+        else
+            echo "两个文件有内容把复制的内容保存在左边"
+            call writefile(templist,"/opt6/tangxinlouosc/txl/left")
+            call writefile([],"/opt6/tangxinlouosc/txl/right")
+        endif
+    elseif len(templeft) ==# 0 &&  len(tempright) ==# 0
+
+        echo "两个文件都是空的，把复制的内容保存在左边"
+        call writefile(templist,"/opt6/tangxinlouosc/txl/left")
+    elseif len(templeft) != 0 &&  len(tempright) ==# 0
+
+        echo "左边内容已存在，把复制的内容保存在右边"
+        call writefile(templist,"/opt6/tangxinlouosc/txl/right")
+    endif
+    call input("是否继续")
+    let @@ = saved_unnamed_register
+endfunction
+"}}}}
+"{{{{{2 function! FindMergedVersion()            寻找某笔提交什么版本合入
+function! FindMergedVersion()
+    "{{{{{3 变量定义
+    let function = "2183"
+    let isexport = ""
+    let isdaly = ""
+    let isneeddownload = ""
+    let androidversion = ""
+    let manifestXmlList2 = []
+    let manifestXmlList = []
+    let isupdate = system("ls -F \| grep -Esi \"/$\"")
+    let curpath = split(join(split(isupdate),"\x00"),"/")
+    let index = 0
+    let commitid = 0
+    let curxmlfile = []
+    let index1 = 0
+    let searchpath = ""
+    let runofresults = ""
+    let idx = 0
+    let projectlist = ['vendor_vivo_bluetoothInteropConf',
+                \ 'android_packages_apps_Bluetooth',
+                \ 'android_system_bt',
+                \ 'android_frameworks_base',
+                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+                \ 'android_device_mediatek_vendor_common',
+                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+                \ "android_kernel-4.14",
+                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+                \ "android_packages_modules_Bluetooth",
+                \ "android_prebuilts_module_sdk_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
+                \ "vendor_vivo_source_frameworks_services",
+                \ "android_cts",
+                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+                \ "android_vendor_mediatek_proprietary_tinysys_common",
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+    let index2  = 0
+    let branchlist = []
+    let index3  = 0
+    let tempint = 0
+    let headnode =  0
+    let endnode =  0
+    let tempnode = 0
+    "}}}}
+    "输入必要的选项
+    let curpath1 = copy(curpath)
+    if len(curpath1) > 15
+        echo "路径错误"
+        return
+    endif
+    call AddNumber(curpath1)
+    let index = input("请选择所在的仓")
+    let isneeddownload = input("是否需要下载yes or no")
+    let function = input("请输入项目")
+    let isexport = input("是否是外销yes or no")
+    let issystem = input("是否是system版本 yes or no")
+    let androidversion  = input("输入安卓版本")
+    let commitid = input("请输入commitid")
+    let idx = index(projectlist,curpath[index])
+    echo idx
+
+    "wget 获取所有的manifest
+    if isneeddownload == "yes"
+        call DownloadManifest(function,isexport,issystem)
+    endif
+
+    "根据安卓版本,仓库刷选manifest xml
+    if androidversion == "12"
+        call system("find ~/manifests -iname '*modem*' | xargs rm -rf")
+        call system("find ~/manifests -iname '*vendor*' | xargs rm -rf")
+    elseif  androidversion == "13"
+        call system("find ~/manifests -iname '*modem*' | xargs rm -rf")
+        if "android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch" == matchstr(curpath[index],"android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch")
+            call system("find ~/manifests -iname '*system*' | xargs rm -rf")
+        else
+            call system("find ~/manifests -iname '*vendor*' | xargs rm -rf")
+        endif
+    endif
+
+    "获取当前commit id 在哪些分支上
+    let branchlist = split(system("cd ". curpath[index] . " ;git branch -a --contains " . commitid),"\n")
+
+    let index1 = 0
+    while  index1 < len(branchlist)
+        if "remotes" != matchstr(branchlist[index1],"remotes") || "temp" == matchstr(branchlist[index1],"temp")
+            let branchlist[index1] = ""
+            echo branchlist[index1]
+        else
+            let branchlist[index1] = split(branchlist[index1],"/")[2]
+        endif
+        let index1 += 1
     endwhile
-    return b
-endfunction
-"}}}}
-"{{{{2  Gettt()
-function! Gettt()
-    let char = ""
-    let list = []
-    let char = "InteractiveWindow"
-    "let Char1 = function(char,list)
-    call call(char,list)
-    "call Char1
-endfunction
-"}}}}
-"}}}}
+    let branchlist =  split(join(branchlist),"\x00")
 
 
+    "获取需要查询的manifest xml
+    let manifestXmlList = IsCfgfile(function,"~/manifests",androidversion)
+
+    "查询manifest xml 中是否包含commit
+    let index1 = 0
+    while index1 < len(manifestXmlList)
+        let curxmlfile = IsVersion(manifestXmlList[index1])
+        let index3  = 0
+        let tempint = 0
+        echo manifestXmlList[index1]
+        while index3 < len(branchlist)
+            if  branchlist[index3] ==  curxmlfile[idx * 2 + 1]
+                let tempint = 1
+                echo curxmlfile[idx * 2 + 1]
+            else
+            endif
+            let index3 += 1
+        endwhile
+
+        if tempint == 1
+            echo "tangxinlou4"
+            silent let searchpath  = join(split(join(["cd"," ",curpath[index]])))
+            silent let runofresults  = system(searchpath)
+            if "No such file or directory" !=# matchstr(runofresults, "No such file or directory")
+                let runofresults =   system(searchpath . " ; git checkout . ")
+                let runofresults =   system(searchpath . " ; git fetch ; git checkout " . curxmlfile[idx * 2 + 1])
+                let runofresults =   system(searchpath . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx * 2])
+                let runofresults =   system(searchpath . " ; git log    --pretty=format:\"\%H\" ")
+                let runofresults = split(runofresults,"\n")
+                let index2  =  index(runofresults,commitid)
+                if  index2 == -1
+                    let manifestXmlList[index1] = join([manifestXmlList[index1],"null"])
+                else
+                    echo "tangxinlou 3"
+                    echo manifestXmlList[index1]
+                endif
+            endif
+        else
+            echo "tangxinlou5"
+        endif
+
+        let index1 +=1
+    endwhile
+    let manifestXmlList = copy(manifestXmlList)
+    call AddNumber(manifestXmlList)
+    call input("1255")
+    "返回包含当前修改的版本
+endfunction
+"}}}}
+"{{{{{2  DownloadManifest() 下载某个项目的所有的manifest
+function! DownloadManifest(...) "1项目 2 是否外销 3 是否系统版本
+    "wget -c -r -np -P ~/manifests http://manifests.vivo.xyz/gerrit/manifests/PD2183/SystemTest/
+    "wget -c -r -np -P ~/manifests  --accept-regex PD2183.*12.*vivo.*mtk http://manifests.vivo.xyz/gerrit/manifests/PD2183/SystemTest/
+    "{{{{{3 变量定义
+    let downloadcmd = "wget -c -r -np -P "
+    let downloadpath = "~/manifests"
+    let downloadlink = "http://manifests.vivo.xyz/gerrit/manifests/"
+    let function = "2183"
+    let isexport = ""
+    let issystem = "SystemTest"
+    "}}}}
+    if a:0 != 0
+        let function = a:1
+        if a:2 == "yes"
+            let isexport = "F_EX"
+        endif
+        if a:3 == "no"
+            let issystem = "DailyTest"
+        endif
+    else
+    endif
+    let downloadcmd = join([downloadcmd,downloadpath,"  ",downloadlink,"PD",function,isexport,"/",issystem,"/"],"\x00")
+    echo downloadcmd
+    call system(downloadcmd)
+endfunction
+"}}}}
+"}}}
+"{{{{ fund
 "每次需要调用 24 WriteFile 把新的数据写到fund中
 "需要调用 31  CalculateInvest 选2  把pe写到analyze
 "把pe写到analyze,调用30 WriteFund2Index 选3把analyze格式化
 "调用  31CalculateInvest 金额，选1 把金额写到index中
 "调用  30 WriteFund2Index 选2把index格式化
-"{{{{ fund
 "{{{{2  GetFundValue() 通过xml获取元数据
 function! GetFundValue(...)
     let fundfilename = "2022-02-17.html"
@@ -782,75 +2034,6 @@ function! GetFundValue(...)
     return fundvalues1
 endfunction
 "}}}}}
-"{{{{{2   SetCharNull(...) 补空格
-function! SetCharNull(...)
-    let char = " "
-    let char2 = ""
-    let idx1 = 0
-    let list = []
-    if a:0 ==# 2
-        let char = " "
-        let idx1 = a:2
-        let char2 = a:1
-        let char2 = char2 . repeat(char,idx1 - strwidth(char2) - 1) . '|'
-    endif
-    return char2
-endfunction
-"}}}}}
-"{{{{2  List2Format(...)    把字符后面补空格
-function! List2Format(...)
-    let list2fmt = []
-    let list2fmt1 = []
-    let idx1 = 0
-    let idx2 = 0
-    if a:0 ==# 1
-        let list2fmt = a:1
-        "echo  list2fmt
-        while idx1 < len(list2fmt)
-            let idx2 = 0
-            let list2fmt1 = split(list2fmt[idx1],",")
-            "echo list2fmt1
-            while idx2 < len(list2fmt1)
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
-                else
-                    "echo list2fmt1[idx2]
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],10)
-                    "echo list2fmt1[idx2]
-                endif
-                let idx2 += 1
-            endwhile
-            let list2fmt[idx1] = join(list2fmt1,"\x00")
-            let idx1 += 1
-        endwhile
-    endif
-    return list2fmt
-endfunction
-"}}}}
-"{{{{2  DictTest()   测试字典
-"noremap <F4> :call  DictTest()
-function! DictTest()
-    let char1 = "aaaaaaaa"
-    let char2 = "指数名称"
-    let list = ['a', 'b', 'c', 'd', 'e']
-    let char = {'a': 1, 100: 'foo',1001:list}
-    let char = {5:1}
-    echo list
-    echo list[0:3]
-    echo len(char1)
-    echo strlen(char1)
-    echo strchars(char1)
-    echo strwidth(char1)
-    echo len(char2)
-    echo strlen(char2)
-    echo strchars(char2)
-    echo strwidth(char2)
-    echo len(char)
-    echo keys(char)
-    echo values(char)
-    echo items(char)
-endfunction
-"}}}}
 "{{{{{2   WriteFile(...)  获取指数源数据写入fund文件
 "noremap <F5> :call  WriteFile()
 function! WriteFile(...)
@@ -1374,23 +2557,6 @@ function! CalculateAmount(...)
     return invests
 endfunction
 "}}}}}
-"{{{{{2   IsContain(...) string list返回对应 列表项
-function! IsContain(...)
-    let string = ""
-    let char = ""
-    let list = []
-    let idx1 = 0
-    let string = a:1
-    let list = a:2
-    while idx1 < len(list)
-        let char = matchstr(list[idx1],string)
-        if matchstr(list[idx1],string) != ""
-            return list[idx1]
-        endif
-        let idx1 += 1
-    endwhile
-endfunction
-"}}}}}
 "{{{{{2   ConsolidateData(...) 整合index 文件，使数据化
 noremap <F5> :call  ConsolidateData()
 function! ConsolidateData(...)
@@ -1690,9 +2856,7 @@ endfunction
 "}}}}
 
 "}}}
-
-"{{{{{{1 code
-
+"{{{{{ code
 "{{{{2  ParseCode()   解析code
 function! ParseCode(...) "文件内容列表，解析的标志
     let sourcecode = a:1
@@ -1722,12 +2886,12 @@ function! ParseCode(...) "文件内容列表，解析的标志
         let cmpcount = GetMatchNumber(sourcecode,codeflag[0])
         let coutchapter = count(sourcecode,"```c")
         let targetcode =  repeat(targetcode,cmpcount)
-        echo  cmpcount   len(targetcode)
+        echo  cmpcount coutchapter  len(targetcode)  "tangxinlou1"
         while idx1 < len(sourcecode)
             if idx1 ==# len(sourcecode) - 1
                 if src != 0
                     let targetcode[idj1] = sourcecode[src:idx1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2 + 2)
                 endif
             endif
             if codeflag[0] ==# matchstr(sourcecode[idx1], matchstr)
@@ -1738,10 +2902,9 @@ function! ParseCode(...) "文件内容列表，解析的标志
                     let tail = idx1
                     echo idx1 idj1 src tail codeflag[0]  sourcecode[idx1]
                     let targetcode[idj1] = sourcecode[src:tail - 1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (src + 1)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2 + 2)
                     let tail = 0
                     let src = idx1
-                    "echo src
                     let idj1 +=1
                 endif
             endif
@@ -1797,7 +2960,7 @@ endfunction
 
 "}}}}
 
-"{{{{{  AnalyzeCode()  分析code
+"{{{{{ function! AnalyzeCode()                   分析code                      普通模式<F11>调用
 nnoremap <F11>  :call AnalyzeCode()<cr>
 function! AnalyzeCode()
     let targetcode = []
@@ -1855,7 +3018,7 @@ function! AnalyzeCode()
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  WriteFund2Index(codedict[dictkeys[idx1]])
-            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",idx1 + 1,"章节流程图"]))
+            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",dictkeys[idx1]," 流程图"]))
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
             let idx1 += 1
         endwhile
@@ -1868,7 +3031,7 @@ function! AnalyzeCode()
         endwhile
         let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
         let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
-        "      call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
+        call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
         call extend(codefile,tempdictlist,8)
         call writefile(codefile,expand("%:p"))
     else
@@ -1882,7 +3045,7 @@ function! AnalyzeCode()
         let codedict =  WriteFund2Index(codedict)
         let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
         let codedict = add(codedict,">>>>>>>>>>>>>>>")
-        "      call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
+        call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
         call extend(codefile,codedict,8)
         call writefile(codefile,expand("%:p"))
     endif
@@ -2086,7 +3249,293 @@ function! GetMatchNumber(...)
 endfunction
 "}}}}}
 
+
+"}}}}}
+"{{{{ 定时器
+
+"{{{{{  MyHandler()  回调
+function! MyHandler(timer)
+    let searchs = ""
+    let idx1 = 0
+    let idj1 = 0
+    let clear = [""]
+    let command = ""
+    let searchs = getline(1)
+    let searchstarge = []
+    let clear =  repeat(clear,50)
+    if searchs ==# "null"
+        return
+    endif
+    let command = "find -iname " . "'*" . searchs ."*'"
+    let searchstarge =  system(command)
+    let searchstarge = split(searchstarge,"\n")
+    "let searchstarge = insert(searchstarge,searchs)
+    call setline(2, searchstarge)
+    call setline(len(searchstarge) + 2,clear)
+
+endfunction
+"}}}}}
+
+"{{{{{  Searcher()  搜索器  普通模式<F9>调用
+nnoremap <F9> :call   Searcher()<cr>
+function! Searcher()
+    let timeinfo = []
+    let timeinfo = timer_info()
+    echo "tangxinlou45" len(timeinfo)
+    if  len(timeinfo) > 0
+        echo "tangxinlou2"
+        call timer_stop(1)
+    else
+        echo "tangxinlou3"
+        let timer = timer_start(500, 'MyHandler', {'repeat': -1})
+    endif
+endfunction
+"}}}}}
+
 "}}}}
-if &diff
-    syntax off
-endif
+"{{{{ 批量处理
+"{{{{{  BatchHandle()  批量处理
+function! BatchHandle()
+    let files = ""
+    let searchflag = "find -iname strings.xml"
+    let files = system(searchflag)
+    let files = split(files,"\n")
+    let idx1 = 0
+    while idx1 < len(files)
+        call ProcessFiles(files[idx1],"<plurals.*noti_caption_unsuccessful")
+        call ProcessFiles(files[idx1],"<plurals.*noti_caption_success")
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}
+"{{{{{  ProcessFiles()  批量处理
+function! ProcessFiles(...)
+    let filename = a:1
+    "let filename = "values-bo-rCN/strings.xml"
+    let fileslist = readfile(filename)
+    "let indexwords = "<plurals.*noti_caption_unsuccessful"
+    let indexwords = a:2
+    let indexwords2 = "</plurals>"
+    let keywords = ""
+    let vertiefung = ""
+    let forwardlist = []
+    let middlelist = []
+    let backlist = []
+    let idx1 = 0
+    let src = 0
+    let tail = 0
+    let ReplaceList = ["    <string name=\"noti_caption_unsuccessful\"> {count, plural,",
+                \ "        =1    {# 个文件传输失败。}",
+                \ "        other {# 个文件传输失败。}",
+                \ "    }</string>"]
+    while idx1 < len(fileslist)
+        if "" != matchstr(fileslist[idx1],indexwords)
+            let src = idx1
+            echo src "src"
+        elseif  "" != matchstr(fileslist[idx1],indexwords2)
+            if src < idx1 && tail ==# 0 && src != 0
+                let tail = idx1
+                echo tail "tail"
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    let forwardlist = fileslist[:src-1]
+    let middlelist = fileslist[src:tail]
+    let backlist = fileslist[tail + 1:]
+    if src  ==# 0 && tail ==# 0
+        return
+    endif
+    call setline(1,middlelist)
+    if "noti_caption_unsuccessful" ==# matchstr(middlelist[0],"noti_caption_unsuccessful")
+        let keywords = split(split(middlelist[1],"g>")[1],"<")[0]
+        let vertiefung = split(middlelist[0],"<plurals")[0]
+        let ReplaceList[0] = join([vertiefung, "<string name=\"" , "noti_caption_unsuccessful" , "\"> {count, plural,"],"\x00")
+        let ReplaceList[1] = join([vertiefung, vertiefung, "=1    {# " , keywords , "}"],"\x00")
+        let ReplaceList[2] = join([vertiefung, vertiefung, "other {# " , keywords , "}"],"\x00")
+        let ReplaceList[3] = join([vertiefung, "}</string>"],"\x00")
+    elseif "noti_caption_success" ==# matchstr(middlelist[0],"noti_caption_success")
+        let keywords = split(split(middlelist[1],"g>")[1],"%")[0]
+        let vertiefung = split(middlelist[0],"<plurals")[0]
+        let ReplaceList[0] = join([vertiefung, "<string name=\"" , "noti_caption_success" , "\"> {count, plural,"],"\x00")
+        let ReplaceList[1] = join([vertiefung, vertiefung, "=1    {# " , keywords , "}"],"\x00")
+        let ReplaceList[2] = join([vertiefung, vertiefung, "other {# " , keywords , "}"],"\x00")
+        let ReplaceList[3] = join([vertiefung, "}</string>"],"\x00")
+    endif
+    echo  ReplaceList
+    let forwardlist = extend(forwardlist  ,ReplaceList)
+    let forwardlist = extend(forwardlist  ,backlist)
+    call writefile(forwardlist,filename)
+endfunction
+"}}}}}
+"}}}}
+"{{{{ 解冲突
+"{{{{{  ResolveConflict()  解冲突 普通模式<F10>调用
+nnoremap <F10>  <esc>:call   ResolveConflict()<cr>
+function! ResolveConflict()
+    let saved_unnamed_register = @@
+    execute "normal! yy"
+    let filestmp = @@
+    let filestmp = split(split(filestmp,"\x00")[0],'\.')
+    let filesrej = filestmp[0] . '.' .  filestmp[1] . '.' . filestmp[2]
+    let filesorg = filestmp[0] . '.' .  filestmp[1]
+    echo  filesrej
+    echo  filesorg
+    call ParsingRej(filesrej,filesorg)
+    silent execute "normal! :tabnew\<cr>"
+    silent execute "normal! :e " . filesorg . "\<cr>"
+    silent execute "normal! :tabnew\<cr>"
+    silent execute "normal! :e " . filesrej . "\<cr>"
+    let @@ = saved_unnamed_register
+endfunction
+"}}}}}
+"{{{{{  ParsingRej() 解析rej文件
+function! ParsingRej(...)
+    let rejfiles = a:1
+    let orgfiles = a:2
+    let idx1 = 0
+    let idx2 = 0
+    let flag = 0
+    let tempsearch = ""
+    let rejfile = readfile(rejfiles)
+    let orgfile = readfile(orgfiles)
+
+    while idx1 < len(rejfile)
+        "echo len(join(split(rejfile[idx1],"\x00"),"\x00"))
+        if "+" ==#  matchstr(rejfile[idx1], "+") ||
+                    \  "-" ==#  matchstr(rejfile[idx1], "-") ||
+                    \ "@@" ==#  matchstr(rejfile[idx1], "@@") ||
+                    \  len(join(split(rejfile[idx1],"\x00"),"\x00")) < 6
+        else
+            let flag = 0
+            let tempsearch = join(split(join(split(rejfile[idx1],'*')," "),"\x00"),'.*')
+            echo tempsearch
+            let idx2 = 0
+            while idx2 < len(orgfile)
+                if "" ==# matchstr(orgfile[idx2], tempsearch) || flag ==# 1
+                else
+                    let rejfile[idx1] = rejfile[idx1] . '|' . idx2
+                    "echo "tangxinlou456"
+                    "echo  matchstr(orgfile[idx2], tempsearch)
+                    let flag = 1
+                endif
+                let idx2 += 1
+            endwhile
+
+        endif
+        let idx1 += 1
+    endwhile
+    silent execute "normal! :tabnew\<cr>"
+    call append(0,rejfile)
+    "call writefile(rejfile,rejfiles)
+
+endfunction
+"}}}}}
+"}}}}
+"{{{{ 文件管理
+"主要功能：每个文件夹下导入README 文件，文件中记录当前文件夹下所有文件的功能
+"子目录的README 文件包含到上一级中
+"{{{{{2 function! s:TreeContens(type)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
+vnoremap <leader>r :<c-u>call <SID>TreeContens(visualmode())<cr>
+function! s:TreeContens(type)
+    let saved_unnamed_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    let tempfile = ""
+    let tempfile = @@
+    let tempfile = system("find -iname  " . tempfile)
+    silent execute "normal! :tabnew\<cr>"
+    silent execute "normal! :e " . tempfile . "\<cr>"
+    let @@ = saved_unnamed_register
+endfunction
+"}}}}}
+"{{{{{2 function! s:UpdateTreeContens(...)      更新图形目录                  普通模式下 逗号 + u 调用
+nnoremap <leader>u :call UpdateTreeContens()<cr>
+function! UpdateTreeContens(...)
+    "{{{{{3 变量定义
+    let contensfile = []
+    let src  = 0
+    let tail = 0
+    let prvcontesfile = []
+    let curcontesfile = []
+    let len = 0
+    let idx1 = 0
+    let index = 0
+    let tempchar = ""
+    let tempchar1 = ""
+    "}}}}
+    let contensfile = readfile(expand("%:p"))
+    let curcontesfile = split(system("tree -L 4"),"\n")[1:-3]
+    if count(contensfile ,"<<<<<<<<<<<<<<<<") && count(contensfile ,">>>>>>>>>>>>>>>")
+        echo "之前修改过"
+        let src = index(contensfile,"<<<<<<<<<<<<<<<<")
+        let tail = index(contensfile,">>>>>>>>>>>>>>>")
+        let prvcontesfile = contensfile[src + 1:tail - 1]
+        call remove(contensfile,src,tail)
+        echo src tail
+        let idx1 = 0
+        while idx1 < len(curcontesfile)
+            if len(split(curcontesfile[idx1])) > 1
+                let tempchar =  split(curcontesfile[idx1])[1]
+                let tempchar1 = ""
+                let tempchar1 = IsContain(tempchar,prvcontesfile)
+                if tempchar1 != ""
+                    "echo "tangxinlou1"
+                    let curcontesfile[idx1] = tempchar1
+                else
+                    echo  tempchar
+                    let tempchar1 = GetItemFromFile("Description  ",tempchar)
+                    if tempchar1 != ""
+                        let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ",52 - strwidth(curcontesfile[idx1]) - 1),split(split(tempchar1,":")[1])[0]],"|")
+                    endif
+                    echo "tangxinlou2"
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    else
+        echo "第一次生成目录"
+    endif
+    let curcontesfile = insert(curcontesfile,"<<<<<<<<<<<<<<<<")
+    let curcontesfile = add(curcontesfile,">>>>>>>>>>>>>>>")
+    call extend(contensfile,curcontesfile,9)
+    if "yes" ==# input("是否更新目录")
+        call writefile(contensfile,expand("%:p"))
+    endif
+endfunction
+"}}}}}
+"{{{{{2 GetItemFromFile(...)             获取对应文件的某一项
+function! GetItemFromFile(...)
+    "{{{{{3 变量定义
+    let string = ""
+    let files = ""
+    let path = ""
+    let tempresult = ""
+    let tempchar1 = ""
+    "}}}}
+    let string = a:1
+    let files = a:2
+    let tempresult = system("find -iname " . files)
+    if  len(split(tempresult,"\n")) ==# 1
+        let path = split(tempresult,"\n")[0]
+    else
+        echo "有相同文件名的文件"
+        return
+    endif
+    let files = readfile(path)
+    let tempchar1 = ""
+    let tempchar1 = IsContain(string,files)
+    return  tempchar1
+endfunction
+"}}}}}
+"}}}}
+
+
+
+"forgroundTimeForWifi.\{,20}",
+"%g!/唐新楼重新指派了缺陷/d
