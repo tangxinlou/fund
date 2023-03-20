@@ -14,14 +14,14 @@ function! AddTitle()
     echohl WarningMsg | echo "Successful in adding copyright." | echohl None
 endfunction
 function! UpdateTitle()
-     normal m'
-     execute '/$ Last modified/s@:.*$@\=strftime(":\t%Y-%m-%d %H:%M")@'
-     normal ''
-     normal mk
-     execute '/$ Filename/s@:.*$@\=":\t".expand("%:t")@'
-     execute "noh"
-     normal 'k
-     echohl WarningMsg | echo "Successful in updating the copyright." | echohl None
+    normal m'
+    execute '/$ Last modified/s@:.*$@\=strftime(":\t%Y-%m-%d %H:%M")@'
+    normal ''
+    normal mk
+    execute '/$ Filename/s@:.*$@\=":\t".expand("%:t")@'
+    execute "noh"
+    normal 'k
+    echohl WarningMsg | echo "Successful in updating the copyright." | echohl None
 endfunction
 function! TitleDet()
     let n=1
@@ -37,9 +37,10 @@ function! TitleDet()
 endfunction
 "}}}}
 "vimdiff 颜色配置{{{
- if &diff
-"    colorscheme evening
- endif
+if &diff
+    "    colorscheme evening
+    syntax off
+endif
 "}}}
 "设置屏幕效果按za打开折叠{{{{
 "设置折叠的颜色
@@ -108,58 +109,58 @@ iabbrev vimg vimgrep! //j %:p
 "inoremap <esc> <nop>
 "}}}
 "auto command自动命令{{{
-     "创建空文件和自动注释
-     "设置折叠
+"创建空文件和自动注释
+"设置折叠
 augroup filetype_vim
-     autocmd FileType vim  setlocal foldmethod=marker
+    autocmd FileType vim  setlocal foldmethod=marker
 augroup END
-     "保存文件打印
+"保存文件打印
 augroup testgroup
-     "清除组命令
-     autocm!
-     "保存文件是自动打印
-     autocmd BufWrite * :echom "cat"
+    "清除组命令
+    autocm!
+    "保存文件是自动打印
+    autocmd BufWrite * :echom "cat"
 augroup END
 "}}}
 "简单的映射i{{{
-     "保存
+"保存
 noremap <leader>w :write<cr>
 noremap <leader>q :q!<cr>
-   "插入模式<esc>
+"插入模式<esc>
 inoremap <leader>k <esc>
-     "可视模式<esc>
+"可视模式<esc>
 vnoremap <leader>k <esc>
-     "所有模式<esc>,我换输入法后这条命令失效
+"所有模式<esc>,我换输入法后这条命令失效
 noremap  <leader>k <esc>
-     "按,v进入可视模式
+"按,v进入可视模式
 inoremap  <leader>v <esc>v
-     "切换tab标签
+"切换tab标签
 nnoremap <c-n>  :tabn<cr>
 nnoremap <c-p>  :tabp<cr>
-     "切换搜索结果
+"切换搜索结果
 nnoremap <leader>cn :cn<cr>
 nnoremap <leader>cp :cn<cr>
-     "切换打开的buffer
+"切换打开的buffer
 nnoremap <leader>bn :bn!<cr>
 nnoremap <leader>bp :bp!<cr>
 nnoremap <leader>tab :tabnew<cr>
-     "分割终端
+"分割终端
 nnoremap <leader>sp :split
 nnoremap <leader>vsp :vsplit
-    "外部ls命令
+"外部ls命令
 nnoremap <leader>ls :copen<cr>:set modifiable<cr>:r!ls<cr><c-w>H
-     "外部wc命令
+"外部wc命令
 nnoremap <leader>lr :copen<cr>:set modifiable<cr>:r!ls -lR \| wc -l<cr>
-     "内部ls命令
+"内部ls命令
 nnoremap <leader>ll :ls<cr>
-     "外部tree命令
+"外部tree命令
 nnoremap <leader>tree   :copen<cr>:set modifiable<cr>:r!tree<cr><c-w>H
-     "改变分割的终端窗口的尺寸
+"改变分割的终端窗口的尺寸
 nnoremap +  <c-w>+ 5
 nnoremap -  <c-w>- 5
 nnoremap <  <c-w>< 10
 nnoremap >  <c-w>> 10
-     "内部cd命令
+"内部cd命令
 nnoremap cd :cd
 vnoremap g y
 nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>
@@ -196,7 +197,7 @@ nnoremap <leader>vm :%s/<c-v><c-M>/<cr>/g
 vnoremap <leader>a "dy<esc>:let @c= expand("%:p").':'.line(".").':'<cr>
 "复制文本及当前行
 "nnoremap <leader>p i```c<cr>```<esc>O<esc>0"cpli<cr><esc>0"dp
- nnoremap <leader>p i<cr>```c<cr><cr>```<esc>O<cr><esc>k0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
+nnoremap <leader>p i<cr>```c<cr><cr>```<esc>O<cr><esc>k0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
 nnoremap <leader>txl :tabnew<cr>:e ~/tang1.txt<cr>
 "nnoremap <leader>co :copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>co :call <SID>QuckfixToggle()<cr>
@@ -213,45 +214,45 @@ nnoremap <leader>/  q:i/<esc>p<cr>
 "取消的映射{{{{
 "nnoremap b :normal!  yt|
 "nnoremap bn :normal! yi|
-      "黏贴
+"黏贴
 "noremap <a-r>v :execute "normal! p"
-     "得到文件名
+"得到文件名
 "nnoremap <leader>t :%p<cr>
 "nnoremap <leader>tt  :%:p:hp<cr>
-     "按,gsn后没有感叹号会跳转到第一个结果的文件中来,用cn和cp可以切换文件
+"按,gsn后没有感叹号会跳转到第一个结果的文件中来,用cn和cp可以切换文件
 "nnoremap <leader>gsn :execute "grep -R" "something" "."<cr>
-     "按,vjcn后可以跳转到第一个结果的文件中来,用cn和cp切换源文件
+"按,vjcn后可以跳转到第一个结果的文件中来,用cn和cp切换源文件
 "nnoremap <leader>vjcn :execute "vim" shellescape(expand("<cword>"))"**/*.java"<cr>
-     "按,gcn后可以跳转到第一个结果中来,并用cn和cp切换文件
+"按,gcn后可以跳转到第一个结果中来,并用cn和cp切换文件
 "nnoremap <leader>gcn :execute "grep -R " shellescape(expand("<cword>"))
 "."<cr>
-      "将本行下移动一行
+"将本行下移动一行
 "noremap - ddjp
 "augroup bufnefile
 "     autocmd!
 "     autocmd bufNewFile *.txt :write
 "     autocmd FileType vim  nnoremap <buffer> <leader>c //<esc>
 "augroup END
-      "按,<c-d>后在插入模式删除一行
+"按,<c-d>后在插入模式删除一行
 "inoremap <leader><c-d> <esc>ddi
-     "按,<c-u>后在插入模式将光标变大写
+"按,<c-u>后在插入模式将光标变大写
 "inoremap <leader><c-u> <esc>lviwUi
-     "按,<c-j>后在插入模式将光标下单词变小写
+"按,<c-j>后在插入模式将光标下单词变小写
 "inoremap <leader><c-j> <esc>lviwui
 "}}}}
 "编辑vimrc文件{{{
-     "编辑vimrc文件
+"编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-     "加载vimrc文件
+"加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
 ""}}}
 "搜索命令{{{{
 "第一个搜索映射,搜索something:会在搜索到something后用一个新的修改区保起来
-     "grep!没有感叹号就会跳转第一个结果中,有了感叹号就会直接调到新的修改区,
-     "但是这个也有好处可以直接来到相应的文件中看代码,用cn和cp切换代码文件
-     "按,gs后可以搜索something出现的个数和文件位置用一个新的修改区保存下来
+"grep!没有感叹号就会跳转第一个结果中,有了感叹号就会直接调到新的修改区,
+"但是这个也有好处可以直接来到相应的文件中看代码,用cn和cp切换代码文件
+"按,gs后可以搜索something出现的个数和文件位置用一个新的修改区保存下来
 "nnoremap <leader>gs :execute "grep! -R" "something" "."<cr>:copen<cr>
 "nnoremap <leader>gs q:ir!find -iname  <esc>pa .<cr>:copen<cr><c-w>H<esc><cr>
 nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
@@ -271,9 +272,9 @@ nnoremap <leader>vhc :execute "vim!" shellescape(expand("<cword>"))"**/*.h"<cr>:
 nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr>
 ""}}}}
 "文件路径切换{{{{
-     "更改到当前文件所在的目录
+"更改到当前文件所在的目录
 nnoremap <leader>lcd :lcd %:p:h
-     "打开选中的的文件,并新开一个tap
+"打开选中的的文件,并新开一个tap
 "omap i:  f:lvf:h
 nnoremap <leader>y :normal! yt:<cr>
 nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
@@ -286,21 +287,21 @@ nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
 function! s:GrepOperator(type)
-let saved_unnamed_register = @@
-if a:type ==# 'v'
-normal! `<v`>y
-elseif a:type ==# 'char'
-normal! `[v`]y
-else
-return
-endif
-silent execute "grep! -EsinR " . shellescape(@@) . " ."
-copen
-set modifiable
-silent execute "!clear"
-silent execute "normal! \<c-w>H"
-"execute "normal! 'q:i!clear<cr>:copen<cr>:set modifiable<cr><c-w>H<esc>'"
-let @@ = saved_unnamed_register
+    let saved_unnamed_register = @@
+    if a:type ==# 'v'
+        normal! `<v`>y
+    elseif a:type ==# 'char'
+        normal! `[v`]y
+    else
+        return
+    endif
+    silent execute "grep! -EsinR " . shellescape(@@) . " ."
+    copen
+    set modifiable
+    silent execute "!clear"
+    silent execute "normal! \<c-w>H"
+    "execute "normal! 'q:i!clear<cr>:copen<cr>:set modifiable<cr><c-w>H<esc>'"
+    let @@ = saved_unnamed_register
 endfunction
 let g:quickfix_is_open = 0
 function! s:QuckfixToggle()
@@ -338,14 +339,14 @@ endfunction
 function! InteractiveWindow()
     let char = "s"
     while char =~ '^\w$'
-    echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
-    let char = s:getchar()
-    if char == "h" | call SetWindowSize("incr" ,-5 ,0) | endif
-    if char == "j" | call SetWindowSize("incr" ,0 ,5) | endif
-    if char == "k" | call SetWindowSize("incr" ,0 ,-5) | endif
-    if char == "l" | call SetWindowSize("incr" ,5 ,0) | endif
-    if char == "a" | call SetWindowSize("abs" ,0 ,0) | endif
-    redraw
+        echo "(InteractiveWindow) TYPE: h,j,k,l to resize or a for auto resize"
+        let char = s:getchar()
+        if char == "h" | call SetWindowSize("incr" ,-5 ,0) | endif
+        if char == "j" | call SetWindowSize("incr" ,0 ,5) | endif
+        if char == "k" | call SetWindowSize("incr" ,0 ,-5) | endif
+        if char == "l" | call SetWindowSize("incr" ,5 ,0) | endif
+        if char == "a" | call SetWindowSize("abs" ,0 ,0) | endif
+        redraw
     endwhile
 endfunction
 "}}}}
@@ -594,11 +595,11 @@ endfunction
 "}}}}
 "{{{{2  GetKey()
 function GetKey()
-  let c = getchar()
-  while c == "\<CursorHold>"
     let c = getchar()
-  endwhile
-  return c
+    while c == "\<CursorHold>"
+        let c = getchar()
+    endwhile
+    return c
 endfunction
 "}}}}
 "{{{{{2 function! FunList() 目前实现的函数
@@ -645,7 +646,7 @@ function! FunList()
     endwhile
 endfunction
 "}}}}}
- "{{{{{2 function! AddNumber() 在列表最后一个成员每项前加个标号并打印出来,第二次调用时会原处刷新，如果打印需要保留需要将光标下移
+"{{{{{2 function! AddNumber() 在列表最后一个成员每项前加个标号并打印出来,第二次调用时会原处刷新，如果打印需要保留需要将光标下移
 function! AddNumber(...)
     let isnumber = "tangxinlou"
     let isnumber2 = []
@@ -673,7 +674,7 @@ function! AddNumber(...)
 endfunction
 "}}}}}
 "{{{{2
- function! Getchar()
+function! Getchar()
     let c = ''
     let b = ""
     while 1
@@ -963,12 +964,12 @@ function! ParseFund(...)
                 let src = idx1
             else
                 let tail = idx1
-               let list[idj1] = lists[src:tail - 1]
-               let tail = 0
-               let src = idx1
-               "echo src
-               let idj1 +=1
-           endif
+                let list[idj1] = lists[src:tail - 1]
+                let tail = 0
+                let src = idx1
+                "echo src
+                let idj1 +=1
+            endif
         endif
         let idx1 += 1
     endwhile
@@ -1027,20 +1028,20 @@ function! CutData(...)
     while idx1 < len(list2)
         let list1 = split(list2[idx1],"|")
         if len(list1) ==# 1
-           if split(list1[0]," \\{3,5}")[0] ==# "指数低估"
-               let intlow = idx1
-               "echo "low"
-           elseif split(list1[0]," \\{3,5}")[0] ==# "指数正常"
-               let intmid = idx1
-               "echo "mid"
-           elseif split(list1[0]," \\{3,5}")[0] ==# "指数高估"
-               let inthigh = idx1
-               "echo "high"
-           elseif split(list1[0]," \\{3,5}")[0] ==# "指数未定义"
-               let intunsort = idx1
-               "echo "unsort"
-           else
-           endif
+            if split(list1[0]," \\{3,5}")[0] ==# "指数低估"
+                let intlow = idx1
+                "echo "low"
+            elseif split(list1[0]," \\{3,5}")[0] ==# "指数正常"
+                let intmid = idx1
+                "echo "mid"
+            elseif split(list1[0]," \\{3,5}")[0] ==# "指数高估"
+                let inthigh = idx1
+                "echo "high"
+            elseif split(list1[0]," \\{3,5}")[0] ==# "指数未定义"
+                let intunsort = idx1
+                "echo "unsort"
+            else
+            endif
         endif
         let idx1 += 1
     endwhile
@@ -1246,15 +1247,15 @@ endfunction
 "}}}}}
 "{{{{{2   MyCompare(i1, i2) 使用sort 排序list
 function! MyCompare(i1, i2)
-        let list = []
-        let list1 = []
-        let char = ""
-        let char1 = ""
-        let list = split(a:i1,"|")
-        let list1 = split(a:i2,"|")
-        "echo list
-        "echo list1
-        return list1[2] - list[2]
+    let list = []
+    let list1 = []
+    let char = ""
+    let char1 = ""
+    let list = split(a:i1,"|")
+    let list1 = split(a:i2,"|")
+    "echo list
+    "echo list1
+    return list1[2] - list[2]
 endfunction
 func MyCompare1(i1, i2)
     return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
@@ -1384,7 +1385,7 @@ function! IsContain(...)
     while idx1 < len(list)
         let char = matchstr(list[idx1],string)
         if matchstr(list[idx1],string) != ""
-          return list[idx1]
+            return list[idx1]
         endif
         let idx1 += 1
     endwhile
@@ -1440,20 +1441,20 @@ function! SumInvest(...)
         let indexlist[investment] = 0
         while idx2 < len(indexlist)
             if  investment ==# 1
-            if "low" ==# matchstr(indexlist[idx2],"low") || "Y" ==# matchstr(indexlist[idx2],"Y")
-                let indexlist[investment] = indexlist[investment] + indexlist[idx2]
-            endif
-        elseif  investment ==# 2
-            if sumVorR ==# 0
-                if "(R)" ==# matchstr(indexlist[idx2],"(R)")
-                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
+                if "low" ==# matchstr(indexlist[idx2],"low") || "Y" ==# matchstr(indexlist[idx2],"Y")
+                    let indexlist[investment] = indexlist[investment] + indexlist[idx2]
                 endif
-            elseif sumVorR ==# 1
-                if "(R)" ==# matchstr(indexlist[idx2],"(R)") || "(V)" ==# matchstr(indexlist[idx2],"(V)")
-                    let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
+            elseif  investment ==# 2
+                if sumVorR ==# 0
+                    if "(R)" ==# matchstr(indexlist[idx2],"(R)")
+                        let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
+                    endif
+                elseif sumVorR ==# 1
+                    if "(R)" ==# matchstr(indexlist[idx2],"(R)") || "(V)" ==# matchstr(indexlist[idx2],"(V)")
+                        let indexlist[investment] = indexlist[investment] + split(indexlist[idx2],")(")[2]
+                    endif
                 endif
             endif
-        endif
             let idx2 += 1
         endwhile
         let indexlist[investment] = split(indexlist[investment]," \\{3,30}")[0]
@@ -1637,31 +1638,31 @@ function! SumColumn(...)
                     let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
                 endif
             elseif idx2 ==# 2
-                    let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
-                    let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
-                    let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
+                let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                let value1 = split(investcolumn[idx2],")(")[1] + split(investtail[idx2],")(")[1]
+                let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
             elseif idx2 > 3
                 if  tmpinvestname !=# "汇添富中证生物科技A"
                     if idx1 ==# 2
-                    if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
-                        let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
-                        let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[2]
-                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
+                        if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
+                            let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                            let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[2]
+                            let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
+                        endif
+                    else
+                        if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
+                            let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
+                            let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[1]
+                            let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
+                        endif
                     endif
-                else
-                    if "(R)" ==# matchstr(investcolumn[idx2],"(R)")
-                        let value =  split(investcolumn[idx2],")(")[0] + split(investtail[idx2],")(")[0]
-                        let value1 = split(investcolumn[idx2],")(")[2] + split(investtail[idx2],")(")[1]
-                        let investtail[idx2] = join([value,")(",value1,")(R)"],"\x00")
-                    endif
-                endif
                 endif
             endif
             let idx2 += 1
         endwhile
         let idx1 += 1
-endwhile
-let investtail = join(investtail,"|")
+    endwhile
+    let investtail = join(investtail,"|")
     let indexinvestlist = add(indexinvestlist,investtail)
     return   indexinvestlist
 endfunction
@@ -1799,92 +1800,92 @@ endfunction
 "{{{{{  AnalyzeCode()  分析code
 nnoremap <F11>  :call AnalyzeCode()<cr>
 function! AnalyzeCode()
-   let targetcode = []
-   let codedict = {}
-   let tempdictlist = []
-   let numberfunc = []
-   let src = 0
-   let tail = 0
-   let idx1 = 0
-   let idj1 = 0
-   let codefile = readfile(expand("%:p"))
-   if count(codefile,"<<<<<<<<<<<<<<<<") && count(codefile,">>>>>>>>>>>>>>>")
-       echo "之前修改过"
-       let src = index(codefile,"<<<<<<<<<<<<<<<<")
-       let tail = index(codefile,">>>>>>>>>>>>>>>")
-       call remove(codefile,src,tail)
-       echo src tail
-   endif
-   let targetcode =  ParseCode(codefile,"# ")
-   if type(targetcode) ==# 3
-       while idx1 < len(targetcode)
-           echo targetcode[idx1][0]
-           let codedict[idx1 . "|"  . targetcode[idx1][0]] = targetcode[idx1]
-           "let codedict[idx1] = targetcode[idx1]
-           let idx1 += 1
-       endwhile
-       let dictkeys =  sort(keys(codedict))
-       let numberfunc = copy(dictkeys)
-       echo dictkeys
-       "echo codedict
-       let idx1 = 0
-       while idx1 < len(dictkeys)
-           let codedict[dictkeys[idx1]] = ParseCode(codedict[dictkeys[idx1]],"```c|```")
-           let idx1 += 1
-       endwhile
-       "call writefile(codedict[dictkeys[4]],"/opt6/tangxinlouosc/txl/parse")
-       let idx1 = 0
-       while idx1 < len(dictkeys)
-           let tempdictlist = codedict[dictkeys[idx1]]
-           let idj1 = 0
+    let targetcode = []
+    let codedict = {}
+    let tempdictlist = []
+    let numberfunc = []
+    let src = 0
+    let tail = 0
+    let idx1 = 0
+    let idj1 = 0
+    let codefile = readfile(expand("%:p"))
+    if count(codefile,"<<<<<<<<<<<<<<<<") && count(codefile,">>>>>>>>>>>>>>>")
+        echo "之前修改过"
+        let src = index(codefile,"<<<<<<<<<<<<<<<<")
+        let tail = index(codefile,">>>>>>>>>>>>>>>")
+        call remove(codefile,src,tail)
+        echo src tail
+    endif
+    let targetcode =  ParseCode(codefile,"# ")
+    if type(targetcode) ==# 3
+        while idx1 < len(targetcode)
+            echo targetcode[idx1][0]
+            let codedict[idx1 . "|"  . targetcode[idx1][0]] = targetcode[idx1]
+            "let codedict[idx1] = targetcode[idx1]
+            let idx1 += 1
+        endwhile
+        let dictkeys =  sort(keys(codedict))
+        let numberfunc = copy(dictkeys)
+        echo dictkeys
+        "echo codedict
+        let idx1 = 0
+        while idx1 < len(dictkeys)
+            let codedict[dictkeys[idx1]] = ParseCode(codedict[dictkeys[idx1]],"```c|```")
+            let idx1 += 1
+        endwhile
+        "call writefile(codedict[dictkeys[4]],"/opt6/tangxinlouosc/txl/parse")
+        let idx1 = 0
+        while idx1 < len(dictkeys)
+            let tempdictlist = codedict[dictkeys[idx1]]
+            let idj1 = 0
 
-           while idj1 < len(tempdictlist)
-               if idj1 ==# 0
-                   let numberfunc[idx1] = split(tempdictlist[0][0],"|")[2]
-               endif
-               "debug
-               "echo idx1 idj1
-               let tempdictlist[idj1] =  ListKeyWords(tempdictlist[idj1])
-               let idj1 += 1
-           endwhile
-           let codedict[dictkeys[idx1]] = tempdictlist
-           let idx1 += 1
-       endwhile
-       let idx1 = 0
-       while idx1 < len(dictkeys)
-           let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
-           let codedict[dictkeys[idx1]] =  WriteFund2Index(codedict[dictkeys[idx1]])
-           let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",idx1 + 1,"章节流程图"]))
-           let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
-           let idx1 += 1
-       endwhile
-       echo numberfunc
-       let idx1 = 0
-       let tempdictlist = []
-       while idx1 < len(dictkeys)
-           let tempdictlist = extend(tempdictlist,codedict[dictkeys[idx1]])
-           let idx1 += 1
-       endwhile
-       let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
-       let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
- "      call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
-       call extend(codefile,tempdictlist,8)
-       call writefile(codefile,expand("%:p"))
-   else
-       let codedict = ParseCode(codefile,"```c|```")
-       let idj1 = 0
-       while idj1 < len(codedict)
-           let codedict[idj1] =  ListKeyWords(codedict[idj1])
-           let idj1 += 1
-       endwhile
-       let codedict =  DrawTimingDiagram(codedict)
-       let codedict =  WriteFund2Index(codedict)
-       let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
-       let codedict = add(codedict,">>>>>>>>>>>>>>>")
- "      call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
-       call extend(codefile,codedict,8)
-       call writefile(codefile,expand("%:p"))
-   endif
+            while idj1 < len(tempdictlist)
+                if idj1 ==# 0
+                    let numberfunc[idx1] = split(tempdictlist[0][0],"|")[2]
+                endif
+                "debug
+                "echo idx1 idj1
+                let tempdictlist[idj1] =  ListKeyWords(tempdictlist[idj1])
+                let idj1 += 1
+            endwhile
+            let codedict[dictkeys[idx1]] = tempdictlist
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+        while idx1 < len(dictkeys)
+            let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
+            let codedict[dictkeys[idx1]] =  WriteFund2Index(codedict[dictkeys[idx1]])
+            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",idx1 + 1,"章节流程图"]))
+            let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
+            let idx1 += 1
+        endwhile
+        echo numberfunc
+        let idx1 = 0
+        let tempdictlist = []
+        while idx1 < len(dictkeys)
+            let tempdictlist = extend(tempdictlist,codedict[dictkeys[idx1]])
+            let idx1 += 1
+        endwhile
+        let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
+        let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
+        "      call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
+        call extend(codefile,tempdictlist,8)
+        call writefile(codefile,expand("%:p"))
+    else
+        let codedict = ParseCode(codefile,"```c|```")
+        let idj1 = 0
+        while idj1 < len(codedict)
+            let codedict[idj1] =  ListKeyWords(codedict[idj1])
+            let idj1 += 1
+        endwhile
+        let codedict =  DrawTimingDiagram(codedict)
+        let codedict =  WriteFund2Index(codedict)
+        let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
+        let codedict = add(codedict,">>>>>>>>>>>>>>>")
+        "      call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
+        call extend(codefile,codedict,8)
+        call writefile(codefile,expand("%:p"))
+    endif
 endfunction
 "}}}}}
 
@@ -1963,7 +1964,7 @@ function! ListKeyWords(...)
     else
         let keywords = join(templist)
         if "(" ==# matchstr(keywords,"(")
-        let keywords = split(keywords,"(")[0]
+            let keywords = split(keywords,"(")[0]
         endif
     endif
 
@@ -2008,56 +2009,56 @@ endfunction
 
 "{{{{{  DrawTimingDiagram()  画时序图
 function! DrawTimingDiagram(...)
-   let drawcode = a:1
-   let drawlist = [" "]
-   let idx1 = 0
-   let tempindex = 0
-   let prvindex = 0
-   let drawhead = []
-   let templist = []
-   let tempnotes = []
-   let tempcodelist = []
-   let drawlist =  repeat(drawlist,len(drawcode) * 2)
-   while idx1 < len(drawcode)
-       let templist = split(drawcode[idx1],"|")
-       if 0 ==# count(drawhead,templist[0])
-           let drawhead = add(drawhead,templist[0])
-       endif
-       let idx1 += 1
-   endwhile
-   let drawhead = add(drawhead," ")
-   let drawhead = insert(drawhead," ")
-   let idx1 = len(drawcode)
-   while idx1 > 0
-       let templist = [" "]
-       let tempnotes = [" "]
-       let templist =  repeat(templist,len(drawhead))
-       let tempnotes =  repeat(tempnotes,len(drawhead))
-       let tempcodelist = split(drawcode[idx1 - 1],"|")
-       let tempindex = index(drawhead,tempcodelist[0])
-       let templist[tempindex] = tempcodelist[1]
-       let tempnotes[tempindex] = tempcodelist[2]
-       if idx1 < len(drawcode)
-           if prvindex > tempindex
-               let templist[tempindex  + 1] = ">>>>"
-           elseif prvindex ==# tempindex
-               let templist[tempindex  + 1] = "V"
-           elseif  prvindex <  tempindex
-               let templist[tempindex  - 1] = "<<<<"
-           endif
-       endif
-       let drawlist[idx1 * 2 - 1] = templist
-       let drawlist[idx1 * 2 - 2] = tempnotes
-       let prvindex = tempindex
-       let idx1 -= 1
-   endwhile
-   let drawlist = insert(drawlist,drawhead)
-   let idx1 = 0
-   while idx1 < len(drawlist)
-       let drawlist[idx1] = join(drawlist[idx1],"|")
-       let idx1 += 1
-   endwhile
-   return drawlist
+    let drawcode = a:1
+    let drawlist = [" "]
+    let idx1 = 0
+    let tempindex = 0
+    let prvindex = 0
+    let drawhead = []
+    let templist = []
+    let tempnotes = []
+    let tempcodelist = []
+    let drawlist =  repeat(drawlist,len(drawcode) * 2)
+    while idx1 < len(drawcode)
+        let templist = split(drawcode[idx1],"|")
+        if 0 ==# count(drawhead,templist[0])
+            let drawhead = add(drawhead,templist[0])
+        endif
+        let idx1 += 1
+    endwhile
+    let drawhead = add(drawhead," ")
+    let drawhead = insert(drawhead," ")
+    let idx1 = len(drawcode)
+    while idx1 > 0
+        let templist = [" "]
+        let tempnotes = [" "]
+        let templist =  repeat(templist,len(drawhead))
+        let tempnotes =  repeat(tempnotes,len(drawhead))
+        let tempcodelist = split(drawcode[idx1 - 1],"|")
+        let tempindex = index(drawhead,tempcodelist[0])
+        let templist[tempindex] = tempcodelist[1]
+        let tempnotes[tempindex] = tempcodelist[2]
+        if idx1 < len(drawcode)
+            if prvindex > tempindex
+                let templist[tempindex  + 1] = ">>>>"
+            elseif prvindex ==# tempindex
+                let templist[tempindex  + 1] = "V"
+            elseif  prvindex <  tempindex
+                let templist[tempindex  - 1] = "<<<<"
+            endif
+        endif
+        let drawlist[idx1 * 2 - 1] = templist
+        let drawlist[idx1 * 2 - 2] = tempnotes
+        let prvindex = tempindex
+        let idx1 -= 1
+    endwhile
+    let drawlist = insert(drawlist,drawhead)
+    let idx1 = 0
+    while idx1 < len(drawlist)
+        let drawlist[idx1] = join(drawlist[idx1],"|")
+        let idx1 += 1
+    endwhile
+    return drawlist
 endfunction
 "}}}}}
 
@@ -2086,3 +2087,6 @@ endfunction
 "}}}}}
 
 "}}}}
+if &diff
+    syntax off
+endif
