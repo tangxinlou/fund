@@ -9,10 +9,10 @@ if [ ! -d $1 -o ! -d $2 ];then
 fi
 
 ## 注意，Mac的readlink程序和GNU readlink功能不同，Mac需要下载greadlink
-arg1=`greadlink -f $1`
-arg2=`greadlink -f $2`
+arg1=`readlink -f $1`
+arg2=`readlink -f $2`
 
-tmp_dir=/tmp/tmp.$$
+tmp_dir=~/tmp/tmp.$$
 rm -rf $tmp_dir
 mkdir -p $tmp_dir || exit 0
 #echo $tmp_dir
@@ -27,7 +27,7 @@ function get_file_md5
         return 1
     fi
     local file=$1
-    md5 $file | awk -F"=" '{print $2}'
+    md5sum $file | awk -F"=" '{print $2}'
 }
 
 function myexit
@@ -82,11 +82,11 @@ function check_value
     awk -v dir1=$arg1 -v dir2=$arg2 '{
         if (NR==1)
         {
-            printf("edit %s/%s\nvertical diffsplit %s/%s\n", dir1, $0, dir2, $0)
+            printf("edit %s/%s\nvertical diffsplit %s/%s\nsyntax off\n", dir1, $0, dir2, $0)
         }
         else
         {
-            printf("tabnew %s/%s\nvertical diffsplit %s/%s\n", dir1, $0, dir2, $0)
+            printf("tabnew %s/%s\nvertical diffsplit %s/%s\nsyntax off\n", dir1, $0, dir2, $0)
         }
     }' $tmp_file
 }
@@ -108,9 +108,9 @@ do
         fi
         md5_1=`get_file_md5 $file`
         md5_2=`get_file_md5 $arg2/$file_relative_name`
-        if [[ "$md5_1" = "$md5_2" ]];then
-            continue
-        fi
+        #if [[ "$md5_1" = "$md5_2" ]];then
+        #    continue
+        #fi
         ## file not same
         echo "$file_relative_name" >> $tmp_dir/diff_file
     else
