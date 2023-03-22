@@ -27,7 +27,8 @@ function get_file_md5
         return 1
     fi
     local file=$1
-    md5sum $file | awk -F"=" '{print $2}'
+    md5sum $file | awk -F"*" '{print $1}'
+    #md5sum $file | awk -F"*"
 }
 
 function myexit
@@ -108,11 +109,13 @@ do
         if [ $? -ne 0 ];then
             continue
         fi
+        #echo "tangxinlou4"
         md5_1=`get_file_md5 $file`
         md5_2=`get_file_md5 $arg2/$file_relative_name`
-        #if [[ "$md5_1" = "$md5_2" ]];then
-        #    continue
-        #fi
+        #echo "tangxinlou2"
+        if [[ "$md5_1" = "$md5_2" ]];then
+            continue
+        fi
         ## file not same
         echo "$file_relative_name" >> $tmp_dir/diff_file
     else
