@@ -488,6 +488,45 @@ function! MakeCompressedPackage()
     call system("tar -cvf copyfile.tar ./cp")
 endfunction
 "}}}}}
+"{{{{{2   MyCompare(i1, i2) 使用sort 排序list
+function! MyCompare(i1, i2)
+    let list = []
+    let list1 = []
+    let char = ""
+    let char1 = ""
+    let list = split(a:i1,"|")
+    let list1 = split(a:i2,"|")
+    "echo list
+    "echo list1
+    return list1[2] - list[2]
+endfunction
+func! MyCompare1(i1, i2)
+    return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
+endfunc
+function! MyCompareVersion(i1, i2)
+    let idex = 0
+    let biger = ""
+    let smaller = ""
+    "\d\{0,4}\.\d\{1,2}.\{,3}\.\d\{1,2}
+    let smaller1 = matchstr(a:i1,"\\d\\{0,4}\\.\\d\\{1,2}.\\{,3}\\.\\d\\{1,2}")
+    let biger1 = matchstr(a:i2,"\\d\\{0,4}\\.\\d\\{1,2}.\\{,3}\\.\\d\\{1,2}")
+    let smaller = split(smaller1,"\\.")
+    let biger = split(biger1,"\\.")
+    let smallerlen = (len(biger) >= len(smaller)) ?  len(smaller) : len(biger)
+    while idex < smallerlen
+        "echo biger1  . " " .  smaller1
+        let difference =  biger[idex] - smaller[idex]
+        if difference > 0
+            return 1
+        elseif  difference < 0
+            return -1
+        elseif  difference == 0
+        endif
+        let idex += 1
+    endwhile
+    return 0
+endfunction
+"}}}}}
 "{{{{{2   IsContain(...) string list返回对应 列表项
 function! IsContain(...)
     let string = ""
@@ -2034,7 +2073,7 @@ function! GetFundValue(...)
     return fundvalues1
 endfunction
 "}}}}}
-"{{{{{2   WriteFile(...)  获取指数源数据写入fund文件
+"{{{{{2  function! WriteFile(...)                  获取指数源数据写入fund文件
 "noremap <F5> :call  WriteFile()
 function! WriteFile(...)
     let idx1 = 0
@@ -2073,8 +2112,9 @@ function! WriteFile(...)
         while idx1 < len(lists)
             let templist = split(lists[idx1],"|")
             if len(templist) ==# 2
-                echo templist
-                echo split(list[0],"|")[1]
+                "debug
+                "echo templist
+                "echo split(list[0],"|")[1]
                 if templist[1] ==# split(list[0],"|")[1]
                     echo "tangxinlou2"
                     return
@@ -2306,7 +2346,6 @@ function! WriteFund2Index(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   WriteFund2Index1(...) 格式化fund2index
 function! WriteFund2Index1(...)
     let list2fmt = []
@@ -2385,7 +2424,7 @@ function! WriteFund2Index1(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2   CalculateInvest(...) 计算投资
+"{{{{{2  function! CalculateInvest(...)            计算投资
 noremap <F5> :call  CalculateInvest()
 function! CalculateInvest(...)
     let idx1 = 0
@@ -2427,22 +2466,6 @@ function! CalculateInvest(...)
         endif
     endif
 endfunction
-"}}}}}
-"{{{{{2   MyCompare(i1, i2) 使用sort 排序list
-function! MyCompare(i1, i2)
-    let list = []
-    let list1 = []
-    let char = ""
-    let char1 = ""
-    let list = split(a:i1,"|")
-    let list1 = split(a:i2,"|")
-    "echo list
-    "echo list1
-    return list1[2] - list[2]
-endfunction
-func MyCompare1(i1, i2)
-    return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
-endfunc
 "}}}}}
 "{{{{{2   CalculateAmount(...) investall , fund2indexall,indexall ,time  flag 计算金额
 function! CalculateAmount(...)
@@ -2833,23 +2856,23 @@ function! SumColumn(...)
     return   indexinvestlist
 endfunction
 "}}}}}
-"{{{{2  InputData()   一键输入数据
+"{{{{2 function! InputData()                       一键输入数据
 "noremap <F4> :call  InputData()
 function! InputData()
     call WriteFile()
-    echo "选择2"
+    echo "获取PE选2"
     call CalculateInvest()
-    echo "选择3"
+    echo "analyze.txt 选3"
     call WriteFund2Index()
 
 endfunction
 "}}}}
-"{{{{2  ObtainAmount()   一键计算金额
+"{{{{2 function! ObtainAmount()                    一键计算金额
 "noremap <F4> :call  ObtainAmount()
 function! ObtainAmount()
-    echo "选择1"
+    echo "金额选1"
     call CalculateInvest()
-    echo "选择2"
+    echo "index.txt 选2"
     call WriteFund2Index()
 
 endfunction
