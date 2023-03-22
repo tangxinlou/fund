@@ -1431,11 +1431,12 @@ function! FunList()
 endfunction
 "}}}}}
 "{{{{{2 function! IsAddDiff()                    动态添加需要比较的文件
-function! Isadddiff()
+"https://github.com/handy1989/vim/blob/master/diffdir
+function! IsAddDiff()
     let isadddiff = "tangxinlou"
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
-    let isdiffpatch = "/opt6/tangxinlouosc/txl/1.txt"
+    let isdiffpatch = "/c/Users/Administrator/txl/1.txt"
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -1443,7 +1444,7 @@ function! Isadddiff()
     let curadddiff2 = []
     let isadddiff = system("pwd")
     let isadddiff = join(split(isadddiff,"\x00"))
-    let curadddiff = readfile("/opt6/tangxinlouosc/txl/1.txt")
+    let curadddiff = readfile(isdiffpatch)
     let curadddiff1 = copy(curadddiff)
     call AddNumber1(curadddiff1)
     let curadddiff2 = split(curadddiff[len(curadddiff) - 1],"")
@@ -1457,7 +1458,7 @@ function! Isadddiff()
             let idx2 = input("请输入编号")
             let curadddiff2 = split(curadddiff[idx2],"")
             "echo curadddiff2
-            let isadddiff1 = join(["~/txl/diffdir.sh" , " " , curadddiff2[1] ," ", curadddiff2[0]])
+            let isadddiff1 = join(["/c/Users/Administrator/txl/diffdir.sh" , " " , curadddiff2[0] ," ", curadddiff2[1]])
             execute "!" .  isadddiff1
         endif
     elseif 1 ==# len(curadddiff2)
@@ -1467,7 +1468,11 @@ function! Isadddiff()
             echo "选择右边文件\n"
         endif
     else
+        let curadddiff = add(curadddiff,isadddiff)
+        call writefile(curadddiff,isdiffpatch)
+        echo "第一次比较，文件是空的"
         return
+
     endif
     let curadddiff1 = copy(curadddiff)
     call AddNumber1(curadddiff1)
