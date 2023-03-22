@@ -97,12 +97,14 @@ function check_value
 for file in `find $arg1 | grep -v "/\." | grep -v "^\."`
 do
     file_relative_name=${file#$arg1/}
-    file $file | grep -Eq "text"
+    #file xxx.txt  可以查询文件类型，bin 文件类型有text data 等等
+    #有些二进制bin文件修改了识别不出来，添加上data 类型
+    file $file | grep -Eq "text|data"
     if [ $? -ne 0 ];then
         continue
     fi
     if [ -f $arg2/$file_relative_name ];then
-        file $arg2/$file_relative_name | grep -Eq "text"
+        file $arg2/$file_relative_name | grep -Eq "text|data"
         if [ $? -ne 0 ];then
             continue
         fi
