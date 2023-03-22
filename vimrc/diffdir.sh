@@ -43,12 +43,18 @@ function show_diff
         return 1
     fi
     local diff_file=$1
-    echo "diff file:"
+    echo $tmp_dir
     printf "    %-55s  %-52s\n" $arg1 $arg2
-    if [ -f $tmp_dir/A_ony_file ];then
-        awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/A_ony_file
-        python -c 'print "-"*100'
+    if [ -f $tmp_dir/A_only_file ];then
+        echo "A only file"
+        awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/A_only_file
+        #python -c 'print "-"*100'
     fi
+    #if [ -f $tmp_dir/same_file ];then
+    #    awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/same_file
+    #    #python -c 'print "-"*100'
+    #fi
+    echo "diff file:"
     awk '{printf("    [%2d] %-50s  %-50s\n", NR, $1, $1)}' $diff_file
     echo "(s):show diff files (a):open all diff files (q):exit"
     echo
@@ -114,12 +120,13 @@ do
         md5_2=`get_file_md5 $arg2/$file_relative_name`
         #echo "tangxinlou2"
         if [[ "$md5_1" = "$md5_2" ]];then
+            echo "$file_relative_name" >> $tmp_dir/same_file
             continue
         fi
         ## file not same
         echo "$file_relative_name" >> $tmp_dir/diff_file
     else
-        echo "$file_relative_name" >> $tmp_dir/A_ony_file
+        echo "$file_relative_name" >> $tmp_dir/A_only_file
     fi
 done
 
