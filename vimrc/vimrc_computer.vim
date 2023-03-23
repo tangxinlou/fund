@@ -4,12 +4,12 @@ let mapleader = ","
 map <F6> :call TitleDet()<cr>
 function! AddTitle()
     call append(0,"/*******************************************************")
-    call append(1,"$ Author       : 唐新楼 ")
-    call append(2,"$ Last modified: ".strftime("%Y-%m-%d %H:%M"))
-    call append(3,"$ Email        : **************")
-    call append(4,"$ blog         : https://blog.csdn.net/daweigongting")
-    call append(5,"$ Filename     : ".expand("%:t"))
-    call append(6,"$ Description  : ")
+    call append(1,"$Author       : 唐新楼 ")
+    call append(2,"$Last modified: ".strftime("%Y-%m-%d %H:%M"))
+    call append(3,"$Email        : 个人邮箱")
+    call append(4,"$blog         : https://blog.csdn.net/daweigongting")
+    call append(5,"$Filename     : ".expand("%:t"))
+    call append(6,"$Description  : ")
     call append(7,"*******************************************************/")
     echohl WarningMsg | echo "Successful in adding copyright." | echohl None
 endfunction
@@ -95,14 +95,15 @@ set guioptions=mrb
 set diffopt=context:3
 
 "}}}}}
- "vimdiff 颜色配置{{{
+"vimdiff 颜色配置{{{
 if &diff
     "colorscheme morning
     "colorscheme industry
     "set diffopt-=internal
     "set diffopt+=iwhite
-    syntax off "diff模式关闭颜色高亮
+    "diff模式关闭颜色高亮
     colorscheme default
+    syntax off
 endif
 "}}}
 "快捷输入{{{{
@@ -673,6 +674,153 @@ function! DictTest()
     endwhile
 endfunction
 "}}}}
+"{{{{{2   WriteFund2Index(...) 格式化fund2index
+function! WriteFund2Index(...)
+    let list2fmt = []
+    let list2fmt1 = []
+    let list2fmt2 = []
+    let idx1 = 0
+    let idx12 = 0
+    let char = ""
+    let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2 analyze.txt 选3")
+    if char ==# "1"
+        let list2fmt = readfile("fund2index.txt")
+    elseif char ==# "2"
+        let list2fmt = readfile("index.txt")
+    elseif char ==# "3"
+        let list2fmt = readfile("analyze.txt")
+    endif
+    while idx1 < len(list2fmt)
+        let idx2 = 0
+        let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
+        while idx2 < len(list2fmt1)
+            if char ==# "1"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
+                endif
+            elseif char ==# "2"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
+                elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
+                endif
+            elseif char ==# "3"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
+                endif
+            endif
+            let idx2 += 1
+        endwhile
+        let list2fmt[idx1] = join(list2fmt1,"\x00")
+        let idx1 += 1
+    endwhile
+    if len(list2fmt) < 5
+        return
+    endif
+    if char ==# "1"
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"fund2index.txt")
+        endif
+    elseif char ==# "2"
+        let list2fmt2 = copy(list2fmt)
+        call sort(list2fmt2,"MyCompare")
+        call append(line('.'),list2fmt2)
+        redraw
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"index.txt")
+        endif
+    elseif char ==# "3"
+        let list2fmt = RestoreOrder(list2fmt)
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"analyze.txt")
+        endif
+    endif
+endfunction
+"}}}}}
+"{{{{{2  function! WriteFund2Index1(...) 格式化fund2index
+function! WriteFund2Index1(...)
+    let list2fmt = []
+    let list2fmt1 = []
+    let list2fmt2 = []
+    let idx1 = 0
+    let idx12 = 0
+    let char = ""
+    let list2fmt =  a:1
+    let char = 4
+    if a:0 ==# 0
+        let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2 analyze.txt 选3, ")
+        if char ==# "1"
+            let list2fmt = readfile("fund2index.txt")
+        elseif char ==# "2"
+            let list2fmt = readfile("index.txt")
+        elseif char ==# "3"
+            let list2fmt = readfile("analyze.txt")
+        endif
+    endif
+    while idx1 < len(list2fmt)
+        let idx2 = 0
+        if char ==# 4
+            let list2fmt1 = split(list2fmt[idx1],"|")
+        else
+            let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
+        endif
+        while idx2 < len(list2fmt1)
+            if char ==# "1"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
+                endif
+            elseif char ==# "2"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
+                elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
+                endif
+            elseif char ==# "3"
+                if idx2 ==# 0
+                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
+                endif
+            elseif char ==# 4
+                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],60)
+            endif
+            let idx2 += 1
+        endwhile
+        let list2fmt[idx1] = join(list2fmt1,"\x00")
+        let idx1 += 1
+    endwhile
+    if char ==# "1"
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"fund2index.txt")
+        endif
+    elseif char ==# "2"
+        let list2fmt2 = copy(list2fmt)
+        call sort(list2fmt2,"MyCompare")
+        call append(line('.'),list2fmt2)
+        redraw
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"index.txt")
+        endif
+    elseif char ==# "3"
+        let list2fmt = RestoreOrder(list2fmt)
+        if "yes" ==# input("是否写入")
+            call writefile(list2fmt,"analyze.txt")
+        endif
+    elseif char ==# "4"
+        return list2fmt
+    endif
+endfunction
+"}}}}}  
 "}}}}
 "{{{{vmake 命令
 
@@ -2282,154 +2430,7 @@ function! CutData(...)
     return lists
 endfunction
 "}}}}}
-"{{{{{2   WriteFund2Index(...) 格式化fund2index
-function! WriteFund2Index(...)
-    let list2fmt = []
-    let list2fmt1 = []
-    let list2fmt2 = []
-    let idx1 = 0
-    let idx12 = 0
-    let char = ""
-    let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2 analyze.txt 选3")
-    if char ==# "1"
-        let list2fmt = readfile("fund2index.txt")
-    elseif char ==# "2"
-        let list2fmt = readfile("index.txt")
-    elseif char ==# "3"
-        let list2fmt = readfile("analyze.txt")
-    endif
-    while idx1 < len(list2fmt)
-        let idx2 = 0
-        let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
-        while idx2 < len(list2fmt1)
-            if char ==# "1"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
-                endif
-            elseif char ==# "2"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
-                elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
-                endif
-            elseif char ==# "3"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
-                endif
-            endif
-            let idx2 += 1
-        endwhile
-        let list2fmt[idx1] = join(list2fmt1,"\x00")
-        let idx1 += 1
-    endwhile
-    if len(list2fmt) < 5
-        return
-    endif
-    if char ==# "1"
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"fund2index.txt")
-        endif
-    elseif char ==# "2"
-        let list2fmt2 = copy(list2fmt)
-        call sort(list2fmt2,"MyCompare")
-        call append(line('.'),list2fmt2)
-        redraw
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"index.txt")
-        endif
-    elseif char ==# "3"
-        let list2fmt = RestoreOrder(list2fmt)
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"analyze.txt")
-        endif
-    endif
-endfunction
-"}}}}}
-"{{{{{2   WriteFund2Index1(...) 格式化fund2index
-function! WriteFund2Index1(...)
-    let list2fmt = []
-    let list2fmt1 = []
-    let list2fmt2 = []
-    let idx1 = 0
-    let idx12 = 0
-    let char = ""
-    let list2fmt =  a:1
-    let char = 4
-    if a:0 ==# 0
-        let char = input("格式化哪个文件，fund2index.txt 选1,index.txt 选2 analyze.txt 选3, ")
-        if char ==# "1"
-            let list2fmt = readfile("fund2index.txt")
-        elseif char ==# "2"
-            let list2fmt = readfile("index.txt")
-        elseif char ==# "3"
-            let list2fmt = readfile("analyze.txt")
-        endif
-    endif
-    while idx1 < len(list2fmt)
-        let idx2 = 0
-        if char ==# 4
-            let list2fmt1 = split(list2fmt[idx1],"|")
-        else
-            let list2fmt1 = split(join(split(list2fmt[idx1],"|")))
-        endif
-        while idx2 < len(list2fmt1)
-            if char ==# "1"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],35)
-                endif
-            elseif char ==# "2"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],35)
-                elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
-                endif
-            elseif char ==# "3"
-                if idx2 ==# 0
-                    let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
-                else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
-                endif
-            elseif char ==# 4
-                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],60)
-            endif
-            let idx2 += 1
-        endwhile
-        let list2fmt[idx1] = join(list2fmt1,"\x00")
-        let idx1 += 1
-    endwhile
-    if char ==# "1"
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"fund2index.txt")
-        endif
-    elseif char ==# "2"
-        let list2fmt2 = copy(list2fmt)
-        call sort(list2fmt2,"MyCompare")
-        call append(line('.'),list2fmt2)
-        redraw
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"index.txt")
-        endif
-    elseif char ==# "3"
-        let list2fmt = RestoreOrder(list2fmt)
-        if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"analyze.txt")
-        endif
-    elseif char ==# "4"
-        return list2fmt
-    endif
-endfunction
-"}}}}}
-"{{{{{2  function! CalculateInvest(...)            计算投资
+"{{{{{2  function! CalculateInvest(...)            计算投资 普通模式<F5>调用
 noremap <F5> :call  CalculateInvest()
 function! CalculateInvest(...)
     let idx1 = 0
@@ -2472,7 +2473,7 @@ function! CalculateInvest(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2   CalculateAmount(...) investall , fund2indexall,indexall ,time  flag 计算金额
+"{{{{{2  function! CalculateAmount(...)                     investall , fund2indexall,indexall ,time  flag 计算金额
 function! CalculateAmount(...)
     let amounthead = ""
     let amountlow = []
@@ -2585,8 +2586,7 @@ function! CalculateAmount(...)
     return invests
 endfunction
 "}}}}}
-"{{{{{2   ConsolidateData(...) 整合index 文件，使数据化
-noremap <F5> :call  ConsolidateData()
+"{{{{{2  function! ConsolidateData(...)                     整合index 文件，使数据化
 function! ConsolidateData(...)
     let indexfilelist = []
     let list2fmt1 = []
@@ -3045,7 +3045,7 @@ function! AnalyzeCode()
         let idx1 = 0
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
-            let codedict[dictkeys[idx1]] =  WriteFund2Index(codedict[dictkeys[idx1]])
+            let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",dictkeys[idx1]," 流程图"]))
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
             let idx1 += 1
@@ -3070,7 +3070,7 @@ function! AnalyzeCode()
             let idj1 += 1
         endwhile
         let codedict =  DrawTimingDiagram(codedict)
-        let codedict =  WriteFund2Index(codedict)
+        let codedict =  WriteFund2Index1(codedict)
         let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
         let codedict = add(codedict,">>>>>>>>>>>>>>>")
         call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
