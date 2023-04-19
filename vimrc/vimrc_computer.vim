@@ -3564,6 +3564,34 @@ endfunction
 "}}}}
 
 
+"{{{{test
+"{{{{{2  TestTest(...)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
+function! TestTest(...)
+   let files = [] 
+   let idx1 = 0
+   let files1 = readfile("/d/txl/test/1.csv")
+   echo len(files1)
+   let temp_files = [' ']
+   let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
+   while idx1 < len(files1)
+       let temp_files[idx1 / 2] = files1[idx1]  . " " . files1[idx1 + 1]
+       let idx1 += 2
+   endwhile
+   call writefile(temp_files,"/d/txl/test/2.csv")
+   silent execute "normal! :e /d/txl/test/2.csv\<cr>"
+   silent execute "normal! :%s/？ /？ ,/g\<cr>"
+   silent execute "normal! :%s/A、/,A、/g\<cr>"
+   silent execute "normal! :%s/B、/,B、/g\<cr>"
+   silent execute "normal! :%s/C、/,C、/g\<cr>"
+   silent execute "normal! :%s/D、/,D、/g\<cr>"
+   silent execute "normal! :%s/E、/,E、/g\<cr>"
+   silent execute "normal! :%s/F、/,F、/g\<cr>"
+
+   
+endfunction
+"}}}}} 
+"}}}}
+
 
 "forgroundTimeForWifi.\{,20}",
 "%g!/唐新楼重新指派了缺陷/d
