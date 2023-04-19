@@ -9,7 +9,7 @@ function! AddTitle()
     call append(3,"$Email        : 个人邮箱")
     call append(4,"$blog         : https://blog.csdn.net/daweigongting")
     call append(5,"$Filename     : ".expand("%:t"))
-    call append(6,"$Description  : ")
+    call append(6,"$Description  : tangxinlou")
     call append(7,"*******************************************************/")
     echohl WarningMsg | echo "Successful in adding copyright." | echohl None
 endfunction
@@ -108,7 +108,7 @@ endif
 "}}}
 "快捷输入{{{{
 "iabbrev com tangxinlou@wingtech.com
-iabbrev txl tangxinlou
+"iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname
 iabbrev grep grep -Esinr
@@ -137,10 +137,19 @@ augroup filetype_make
     autocmd FileType make  setlocal  noexpandtab
 augroup END
 augroup filetype_markdown
-    autocmd FileType markdown  setlocal foldmethod=indent
+    "autocmd FileType markdown  setlocal foldmethod=manual syntax marker
+    "autocmd FileType markdown  setlocal foldmethod=indent
+    "autocmd FileType markdown  setlocal foldignore=
+    autocmd FileType markdown  setlocal foldmethod=expr
+    autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
 augroup END
 augroup filetype_dts
     autocmd FileType dts  setlocal foldmethod=indent
+    autocmd FileType dts  setlocal foldignore=
+augroup END
+augroup filetype_csv
+    autocmd BufNewFile,BufRead *.csv      setf csv
+    autocmd BufWrite *.csv   :call VisualiZationcsv(2,",")
 augroup END
 "保存文件打印
 augroup testgroup
@@ -283,7 +292,10 @@ nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
 nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vhc :execute "vim!" shellescape(expand("<cword>"))"**/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+"nnoremap <leader>vhc :execute "vimgrep!" shellescape(expand("<cword>")) " **/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 "执行命令
 nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 ""}}}}
@@ -453,13 +465,14 @@ function! MakeCompressedPackage()
     let templist = []
     "}}}}}
     let command = "pwd"
+    "set fileformats=dos
+    call system("rm *.tar")
+    call system("rm  -rf cp")
     let iscopyconf = input("是否打包conf 文件")
     let iscopyapk = input("是否打包apk 文件")
     let iscopyso = input("是否打包so 文件")
-
     let curpath = system(command)
     call system("cp -rf " . intentpath . " ./ ")
-    call system("rm *.tar")
     let batfile = readfile("./cp/cp64.host.R.bat")
 
     if iscopyso ==# "yes"
@@ -486,6 +499,10 @@ function! MakeCompressedPackage()
     endif
     call writefile(batfile,"./cp/cp64.host.R.bat")
     call append(line("."),batfile)
+    silent execute "normal! :tabnew\<cr>"
+    silent execute "normal! :e ./cp/cp64.host.R.bat\<cr>"
+    silent execute "normal! \<c-v>G$A\<c-v>\<c-m>\<esc>"
+    silent execute "normal! :wq\<cr>"
     call system("tar -cvf copyfile.tar ./cp")
 endfunction
 "}}}}}
@@ -792,7 +809,11 @@ function! WriteFund2Index1(...)
                     let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
                 endif
             elseif char ==# 4
-                let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],60)
+                if idx2 ==# 0 || idx2 ==# len(list2fmt1) - 1
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],5)
+                else
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],60)
+                endif
             endif
             let idx2 += 1
         endwhile
@@ -820,7 +841,7 @@ function! WriteFund2Index1(...)
         return list2fmt
     endif
 endfunction
-"}}}}}  
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -1086,7 +1107,7 @@ function! GitStatus()
         elseif "deleted:" ==# matchstr(Preadd[idx1],"deleted:")
             let idx1 += 2
         else
-            if ".sw" ==# matchstr(Preadd[idx1],".sw") || ".patch" ==# matchstr(Preadd[idx1],".patch") || "out_" ==# matchstr(Preadd[idx1],"out_") || "buildconfig.ini" ==# matchstr(Preadd[idx1],"buildconfig.ini") || "tangxinlouosc_buildurl.txt" ==# matchstr(Preadd[idx1],"tangxinlouosc_buildurl.txt") || "build.log" ==# matchstr(Preadd[idx1],"build.log")
+            if ".sw" ==# matchstr(Preadd[idx1],".sw") || ".patch" ==# matchstr(Preadd[idx1],".patch") || "out_" ==# matchstr(Preadd[idx1],"out_") || "buildconfig.ini" ==# matchstr(Preadd[idx1],"buildconfig.ini") || "tangxinlouosc_buildurl.txt" ==# matchstr(Preadd[idx1],"tangxinlouosc_buildurl.txt") || "build.log" ==# matchstr(Preadd[idx1],"build.log") || "new file" ==# matchstr(Preadd[idx1],"new file")
                 "Preadd->remove(idx1)
                 call remove(Preadd,idx1)
                 let idx1 = 0
@@ -1130,7 +1151,7 @@ function! GitAdd()
             call system("git rm " . Precommit[idx2 + 1])
             let idx2 += 2
         else
-            call system("git add " . Precommit[idx2])
+            "call system("git add " . Precommit[idx2])
             let idx2 += 1
         endif
     endwhile
@@ -1603,6 +1624,9 @@ function! IsAddDiff()
             call writefile(curadddiff,isdiffpatch)
             echo "选择左边文件\n"
         elseif  "yes" ==# tempchar
+            let curadddiff = reverse(curadddiff)
+            let curadddiff1 = copy(curadddiff)
+            call AddNumber1(curadddiff1)
             let idx2 = input("请输入编号")
             let curadddiff2 = split(curadddiff[idx2],"")
             "echo curadddiff2
@@ -1941,31 +1965,31 @@ function! s:DynamicDiff(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
 
-    let templeft = readfile("/opt6/tangxinlouosc/txl/left")
-    let tempright = readfile("/opt6/tangxinlouosc/txl/right")
+    let templeft = readfile("/d/txl/left")
+    let tempright = readfile("/d/txl/right")
 
     if len(templeft) != 0 &&  len(tempright) != 0
         if "yes" ==# input("是否比较")
-            call system("diff -Naur  /opt6/tangxinlouosc/txl/left /opt6/tangxinlouosc/txl/right > /opt6/tangxinlouosc/txl/1.patch ")
-            silent tabnew   /opt6/tangxinlouosc/txl/right
-            silent vsplit   /opt6/tangxinlouosc/txl/left
+            call system("diff -Naur  /d/txl/left /d/txl/right > /d/txl/1.patch ")
+            silent tabnew   /d/txl/right
+            silent vsplit   /d/txl/left
             if "yes" ==# input("是否清空两个文件，yes 是清空")
-                call writefile([],"/opt6/tangxinlouosc/txl/left")
-                call writefile([],"/opt6/tangxinlouosc/txl/right")
+                call writefile([],"/d/txl/left")
+                call writefile([],"/d/txl/right")
             endif
         else
             echo "两个文件有内容把复制的内容保存在左边"
-            call writefile(templist,"/opt6/tangxinlouosc/txl/left")
-            call writefile([],"/opt6/tangxinlouosc/txl/right")
+            call writefile(templist,"/d/txl/left")
+            call writefile([],"/d/txl/right")
         endif
     elseif len(templeft) ==# 0 &&  len(tempright) ==# 0
 
         echo "两个文件都是空的，把复制的内容保存在左边"
-        call writefile(templist,"/opt6/tangxinlouosc/txl/left")
+        call writefile(templist,"/d/txl/left")
     elseif len(templeft) != 0 &&  len(tempright) ==# 0
 
         echo "左边内容已存在，把复制的内容保存在右边"
-        call writefile(templist,"/opt6/tangxinlouosc/txl/right")
+        call writefile(templist,"/d/txl/right")
     endif
     call input("是否继续")
     let @@ = saved_unnamed_register
@@ -2227,7 +2251,6 @@ function! GetFundValue(...)
 endfunction
 "}}}}}
 "{{{{{2  function! WriteFile(...)                  获取指数源数据写入fund文件
-"noremap <F5> :call  WriteFile()
 function! WriteFile(...)
     let idx1 = 0
     let filenumber = 0
@@ -2430,7 +2453,7 @@ function! CutData(...)
     return lists
 endfunction
 "}}}}}
-"{{{{{2  function! CalculateInvest(...)            计算投资 普通模式<F5>调用
+"{{{{{2 function!  CalculateInvest(...) 计算投资 普通模式<F5>调用
 noremap <F5> :call  CalculateInvest()
 function! CalculateInvest(...)
     let idx1 = 0
@@ -2473,7 +2496,7 @@ function! CalculateInvest(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2  function! CalculateAmount(...)                     investall , fund2indexall,indexall ,time  flag 计算金额
+"{{{{{2  function! CalculateAmount(...)          investall , fund2indexall,indexall ,time  flag 计算金额
 function! CalculateAmount(...)
     let amounthead = ""
     let amountlow = []
@@ -2586,7 +2609,7 @@ function! CalculateAmount(...)
     return invests
 endfunction
 "}}}}}
-"{{{{{2  function! ConsolidateData(...)                     整合index 文件，使数据化
+"{{{{{2 function!  ConsolidateData(...)          整合index 文件，使数据化
 function! ConsolidateData(...)
     let indexfilelist = []
     let list2fmt1 = []
@@ -3519,7 +3542,7 @@ function! UpdateTreeContens(...)
                     echo  tempchar
                     let tempchar1 = GetItemFromFile("Description  ",tempchar)
                     if tempchar1 != ""
-                        let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ",52 - strwidth(curcontesfile[idx1]) - 1),split(split(tempchar1,":")[1])[0]],"|")
+                        let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ",52 - strwidth(curcontesfile[idx1]) - 1),join(split(split(tempchar1,":")[1],"\x00"))],"|")
                     endif
                     echo "tangxinlou2"
                 endif
@@ -3562,21 +3585,149 @@ function! GetItemFromFile(...)
 endfunction
 "}}}}}
 "}}}}
+"fold{{{{  markdown 类型文件折叠和高亮
+"{{{{{2   GetPotionFold(...) 计算foldlevel
+function! GetPotionFold(lnum)
+    if getline(a:lnum) =~? '\v^\s*$'
+        "echom a:lnum
+        "echom "tangxinlou1"
+        return '-1'
+    elseif  getline(a:lnum) =~? "```c" || getline(a:lnum) =~? "```"
+        return '0'
+    elseif  getline(a:lnum) =~? "<<<<<<<<<<<<<<<<" || getline(a:lnum) =~? ">>>>>>>>>>>>>>>"
+        return '0'
+    else
+        return '1'
+    endif
+endfunction
+"}}}}}
 
+"}}}
+"csv files {{{{  表格文件
+"{{{{{2   VisualiZationcsv(...) 可视化表格文件
+nnoremap <F2>  :call VisualiZationcsv(1,",")<cr>
+function! VisualiZationcsv(...)
+    "{{{{{3 变量定义
+    let dimensional1 = []   "一维表格
+    let dimensional2 = []   "二维表格
+    let idx1 = 0
+    let mode = a:1            "1 增加空格，2减少空格
+    let templist = [""]
+    let LenOfListHead =  0  "表格第一行有多少列
+    let LenOfListcur =   0  "表格当前行有多少列
+    let charinterval = a:2
+    "}}}}
+    "读取当前文件,对缺少空格的行补逗号
+    let dimensional1 = readfile(expand("%:p"))
+    if mode ==# 1
+        let LenOfListHead = len(split(dimensional1[0],charinterval))
+        let idx1 = 0
+        while idx1 < len(dimensional1)
+            if  len(split(dimensional1[idx1],charinterval)) >  LenOfListHead
+                let LenOfListHead = len(split(dimensional1[idx1],charinterval))
+            endif
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+        while idx1 < len(dimensional1)
+            let LenOfListcur =  len(split(dimensional1[idx1],charinterval))
+            if  LenOfListHead !=  LenOfListcur
+                let dimensional1[idx1] =  dimensional1[idx1]  . join(repeat(templist,LenOfListHead - LenOfListcur + 1),charinterval)
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+    let dimensional2 = copy(dimensional1)
+    let dimensional1 =   ExpansionAndContraction(dimensional2,mode,charinterval)
+    call writefile(dimensional1,expand("%:p"))
+    execute "normal! :e " .  expand("%:p") . "\<cr>"
+endfunction
+"}}}}}
+
+"{{{{{2   ExpansionAndContraction(...) 填充空格和消除空格
+function! ExpansionAndContraction(...)
+    "{{{{{3 变量定义
+    let filelists = a:1
+    let listlength = [""]
+    let mode = a:2
+    let idx1 = 0
+    let idx2 = 0
+    let charinterval = a:3
+    let templength = 0
+    "}}}}
+    if mode ==# 1
+        "计算出每列最大的长度
+        let idx1 = 0
+        while idx1 < len(filelists)
+            if   len(split(filelists[idx1],charinterval)) > templength
+                let templength =  len(split(filelists[idx1],charinterval))
+            endif
+            let idx1 += 1
+        endwhile
+        let listlength = repeat(listlength,templength)
+        let idx1 = 0
+        while idx1 < len(filelists)
+            let filelists[idx1] =  split(filelists[idx1],charinterval)
+            let idx2 = 0
+            while idx2 < len(filelists[idx1])
+                if listlength[idx2] < strwidth(filelists[idx1][idx2])
+                    let listlength[idx2] = strwidth(filelists[idx1][idx2])
+                endif
+                let idx2 += 1
+            endwhile
+            let idx1 += 1
+        endwhile
+        "添加空格
+        let idx1 = 0
+        let idx2 = 0
+        while idx1 < len(filelists)
+            let idx2 = 0
+            while idx2 < len(filelists[idx1])
+                let filelists[idx1][idx2] = filelists[idx1][idx2] . repeat(" ",listlength[idx2] - strwidth(filelists[idx1][idx2]) + 5)
+                let idx2 +=1
+            endwhile
+            let filelists[idx1] =  join(filelists[idx1],charinterval)
+            let idx1 += 1
+        endwhile
+    elseif mode ==# 2
+        let idx1 = 0
+        let idx2 = 0
+        while idx1 < len(filelists)
+            let filelists[idx1] =  split(filelists[idx1],charinterval)
+            let idx2 = 0
+            while idx2 < len(filelists[idx1])
+                if  len(split(filelists[idx1][idx2]," \\{3,30}"))  != 0
+                    let filelists[idx1][idx2] = split(filelists[idx1][idx2]," \\{3,30}")[0]
+                else
+                    let filelists[idx1][idx2] = ""
+                endif
+                let idx2 +=1
+            endwhile
+            let filelists[idx1] =  join(filelists[idx1],charinterval)
+            let idx1 += 1
+        endwhile
+    endif
+    return  filelists
+endfunction
+"}}}}}
+
+"}}}
 
 "{{{{test
 "{{{{{2  TestTest(...)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
 function! TestTest(...)
-   let files = [] 
+   let files = []
    let idx1 = 0
    let files1 = readfile("/d/txl/test/1.csv")
    echo len(files1)
    let temp_files = [' ']
    let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
+   echo temp_files
    while idx1 < len(files1)
-       let temp_files[idx1 / 2] = files1[idx1]  . " " . files1[idx1 + 1]
+       let temp_files[idx1 / 2] = join([files1[idx1],files1[idx1 + 1]])
        let idx1 += 2
    endwhile
+   echo temp_files
    call writefile(temp_files,"/d/txl/test/2.csv")
    silent execute "normal! :e /d/txl/test/2.csv\<cr>"
    silent execute "normal! :%s/？ /？ ,/g\<cr>"
@@ -3585,11 +3736,10 @@ function! TestTest(...)
    silent execute "normal! :%s/C、/,C、/g\<cr>"
    silent execute "normal! :%s/D、/,D、/g\<cr>"
    silent execute "normal! :%s/E、/,E、/g\<cr>"
-   silent execute "normal! :%s/F、/,F、/g\<cr>"
+   silent execute "normal! :write!"
 
-   
 endfunction
-"}}}}} 
+"}}}}}
 "}}}}
 
 
