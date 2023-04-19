@@ -28,6 +28,7 @@ function get_file_md5
     fi
     local file=$1
     md5sum $file | awk -F"*" '{print $1}'
+    #md5sum $file | awk -F"*" '{print $1}' git bash 使用*分割
     #md5sum $file | awk -F"*"
 }
 
@@ -44,20 +45,31 @@ function show_diff
     fi
     local diff_file=$1
     echo $tmp_dir
+    open_files=$tmp_dir/diff_file
     printf "    %-55s  %-52s\n" $arg1 $arg2
     if [ -f $tmp_dir/A_only_file ];then
         echo "A only file"
         awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/A_only_file
         #python -c 'print "-"*100'
     fi
-    #if [ -f $tmp_dir/same_file ];then
-    #    awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/same_file
-    #    #python -c 'print "-"*100'
-    #fi
     echo "diff file:"
     awk '{printf("    [%2d] %-50s  %-50s\n", NR, $1, $1)}' $diff_file
-    echo "(s):show diff files (a):open all diff files (q):exit"
+    echo "(ss):show same files (sd):show diff files (a):open all diff files (q):exit"
     echo
+}
+
+function show_same
+{
+    if [ $# -ne 1 ];then
+        return 1
+    fi
+    local same_file=$1
+    open_files=$tmp_dir/same_file
+    echo $tmp_dir
+    printf "    %-55s  %-52s\n" $arg1 $arg2
+    echo "same_file"
+    awk '{printf("    [%2d] %-50s\n", NR, $1)}' $tmp_dir/same_file
+    echo "(ss):show same files (s):show diff files (a):open all diff files (q):exit"
 }
 
 function check_value
@@ -106,12 +118,12 @@ do
     file_relative_name=${file#$arg1/}
     #file xxx.txt  可以查询文件类型，bin 文件类型有text data 等等
     #有些二进制bin文件修改了识别不出来，添加上data 类型
-    file $file | grep -Eq "text|data"
+    file $file | grep -Eq "text|data|ELF"
     if [ $? -ne 0 ];then
         continue
     fi
     if [ -f $arg2/$file_relative_name ];then
-        file $arg2/$file_relative_name | grep -Eq "text|data"
+        file $arg2/$file_relative_name | grep -Eq "text|data|ELF"
         if [ $? -ne 0 ];then
             continue
         fi
@@ -145,12 +157,15 @@ do
     if [[ "$value" = "s" ]] || [[ "$value" = "S" ]];then
         show_diff $tmp_dir/diff_file
         continue
+    elif [[ "$value" = "ss" ]] || [[ "$value" = "SS" ]];then
+        show_same $tmp_dir/same_file
+        continue
     elif [[ "$value" = "q" ]] || [[ "$value" = "Q" ]];then
         myexit
     elif [[ "$value" = "a" ]] || [ "$value" = "A" ];then
         value="1-$"
     fi
-    vim_script=`check_value $tmp_dir/diff_file "$value" 2>/dev/null`
+    vim_script=`check_value $open_files "$value" 2>/dev/null`
     if [ $? -ne 0 ];then
         echo "invalid parameter[$value]!"
     else
