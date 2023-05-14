@@ -547,12 +547,14 @@ endfunction
 "}}}}}
 "{{{{{2   IsContain(...) string list返回对应 列表项
 function! IsContain(...)
+    "{{{{{3 变量定义
     let string = ""
     let char = ""
     let list = []
     let idx1 = 0
     let string = a:1
     let list = a:2
+    "}}}}
     while idx1 < len(list)
         let char = matchstr(list[idx1],string)
         if matchstr(list[idx1],string) != ""
@@ -615,8 +617,12 @@ function! DictTest()
     let char3 = {5:1,6:3}
     let list = ['a', 'b', 'c', 'd', 'e']
     let list1 = ['1', '2', '3']
-    let char = {'a': 1, 100: 'foo',1001:list,1002:char3}
+    let char = {'a': 1,
+                \ 100: 'foo',
+                \ 1001:list,
+                \ 1002:char3}
     let char[1003] = "txlws"
+    let char.1004 = "1234"
     echo list
     echo list[0:3]
     echo len(char1)
@@ -634,7 +640,7 @@ function! DictTest()
     echo values(char)
     echo len(values(char))
     echo char[1002]
-    echo char[3]
+    echo char[1004]
     echo "tangxinlou"
     highlight MyGroup ctermbg=green guibg=green
     let m = matchaddpos("MyGroup", [[24, 24], 34])
@@ -840,6 +846,13 @@ function! WriteFund2Index1(...)
     elseif char ==# "4"
         return list2fmt
     endif
+endfunction
+"}}}}}
+"{{{{{2   printf(...) 打印log的函数
+function! Printf(...)
+    "{{{{{3 变量定义
+
+    "}}}}
 endfunction
 "}}}}}
 "}}}}
@@ -3297,6 +3310,269 @@ function! GetMatchNumber(...)
         let idx1 += 1
     endwhile
     return matchcount
+endfunction
+"}}}}}
+
+"{{{{{2   SelectCode(...) 选中代码
+function! SelectCode(...)
+    "{{{{{3 变量定义
+    let filesname = a:1
+    let matchchar = a:2
+    let structname = ""
+    let fileslist = []
+    let matchnum = 0
+    let strunctindex = 0
+    let structclass = ['union',
+                \'struct' ]
+    let structtype = ""
+    let toward = 0
+    let indx1 = 0
+    let Cycles = 0
+    let src = 0
+    let tail = 0
+    let returnstruct = []
+    "}}}}
+    if a:0 ==# 3
+        let structname = a:3
+    endif
+    "读取文件
+    let fileslist = readfile(filesname)
+    let matchnum = count(fileslist,matchchar )
+    let strunctindex = index(fileslist,matchchar )
+    echo  matchchar  . " 只有一个匹配,匹配项在" . (strunctindex + 1) . "行"
+    if strunctindex ==# 0
+        echo "找不到匹配项"
+        return "error"
+    endif
+    "判断结构体类型
+    let matchchar = split(matchchar)
+    if len(matchchar) != 0
+        if len(matchchar) != 1
+            "判断朝向
+            if matchchar[len(matchchar) - 1] ==# "{"
+                "朝下匹配
+                let toward = 1
+            elseif matchchar[0] ==# "}"
+                "朝上匹配
+                let toward = 2
+            endif
+            "判断class 待续
+        else
+            "只有结构体
+        endif
+    else
+        "error
+    endif
+    "选中code
+    if toward ==# 1
+        echo "toward = 1,朝下匹配"
+        let Cycles = len(fileslist) - strunctindex - 1
+        let indx1 =  strunctindex
+        while indx1 < len(fileslist)
+            if "}" ==# matchstr(fileslist[indx1],"}")
+                let src = strunctindex
+                let tail = indx1
+                let returnstruct = fileslist[src:tail]
+                "echo returnstruct
+                return returnstruct
+                break
+            endif
+            let indx1 += 1
+        endwhile
+    elseif toward ==# 2
+        echo "toward = 2,朝上匹配"
+        let Cycles = 0
+        let indx1 =  strunctindex
+        while indx1 > 0
+            if "{" ==# matchstr(fileslist[indx1],"{")
+                let src = indx1
+                let tail = strunctindex
+                let returnstruct = fileslist[src:tail]
+                "echo returnstruct
+                return returnstruct
+                break
+            endif
+            let indx1 -= 1
+        endwhile
+    endif
+
+endfunction
+"}}}}}
+
+"{{{{{2   TraverseNodes(...) 遍历结构体
+"nnoremap <F8>  :call TraverseNodes("/opt6/tangxinlouosc/aosp/packages/modules/Bluetooth/system/bta/av/bta_av_int.h","union tBTA_AV_DATA {")<cr>
+"nnoremap <F8>  :call TraverseNodes("tBTA_AV_DATA")<cr>
+nnoremap <F8>  :call TraverseNodes("tAVRC_MSG")<cr>
+function! TraverseNodes(...)
+    "{{{{{3 变量定义
+    let filespath = ""
+    let matchchar = ""
+    let fileslist = []
+    let headnode = []
+    let childnode = []
+    let memberclass = []
+    let membertype = []
+    let structname = ""
+    let childstructname = ""
+    let pathmatchchar = ""
+    let nodeformat = {'path':'xx',
+                \'matchchar':'xx',
+                \'structname':'xx',
+                \'structuremember':'xx',
+                \'structuremembername':'xx'}
+    let structdictall = {}
+    let structdict = {}
+    let tempreturn = ""
+    let idx1 = 0
+    let blacklist = ['uint16_t', 'uint8_t', 'RawAddress', 'bool',  'tBTA_AV_HNDL', 'tBTA_AV_CODE', 'tBTA_AV_STATUS']
+    let ischildcall = 0
+    "}}}}
+    if a:0 ==# 2
+        let filespath = a:1
+        let matchchar = a:2
+    elseif a:0 ==# 1 || a:0 ==# 4
+        let structname = a:1
+        echo structname . "首节点"
+        let pathmatchchar = ResultJudgment(structname)
+        if pathmatchchar != "error"
+            let filespath = split(pathmatchchar,":")[0]
+            let matchchar = split(pathmatchchar,":")[1]
+            if a:0 ==# 4
+                let ischildcall = 1
+                let structdictall = a:3
+                let structdict = a:4
+                echo "传下来的数组"
+            endif
+            "获取首节点
+            let headnode = SelectCode(filespath,matchchar)
+            if type(headnode) ==# 1 && tempreturn ==# "error"
+                return "error"
+            elseif type(headnode) ==# 3
+                let structdictall[structname] = ListToDict(filespath,matchchar,structname,headnode)
+                if ischildcall ==# 0
+                    let structdictall[structname].structuremembername = structname
+                    let structdictall["blacklist"] = blacklist
+                elseif  ischildcall ==# 1
+                    let structdictall[structname].structuremembername = a:1 . " " . a:2
+                    let blacklist = structdictall["blacklist"]
+                endif
+            endif
+            let structdict = copy(structdictall[structname])
+            "循环获取次节点
+            let idx1 = 0
+            while idx1 < len(structdict.structuremember)
+                let childstructname = copy(structdict.structuremember[idx1])
+                echo childstructname
+                let childstructname = split(join(split(split(childstructname,"/")[0],"*")))
+                echo childstructname
+                echo "tangxinlou4355"
+                if len(childstructname) <= 3
+                    "判断是否需要搜索
+                    if 0 ==# count(keys(structdictall),childstructname[0])
+                        if 0 ==# count(blacklist,childstructname[0])
+                            if  "FEAT" != matchstr(structdict.structuremember[idx1],"FEAT") && "BACK" != matchstr(structdict.structuremember[idx1],"BACK")
+                                let tempreturn  =  TraverseNodes(childstructname[0],childstructname[1],structdictall,structdict.structuremember[idx1])
+                                if type(tempreturn) ==# 1 && tempreturn ==# "error"
+                                    let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . " 没有找到加入到blacklist"
+                                    let structdictall["blacklist"] = add(structdictall["blacklist"],childstructname[0])
+                                    echo  structdict.structuremember[idx1]  . childstructname[0] . " 没有找到加入到blacklist"
+                                elseif type(tempreturn) ==# 4
+                                    echo  "找到了"
+                                    let structdict.structuremember[idx1] = tempreturn
+                                endif
+                            else
+                                echo  structdict.structuremember[idx1]  . childstructname[0] . "回调函数指针不需要找"
+                                let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . "回调函数指针不需要找"
+                            endif
+                        else
+                            let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . " 在黑名单不需要找"
+                        endif
+                    else
+                        let structdict.structuremember[idx1] = structdictall[childstructname[0]]
+                        let structdict.structuremember[idx1].structuremembername = childstructname[0]. " " . childstructname[1]
+                    endif
+                else
+                    let structdict.structuremember[idx1] =  structdict.structuremember[idx1] . "注释不需要搜索"
+                endif
+                let idx1 += 1
+            endwhile
+            echo "tangxinlou666"
+            "call append(line("."),structdict["structuremembername"] )
+            echo  structdict
+            echo  structdictall["blacklist"]
+            echo "所有搜索过的"
+            "echo structdictall
+            return structdict
+        else
+            echo "head node get fail"
+            return "error"
+        endif
+    endif
+    "let headnode = SelectCode(filespath,matchchar)
+    "call append(line("."),headnode )
+endfunction
+"}}}}}
+
+"{{{{{2   ResultJudgment(...) 判断搜索结果
+"nnoremap <F8>  :call ResultJudgment("tBTA_AV_DATA")<cr>
+function! ResultJudgment(...)
+    "{{{{{3 变量定义
+    let grepcmd = ""
+    let structname = a:1
+    let resultreturn = ""
+    let indx1 = 0
+    let tempreturnchar = ""
+    let returndown = structname . " " . ".*" . "{"
+    let returnup = "}" . " " . structname . ";"
+    let counter = 0
+    "}}}}
+    "echo system("grep -Esinr  --include=*.h \"tBTA_AV_DATA\"")
+    let grepcmd = "grep -Esinr  --include=*.h "
+    let resultreturn = system(grepcmd . " " . structname )
+    "silent call append(line('.'), split(resultreturn,"\n"))
+    "有两种朝上和朝下
+    let resultreturn = split(resultreturn,"\n")
+    "call append(line("."),resultreturn)
+    let idx1 = 0
+    while idx1 < len(resultreturn)
+        if "" != matchstr(resultreturn[idx1],returndown)
+            let tempreturnchar = resultreturn[idx1]
+            let counter += 1
+        elseif  "" != matchstr(resultreturn[idx1],returnup)
+            let tempreturnchar = resultreturn[idx1]
+            let counter += 1
+        endif
+        let idx1 +=1
+    endwhile
+    if counter ==# 1
+        let tempreturnchar = join([split(tempreturnchar,":")[0],join(split(split(tempreturnchar,":")[2],"\x00"))],":")
+        echo structname  . " 搜索成功"
+        return  tempreturnchar
+    else
+        return "error"
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2   ListToDict(...) 打印log的函数
+function! ListToDict(...)
+    "{{{{{3 变量定义
+    let path = a:1
+    let matchchar = a:2
+    let structname = a:3
+    let List = a:4
+    let nodeformat = {'path':'xx',
+                \'matchchar':'xx',
+                \'structname':'xx',
+                \'structuremember':'xx',
+                \'structuremembername':'xx'}
+    "}}}}
+    let nodeformat.path = path
+    let nodeformat.matchchar = matchchar
+    let nodeformat.structname = structname
+    let nodeformat.structuremember = List[1:len(List) - 2]
+    let nodeformat.structuremembername =  structname
+    return nodeformat
 endfunction
 "}}}}}
 
