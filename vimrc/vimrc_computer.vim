@@ -368,16 +368,17 @@ function! s:Copy2file(type)
 endfunction
 "}}}}}
 "{{{{{2  s:QuckfixToggle()  早期第一次写的函数
+nnoremap <F1> :call  QuckfixToggle()<cr>
 let g:quickfix_is_open = 0
-function! s:QuckfixToggle()
+function! QuckfixToggle()
     if g:quickfix_is_open
-        cclose
+        set mouse=
+        echo  "关闭鼠标"
         let g:quickfix_is_open = 0
     else
-        copen
-        set modifiable
-        silent execute "normal! \<c-w>H"
         let g:quickfix_is_open = 1
+        set mouse=a
+        echo "打开鼠标"
     endif
 endfunction
 "}}}}}
@@ -848,6 +849,34 @@ function! WriteFund2Index1(...)
     endif
 endfunction
 "}}}}}
+"{{{{test
+"{{{{{2  TestTest(...)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
+function! TestTest(...)
+   let files = []
+   let idx1 = 0
+   let files1 = readfile("/d/txl/test/1.csv")
+   echo len(files1)
+   let temp_files = [' ']
+   let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
+   echo temp_files
+   while idx1 < len(files1)
+       let temp_files[idx1 / 2] = join([files1[idx1],files1[idx1 + 1]])
+       let idx1 += 2
+   endwhile
+   echo temp_files
+   call writefile(temp_files,"/d/txl/test/2.csv")
+   silent execute "normal! :e /d/txl/test/2.csv\<cr>"
+   silent execute "normal! :%s/？ /？ ,/g\<cr>"
+   silent execute "normal! :%s/A、/,A、/g\<cr>"
+   silent execute "normal! :%s/B、/,B、/g\<cr>"
+   silent execute "normal! :%s/C、/,C、/g\<cr>"
+   silent execute "normal! :%s/D、/,D、/g\<cr>"
+   silent execute "normal! :%s/E、/,E、/g\<cr>"
+   silent execute "normal! :write!"
+
+endfunction
+"}}}}}
+"}}}}
 "{{{{{2   printf(...) 打印log的函数
 function! Printf(...)
     "{{{{{3 变量定义
@@ -3095,7 +3124,7 @@ function! AnalyzeCode()
         endwhile
         let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
         let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
-        call writefile(tempdictlist,"/opt6/tangxinlouosc/txl/parse")
+        call writefile(tempdictlist,"/d/txl/parse")
         call extend(codefile,tempdictlist,8)
         call writefile(codefile,expand("%:p"))
     else
@@ -3154,7 +3183,7 @@ function! ListKeyWords(...)
                 \ 'private',
                 \ 'public']
     while idx1 < len(listwords)
-        if "" != matchstr(listwords[idx1],"\/work.*\/.*\/")
+        if "" != matchstr(listwords[idx1],"\/.*\/.*\/")
             let filename = split(split(listwords[idx1],":")[0],"/")
             let filename = filename[len(filename) - 1]
             let line = split(listwords[idx1],":")[1]
@@ -3401,8 +3430,9 @@ endfunction
 
 "{{{{{2   TraverseNodes(...) 遍历结构体
 "nnoremap <F8>  :call TraverseNodes("/opt6/tangxinlouosc/aosp/packages/modules/Bluetooth/system/bta/av/bta_av_int.h","union tBTA_AV_DATA {")<cr>
-"nnoremap <F8>  :call TraverseNodes("tBTA_AV_DATA")<cr>
-nnoremap <F8>  :call TraverseNodes("tAVRC_MSG")<cr>
+nnoremap <F8>  :call TraverseNodes("tBTA_AV_DATA")<cr>
+"nnoremap <F8>  :call TraverseNodes("tAVRC_MSG")<cr>
+"nnoremap <F8>  :call TraverseNodes("tBTA_AV_API_ENABLE")<cr>
 function! TraverseNodes(...)
     "{{{{{3 变量定义
     let filespath = ""
@@ -3415,24 +3445,28 @@ function! TraverseNodes(...)
     let structname = ""
     let childstructname = ""
     let pathmatchchar = ""
-    let nodeformat = {'path':'xx',
-                \'matchchar':'xx',
-                \'structname':'xx',
-                \'structuremember':'xx',
-                \'structuremembername':'xx'}
+    let nodeformat = {'0path':'xx',
+                \'1matchchar':'xx',
+                \'2structname':'xx',
+                \'5structuremember':'xx',
+                \'00structuremembername':'xx',
+                \'3structtype':'xx'}
     let structdictall = {}
     let structdict = {}
     let tempreturn = ""
     let idx1 = 0
-    let blacklist = ['uint16_t', 'uint8_t', 'RawAddress', 'bool',  'tBTA_AV_HNDL', 'tBTA_AV_CODE', 'tBTA_AV_STATUS']
+    let blacklist = ['uint16_t', 'uint8_t', 'RawAddress', 'bool', 'uint32_t']
+    let structtypeblack = ["enum","class"]
     let ischildcall = 0
+    let codenote = 0
+    let dictlist = []
     "}}}}
     if a:0 ==# 2
         let filespath = a:1
         let matchchar = a:2
     elseif a:0 ==# 1 || a:0 ==# 4
         let structname = a:1
-        echo structname . "首节点"
+        "echo structname . "首节点"
         let pathmatchchar = ResultJudgment(structname)
         if pathmatchchar != "error"
             let filespath = split(pathmatchchar,":")[0]
@@ -3441,7 +3475,7 @@ function! TraverseNodes(...)
                 let ischildcall = 1
                 let structdictall = a:3
                 let structdict = a:4
-                echo "传下来的数组"
+                "echo "传下来的数组"
             endif
             "获取首节点
             let headnode = SelectCode(filespath,matchchar)
@@ -3450,56 +3484,77 @@ function! TraverseNodes(...)
             elseif type(headnode) ==# 3
                 let structdictall[structname] = ListToDict(filespath,matchchar,structname,headnode)
                 if ischildcall ==# 0
-                    let structdictall[structname].structuremembername = structname
+                    execute "normal! :r!date +\\%F-\\%T\<cr>"
+                    call cursor(line('.') + 1,0)
+                    let structdictall[structname].00structuremembername = structname
                     let structdictall["blacklist"] = blacklist
                 elseif  ischildcall ==# 1
-                    let structdictall[structname].structuremembername = a:1 . " " . a:2
+                    let structdictall[structname].00structuremembername = a:1 . " " . a:2
                     let blacklist = structdictall["blacklist"]
                 endif
             endif
             let structdict = copy(structdictall[structname])
+            if  structdict.3structtype != "error" && 1 ==# count(structtypeblack,structdict.3structtype)
+                "echo structdict.3structtype . "这个结构体类型不需要找"
+                return structdict
+            endif
             "循环获取次节点
             let idx1 = 0
-            while idx1 < len(structdict.structuremember)
-                let childstructname = copy(structdict.structuremember[idx1])
-                echo childstructname
-                let childstructname = split(join(split(split(childstructname,"/")[0],"*")))
-                echo childstructname
-                echo "tangxinlou4355"
-                if len(childstructname) <= 3
+            while idx1 < len(structdict.5structuremember)
+                let codenote = 0
+                let childstructname = copy(structdict.5structuremember[idx1])
+                let codenote = Isnote(childstructname)
+                let childstructname = split(join(split(childstructname,'*')))
+                "echo "tangxinlou4355"
+                if codenote ==# 0
                     "判断是否需要搜索
+                    "echo  structdict.5structuremember[idx1]
                     if 0 ==# count(keys(structdictall),childstructname[0])
                         if 0 ==# count(blacklist,childstructname[0])
-                            if  "FEAT" != matchstr(structdict.structuremember[idx1],"FEAT") && "BACK" != matchstr(structdict.structuremember[idx1],"BACK")
-                                let tempreturn  =  TraverseNodes(childstructname[0],childstructname[1],structdictall,structdict.structuremember[idx1])
+                            if  "BACK" != matchstr(structdict["5structuremember"][idx1],"BACK")
+                                let tempreturn  =  TraverseNodes(childstructname[0],childstructname[1],structdictall,structdict.5structuremember[idx1])
                                 if type(tempreturn) ==# 1 && tempreturn ==# "error"
-                                    let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . " 没有找到加入到blacklist"
+                                    let structdict.5structuremember[idx1] = structdict.5structuremember[idx1]
                                     let structdictall["blacklist"] = add(structdictall["blacklist"],childstructname[0])
-                                    echo  structdict.structuremember[idx1]  . childstructname[0] . " 没有找到加入到blacklist"
+                                    "echo  structdict.structuremember[idx1]  . childstructname[0] . " 没有找到加入到blacklist"
                                 elseif type(tempreturn) ==# 4
-                                    echo  "找到了"
-                                    let structdict.structuremember[idx1] = tempreturn
+                                    "echo  "找到了"
+                                    let structdict.5structuremember[idx1] = tempreturn
                                 endif
                             else
-                                echo  structdict.structuremember[idx1]  . childstructname[0] . "回调函数指针不需要找"
-                                let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . "回调函数指针不需要找"
+                                "echo  structdict.structuremember[idx1]  . childstructname[0] . "回调函数指针不需要找"
+                                let structdict.5structuremember[idx1] = structdict.5structuremember[idx1]
                             endif
                         else
-                            let structdict.structuremember[idx1] = structdict.structuremember[idx1]  . childstructname[0] . " 在黑名单不需要找"
+                            let structdict.5structuremember[idx1] = structdict.5structuremember[idx1]
                         endif
                     else
-                        let structdict.structuremember[idx1] = structdictall[childstructname[0]]
-                        let structdict.structuremember[idx1].structuremembername = childstructname[0]. " " . childstructname[1]
+                        let structdict.5structuremember[idx1] = structdictall[childstructname[0]]
+                        let structdict.5structuremember[idx1].00structuremembername = childstructname[0]. " " . childstructname[1]
                     endif
                 else
-                    let structdict.structuremember[idx1] =  structdict.structuremember[idx1] . "注释不需要搜索"
+                    "let structdict.5structuremember[idx1] =  structdict.5structuremember[idx1] . "注释不需要搜索"
+                    let structdict.5structuremember[idx1] =  ""
                 endif
                 let idx1 += 1
             endwhile
-            echo "tangxinlou666"
+            "echo "tangxinlou666"
             "call append(line("."),structdict["structuremembername"] )
-            echo  structdict
-            echo  structdictall["blacklist"]
+            if ischildcall ==# 0
+                execute "normal! :r!date +\\%F-\\%T\<cr>"
+                call cursor(line('.') + 1,0)
+                call append(line("."),string(structdict))
+                call cursor(line('.') + 1,0)
+                let dictlist = PrintDict(structdict)
+                call append(line("."),dictlist)
+                call cursor(line('.') + 1,0)
+               " call append(line("."),"tangxinloufakdfklad")
+               " call cursor(line('.') + 1,0)
+               " call append(line("."),structdictall["blacklist"])
+               " call cursor(line('.') + 1,0)
+               " call append(line("."),string(structdictall))
+               " call cursor(line('.') + 1,0)
+            endif
             echo "所有搜索过的"
             "echo structdictall
             return structdict
@@ -3554,28 +3609,133 @@ function! ResultJudgment(...)
 endfunction
 "}}}}}
 
-"{{{{{2   ListToDict(...) 打印log的函数
+"{{{{{2   ListToDict(...) 填充字典
 function! ListToDict(...)
     "{{{{{3 变量定义
     let path = a:1
     let matchchar = a:2
     let structname = a:3
     let List = a:4
-    let nodeformat = {'path':'xx',
-                \'matchchar':'xx',
-                \'structname':'xx',
-                \'structuremember':'xx',
-                \'structuremembername':'xx'}
+    let nodeformat = {'0path':'xx',
+                \'1matchchar':'xx',
+                \'2structname':'xx',
+                \'5structuremember':'xx',
+                \'00structuremembername':'xx',
+                \'3structtype':'xx'}
+    let structtype = ["enum","class","struct","union"]
+    let counter = 0
+    let idx1 = 0
     "}}}}
-    let nodeformat.path = path
-    let nodeformat.matchchar = matchchar
-    let nodeformat.structname = structname
-    let nodeformat.structuremember = List[1:len(List) - 2]
-    let nodeformat.structuremembername =  structname
+    let idx1 = 0
+    while idx1 < len(structtype)
+        if structtype[idx1] ==# matchstr(List[0],structtype[idx1])
+            let nodeformat.3structtype = structtype[idx1]
+            let counter += 1
+        elseif structtype[idx1] ==#  matchstr(List[len(List) - 1],structtype[idx1])
+            let nodeformat.3structtype = structtype[idx1]
+            let counter += 1
+        endif
+        let idx1 += 1
+    endwhile
+    let nodeformat.0path = path
+    let nodeformat.1matchchar = matchchar
+    let nodeformat.2structname = structname
+    let nodeformat.5structuremember = List[1:len(List) - 2]
+    let nodeformat.00structuremembername =  structname
+    if counter != 1
+        let nodeformat.3structtype = "error"
+    endif
     return nodeformat
 endfunction
 "}}}}}
 
+ "{{{{{2   Isnote(...) 判断是否是注释
+function! Isnote(...)
+    "{{{{{3 变量定义
+    let char = a:1
+    let isnote = 0
+    "}}}}
+    if ";"!= matchstr(char,';')
+        let isnote = 1
+        "echo char . "是注释"
+    else
+        "echo char . "不是注释"
+    endif
+    return isnote
+endfunction
+"}}}}}
+
+"{{{{{2   PrintDict(...) 打印字典
+function! PrintDict(...)
+    "{{{{{3 变量定义
+    let ischildcall = 0
+    let appendparameter = a:1
+    let appendprintlist = []
+    let idx1 = 0
+    let loopcounter = 1
+    let temploopcounter = 0
+    let printtype = 0
+    let keyintem = []
+    let idj1 = 0
+    let tempchar = '*'
+    let tempchar1 = "├── "
+    let tempchar2 = "│   "
+    "}}}}
+    if a:0 ==# 3
+        let ischildcall = 1
+        let appendprintlist = a:2
+        let loopcounter = a:3
+    endi
+    "let loopcounter += 1
+    let printtype = type(appendparameter)
+    if printtype ==# 1
+        let tempchar = '*'
+        let tempchar =  repeat(tempchar,loopcounter)
+        let appendprintlist = add(appendprintlist,tempchar . join(split(appendparameter)))
+    elseif  printtype ==# 3
+        while idx1 < len(appendparameter)
+            let temploopcounter = copy(loopcounter)
+            let printtype = type(appendparameter[idx1])
+            if  printtype ==# 1 && appendparameter[idx1] != ""
+                let tempchar = '*'
+                let tempchar =  repeat(tempchar2,temploopcounter - 1) . tempchar1
+                let appendprintlist = add(appendprintlist,tempchar . join(split(appendparameter[idx1])))
+            elseif  printtype ==# 3 || printtype ==# 4
+                if printtype ==# 4
+                    let temploopcounter += 1
+                endif
+                let appendprintlist = PrintDict(appendparameter[idx1],appendprintlist,temploopcounter)
+            endif
+            let idx1 += 1
+        endwhile
+    elseif  printtype ==# 4
+        let keyintem = sort(keys(appendparameter))
+        let idx1 = 0
+        while idx1 < len(keyintem)
+            let temploopcounter = copy(loopcounter)
+            let printtype = type(appendparameter[keyintem[idx1]])
+            if  printtype ==# 1  && appendparameter[keyintem[idx1]] != ""
+                if  keyintem[idx1] ==# "00structuremembername" &&  temploopcounter > 1
+                    let temploopcounter = temploopcounter - 1
+                endif
+                let tempchar = '*'
+                let tempchar =  repeat(tempchar2,temploopcounter - 1) . tempchar1
+                if keyintem[idx1] != "1matchchar" && keyintem[idx1] != "2structname" && keyintem[idx1] != "0path"
+                    let appendprintlist = add(appendprintlist,tempchar . join(split(appendparameter[keyintem[idx1]])))
+                endif
+            elseif  printtype ==# 3 || printtype ==# 4
+                if printtype ==# 4
+                    let temploopcounter += 1
+                endif
+                let appendprintlist = PrintDict(appendparameter[keyintem[idx1]],appendprintlist,temploopcounter)
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+    return  appendprintlist
+
+endfunction
+"}}}}}
 
 "}}}}}
 "{{{{ 定时器
@@ -3989,34 +4149,7 @@ endfunction
 
 "}}}
 
-"{{{{test
-"{{{{{2  TestTest(...)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
-function! TestTest(...)
-   let files = []
-   let idx1 = 0
-   let files1 = readfile("/d/txl/test/1.csv")
-   echo len(files1)
-   let temp_files = [' ']
-   let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
-   echo temp_files
-   while idx1 < len(files1)
-       let temp_files[idx1 / 2] = join([files1[idx1],files1[idx1 + 1]])
-       let idx1 += 2
-   endwhile
-   echo temp_files
-   call writefile(temp_files,"/d/txl/test/2.csv")
-   silent execute "normal! :e /d/txl/test/2.csv\<cr>"
-   silent execute "normal! :%s/？ /？ ,/g\<cr>"
-   silent execute "normal! :%s/A、/,A、/g\<cr>"
-   silent execute "normal! :%s/B、/,B、/g\<cr>"
-   silent execute "normal! :%s/C、/,C、/g\<cr>"
-   silent execute "normal! :%s/D、/,D、/g\<cr>"
-   silent execute "normal! :%s/E、/,E、/g\<cr>"
-   silent execute "normal! :write!"
 
-endfunction
-"}}}}}
-"}}}}
 
 
 "forgroundTimeForWifi.\{,20}",
