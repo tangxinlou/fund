@@ -257,6 +257,7 @@ nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo t
 inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
 "早期debug 映射
 nnoremap <leader>rm :echom "hello"
+"echo winheight('%') winwidth('%')
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
