@@ -257,6 +257,7 @@ nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo t
 inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
 "早期debug 映射
 nnoremap <leader>rm :echom "hello"
+nnoremap <leader>y :call AddLineNumber()<cr>
 "echo winheight('%') winwidth('%')
 "}}}
 "画图{{{{
@@ -305,7 +306,7 @@ nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 nnoremap <leader>lcd :lcd %:p:h
 "打开选中的的文件,并新开一个tap
 "omap i:  f:lvf:h
-nnoremap <leader>y :normal! yt:<cr>
+"nnoremap <leader>y :normal! yt:<cr>
 nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
 nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
@@ -352,7 +353,7 @@ function! s:Copy2file(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
     if  @@ ==# " "
-        let templist = readfile("/opt6/tangxinlouosc/txl/transplant.txt")
+        let templist = readfile("/d/txl/transplant.txt")
         echo "复制公共文件到本地"
         while idx1 < len(templist)
             call append(line('.'), templist[idx1])
@@ -361,7 +362,7 @@ function! s:Copy2file(type)
         endwhile
     else
         echo "复制到公共文件"
-        call writefile(templist,"/opt6/tangxinlouosc/txl/transplant.txt")
+        call writefile(templist,"/d/txl/transplant.txt")
     endif
     "silent execute "grep! -EsinR " . shellescape(@@) . " ."
 
@@ -883,6 +884,40 @@ function! Printf(...)
     "{{{{{3 变量定义
 
     "}}}}
+endfunction
+"}}}}}
+"{{{{{2   AddLineNumber(...) 每行添加行号
+function! AddLineNumber(...)
+    "{{{{{3 变量定义
+    let line = 0
+    let filetype = ""
+    let idx1 = 0
+    let char = ""
+    let neglect = 0
+    "}}}}
+    let filetype = reverse(split(join(split(execute("set filetype"),"="))))[0]
+    echo filetype
+    if filetype ==# "markdown"
+        let idx1 = 10
+        while idx1 <= len(readfile(expand("%:p")))
+            let char = getline(idx1)
+            if neglect ==# 1
+               if  char != "```c" && char != "```" && char != ""
+                   let char = idx1 . " " . char
+                   call setline(idx1,char)
+               endif
+            else
+                if  "》》》》》》》"  ==# matchstr(char,"》》》》》》》")
+                    let neglect = 1
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    else
+        execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+    endif
+
+    "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
 endfunction
 "}}}}}
 "}}}}
@@ -2985,7 +3020,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
             if idx1 ==# len(sourcecode) - 1
                 if src != 0
                     let targetcode[idj1] = sourcecode[src:idx1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2 + 2)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 3 + src + 2 + 1)
                 endif
             endif
             if codeflag[0] ==# matchstr(sourcecode[idx1], matchstr)
@@ -2996,7 +3031,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
                     let tail = idx1
                     echo idx1 idj1 src tail codeflag[0]  sourcecode[idx1]
                     let targetcode[idj1] = sourcecode[src:tail - 1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 2 + src + 1 + 2 + 2)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 3 + src + 2 + 1)
                     let tail = 0
                     let src = idx1
                     let idj1 +=1
@@ -3066,10 +3101,10 @@ function! AnalyzeCode()
     let idx1 = 0
     let idj1 = 0
     let codefile = readfile(expand("%:p"))
-    if count(codefile,"<<<<<<<<<<<<<<<<") && count(codefile,">>>>>>>>>>>>>>>")
+    if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
         echo "之前修改过"
-        let src = index(codefile,"<<<<<<<<<<<<<<<<")
-        let tail = index(codefile,">>>>>>>>>>>>>>>")
+        let src = index(codefile,"《《《《《《《")
+        let tail = index(codefile,"》》》》》》》")
         call remove(codefile,src,tail)
         echo src tail
     endif
@@ -3112,7 +3147,8 @@ function! AnalyzeCode()
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
-            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",dictkeys[idx1]," 流程图"]))
+            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],"")
+            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
             let idx1 += 1
         endwhile
@@ -3123,8 +3159,8 @@ function! AnalyzeCode()
             let tempdictlist = extend(tempdictlist,codedict[dictkeys[idx1]])
             let idx1 += 1
         endwhile
-        let tempdictlist = insert(tempdictlist,"<<<<<<<<<<<<<<<<")
-        let tempdictlist = add(tempdictlist,">>>>>>>>>>>>>>>")
+        let tempdictlist = insert(tempdictlist,"《《《《《《《")
+        let tempdictlist = add(tempdictlist,"》》》》》》》")
         call writefile(tempdictlist,"/d/txl/parse")
         call extend(codefile,tempdictlist,8)
         call writefile(codefile,expand("%:p"))
@@ -3137,8 +3173,8 @@ function! AnalyzeCode()
         endwhile
         let codedict =  DrawTimingDiagram(codedict)
         let codedict =  WriteFund2Index1(codedict)
-        let codedict = insert(codedict,"<<<<<<<<<<<<<<<<")
-        let codedict = add(codedict,">>>>>>>>>>>>>>>")
+        let codedict = insert(codedict,"《《《《《《《")
+        let codedict = add(codedict,"》》》》》》》")
         call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
         call extend(codefile,codedict,8)
         call writefile(codefile,expand("%:p"))
@@ -3160,6 +3196,7 @@ function! ListKeyWords(...)
     let isreturn = 0
     let listkeywords = ""
     let notes = ""
+    let tempvalue = 0
     let returnkeywords = ['void',
                 \ 'int',
                 \ 'char',
@@ -3184,7 +3221,10 @@ function! ListKeyWords(...)
                 \ 'private',
                 \ 'public']
     while idx1 < len(listwords)
-        if "" != matchstr(listwords[idx1],"\/.*\/.*\/")
+        if "" != matchstr(listwords[idx1],"\/txl.*\/.*\/")
+            let tempvalue = split(listwords[0],"|")
+            let tempvalue[1] =  idx1 + tempvalue[1] + 1
+            let listwords[0] = join(tempvalue,"|")
             let filename = split(split(listwords[idx1],":")[0],"/")
             let filename = filename[len(filename) - 1]
             let line = split(listwords[idx1],":")[1]
@@ -3297,11 +3337,11 @@ function! DrawTimingDiagram(...)
         let tempnotes[tempindex] = tempcodelist[2]
         if idx1 < len(drawcode)
             if prvindex > tempindex
-                let templist[tempindex  + 1] = ">>>>"
+                let templist[tempindex  + 1] = "》》"
             elseif prvindex ==# tempindex
                 let templist[tempindex  + 1] = "V"
             elseif  prvindex <  tempindex
-                let templist[tempindex  - 1] = "<<<<"
+                let templist[tempindex  - 1] = "《《"
             endif
         endif
         let drawlist[idx1 * 2 - 1] = templist
