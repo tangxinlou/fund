@@ -151,6 +151,9 @@ augroup filetype_csv
     autocmd BufNewFile,BufRead *.csv      setf csv
     autocmd BufWrite *.csv   :call VisualiZationcsv(2,",")
 augroup END
+augroup filetype_python
+    autocmd BufNewFile *.py      :call OpenPythonfile()
+augroup END
 "保存文件打印
 augroup testgroup
     "清除组命令
@@ -4189,6 +4192,17 @@ endfunction
 "}}}}}
 
 "}}}
+ "{{{{  python
+"{{{{{2   OpenPythonfile(...) 打开python文件触发
+function! OpenPythonfile()
+    "{{{{{3 变量定义
+    let pythonfile = ""
+    "}}}}    
+    call setline(1,"#!/usr/bin/python3")
+endfunction
+"}}}}}
+
+"}}} 
 
 
 
