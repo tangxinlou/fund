@@ -93,6 +93,7 @@ filetype indent on
 set cursorline cursorcolumn
 set guioptions=mrb
 set diffopt=context:3
+"set scrolloff=999
 
 "}}}}}
 "vimdiff 颜色配置{{{
@@ -142,6 +143,9 @@ augroup filetype_markdown
     "autocmd FileType markdown  setlocal foldignore=
     autocmd FileType markdown  setlocal foldmethod=expr
     autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
+    autocmd FileType text  setlocal foldmethod=expr
+    autocmd FileType text  setlocal foldexpr=GetPotionFold(v:lnum)
+    autocmd BufWrite *.md   :call TitleDet()
 augroup END
 augroup filetype_dts
     autocmd FileType dts  setlocal foldmethod=indent
@@ -620,6 +624,7 @@ endfunction
 function! DictTest()
     let char1 = "aaaaaaaa"
     let char2 = "指数名称"
+    let dict1 = {}
     let char3 = {5:1,6:3}
     let list = ['a', 'b', 'c', 'd', 'e']
     let list1 = ['1', '2', '3']
@@ -627,8 +632,16 @@ function! DictTest()
                 \ 100: 'foo',
                 \ 1001:list,
                 \ 1002:char3}
+    let nodeformat = {'0path':'xx',
+                \'1matchchar':'xx',
+                \'2structname':'xx',
+                \'5structuremember':'xx',
+                \'00structuremembername':'xx',
+                \'3structtype':'xx'}
     let char[1003] = "txlws"
     let char.1004 = "1234"
+    echo sort(keys(nodeformat))
+    let stringdict = string(char)
     echo list
     echo list[0:3]
     echo len(char1)
@@ -641,12 +654,22 @@ function! DictTest()
     echo strwidth(char2)
     echo "tangxinlou"
     echo  char
+    echo stringdict
+    echo char[1003]
+    echo stringdict[1003]
+    let dict1  = eval(stringdict)
+    echo eval(string(char3))
+    echo "tangxinlou333"
+    echo dict1
+    echo dict1[1003]
+    echo "tangxinlou22"
+    echo char[1003]
     echo len(char)
     echo keys(char)
     echo values(char)
     echo len(values(char))
     echo char[1002]
-    echo char[1004]
+    echo char[3]
     echo "tangxinlou"
     highlight MyGroup ctermbg=green guibg=green
     let m = matchaddpos("MyGroup", [[24, 24], 34])
@@ -898,9 +921,9 @@ function! AddLineNumber(...)
     let char = ""
     let neglect = 0
     "}}}}
-    let filetype = reverse(split(join(split(execute("set filetype"),"="))))[0]
-    echo filetype
-    if filetype ==# "markdown"
+    "let filetype = reverse(split(join(split(execute("set filetype"),"="))))[0]
+    echo &filetype
+    if &filetype ==# "markdown"
         let idx1 = 10
         while idx1 <= len(readfile(expand("%:p")))
             let char = getline(idx1)
@@ -946,6 +969,10 @@ function! VmakeChange()
     let a:MyGroup6 = []
     let a:MyGroup7 = []
     let curversion = []
+    if "yes" ==# input("是否更新日期")
+        execute "normal! :r!date +\\%F-\\%T\<cr>"
+        return
+    endif
     let a:MyGroup4 = IsCfgfile(input("请输入编译的项目"))
     let a:MyGroup7 = copy(a:MyGroup4)
     call AddNumber2(a:MyGroup7)
@@ -979,7 +1006,7 @@ function! VmakeChange()
     execute "normal! 03f\"yi\""
     execute "normal! 017f\"yi\""
     let a:pathh = split(@@)
-    execute "normal! :r!date\<cr>"
+    execute "normal! :r!date +\\%F-\\%T\<cr>"
     if len(a:pathh) > 1
         echo "tangxinlou len >1"
         while i < len(a:pathh)
@@ -1435,7 +1462,9 @@ function! IsVersion(...)
                 \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
                 \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
                 \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+                \ "android_device_mediatek_common",
+                \ "android_vendor_mediatek_proprietary_custom"]
 
     let lenproject = len(projectlist)
     let branchandcommit = ["1"]
@@ -1529,7 +1558,9 @@ function! IsUpdate()
                 \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
                 \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
                 \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+                \ "android_device_mediatek_common",
+                \ "android_vendor_mediatek_proprietary_custom"]
     let lenproject = len(projectlist)
     let curpath = []
     let curpath1 = []
@@ -1800,7 +1831,9 @@ function! CompareVersion()
                 \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
                 \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
                 \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+                \ "android_device_mediatek_common",
+                \ "android_vendor_mediatek_proprietary_custom"]
     let lenproject = len(projectlist)
     let cmplist = []
     let isupdate = system("ls -F \| grep -Esi \"/$\"")
@@ -1814,7 +1847,9 @@ function! CompareVersion()
     endif
     call AddNumber(curpath1)
     execute "normal! Go\<esc>"
+    echo "输入小版本"
     let leftversion  = IsVersion()
+    echo "输入大版本"
     let rightversion = IsVersion()
     let idx1 = 0
     let idx2 = 0
@@ -1961,6 +1996,8 @@ function! CompareversionBranch(...)
                 let idx1 += 1
             endif
         endwhile
+        let version1 = reverse(version1)
+        let version2 = reverse(version2)
         if len(version2) ==# 0
             if  curxmlfile1[idx2] ==# curxmlfile[idx2]
                 let version1 = insert(version1,"<<<<<<<<<两个版本相同<<<<<<<<")
@@ -1991,6 +2028,8 @@ function! CompareversionBranch(...)
                 let idx1 += 1
             endif
         endwhile
+        let version1 = reverse(version1)
+        let version2 = reverse(version2)
         if len(version1) ==# 0
             if  curxmlfile1[idx2] ==# curxmlfile[idx2]
                 let version2 = insert(version2,"<<<<<<<<<两个版本commit相同<<<<<<<<")
@@ -2115,7 +2154,9 @@ function! FindMergedVersion()
                 \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
                 \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
                 \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common"]
+                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+                \ "android_device_mediatek_common",
+                \ "android_vendor_mediatek_proprietary_custom"]
     let index2  = 0
     let branchlist = []
     let index3  = 0
@@ -2605,6 +2646,7 @@ function! CalculateAmount(...)
     endif
     let idx1 = 0
     while idx1 < len(a:1)
+        "消除多余空格
         let tmpinvestname = split(split(a:1[idx1],"|")[0]," \\{3,30}")[0]
         if tmpinvestname ==# "基金名" || tmpinvestname ==# "指数名称"
             let amounthead = a:1[idx1] . time . " |"
@@ -2989,6 +3031,9 @@ endfunction
 
 "}}}
 "{{{{{ code
+"协助写出代码流程文档
+"循环查找结构体声明子节点,并把整个节点打印出来
+"结构体声明，结构体定义，结构体初始化
 "{{{{2  ParseCode()   解析code
 function! ParseCode(...) "文件内容列表，解析的标志
     let sourcecode = a:1
@@ -3023,7 +3068,8 @@ function! ParseCode(...) "文件内容列表，解析的标志
             if idx1 ==# len(sourcecode) - 1
                 if src != 0
                     let targetcode[idj1] = sourcecode[src:idx1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 3 + src + 2 + 1)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 4 + src + 2 + 1)
+                    "echo "debug" idx1 idj1 src tail codeflag[0]  targetcode[idj1][0] coutchapter  cmpcount
                 endif
             endif
             if codeflag[0] ==# matchstr(sourcecode[idx1], matchstr)
@@ -3032,9 +3078,9 @@ function! ParseCode(...) "文件内容列表，解析的标志
                     let src = idx1
                 else
                     let tail = idx1
-                    echo idx1 idj1 src tail codeflag[0]  sourcecode[idx1]
                     let targetcode[idj1] = sourcecode[src:tail - 1]
-                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 3 + src + 2 + 1)
+                    let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 4 + src + 2 + 1)
+                    "echo "debug" idx1 idj1 src tail codeflag[0]  targetcode[idj1][0] coutchapter  cmpcount
                     let tail = 0
                     let src = idx1
                     let idj1 +=1
@@ -3047,7 +3093,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
         let targetcode =  repeat(targetcode ,cmpcount)
         if "|" ==# matchstr(sourcecode[0],"|")
             let line = split(sourcecode[0],"|")[1]
-            echo cmpcount  codeflag[0] line
+            echo "此章节解析" codeflag[0]  "有"  cmpcount "个,章节基础行是" line "行"
         else
             let line = cmpcount * 2 + 2 + 1
             echo "no chapter"
@@ -3066,10 +3112,10 @@ function! ParseCode(...) "文件内容列表，解析的标志
                     if idj1 < cmpcount
                         let targetcode[idj1]  = sourcecode[src:tail]
                         if isaddflag ==# 1
-                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1) . " point"
+                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src) . " point"
                             let isaddflag = 0
                         else
-                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src + 1)
+                            let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (line + src)
                         endif
                     endif
                     let idj1 += 1
@@ -3167,6 +3213,7 @@ function! AnalyzeCode()
         call writefile(tempdictlist,"/d/txl/parse")
         call extend(codefile,tempdictlist,8)
         call writefile(codefile,expand("%:p"))
+        execute "normal! :e " .  expand("%:p") . "\<cr>"
     else
         let codedict = ParseCode(codefile,"```c|```")
         let idj1 = 0
@@ -3226,6 +3273,7 @@ function! ListKeyWords(...)
     while idx1 < len(listwords)
         if "" != matchstr(listwords[idx1],"\/txl.*\/.*\/")
             let tempvalue = split(listwords[0],"|")
+            "echo "debug" tempvalue[1]  idx1
             let tempvalue[1] =  idx1 + tempvalue[1] + 1
             let listwords[0] = join(tempvalue,"|")
             let filename = split(split(listwords[idx1],":")[0],"/")
@@ -3729,7 +3777,7 @@ function! PrintDict(...)
         let ischildcall = 1
         let appendprintlist = a:2
         let loopcounter = a:3
-    endi
+    endif
     "let loopcounter += 1
     let printtype = type(appendparameter)
     if printtype ==# 1
@@ -3777,6 +3825,19 @@ function! PrintDict(...)
         endwhile
     endif
     return  appendprintlist
+
+endfunction
+"}}}}}
+
+"{{{{{2   StructureDefinition(...) 结构体定义
+"nnoremap <F8>  :call StructureDefinition("tBTA_AV_API_ENABLE")<cr>
+function! StructureDefinition(...)
+    "echo system("grep -Esinr  --include=*.h \"tBTA_AV_DATA\"")
+    "{{{{{3 变量定义
+    let grepcmd = "grep -Esinr "
+    let structname = a:1
+
+    "}}}}
 
 endfunction
 "}}}}}
@@ -4065,7 +4126,7 @@ function! GetItemFromFile(...)
 endfunction
 "}}}}}
 "}}}}
-"fold{{{{  markdown 类型文件折叠和高亮
+"fold{{{{  markdown  txt 类型文件折叠和高亮
 "{{{{{2   GetPotionFold(...) 计算foldlevel
 function! GetPotionFold(lnum)
     if getline(a:lnum) =~? '\v^\s*$'
@@ -4076,6 +4137,8 @@ function! GetPotionFold(lnum)
         return '0'
     elseif  getline(a:lnum) =~? "<<<<<<<<<<<<<<<<" || getline(a:lnum) =~? ">>>>>>>>>>>>>>>"
         return '0'
+    elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
+        return count(split(getline(a:lnum)),'│  ')
     else
         return '1'
     endif
@@ -4197,12 +4260,12 @@ endfunction
 function! OpenPythonfile()
     "{{{{{3 变量定义
     let pythonfile = ""
-    "}}}}    
+    "}}}}
     call setline(1,"#!/usr/bin/python3")
 endfunction
 "}}}}}
 
-"}}} 
+"}}}
 
 
 
