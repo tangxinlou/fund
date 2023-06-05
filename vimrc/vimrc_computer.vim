@@ -261,7 +261,7 @@ nnoremap  <Up>   [c
 "cherry pick 后解冲突
 nnoremap <leader>cn /<<<<<<<<cr>v/=====<cr>$ddd/>>>>>>><cr>v$ddd
 nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo tangxinlou modify for B211201-1894 end<esc>Oif (Log.isHostLoggable && Log.isLoggableModel) {}<esc>i<cr><esc>O<esc>p?//vivo tangxinlou<cr>v/// vivo tangaolin add .*end<cr>=
-inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
+"inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
 "早期debug 映射
 nnoremap <leader>rm :echom "hello"
 nnoremap <leader>y :call AddLineNumber()<cr>
@@ -620,7 +620,6 @@ function! List2Format(...)
 endfunction
 "}}}}
 "{{{{2 function! DictTest()                      测试字典
-"noremap <F4> :call  DictTest()
 function! DictTest()
     let char1 = "aaaaaaaa"
     let char2 = "指数名称"
@@ -764,7 +763,7 @@ function! WriteFund2Index(...)
                 if idx2 ==# 0
                     let list2fmt1[0] =  SetCharNull(list2fmt1[0],15)
                 else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
                 endif
             endif
             let idx2 += 1
@@ -1155,7 +1154,6 @@ endfunction
 "    endif
 "    return c
 "endfunction
-"nnoremap <F4> :echo  Getchar()
 function! Getchar()
     let c = ''
     let b = ""
@@ -2369,6 +2367,8 @@ function! GetFundValue(...)
     call insert(fundvalues1[1],logmid)
     call insert(fundvalues1[2],loghigh)
     call insert(fundvalues1[3],logunsort)
+    "echo fundvalues1
+    "call input("32")
     return fundvalues1
 endfunction
 "}}}}}
@@ -2382,14 +2382,14 @@ function! WriteFile(...)
     let lists = []
     let list = []
     let list1 = [1,2,3,4,]
-    let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
-    let fundfilename = split(fundfilename,"\n")
-    let fundfilename = reverse(fundfilename)
-    let fundfilename1 = copy(fundfilename)
-    call AddNumber(fundfilename1)
-    let filenumber = input("请输入待输入指数文件")
+    "let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
+    "let fundfilename = split(fundfilename,"\n")
+    "let fundfilename = reverse(fundfilename)
+    "let fundfilename1 = copy(fundfilename)
+    "call AddNumber(fundfilename1)
+    "let filenumber = input("请输入待输入指数文件")
     let lists = readfile("fund.txt")
-    let list1 = GetFundValue(fundfilename[filenumber])
+    let list1 = PythonGetIndexValuation()
     let list =  SplicingData(list1)
     call append(line('.'),list)
     echo "lists len " . len(lists)
@@ -2433,7 +2433,6 @@ function! WriteFile(...)
 endfunction
 "}}}}}
 "{{{{{2   ConnecTwoList(...)   连接数据和指数名字
-"noremap <F4> :call  ConnecTwoList()
 function! ConnecTwoList(...)
     let char = " "
     let list = ['a','b']
@@ -2458,7 +2457,6 @@ function! ConnecTwoList(...)
 endfunction
 "}}}}}
 "{{{{{2   ParseFund(...)  解析fund数据
-"noremap <F4> :call  ParseFund()
 function! ParseFund(...)
     let time = " "
     let dict = {}
@@ -2676,7 +2674,7 @@ function! CalculateAmount(...)
                     endif
                     call insert(amountlow,amount)
                 elseif amountmid1 != ""
-                    let PE = split(split(amountmid1,"|")[2]," \\{3,30}")[0]
+                    let PE = split(split(amountmid1,"|")[2]," \\{2,30}")[0]
                     if flag ==# 1
                         let initailPE = split(split(a:1[idx1],"|")[3]," \\{3,30}")[0]
                         let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(PE) ,2)
@@ -2718,6 +2716,7 @@ function! CalculateAmount(...)
         endif
         let idx1 += 1
     endwhile
+    call input("2343")
     call insert(amountlow,amounthead)
     "call append(line('.'),amountlow)
     "call append(line('.'),amountmid)
@@ -3008,7 +3007,6 @@ function! SumColumn(...)
 endfunction
 "}}}}}
 "{{{{2 function! InputData()                       一键输入数据
-"noremap <F4> :call  InputData()
 function! InputData()
     call WriteFile()
     echo "获取PE选2"
@@ -3019,7 +3017,6 @@ function! InputData()
 endfunction
 "}}}}
 "{{{{2 function! ObtainAmount()                    一键计算金额
-"noremap <F4> :call  ObtainAmount()
 function! ObtainAmount()
     echo "金额选1"
     call CalculateInvest()
@@ -3028,6 +3025,80 @@ function! ObtainAmount()
 
 endfunction
 "}}}}
+"{{{{{2   PythonGetIndexValuation(...) 使用python方式获取指数估值
+nnoremap <F3> :call PythonGetIndexValuation()<cr>
+function! PythonGetIndexValuation()
+    "{{{{{3 变量定义
+    let fundtitle = "指数名称,指数类型,PE,PE%,PB,PB%,股息率,ROE,预测PEG,指数编号"
+    let logtime = "指数估值,2022-02-17"
+    let loglow = "指数低估"
+    let logmid = "指数正常"
+    let loghigh = "指数高估"
+    let logunsort = "指数未定义"
+    let indexlow = []
+    let indexmid = []
+    let indexhigh = []
+    let indexunsort = []
+    let indexfiledict = ""
+    let tempstring = ""
+    let true = 1
+    let false = 0
+    let datestring = ""
+    let indexdata = [indexlow,indexmid,indexhigh,indexunsort]
+    let tempindexdata = []
+    let indx1 = 0
+    let tempstring = ""
+    let indextype = ""
+    "}}}}
+    let datestring = split(system("date +%F"),"-")[0]
+    let indexfiledict = eval(readfile("urllib_test_runoob_search.html")[0])
+    let tempindexdata = indexfiledict["data"]["items"]
+    "echo "debug"
+    "echo tempindexdata = indexfiledict["data"]["items"][0]
+    let indx1 = 0
+    while indx1 < len(tempindexdata)
+        if  tempindexdata[indx1]["ttype"] ==# 1
+            let indextype = "宽基指数"
+        elseif tempindexdata[indx1]["ttype"] ==# 2
+            let indextype = "策略指数"
+        elseif  tempindexdata[indx1]["ttype"] ==# 3
+            let indextype = "行业指数"
+        endif
+        let tempstring = ""
+        if has_key(tempindexdata[indx1],"peg")
+            let tempstring = join([tempindexdata[indx1]["name"],indextype,tempindexdata[indx1]["pe"],tempindexdata[indx1]["pe_percentile"],
+                        \tempindexdata[indx1]["pb"],tempindexdata[indx1]["pb_percentile"],tempindexdata[indx1]["yeild"],tempindexdata[indx1]["roe"],tempindexdata[indx1]["peg"],tempindexdata[indx1]["index_code"]],",")
+        else
+            let tempstring = join([tempindexdata[indx1]["name"],indextype,tempindexdata[indx1]["pe"],tempindexdata[indx1]["pe_percentile"],
+                        \tempindexdata[indx1]["pb"],tempindexdata[indx1]["pb_percentile"],tempindexdata[indx1]["yeild"],tempindexdata[indx1]["roe"],"--",tempindexdata[indx1]["index_code"]],",")
+        endif
+        if  tempindexdata[indx1]["eva_type"] ==# "low"
+            let indexlow = add(indexlow,tempstring)
+        elseif  tempindexdata[indx1]["eva_type"] ==# "mid"
+            let indexmid = add(indexmid,tempstring)
+        elseif  tempindexdata[indx1]["eva_type"] ==# "high"
+            let indexhigh = add(indexhigh,tempstring)
+        elseif  tempindexdata[indx1]["eva_type"] ==# "unsort"
+            let indexunsort = add(indexunsort,tempstring)
+        endif
+
+        "echo "debug" tempstring
+        let indx1 += 1
+    endwhile
+    let datestring ="指数估值," . datestring. "-" .  tempindexdata[0]["date"]
+    let indexdata[0] = indexlow
+    let indexdata[1] = indexmid
+    let indexdata[2] = indexhigh
+    let indexdata[3] = indexunsort
+    call insert(indexdata[0],loglow)
+    call insert(indexdata[0],fundtitle)
+    call insert(indexdata[0],datestring)
+    call insert(indexdata[1],logmid)
+    call insert(indexdata[2],loghigh)
+    call insert(indexdata[3],logunsort)
+    return  indexdata
+endfunction
+"}}}}}
 
 "}}}
 "{{{{{ code
@@ -3640,12 +3711,12 @@ function! TraverseNodes(...)
                 let dictlist = PrintDict(structdict)
                 call append(line("."),dictlist)
                 call cursor(line('.') + 1,0)
-               " call append(line("."),"tangxinloufakdfklad")
-               " call cursor(line('.') + 1,0)
-               " call append(line("."),structdictall["blacklist"])
-               " call cursor(line('.') + 1,0)
-               " call append(line("."),string(structdictall))
-               " call cursor(line('.') + 1,0)
+                " call append(line("."),"tangxinloufakdfklad")
+                " call cursor(line('.') + 1,0)
+                " call append(line("."),structdictall["blacklist"])
+                " call cursor(line('.') + 1,0)
+                " call append(line("."),string(structdictall))
+                " call cursor(line('.') + 1,0)
             endif
             echo "所有搜索过的"
             "echo structdictall
@@ -3741,7 +3812,7 @@ function! ListToDict(...)
 endfunction
 "}}}}}
 
- "{{{{{2   Isnote(...) 判断是否是注释
+"{{{{{2   Isnote(...) 判断是否是注释
 function! Isnote(...)
     "{{{{{3 变量定义
     let char = a:1
