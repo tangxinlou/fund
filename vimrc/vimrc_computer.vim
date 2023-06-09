@@ -145,6 +145,8 @@ augroup filetype_markdown
     autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
     autocmd FileType text  setlocal foldmethod=expr
     autocmd FileType text  setlocal foldexpr=GetPotionFold(v:lnum)
+    autocmd FileType special setlocal foldmethod=expr
+    autocmd FileType special   setlocal foldexpr=GetPotionFold(v:lnum)
     autocmd BufWrite *.md   :call TitleDet()
 augroup END
 augroup filetype_dts
@@ -153,7 +155,8 @@ augroup filetype_dts
 augroup END
 augroup filetype_csv
     autocmd BufNewFile,BufRead *.csv      setf csv
-    autocmd BufWrite *.csv   :call VisualiZationcsv(2,",")
+    autocmd BufEnter * :call SetFileType()
+    autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
 augroup END
 augroup filetype_python
     autocmd BufNewFile *.py      :call OpenPythonfile()
@@ -449,7 +452,7 @@ function! s:HighLightSearch(type)
     let searchchar = split(searchchar,"\n")
     if len(searchchar) ==# 1
         let searchchar = searchchar[0]
-        let searchchar = join(split(searchchar,"\x00"),'.*')
+        let searchchar = join(split(searchchar,"\x00"),' ')
     else
         while idx1 < len(searchchar)
             let searchchar[idx1] = join(split(join(split(searchchar[idx1],'*'),'.*'),"\x00"),'.*')
@@ -757,7 +760,7 @@ function! WriteFund2Index(...)
                 elseif idx2 ==# 1 || idx2 ==# 2 || idx2 ==# 3
                     let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],18)
                 else
-                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],25)
+                    let list2fmt1[idx2] =  SetCharNull(list2fmt1[idx2],15)
                 endif
             elseif char ==# "3"
                 if idx2 ==# 0
@@ -943,6 +946,16 @@ function! AddLineNumber(...)
     endif
 
     "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
+endfunction
+"}}}}}
+"{{{{{2   SetFileType(...) 设置filetype
+function! SetFileType(...)
+    "{{{{{3 变量定义
+
+    "}}}}
+    if &filetype ==# ""
+        setfiletype  special
+    endif
 endfunction
 "}}}}}
 "}}}}
@@ -2379,6 +2392,7 @@ function! WriteFile(...)
     let fundfilename = "指数估值(2022-02-18).html"
     let fundfilename1 = []
     let templist = []
+    let idx2 = 0
     let lists = []
     let list = []
     let list1 = [1,2,3,4,]
@@ -2390,6 +2404,7 @@ function! WriteFile(...)
     "let filenumber = input("请输入待输入指数文件")
     let lists = readfile("fund.txt")
     let list1 = PythonGetIndexValuation()
+    "let list1 = GetFundValue(fundfilename[filenumber])
     let list =  SplicingData(list1)
     call append(line('.'),list)
     echo "lists len " . len(lists)
@@ -2425,7 +2440,7 @@ function! WriteFile(...)
         if len(lists) < 5
             return
         endif
-        redraw
+        "redraw
         if "yes" ==# input("是否写入")
             call writefile(lists,"fund.txt")
         endif
@@ -3268,7 +3283,7 @@ function! AnalyzeCode()
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],"")
-            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
+            let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",1 + split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
             let idx1 += 1
         endwhile
@@ -4218,6 +4233,7 @@ endfunction
 
 "}}}
 "csv files {{{{  表格文件
+"每行每列添加空格，增加可读性，保存时把空格消除不影响功能
 "{{{{{2   VisualiZationcsv(...) 可视化表格文件
 nnoremap <F2>  :call VisualiZationcsv(1,",")<cr>
 function! VisualiZationcsv(...)
@@ -4231,7 +4247,7 @@ function! VisualiZationcsv(...)
     let LenOfListcur =   0  "表格当前行有多少列
     let charinterval = a:2
     "}}}}
-    "读取当前文件,对缺少空格的行补逗号
+    "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     let dimensional1 = readfile(expand("%:p"))
     if mode ==# 1
         let LenOfListHead = len(split(dimensional1[0],charinterval))
@@ -4270,7 +4286,7 @@ function! ExpansionAndContraction(...)
     let templength = 0
     "}}}}
     if mode ==# 1
-        "计算出每列最大的长度
+        "计算出每行最大的长度,制造一个最长的空列表保存每列长度
         let idx1 = 0
         while idx1 < len(filelists)
             if   len(split(filelists[idx1],charinterval)) > templength
@@ -4280,6 +4296,7 @@ function! ExpansionAndContraction(...)
         endwhile
         let listlength = repeat(listlength,templength)
         let idx1 = 0
+        "计算 每列最长的长度
         while idx1 < len(filelists)
             let filelists[idx1] =  split(filelists[idx1],charinterval)
             let idx2 = 0
@@ -4333,6 +4350,25 @@ function! OpenPythonfile()
     let pythonfile = ""
     "}}}}
     call setline(1,"#!/usr/bin/python3")
+endfunction
+"}}}}}
+
+"{{{{{2   PythonTest(...) python test 传参数
+function! PythonTest()
+    "{{{{{3 变量定义
+    let pythontest = ""
+    let path = "par from vimscript into python"
+    "}}}}
+python3 <<EOM
+import vim
+import os
+var = vim.eval("path")
+print(var)
+var = "%s,add string in python now"%var
+vim.command("let path = '%s'"%var)
+EOM
+echo "tangxinlou"
+echo path
 endfunction
 "}}}}}
 
