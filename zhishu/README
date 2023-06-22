@@ -1,0 +1,12 @@
+/*******************************************************
+$Author       : 唐新楼 
+$Last modified: 2023-06-22 18:53
+$Email        : 个人邮箱
+$blog         : https://blog.csdn.net/daweigongting
+$Filename     : README
+$Description  : tangxinlou
+*******************************************************/
+
+DataFund.py   每日下载指数估值
+funddata      指数估值数据汇总
+logs          python 脚本执行log

@@ -671,7 +671,6 @@ function! DictTest()
     echo values(char)
     echo len(values(char))
     echo char[1002]
-    echo char[3]
     echo "tangxinlou"
     highlight MyGroup ctermbg=green guibg=green
     let m = matchaddpos("MyGroup", [[24, 24], 34])
@@ -696,18 +695,18 @@ function! DictTest()
     endif
     echo matchstr(char2, "tang")
     let cparefile = ""
-    let cparefile = readfile("cpareversion.txt")
-    let filelen = len(cparefile)
-    echo cparefile
+    "let cparefile = readfile("cpareversion.txt")
+    "let filelen = len(cparefile)
+    "echo cparefile
     let idex = 0
-    while  idex < filelen
-        let cparefile[idex] = matchstr(cparefile[idex],"\\d\\{0,4}\\.\\d\\{1,2}\\.\\d\\{1,2}")
-        echo cparefile[idex]
-        let idex += 1
-    endwhile
-    let list = split(cparefile[0],"\\.")
-    echo list
-    echo cparefile
+    "while  idex < filelen
+    "    let cparefile[idex] = matchstr(cparefile[idex],"\\d\\{0,4}\\.\\d\\{1,2}\\.\\d\\{1,2}")
+    "    echo cparefile[idex]
+    "    let idex += 1
+    "endwhile
+    "let list = split(cparefile[0],"\\.")
+    "echo list
+    "echo cparefile
 
     let biger = "12.1.7.4"
     let smaller = "13.1.8"
@@ -726,6 +725,12 @@ function! DictTest()
         endif
         let idex += 1
     endwhile
+    let indexfile = readfile("fund2index.txt")
+	let idx = index(indexfile, "300红利LV.*|")
+    let idx1 = count(indexfile,"300红利LV.*|")
+    echo  "在列表" . idx . "行" 
+    echo  "在列表" . idx1 . "行" 
+
 endfunction
 "}}}}
 "{{{{{2   WriteFund2Index(...) 格式化fund2index
@@ -3066,7 +3071,7 @@ function! PythonGetIndexValuation()
     let indextype = ""
     "}}}}
     let datestring = split(system("date +%F"),"-")[0]
-    let indexfiledict = eval(readfile("urllib_test_runoob_search.html")[0])
+    let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
     let tempindexdata = indexfiledict["data"]["items"]
     "echo "debug"
     "echo tempindexdata = indexfiledict["data"]["items"][0]
@@ -3281,6 +3286,7 @@ function! AnalyzeCode()
         let idx1 = 0
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
+            echo codedict[dictkeys[idx1]]
             let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],"")
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",1 + split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
@@ -4235,7 +4241,8 @@ endfunction
 "csv files {{{{  表格文件
 "每行每列添加空格，增加可读性，保存时把空格消除不影响功能
 "{{{{{2   VisualiZationcsv(...) 可视化表格文件
-nnoremap <F2>  :call VisualiZationcsv(1,",")<cr>
+"call VisualiZationcsv(2,"|")
+nnoremap <F2>  :call VisualiZationcsv(1,"|")<cr>
 function! VisualiZationcsv(...)
     "{{{{{3 变量定义
     let dimensional1 = []   "一维表格
@@ -4268,8 +4275,9 @@ function! VisualiZationcsv(...)
         endwhile
     endif
     let dimensional2 = copy(dimensional1)
-    let dimensional1 =   ExpansionAndContraction(dimensional2,mode,charinterval)
+    let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
     call writefile(dimensional1,expand("%:p"))
+    echo dimensional1
     execute "normal! :e " .  expand("%:p") . "\<cr>"
 endfunction
 "}}}}}
