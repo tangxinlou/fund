@@ -46,7 +46,7 @@ if indexvalua != "":
         date =  indexvalua["data"]["items"][0]["date"]
         date = year + "-" + date
         print(date)
-        f = open("./funddata","r+",encoding='utf-8')
+        f = open("./indexdatabase","r+",encoding='utf-8')
         funddata = f.readline()
         f.close()
         if funddata == "":
@@ -57,7 +57,7 @@ if indexvalua != "":
             funddata[date]["indexvalua"] = indexvalua
             print("当日数据不在写入基金数据源文件里面",date)
             logs.append("当日数据不在写入基金数据源文件里面"+ date + '\n')
-            f = open("./funddata","w",encoding='utf-8')    # 将文件写入到当前目录中
+            f = open("./indexdatabase","w",encoding='utf-8')    # 将文件写入到当前目录中
             f.write(str(funddata))
             f.close()
         else:
@@ -73,7 +73,7 @@ if indexvalua != "":
                 logs.append("当日数据不在写入基金数据源文件里面"+ date + '\n')
                 funddata[date] = {}
                 funddata[date]["indexvalua"] = indexvalua
-                f = open("./funddata","w",encoding='utf-8')    # 将文件写入到当前目录中
+                f = open("./indexdatabase","w",encoding='utf-8')    # 将文件写入到当前目录中
                 f.write(str(funddata))
                 f.close()
     else:
