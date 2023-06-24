@@ -669,6 +669,7 @@ function! DictTest()
     echo len(char)
     echo keys(char)
     echo values(char)
+    echo items(char)
     echo len(values(char))
     echo char[1002]
     echo "tangxinlou"
@@ -730,6 +731,24 @@ function! DictTest()
     let idx1 = count(indexfile,"300红利LV.*|")
     echo  "在列表" . idx . "行" 
     echo  "在列表" . idx1 . "行" 
+    let indexfile = readfile("/d/work/fund/zhishu/indexvaluepanel")
+    let numbereddatabase = eval(readfile("/d/work/fund/zhishu/numbereddatabase")[0])
+    echo numbereddatabase["中证100"]
+    let idx1 = 1
+    let indexname = ""
+
+    while idx1 < len(indexfile)
+        if  len(split(indexfile[idx1],"|")) < 10
+            let indexname = split(split(indexfile[idx1],"|")[0]," \\{3,30}")[0]
+            if has_key(numbereddatabase,indexname) ==# 1
+                let indexfile[idx1]  = indexfile[idx1] . numbereddatabase[indexname] . "|"
+            else
+                "echo  indexname
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    call writefile(indexfile,"/d/work/fund/zhishu/indexvaluepanel")
 
 endfunction
 "}}}}
@@ -3069,9 +3088,11 @@ function! PythonGetIndexValuation()
     let indx1 = 0
     let tempstring = ""
     let indextype = ""
+    let numbereddatabase = ""
     "}}}}
     let datestring = split(system("date +%F"),"-")[0]
     let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
+    let numbereddatabase = eval(readfile("/d/work/fund/zhishu/numbereddatabase")[0])
     let tempindexdata = indexfiledict["data"]["items"]
     "echo "debug"
     "echo tempindexdata = indexfiledict["data"]["items"][0]
@@ -3091,6 +3112,12 @@ function! PythonGetIndexValuation()
         else
             let tempstring = join([tempindexdata[indx1]["name"],indextype,tempindexdata[indx1]["pe"],tempindexdata[indx1]["pe_percentile"],
                         \tempindexdata[indx1]["pb"],tempindexdata[indx1]["pb_percentile"],tempindexdata[indx1]["yeild"],tempindexdata[indx1]["roe"],"--",tempindexdata[indx1]["index_code"]],",")
+        endif
+        if  has_key(numbereddatabase,tempindexdata[indx1]["index_code"]) ==# 0
+            let numbereddatabase[tempindexdata[indx1]["index_code"]] =  tempindexdata[indx1]["name"]
+        endif
+        if  has_key(numbereddatabase,tempindexdata[indx1]["name"]) ==# 0
+            let numbereddatabase[tempindexdata[indx1]["name"]] =  tempindexdata[indx1]["index_code"]
         endif
         if  tempindexdata[indx1]["eva_type"] ==# "low"
             let indexlow = add(indexlow,tempstring)
@@ -3116,6 +3143,7 @@ function! PythonGetIndexValuation()
     call insert(indexdata[1],logmid)
     call insert(indexdata[2],loghigh)
     call insert(indexdata[3],logunsort)
+    call writefile([string(numbereddatabase)],"/d/work/fund/zhishu/numbereddatabase")
     return  indexdata
 endfunction
 "}}}}}
@@ -4155,6 +4183,7 @@ function! UpdateTreeContens(...)
     "}}}}
     let contensfile = readfile(expand("%:p"))
     let curcontesfile = split(system("tree -L 4"),"\n")[1:-3]
+    echo curcontesfile
     if count(contensfile ,"<<<<<<<<<<<<<<<<") && count(contensfile ,">>>>>>>>>>>>>>>")
         echo "之前修改过"
         let src = index(contensfile,"<<<<<<<<<<<<<<<<")
@@ -4241,8 +4270,8 @@ endfunction
 "csv files {{{{  表格文件
 "每行每列添加空格，增加可读性，保存时把空格消除不影响功能
 "{{{{{2   VisualiZationcsv(...) 可视化表格文件
-"call VisualiZationcsv(2,"|")
-nnoremap <F2>  :call VisualiZationcsv(1,"|")<cr>
+"call VisualiZationcsv(2,",")
+nnoremap <F2>  :call VisualiZationcsv(1,',')<cr>
 function! VisualiZationcsv(...)
     "{{{{{3 变量定义
     let dimensional1 = []   "一维表格
@@ -4252,22 +4281,22 @@ function! VisualiZationcsv(...)
     let templist = [""]
     let LenOfListHead =  0  "表格第一行有多少列
     let LenOfListcur =   0  "表格当前行有多少列
-    let charinterval = a:2
+    let charinterval = "\x00" . a:2 . "\x00"
     "}}}}
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     let dimensional1 = readfile(expand("%:p"))
     if mode ==# 1
-        let LenOfListHead = len(split(dimensional1[0],charinterval))
+        let LenOfListHead = count(dimensional1[0],charinterval)
         let idx1 = 0
         while idx1 < len(dimensional1)
-            if  len(split(dimensional1[idx1],charinterval)) >  LenOfListHead
-                let LenOfListHead = len(split(dimensional1[idx1],charinterval))
+            if  count(dimensional1[idx1],charinterval) >  LenOfListHead
+                let LenOfListHead = count(dimensional1[idx1],charinterval)
             endif
             let idx1 += 1
         endwhile
         let idx1 = 0
         while idx1 < len(dimensional1)
-            let LenOfListcur =  len(split(dimensional1[idx1],charinterval))
+            let LenOfListcur =  count(dimensional1[idx1],charinterval)
             if  LenOfListHead !=  LenOfListcur
                 let dimensional1[idx1] =  dimensional1[idx1]  . join(repeat(templist,LenOfListHead - LenOfListcur + 1),charinterval)
             endif
@@ -4277,7 +4306,6 @@ function! VisualiZationcsv(...)
     let dimensional2 = copy(dimensional1)
     let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
     call writefile(dimensional1,expand("%:p"))
-    echo dimensional1
     execute "normal! :e " .  expand("%:p") . "\<cr>"
 endfunction
 "}}}}}
@@ -4286,27 +4314,34 @@ endfunction
 function! ExpansionAndContraction(...)
     "{{{{{3 变量定义
     let filelists = a:1
-    let listlength = [""]
+    let listlength = [" "]
     let mode = a:2
     let idx1 = 0
     let idx2 = 0
     let charinterval = a:3
     let templength = 0
+    let templistlength = 0
     "}}}}
     if mode ==# 1
         "计算出每行最大的长度,制造一个最长的空列表保存每列长度
         let idx1 = 0
         while idx1 < len(filelists)
-            if   len(split(filelists[idx1],charinterval)) > templength
-                let templength =  len(split(filelists[idx1],charinterval))
+            if   count(filelists[idx1],charinterval) > templength
+                let templength =  count(filelists[idx1],charinterval)
+            endif
+            if   len(split(filelists[idx1],charinterval)) > templistlength
+                let templistlength =  len(split(filelists[idx1],charinterval))
             endif
             let idx1 += 1
         endwhile
-        let listlength = repeat(listlength,templength)
+        let listlength = repeat(listlength,templength + 1)
         let idx1 = 0
         "计算 每列最长的长度
         while idx1 < len(filelists)
             let filelists[idx1] =  split(filelists[idx1],charinterval)
+            if  len(filelists[idx1])  < templistlength 
+                let  filelists[idx1] = extend(filelists[idx1],repeat([""],templistlength - len(filelists[idx1])))
+            endif
             let idx2 = 0
             while idx2 < len(filelists[idx1])
                 if listlength[idx2] < strwidth(filelists[idx1][idx2])
