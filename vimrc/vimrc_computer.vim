@@ -44,9 +44,7 @@ set tabstop=4
 set softtabstop=4
 set shiftwidth=4
 set expandtab
-set fileencodings=utf-8,gb2312,gbk,gb18030,big5
-set fenc=utf-8
-set enc=utf-8
+set fileencodings=utf-8,gb2312,gbk,gb18030,big5,cp936,gbk,ucs-bom,latin-1
 set hlsearch
 set incsearch
 set number
@@ -120,6 +118,7 @@ iabbrev gitreflog git reflog
 "查看这个commit 在哪些分支合入了
 iabbrev gitbranch git branch -a --contains
 "iabbrev gitlog git log --graph --oneline  --decorate
+"repo sync --local-only
 iabbrev gitlog  git log --graph --oneline  --decorate  --pretty=format:"\%cr \%cn \%H \%s"
 iabbrev gitcherrypick  git cherry-pick
 iabbrev gitlogbranch git log --graph --decorate --oneline --all
@@ -216,6 +215,8 @@ nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>
 "inoremap <C-h> <Left>
 nnoremap <C-h> 60h
 nnoremap <C-l> 60l
+nnoremap <C-j> 10j
+nnoremap <C-k> 10k
 "inoremap <C-j> <Down>
 "inoremap <C-k> <Up>
 "inoremap <C-l> <Right>
@@ -303,11 +304,11 @@ nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
-nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "nnoremap <leader>vhc :execute "vimgrep!" shellescape(expand("<cword>")) " **/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "执行命令
 nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 ""}}}}
@@ -337,10 +338,12 @@ function! s:GrepOperator(type)
         return
     endif
     silent execute "grep! -EsinR " . shellescape(@@) . " ."
+    let winwidthnum  = float2nr(winheight('%')  * 0.2)
     copen
     set modifiable
     silent execute "!clear"
-    silent execute "normal! \<c-w>H"
+    silent execute "normal! \<c-w>J"
+    execute "normal! :res " . winwidthnum . "\<cr>"
     "execute "normal! 'q:i!clear<cr>:copen<cr>:set modifiable<cr><c-w>H<esc>'"
     let @@ = saved_unnamed_register
 endfunction
@@ -386,10 +389,13 @@ function! QuckfixToggle()
     if g:quickfix_is_open
         set mouse=
         echo  "关闭鼠标"
-        let g:quickfix_is_open = 0
+        colorscheme default
+        highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
+        highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
     else
         let g:quickfix_is_open = 1
         set mouse=a
+        colorscheme morning
         echo "打开鼠标"
     endif
 endfunction
@@ -671,6 +677,7 @@ function! DictTest()
     echo values(char)
     echo items(char)
     echo len(values(char))
+    echo char[3]
     echo char[1002]
     echo "tangxinlou"
     highlight MyGroup ctermbg=green guibg=green
@@ -729,8 +736,8 @@ function! DictTest()
     let indexfile = readfile("fund2index.txt")
 	let idx = index(indexfile, "300红利LV.*|")
     let idx1 = count(indexfile,"300红利LV.*|")
-    echo  "在列表" . idx . "行" 
-    echo  "在列表" . idx1 . "行" 
+    echo  "在列表" . idx . "行"
+    echo  "在列表" . idx1 . "行"
     let indexfile = readfile("/d/work/fund/zhishu/indexvaluepanel")
     let numbereddatabase = eval(readfile("/d/work/fund/zhishu/numbereddatabase")[0])
     echo numbereddatabase["中证100"]
@@ -3348,6 +3355,7 @@ function! AnalyzeCode()
         call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
         call extend(codefile,codedict,8)
         call writefile(codefile,expand("%:p"))
+        execute "normal! :e " .  expand("%:p") . "\<cr>"
     endif
 endfunction
 "}}}}}
@@ -3953,6 +3961,7 @@ endfunction
 "nnoremap <F8>  :call StructureDefinition("tBTA_AV_API_ENABLE")<cr>
 function! StructureDefinition(...)
     "echo system("grep -Esinr  --include=*.h \"tBTA_AV_DATA\"")
+    "echo system("grep -Esinr  --include=*.h \"tBTA_AV_DATA .*{\"")
     "{{{{{3 变量定义
     let grepcmd = "grep -Esinr "
     let structname = a:1
@@ -3965,8 +3974,11 @@ endfunction
 "}}}}}
 "{{{{ 定时器
 
-"{{{{{  MyHandler()  回调
-function! MyHandler(timer)
+"{{{{{  FindFiles()  回调
+let g:windowfindid = 0
+let g:firstfindflag = 0
+let g:lastfilter = ""
+function! FindFiles(timer)
     let searchs = ""
     let idx1 = 0
     let idj1 = 0
@@ -3975,31 +3987,76 @@ function! MyHandler(timer)
     let searchs = getline(1)
     let searchstarge = []
     let clear =  repeat(clear,50)
-    if searchs ==# "null"
+    if g:firstfindflag ==# 0
+        let g:windowfindid = win_getid()
+        let g:firstfindflag = 1
+    endif
+    if  g:windowfindid != win_getid()
+        return
+    endif
+    if g:lastfilter ==# searchs
+        return
+    endif
+    if searchs ==# ""
         return
     endif
     let command = "find -iname " . "'*" . searchs ."*'"
+    echo command
     let searchstarge =  system(command)
     let searchstarge = split(searchstarge,"\n")
     "let searchstarge = insert(searchstarge,searchs)
     call setline(2, searchstarge)
     call setline(len(searchstarge) + 2,clear)
-
+    let g:lastfilter = searchs
 endfunction
 "}}}}}
 
 "{{{{{  Searcher()  搜索器  普通模式<F9>调用
 nnoremap <F9> :call   Searcher()<cr>
 function! Searcher()
+    "[{'id': 1, 'repeat': -1, 'remaining': 185, 'time': 500, 'paused': 0, 'callback': function('MyHandler')}]
+    let idx1 = 0
     let timeinfo = []
+    let funtionname = ["FindFiles"]
+    let tempname = ""
     let timeinfo = timer_info()
-    echo "tangxinlou45" len(timeinfo)
-    if  len(timeinfo) > 0
-        echo "tangxinlou2"
-        call timer_stop(1)
+    let winwidthnum  = 0
+    if g:windowfindid != win_getid() && g:windowfindid != 0
+        if win_gotoid(g:windowfindid) ==# 1
+            return
+        endif
     else
-        echo "tangxinlou3"
-        let timer = timer_start(500, 'MyHandler', {'repeat': -1})
+        if len(tabpagebuflist()) ==# 1 && g:windowfindid ==# 0
+            "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+            let winwidthnum  = float2nr(winheight('%')  * 0.2)
+            echo winwidthnum
+            execute "normal! :new\<cr>"
+            "execute "normal! :vne\<cr>"
+            execute "normal! \<c-w>J"
+            execute "normal! :res " . winwidthnum . "\<cr>"
+            "execute "normal! :vertical res " . winwidthnum . "\<cr>"
+            redraw
+        endif
+    endif
+    echo "是否有定时器，0 没有 1有" len(timeinfo)
+    if  len(timeinfo) > 0
+        echo "准备清空定时器"
+        let idx1 = 0
+        while idx1 <  len(timeinfo)
+            let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
+            if  count(funtionname,tempname)
+                call timer_stop(timeinfo[idx1]["id"])
+                echo "有这个定时器回调函数"
+                if tempname ==# "FindFiles"
+                    let g:firstfindflag = 0
+                    let g:windowfindid = 0
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    else
+        let timer = timer_start(500, 'FindFiles', {'repeat': -1})
+        echo "开启定时器" timer
     endif
 endfunction
 "}}}}}
@@ -4281,9 +4338,14 @@ function! VisualiZationcsv(...)
     let templist = [""]
     let LenOfListHead =  0  "表格第一行有多少列
     let LenOfListcur =   0  "表格当前行有多少列
-    let charinterval = "\x00" . a:2 . "\x00"
+    let charinterval = a:2
     "}}}}
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
+    if mode ==# 1
+        if "UTF-8" != matchstr(system("file " . expand("%:p")),"UTF-8")
+            call system("iconv -f cp936 -t utf-8 " . expand("%:p") . " -o " . expand("%:p"))
+        endif
+    endif
     let dimensional1 = readfile(expand("%:p"))
     if mode ==# 1
         let LenOfListHead = count(dimensional1[0],charinterval)
@@ -4306,7 +4368,11 @@ function! VisualiZationcsv(...)
     let dimensional2 = copy(dimensional1)
     let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
     call writefile(dimensional1,expand("%:p"))
-    execute "normal! :e " .  expand("%:p") . "\<cr>"
+    if mode ==# 1
+        execute "normal! :e " .  expand("%:p") . "\<cr>"
+    else
+       call system("iconv -f utf-8 -t cp936 " . expand("%:p") . " -o " . expand("%:p"))
+    endif
 endfunction
 "}}}}}
 
@@ -4329,19 +4395,13 @@ function! ExpansionAndContraction(...)
             if   count(filelists[idx1],charinterval) > templength
                 let templength =  count(filelists[idx1],charinterval)
             endif
-            if   len(split(filelists[idx1],charinterval)) > templistlength
-                let templistlength =  len(split(filelists[idx1],charinterval))
-            endif
             let idx1 += 1
         endwhile
         let listlength = repeat(listlength,templength + 1)
         let idx1 = 0
         "计算 每列最长的长度
         while idx1 < len(filelists)
-            let filelists[idx1] =  split(filelists[idx1],charinterval)
-            if  len(filelists[idx1])  < templistlength 
-                let  filelists[idx1] = extend(filelists[idx1],repeat([""],templistlength - len(filelists[idx1])))
-            endif
+            let filelists[idx1] =  split(filelists[idx1],charinterval,2)
             let idx2 = 0
             while idx2 < len(filelists[idx1])
                 if listlength[idx2] < strwidth(filelists[idx1][idx2])
@@ -4367,7 +4427,7 @@ function! ExpansionAndContraction(...)
         let idx1 = 0
         let idx2 = 0
         while idx1 < len(filelists)
-            let filelists[idx1] =  split(filelists[idx1],charinterval)
+            let filelists[idx1] =  split(filelists[idx1],charinterval,2)
             let idx2 = 0
             while idx2 < len(filelists[idx1])
                 if  len(split(filelists[idx1][idx2]," \\{3,30}"))  != 0
@@ -4416,7 +4476,32 @@ endfunction
 "}}}}}
 
 "}}}
+"{{{{  调整窗口
+"{{{{{2   WidChanged(...) 打开python文件触发
+nnoremap <F10> :call WidChanged()<cr>
+"let g:windowid = 0
+function! WidChanged()
+    "{{{{{3 变量定义
+    let windowinfo = ""
+    "}}}}
+    let windowinfo = getwininfo()
+    "echo windowinfo
+    let windowinfo[0].width = 50
+    let windowinfo[0].height = 6
+    "echo windowinfo
+    call  execute(["1resize 46","vert 1resize 135"])
+    "call  execute("vert resize 135")
+    "call  execute('vert 1resize 135')
+endfunction
+"}}}}}
+"}}}
 
+"winnr() 窗口id
+"tabpagebuflist() 缓冲区列表
+"gettabinfo()标签页信息
+"echo winheight('%') winwidth('%')
+"set lines=35 columns=118
+"winrestcmd()
 
 
 
