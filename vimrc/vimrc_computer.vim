@@ -1863,7 +1863,7 @@ function! IsAddDiff()
     let isadddiff = "tangxinlou"
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
-    let isdiffpatch = "/c/Users/Administrator/txl/1.txt"
+    let isdiffpatch = "/d/txl/1.txt"
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -1888,7 +1888,7 @@ function! IsAddDiff()
             let idx2 = input("请输入编号")
             let curadddiff2 = split(curadddiff[idx2],"")
             "echo curadddiff2
-            let isadddiff1 = join(["/c/Users/Administrator/txl/diffdir.sh" , " " , curadddiff2[0] ," ", curadddiff2[1]])
+            let isadddiff1 = join(["/d/txl/diffdir.sh" , " " , curadddiff2[0] ," ", curadddiff2[1]])
             execute "!" .  isadddiff1
         endif
     elseif 1 ==# len(curadddiff2)
