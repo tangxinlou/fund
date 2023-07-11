@@ -989,6 +989,110 @@ function! SetFileType(...)
     endif
 endfunction
 "}}}}}
+"{{{{{2   ListTo1D(...)
+function! ListTo1D(...)
+    "{{{{{3 变量定义
+    let listof2d = a:1
+    let charinterval = a:2
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(listof2d)
+        let listof2d[idx1] = join(listof2d[idx1],charinterval)
+        let idx1 += 1
+    endwhile
+    return  listof2d
+endfunction
+"}}}}}
+"{{{{{2   ListTo2D(...)
+function! ListTo2D(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1
+    let charinterval = a:2
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(listof1d)
+        let listof1d[idx1] = split(listof1d[idx1],charinterval,2)
+        let idx1 += 1
+    endwhile
+    return  listof1d
+endfunction
+"}}}}}
+"{{{{{2   ListAddSpaces(...)
+function! ListAddSpaces(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1   "一维表格
+    let listof2d = []   "二维表格
+    let charinterval = a:2
+    let listlength = 0
+    let idx1 = 0
+    let idj1 = 0
+    "}}}}
+    "let listof1d = readfile("PEvaluepanel.txt")
+    let listof2d = ListTo2D(listof1d,charinterval)
+    "计算哪行最长
+    while idx1 < len(listof2d)
+        if len(listlength) < len(listof2d[idx1])
+            let listlength =  len(listof2d[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    let listlength = repeat([" "],listlength)
+    "计算每列最大长度
+    let idx1 = 0
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            if listlength[idj1] < strwidth(listof2d[idx1][idj1])
+                let listlength[idj1] = strwidth(listof2d[idx1][idj1])
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    "添加空格
+    let idx1 = 0
+    let idj1 = 0
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            let listof2d[idx1][idj1] = listof2d[idx1][idj1] . repeat(" ",listlength[idj1] - strwidth(listof2d[idx1][idj1]) + 5)
+            let idj1 +=1
+        endwhile
+        let idx1 += 1
+    endwhile
+    let listof1d = ListTo1D(listof2d ,charinterval)
+    "call append(line('.'),listof1d)
+    return listof1d
+endfunction
+"}}}}}
+"{{{{{2   ListRemoveSpaces(...)
+function! ListRemoveSpaces(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1   "一维表格
+    let listof2d = []   "二维表格
+    let charinterval = a:2
+    let idx1 = 0
+    let idj1 = 0
+    "}}}}
+    "let listof1d = readfile("PEvaluepanel.txt")
+    let listof2d = ListTo2D(listof1d,charinterval)
+
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
+                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
+            else
+                let listof2d[idx1][idj1] = ""
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    let listof1d = ListTo1D(listof2d ,charinterval)
+    return  listof1d
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -4369,7 +4473,7 @@ function! VisualiZationcsv(...)
     let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
     call writefile(dimensional1,expand("%:p"))
     if mode ==# 1
-        execute "normal! :e " .  expand("%:p") . "\<cr>"
+    execute "normal! :e " .  expand("%:p") . "\<cr>"
     else
        call system("iconv -f utf-8 -t cp936 " . expand("%:p") . " -o " . expand("%:p"))
     endif
@@ -4389,57 +4493,9 @@ function! ExpansionAndContraction(...)
     let templistlength = 0
     "}}}}
     if mode ==# 1
-        "计算出每行最大的长度,制造一个最长的空列表保存每列长度
-        let idx1 = 0
-        while idx1 < len(filelists)
-            if   count(filelists[idx1],charinterval) > templength
-                let templength =  count(filelists[idx1],charinterval)
-            endif
-            let idx1 += 1
-        endwhile
-        let listlength = repeat(listlength,templength + 1)
-        let idx1 = 0
-        "计算 每列最长的长度
-        while idx1 < len(filelists)
-            let filelists[idx1] =  split(filelists[idx1],charinterval,2)
-            let idx2 = 0
-            while idx2 < len(filelists[idx1])
-                if listlength[idx2] < strwidth(filelists[idx1][idx2])
-                    let listlength[idx2] = strwidth(filelists[idx1][idx2])
-                endif
-                let idx2 += 1
-            endwhile
-            let idx1 += 1
-        endwhile
-        "添加空格
-        let idx1 = 0
-        let idx2 = 0
-        while idx1 < len(filelists)
-            let idx2 = 0
-            while idx2 < len(filelists[idx1])
-                let filelists[idx1][idx2] = filelists[idx1][idx2] . repeat(" ",listlength[idx2] - strwidth(filelists[idx1][idx2]) + 5)
-                let idx2 +=1
-            endwhile
-            let filelists[idx1] =  join(filelists[idx1],charinterval)
-            let idx1 += 1
-        endwhile
+    let filelists = ListAddSpaces(filelists,charinterval)
     elseif mode ==# 2
-        let idx1 = 0
-        let idx2 = 0
-        while idx1 < len(filelists)
-            let filelists[idx1] =  split(filelists[idx1],charinterval,2)
-            let idx2 = 0
-            while idx2 < len(filelists[idx1])
-                if  len(split(filelists[idx1][idx2]," \\{3,30}"))  != 0
-                    let filelists[idx1][idx2] = split(filelists[idx1][idx2]," \\{3,30}")[0]
-                else
-                    let filelists[idx1][idx2] = ""
-                endif
-                let idx2 +=1
-            endwhile
-            let filelists[idx1] =  join(filelists[idx1],charinterval)
-            let idx1 += 1
-        endwhile
+    let filelists = ListRemoveSpaces(filelists,charinterval)
     endif
     return  filelists
 endfunction
@@ -4495,6 +4551,10 @@ function! WidChanged()
 endfunction
 "}}}}}
 "}}}
+
+
+
+
 
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
