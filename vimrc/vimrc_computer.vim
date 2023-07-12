@@ -375,7 +375,7 @@ function! s:Copy2file(type)
     let templist = []
     let tempchar = ""
     let tempchar = @@
-    let relativepath =  Homedir("txl/transplant.txt")
+    let relativepath = Homedir("txl/transplant.txt")
     let templist = split(tempchar,"\n")
     if  @@ ==# " "
         let templist = readfile(relativepath)
@@ -401,8 +401,8 @@ function! QuckfixToggle()
     if g:quickfix_is_open
         set mouse=
         echo  "关闭鼠标"
-        colorscheme default
         let g:quickfix_is_open = 0
+        colorscheme default
         highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
     else
@@ -1877,6 +1877,7 @@ function! IsAddDiff()
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
     let isdiffpatch = Homedir("txl/1.txt")
+    let diffshfile = Homedir("txl/diffdir.sh")
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -1901,7 +1902,7 @@ function! IsAddDiff()
             let idx2 = input("请输入编号")
             let curadddiff2 = split(curadddiff[idx2],"")
             "echo curadddiff2
-            let isadddiff1 = join(["/d/txl/diffdir.sh" , " " , curadddiff2[0] ," ", curadddiff2[1]])
+            let isadddiff1 = join([diffshfile, " " , curadddiff2[0] ," ", curadddiff2[1]])
             execute "!" .  isadddiff1
         endif
     elseif 1 ==# len(curadddiff2)
@@ -2000,7 +2001,7 @@ function! CompareVersion()
     let curpath1 = copy(curpath)
     let versiondiff = []
     let versionstring = ""
-    let relativepath =  Homedir("txl/version")
+    let relativepath = Homedir("txl/version")
     if len(curpath1) > 15
         echo "路径错误"
         return
@@ -2245,9 +2246,9 @@ function! s:DynamicDiff(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
 
-    let relativepath =  Homedir("txl/left")
-    let relativepath1 =  Homedir("txl/right")
-    let relativepath2 =  Homedir("txl/1.patch")
+    let relativepath = Homedir("txl/left")
+    let relativepath1 = Homedir("txl/right")
+    let relativepath2 = Homedir("txl/1.patch")
     let templeft = readfile(relativepath)
     let tempright = readfile(relativepath1)
 
@@ -3396,7 +3397,7 @@ function! AnalyzeCode()
     let tail = 0
     let idx1 = 0
     let idj1 = 0
-    let relativepath =  Homedir("txl/parse")
+    let relativepath = Homedir("txl/parse")
     let codefile = readfile(expand("%:p"))
     if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
         echo "之前修改过"
@@ -3458,7 +3459,7 @@ function! AnalyzeCode()
         endwhile
         let tempdictlist = insert(tempdictlist,"《《《《《《《")
         let tempdictlist = add(tempdictlist,"》》》》》》》")
-        call writefile(tempdictlist,"/d/txl/parse")
+        call writefile(tempdictlist,relativepath)
         call extend(codefile,tempdictlist,8)
         call writefile(codefile,expand("%:p"))
         execute "normal! :e " .  expand("%:p") . "\<cr>"
@@ -3473,7 +3474,7 @@ function! AnalyzeCode()
         let codedict =  WriteFund2Index1(codedict)
         let codedict = insert(codedict,"《《《《《《《")
         let codedict = add(codedict,"》》》》》》》")
-        call writefile(codedict,"/opt6/tangxinlouosc/txl/parse")
+        call writefile(codedict,relativepath)
         call extend(codefile,codedict,8)
         call writefile(codefile,expand("%:p"))
         execute "normal! :e " .  expand("%:p") . "\<cr>"
@@ -4260,8 +4261,7 @@ endfunction
 "}}}}}
 "}}}}
 "{{{{ 解冲突
-"{{{{{  ResolveConflict()  解冲突 普通模式<F10>调用
-nnoremap <F10>  <esc>:call   ResolveConflict()<cr>
+"{{{{{  ResolveConflict()  解冲突
 function! ResolveConflict()
     let saved_unnamed_register = @@
     execute "normal! yy"
