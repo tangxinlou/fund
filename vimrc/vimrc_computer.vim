@@ -45,6 +45,7 @@ set softtabstop=4
 set shiftwidth=4
 set expandtab
 set fileencodings=utf-8,gb2312,gbk,gb18030,big5,cp936,gbk,ucs-bom,latin-1
+set enc=utf-8
 set hlsearch
 set incsearch
 set number
@@ -325,6 +326,16 @@ nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>
 nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
+"{{{{{2   Homedir(...) 家目录
+let g:homedir = split(system("cd ~ ; pwd"),"\n")[0]
+function! Homedir(...)
+    "{{{{{3 变量定义
+    let dirpath = a:1
+    "}}}}
+    let dirpath = g:homedir . "/" . dirpath
+    return dirpath
+endfunction
+"}}}}}
 "{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
@@ -364,9 +375,10 @@ function! s:Copy2file(type)
     let templist = []
     let tempchar = ""
     let tempchar = @@
+    let relativepath =  Homedir("txl/transplant.txt")
     let templist = split(tempchar,"\n")
     if  @@ ==# " "
-        let templist = readfile("/d/txl/transplant.txt")
+        let templist = readfile(relativepath)
         echo "复制公共文件到本地"
         while idx1 < len(templist)
             call append(line('.'), templist[idx1])
@@ -375,7 +387,7 @@ function! s:Copy2file(type)
         endwhile
     else
         echo "复制到公共文件"
-        call writefile(templist,"/d/txl/transplant.txt")
+        call writefile(templist,relativepath)
     endif
     "silent execute "grep! -EsinR " . shellescape(@@) . " ."
 
@@ -390,6 +402,7 @@ function! QuckfixToggle()
         set mouse=
         echo  "关闭鼠标"
         colorscheme default
+        let g:quickfix_is_open = 0
         highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
     else
@@ -475,7 +488,7 @@ endfunction
 function! MakeCompressedPackage()
     "{{{{{{3 定义变量
     let curpath = ""
-    let intentpath = "/opt6/tangxinlouosc/copy/cp"
+    let intentpath = Homedir("copy/cp")
     let batfile = "cp64.host.R.bat"
     let command = ""
     let iscopyconf = ""
@@ -1863,7 +1876,7 @@ function! IsAddDiff()
     let isadddiff = "tangxinlou"
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
-    let isdiffpatch = "/d/txl/1.txt"
+    let isdiffpatch = Homedir("txl/1.txt")
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -1987,6 +2000,7 @@ function! CompareVersion()
     let curpath1 = copy(curpath)
     let versiondiff = []
     let versionstring = ""
+    let relativepath =  Homedir("txl/version")
     if len(curpath1) > 15
         echo "路径错误"
         return
@@ -2010,8 +2024,8 @@ function! CompareVersion()
     else
         let cmplist = add(cmplist ,rightversion[len(rightversion) - 1])
         let cmplist = add(cmplist ,leftversion[len(leftversion) - 1])
-        call writefile(cmplist,"/opt6/tangxinlouosc/txl/version")
-        let cmplist =  split(system("sort -V /opt6/tangxinlouosc/txl/version"),"\n")
+        call writefile(cmplist,relativepath )
+        let cmplist =  split(system("sort -V " . relativepath),"\n")
         echo cmplist
         if  cmplist[1] ==#  rightversion[len(rightversion) - 1]
             let curxmlfile =  rightversion "大
@@ -2231,31 +2245,34 @@ function! s:DynamicDiff(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
 
-    let templeft = readfile("/d/txl/left")
-    let tempright = readfile("/d/txl/right")
+    let relativepath =  Homedir("txl/left")
+    let relativepath1 =  Homedir("txl/right")
+    let relativepath2 =  Homedir("txl/1.patch")
+    let templeft = readfile(relativepath)
+    let tempright = readfile(relativepath1)
 
     if len(templeft) != 0 &&  len(tempright) != 0
         if "yes" ==# input("是否比较")
-            call system("diff -Naur  /d/txl/left /d/txl/right > /d/txl/1.patch ")
-            silent tabnew   /d/txl/right
-            silent vsplit   /d/txl/left
+            call system("diff -Naur " .  relativepath . " " .  relativepath1 . " > " . relativepath2)
+            execute "normal! :tabnew " . relativepath1 . "\<cr>"
+            execute "normal! :vsplit " . relativepath . "\<cr>"
             if "yes" ==# input("是否清空两个文件，yes 是清空")
-                call writefile([],"/d/txl/left")
-                call writefile([],"/d/txl/right")
+                call writefile([],relativepath)
+                call writefile([],relativepath1)
             endif
         else
             echo "两个文件有内容把复制的内容保存在左边"
-            call writefile(templist,"/d/txl/left")
-            call writefile([],"/d/txl/right")
+            call writefile(templist,relativepath)
+            call writefile([],relativepath1)
         endif
     elseif len(templeft) ==# 0 &&  len(tempright) ==# 0
 
         echo "两个文件都是空的，把复制的内容保存在左边"
-        call writefile(templist,"/d/txl/left")
+        call writefile(templist,relativepath)
     elseif len(templeft) != 0 &&  len(tempright) ==# 0
 
         echo "左边内容已存在，把复制的内容保存在右边"
-        call writefile(templist,"/d/txl/right")
+        call writefile(templist,relativepath1)
     endif
     call input("是否继续")
     let @@ = saved_unnamed_register
@@ -3379,6 +3396,7 @@ function! AnalyzeCode()
     let tail = 0
     let idx1 = 0
     let idj1 = 0
+    let relativepath =  Homedir("txl/parse")
     let codefile = readfile(expand("%:p"))
     if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
         echo "之前修改过"
@@ -3425,7 +3443,6 @@ function! AnalyzeCode()
         let idx1 = 0
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
-            echo codedict[dictkeys[idx1]]
             let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],"")
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",1 + split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
@@ -4533,7 +4550,7 @@ endfunction
 
 "}}}
 "{{{{  调整窗口
-"{{{{{2   WidChanged(...) 打开python文件触发
+"{{{{{2   WidChanged(...) 调整窗口
 nnoremap <F10> :call WidChanged()<cr>
 "let g:windowid = 0
 function! WidChanged()
@@ -4552,18 +4569,12 @@ endfunction
 "}}}}}
 "}}}
 
-
-
-
-
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
 "gettabinfo()标签页信息
 "echo winheight('%') winwidth('%')
 "set lines=35 columns=118
 "winrestcmd()
-
-
 
 "forgroundTimeForWifi.\{,20}",
 "%g!/唐新楼重新指派了缺陷/d
