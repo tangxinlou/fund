@@ -8,5 +8,5 @@ $Description  : tangxinlou
 *******************************************************/
 
 DataFund.py   每日下载指数估值
-funddata      指数估值数据汇总
+indexdatabase 指数估值数据汇总
 logs          python 脚本执行log

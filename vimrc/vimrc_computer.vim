@@ -327,7 +327,7 @@ nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
 "{{{{{2   Homedir(...) 家目录
-let g:homedir = split(system("cd ~ ; pwd"),"\n")[0]
+let g:homedir = "/d" 
 function! Homedir(...)
     "{{{{{3 变量定义
     let dirpath = a:1
@@ -3276,7 +3276,19 @@ function! PythonGetIndexValuation()
     return  indexdata
 endfunction
 "}}}}}
+"{{{{{2   CalculateAmount(...)
+function! CalculateAmount(...)
+    "{{{{{3 变量定义
+    "}}}}
+endfunction
+"}}}}} 
 
+"{{{{{2   CalculatePE(...)
+function! CalculatePE(...)
+    "{{{{{3 变量定义
+    "}}}}
+endfunction
+"}}}}}
 "}}}
 "{{{{{ code
 "协助写出代码流程文档
@@ -4535,7 +4547,7 @@ function! PythonTest()
     let pythontest = ""
     let path = "par from vimscript into python"
     "}}}}
-python3 <<EOM
+python <<EOM
 import vim
 import os
 var = vim.eval("path")
