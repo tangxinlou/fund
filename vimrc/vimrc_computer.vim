@@ -147,7 +147,8 @@ augroup filetype_markdown
     autocmd FileType text  setlocal foldexpr=GetPotionFold(v:lnum)
     autocmd FileType special setlocal foldmethod=expr
     autocmd FileType special   setlocal foldexpr=GetPotionFold(v:lnum)
-    autocmd BufWrite *.md   :call TitleDet()
+    autocmd FileType markdown  :highlight MyGroup1 term=reverse ctermbg=black guibg=Grey40
+    autocmd FileType markdown  :let m = matchadd("MyGroup1", "_")
 augroup END
 augroup filetype_dts
     autocmd FileType dts  setlocal foldmethod=indent
@@ -327,7 +328,7 @@ nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
 "{{{{{2   Homedir(...) 家目录
-let g:homedir = "/d" 
+let g:homedir = "/d"
 function! Homedir(...)
     "{{{{{3 变量定义
     let dirpath = a:1
@@ -405,10 +406,15 @@ function! QuckfixToggle()
         colorscheme default
         highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
+        "call append(line('.'),split(execute("highlight"),"\n"))
+        highlight MyGroup1 term=reverse ctermbg=black ctermfg=White guibg=Grey40
+        let m = matchadd("MyGroup1", "_")
     else
         let g:quickfix_is_open = 1
         set mouse=a
         colorscheme morning
+        highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
+        let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
     endif
 endfunction
@@ -495,6 +501,7 @@ function! MakeCompressedPackage()
     let iscopyapk = ""
     let iscopyso = ""
     let templist = []
+    let zipname = ""
     "}}}}}
     let command = "pwd"
     "set fileformats=dos
@@ -536,6 +543,8 @@ function! MakeCompressedPackage()
     silent execute "normal! \<c-v>G$A\<c-v>\<c-m>\<esc>"
     silent execute "normal! :wq\<cr>"
     call system("tar -cvf copyfile.tar ./cp")
+    let zipname = "tar -cvf " .  split(split(system("pwd"),"/")[-1],"\n")[0]  . ".tar" . " ./cp"
+    call system(zipname)
 endfunction
 "}}}}}
 "{{{{{2   MyCompare(i1, i2) 使用sort 排序list
@@ -1104,6 +1113,27 @@ function! ListRemoveSpaces(...)
     endwhile
     let listof1d = ListTo1D(listof2d ,charinterval)
     return  listof1d
+endfunction
+"}}}}}
+"{{{{{2   OpenQuickfix(...) 快速打开窗口
+nnoremap <F3> :call OpenQuickfix()<cr>
+function! OpenQuickfix(...)
+    "{{{{{3 变量定义
+    let winlist = []
+    let tabpageid = 0
+    "}}}}
+    let tabpageid = tabpagenr()
+    let winlist = getwininfo()
+    for window in winlist
+        if window.quickfix ==# 1
+            if  window.tabnr ==#  tabpageid
+                :ccl
+                return
+            endif
+        endif
+    endfor
+    :copen
+    :exec "normal! \<c-w>J"
 endfunction
 "}}}}}
 "}}}}
@@ -3281,8 +3311,7 @@ function! CalculateAmount(...)
     "{{{{{3 变量定义
     "}}}}
 endfunction
-"}}}}} 
-
+"}}}}}
 "{{{{{2   CalculatePE(...)
 function! CalculatePE(...)
     "{{{{{3 变量定义
@@ -3456,7 +3485,7 @@ function! AnalyzeCode()
         let idx1 = 0
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] =  DrawTimingDiagram(codedict[dictkeys[idx1]])
-            let codedict[dictkeys[idx1]] =  WriteFund2Index1(codedict[dictkeys[idx1]])
+            let codedict[dictkeys[idx1]] =  ListAddSpaces(codedict[dictkeys[idx1]],"|")
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],"")
             let codedict[dictkeys[idx1]] =  insert(codedict[dictkeys[idx1]],join(["第",1 + split(dictkeys[idx1],"|")[0],"章",split(split(dictkeys[idx1],"|")[1])[1]," 流程图"]))
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
@@ -3483,7 +3512,7 @@ function! AnalyzeCode()
             let idj1 += 1
         endwhile
         let codedict =  DrawTimingDiagram(codedict)
-        let codedict =  WriteFund2Index1(codedict)
+        let codedict =  ListAddSpaces(codedict,"|")
         let codedict = insert(codedict,"《《《《《《《")
         let codedict = add(codedict,"》》》》》》》")
         call writefile(codedict,relativepath)
@@ -4189,7 +4218,7 @@ function! Searcher()
             let idx1 += 1
         endwhile
     else
-        let timer = timer_start(500, 'FindFiles', {'repeat': -1})
+        let timer = timer_start(200, 'FindFiles', {'repeat': -1})
         echo "开启定时器" timer
     endif
 endfunction
