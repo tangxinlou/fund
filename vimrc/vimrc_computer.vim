@@ -419,6 +419,27 @@ function! QuckfixToggle()
     endif
 endfunction
 "}}}}}
+"{{{{{2   OpenQuickfix(...) 快速打开窗口
+nnoremap <F3> :call OpenQuickfix()<cr>
+function! OpenQuickfix(...)
+    "{{{{{3 变量定义
+    let winlist = []
+    let tabpageid = 0
+    "}}}}
+    let tabpageid = tabpagenr()
+    let winlist = getwininfo()
+    for window in winlist
+        if window.quickfix ==# 1
+            if  window.tabnr ==#  tabpageid
+                :ccl
+                return
+            endif
+        endif
+    endfor
+    :copen
+    :exec "normal! \<c-w>J"
+endfunction
+"}}}}}
 "{{{{{2 function! s:MarkdownPreview()            markdown 模式切换 现在不用了
 let g:tang = 1
 function! s:MarkdownPreview()
@@ -1115,27 +1136,7 @@ function! ListRemoveSpaces(...)
     return  listof1d
 endfunction
 "}}}}}
-"{{{{{2   OpenQuickfix(...) 快速打开窗口
-nnoremap <F3> :call OpenQuickfix()<cr>
-function! OpenQuickfix(...)
-    "{{{{{3 变量定义
-    let winlist = []
-    let tabpageid = 0
-    "}}}}
-    let tabpageid = tabpagenr()
-    let winlist = getwininfo()
-    for window in winlist
-        if window.quickfix ==# 1
-            if  window.tabnr ==#  tabpageid
-                :ccl
-                return
-            endif
-        endif
-    endfor
-    :copen
-    :exec "normal! \<c-w>J"
-endfunction
-"}}}}}
+
 "}}}}
 "{{{{vmake 命令
 
@@ -2570,64 +2571,12 @@ endfunction
 "}}}}}
 "{{{{{2  function! WriteFile(...)                  获取指数源数据写入fund文件
 function! WriteFile(...)
-    let idx1 = 0
-    let filenumber = 0
-    let fundfilename = "指数估值(2022-02-18).html"
-    let fundfilename1 = []
-    let templist = []
-    let idx2 = 0
-    let lists = []
-    let list = []
-    let list1 = [1,2,3,4,]
-    "let fundfilename = system("find  /d/work/fund/zhishu -iname '*html'")
-    "let fundfilename = split(fundfilename,"\n")
-    "let fundfilename = reverse(fundfilename)
-    "let fundfilename1 = copy(fundfilename)
-    "call AddNumber(fundfilename1)
-    "let filenumber = input("请输入待输入指数文件")
-    let lists = readfile("fund.txt")
-    let list1 = PythonGetIndexValuation()
-    "let list1 = GetFundValue(fundfilename[filenumber])
-    let list =  SplicingData(list1)
-    call append(line('.'),list)
-    echo "lists len " . len(lists)
-    if len(lists) ==# 1
-        echo "tangxinlou"
-        let idx1 = 1
-        let lists = copy(list)
-        call insert(lists,idx1)
-        if len(lists) < 5
-            return
-        endif
-        if "yes" ==# input("是否写入")
-            call writefile(lists,"fund.txt")
-        endif
-    else
-        echo "tangxinlou1"
-        let idx1 = 0
-        while idx1 < len(lists)
-            let templist = split(lists[idx1],"|")
-            if len(templist) ==# 2
-                "debug
-                "echo templist
-                "echo split(list[0],"|")[1]
-                if templist[1] ==# split(list[0],"|")[1]
-                    echo "tangxinlou2"
-                    return
-                endif
-            endif
-            let idx1 += 1
-        endwhile
-        let lists[0]  += 1
-        let lists = extend(lists,list)
-        if len(lists) < 5
-            return
-        endif
-        "redraw
-        if "yes" ==# input("是否写入")
-            call writefile(lists,"fund.txt")
-        endif
-    endif
+    "{{{{{3 变量定义
+    let  indexdict  = {}  "fund.txt 中的已有的指数数据
+    "}}}}
+    let indexdict = ParseFund()
+    let fundkeys = sort(keys(indexdict),"MyCompare1")
+    echo fundkeys
 endfunction
 "}}}}}
 "{{{{{2   ConnecTwoList(...)   连接数据和指数名字
@@ -3225,7 +3174,7 @@ endfunction
 "}}}}
 "{{{{{2   PythonGetIndexValuation(...) 使用python方式获取指数估值
 nnoremap <F3> :call PythonGetIndexValuation()<cr>
-function! PythonGetIndexValuation()
+function! PythonGetIndexValuation(...)
     "{{{{{3 变量定义
     let fundtitle = "指数名称,指数类型,PE,PE%,PB,PB%,股息率,ROE,预测PEG,指数编号"
     let logtime = "指数估值,2022-02-17"
@@ -3237,7 +3186,7 @@ function! PythonGetIndexValuation()
     let indexmid = []
     let indexhigh = []
     let indexunsort = []
-    let indexfiledict = ""
+    let indexfiledict = a:1
     let tempstring = ""
     let true = 1
     let false = 0
@@ -3250,8 +3199,8 @@ function! PythonGetIndexValuation()
     let numbereddatabase = ""
     "}}}}
     let datestring = split(system("date +%F"),"-")[0]
-    let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
-    let numbereddatabase = eval(readfile("/d/work/fund/zhishu/numbereddatabase")[0])
+    "let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
+    let numbereddatabase = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
     let tempindexdata = indexfiledict["data"]["items"]
     "echo "debug"
     "echo tempindexdata = indexfiledict["data"]["items"][0]
@@ -3272,11 +3221,11 @@ function! PythonGetIndexValuation()
             let tempstring = join([tempindexdata[indx1]["name"],indextype,tempindexdata[indx1]["pe"],tempindexdata[indx1]["pe_percentile"],
                         \tempindexdata[indx1]["pb"],tempindexdata[indx1]["pb_percentile"],tempindexdata[indx1]["yeild"],tempindexdata[indx1]["roe"],"--",tempindexdata[indx1]["index_code"]],",")
         endif
-        if  has_key(numbereddatabase,tempindexdata[indx1]["index_code"]) ==# 0
-            let numbereddatabase[tempindexdata[indx1]["index_code"]] =  tempindexdata[indx1]["name"]
+        if  has_key(numbereddatabase["index_code"],tempindexdata[indx1]["index_code"]) ==# 0
+            let numbereddatabase["index_code"][tempindexdata[indx1]["index_code"]] =  tempindexdata[indx1]["name"]
         endif
-        if  has_key(numbereddatabase,tempindexdata[indx1]["name"]) ==# 0
-            let numbereddatabase[tempindexdata[indx1]["name"]] =  tempindexdata[indx1]["index_code"]
+        if  has_key(numbereddatabase["name"],tempindexdata[indx1]["name"]) ==# 0
+            let numbereddatabase["name"][tempindexdata[indx1]["name"]] =  tempindexdata[indx1]["index_code"]
         endif
         if  tempindexdata[indx1]["eva_type"] ==# "low"
             let indexlow = add(indexlow,tempstring)
@@ -3302,7 +3251,7 @@ function! PythonGetIndexValuation()
     call insert(indexdata[1],logmid)
     call insert(indexdata[2],loghigh)
     call insert(indexdata[3],logunsort)
-    call writefile([string(numbereddatabase)],"/d/work/fund/zhishu/numbereddatabase")
+    call writefile([string(numbereddatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
     return  indexdata
 endfunction
 "}}}}}
@@ -3318,6 +3267,121 @@ function! CalculatePE(...)
     "}}}}
 endfunction
 "}}}}}
+"{{{{{2  CutIndexPanel(...)
+"{{{{{3 注释
+"}}}}
+function! CutIndexPanel(...)
+    "{{{{{3 变量定义
+    let time = " "
+    let dict = {}
+    let int = 0
+    let src = 0
+    let tail = 0
+    let idx1 = 0
+    let idj1 = 0
+    let list = ["a"]
+    let lists = a:1
+    "}}}}
+    "let lists = readfile(Homedir("test/fund/zhishu/panelindexvalue"))
+    let int = lists[0]
+    let list =  repeat(list,int)
+    while idx1 < len(lists)
+        if idx1 ==# len(lists) - 1
+            let list[idj1] = lists[src:idx1]
+        endif
+        if len(split(lists[idx1],"|")) ==# 2
+            if src ==# 0
+                let src = idx1
+            else
+                let tail = idx1
+                let list[idj1] = lists[src:tail - 1]
+                let tail = 0
+                let src = idx1
+                "echo src
+                let idj1 +=1
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    let idx1 = 0
+    while idx1 < len(list)
+        let time = split(list[idx1][0],"|")[1]
+        let dict[time] = list[idx1]
+        let idx1 += 1
+    endwhile
+    return dict
+endfunction
+"}}}}}
+"{{{{{2   IndexDataDashboardsort(...)
+"{{{{{3 注释
+"}}}}
+function! IndexDataDashboardsort(...)
+    "{{{{{3 变量定义
+    let dict = {}
+    let idx1 = 0
+    let list = ["a"]
+    let lists = []
+    let datadashboard = []
+    let keys = []
+    "}}}}
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let dict = CutIndexPanel(lists)
+    let keys = sort(keys(dict))
+    let datadashboard = add(datadashboard,lists[0])
+    let idx1 = 0
+    while idx1 < len(keys)
+        let datadashboard = extend(datadashboard,dict[keys[idx1]])
+        let idx1 += 1
+    endwhile
+    if len(datadashboard) < 3
+        return
+    endif
+    call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+endfunction
+"}}}}}
+"{{{{{2   IndexDataDashboard(...)
+nnoremap test :call   IndexDataDashboard()<cr>
+"{{{{{3 注释
+"}}}}
+function! IndexDataDashboard(...)
+    "{{{{{3 变量定义
+    let dict = {}
+    let idx1 = 0
+    let list = ["a"]
+    let lists = []
+    let datadashboard = []
+    let boardkeys = []
+    let databasekeys = []
+    let indexfiledict = {}
+    let countnumber = 0
+    "}}}}
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let datadashboard = copy(lists)
+    let dict = CutIndexPanel(lists)
+    let boardkeys = sort(keys(dict))
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let databasekeys = sort(keys(indexfiledict))
+    echo databasekeys
+    let idx1 = 0
+    let lists = []
+    while idx1 < len(databasekeys)
+        let list = []
+        if count(boardkeys,databasekeys[idx1]) ==# 0
+            echo databasekeys[idx1]
+            let list = PythonGetIndexValuation(indexfiledict[databasekeys[idx1]]["indexvalua"])
+            let list =  SplicingData(list)
+            let lists = extend(lists,list)
+            let countnumber += 1
+        endif
+        let idx1 += 1
+    endwhile
+    let datadashboard[0] = datadashboard[0]  + countnumber
+    let datadashboard = extend(datadashboard,lists)
+    call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+    call  IndexDataDashboardsort()
+endfunction
+"}}}}}
+
 "}}}
 "{{{{{ code
 "协助写出代码流程文档
