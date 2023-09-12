@@ -3583,17 +3583,46 @@ endfunction
 nnoremap test :call IndexCorrespondingFunds()<cr>
 function! IndexCorrespondingFunds(...)
     "{{{{{3 变量定义
+    let indexnum = ""
     let useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
-    let url = "https://danjuanfunds.com/djapi/index_eva/related/funds/SZ399986"
+    let url = "https://danjuanfunds.com/djapi/index_eva/related/funds/"
     let command = ""
     let tempfilesname = "tempfile"
     let IndexArchiveDatabase = {}
+    let tempfilelist = []
+    let idx1 = 0
+    let tempchar = ""
+    let indexkey = []
     "}}}}
-    let command = "wget " . url . " -U "  . "\"" . useragent . "\"" .  " -O " . tempfilesname
-    call system(command)
-    echo readfile(tempfilesname)
-    if findfile(tempfilesname,".;") != ""
-    endif
+    let IndexArchiveDatabase   = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
+    let indexkey = sort(keys(IndexArchiveDatabase["index_code"]))
+    let idx1 = 0
+    while idx1 < len(indexkey)
+        let indexnum = indexkey[idx1]
+        echo IndexArchiveDatabase["index_code"][indexnum ]
+        let command = "wget " . url . indexnum . " -U "  . "\"" . useragent . "\"" .  " -O " . tempfilesname
+        call system(command)
+        if findfile(tempfilesname,".;") != ""
+            let tempfilelist = eval(readfile(tempfilesname)[0])
+            if has_key(IndexArchiveDatabase,"fundtoindex") ==# 0
+                let IndexArchiveDatabase["fundtoindex"] = {}
+            endif
+            for i in  tempfilelist["data"]
+                if has_key(IndexArchiveDatabase["fundtoindex"],IndexArchiveDatabase["index_code"][indexnum]) ==# 0
+                    let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]] = {}
+                endif
+                if has_key(IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]],i["fd_name"]) ==# 0
+                    let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]] = {}
+                endif
+                let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["fd_name"] = i["fd_name"]
+                let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["fd_code"] = i["fd_code"]
+                let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["scale"] = i["scale"]
+            endfor
+        endif
+        call delete(tempfilesname)
+        let idx1 += 1
+    endwhile
+    call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
 endfunction
 "}}}}}
 
