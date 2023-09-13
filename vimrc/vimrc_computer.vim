@@ -2542,6 +2542,33 @@ function! DownloadManifest(...) "1项目 2 是否外销 3 是否系统版本
     call system(downloadcmd)
 endfunction
 "}}}}
+"{{{{{2  function! ModifyCorrespondingCommit(...)  根据提交信息，找到有哪些tag 线
+"{{{{{3 注释
+"}}}}
+function! ModifyCorrespondingCommit(...)
+    "{{{{{3 变量定义
+    let ModifyChar = "同步lea相关修改"
+    let commitlist = []
+    let branchlist = []
+    let commitcomand = "git  log --oneline  --decorate --pretty=format:\"\%H\" --all  --grep  "
+    let branchcomand = "git branch -a --contains "
+    let idx1 = 0
+    "}}}}
+    let ModifyChar = input("请输入修改")
+    let commitcomand = commitcomand . ModifyChar
+    let commitlist = split(system(commitcomand),"\n")
+    echo commitlist
+    while idx1 < len(commitlist)
+        echo  split(system(branchcomand . commitlist[idx1]))
+        let branchlist = extend(branchlist,split(system(branchcomand . commitlist[idx1])))
+        let idx1 += 1
+    endwhile
+    echo len(branchlist)
+    echo len(uniq(sort(branchlist)))
+    "echo  uniq(sort(branchlist))
+    call append(line("."),branchlist)
+endfunction
+"}}}}}
 "}}}
 "{{{{ fund
 "每次需要调用 24 WriteFile 把新的数据写到fund中
@@ -3323,108 +3350,136 @@ function! CalculatePE(...)
 endfunction
 "}}}}}
 "{{{{{2  CutIndexPanel(...)
-    "{{{{{3 注释
-    "}}}}
+"{{{{{3 注释
+"}}}}
 function! CutIndexPanel(...)
     "{{{{{3 变量定义
     let time = " "
     let dict = {}
     let int = 0
     let src = 0
-     let tail = 0
-     let idx1 = 0
-     let idj1 = 0
-     let list = ["a"]
-     let lists = a:1
-     "}}}}
-     "let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
-     let int = lists[0]
-     let list =  repeat(list,int)
-     while idx1 < len(lists)
-         if idx1 ==# len(lists) - 1
-             let list[idj1] = lists[src:idx1]
-         endif
-         if len(split(lists[idx1],"|")) ==# 2
-             if src ==# 0
-                 let src = idx1
-             else
-                 let tail = idx1
-                 let list[idj1] = lists[src:tail - 1]
-                 let tail = 0
-                 let src = idx1
-                 "echo src
-                 let idj1 +=1
-             endif
-         endif
-         let idx1 += 1
-     endwhile
-     let idx1 = 0
-     while idx1 < len(list)
-         let time = split(list[idx1][0],"|")[1]
-         let dict[time] = list[idx1]
-         let idx1 += 1
-     endwhile
-     return dict
- endfunction
- "}}}}}
- "{{{{{2   IndexDataDashboardsort(...) 面板排序
-     "{{{{{3 注释
-     "}}}}
- function! IndexDataDashboardsort(...)
-     "{{{{{3 变量定义
-     let dict = {}
-     let idx1 = 0
-     let list = ["a"]
-     let lists = []
-     let datadashboard = []
-     let keys = []
-     "}}}}
-     if a:0 ==# 0
-         let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
-         let dict = CutIndexPanel(lists)
-         let datadashboard = add(datadashboard,lists[0])
-     else
-     endif
-     let keys = sort(keys(dict))
-     let idx1 = 0
-     while idx1 < len(keys)
-         let datadashboard = extend(datadashboard,dict[keys[idx1]])
-         let idx1 += 1
-     endwhile
-     if len(datadashboard) < 3
-         return
-     endif
-     call input("11")
-     return  datadashboard
- endfunction
- "}}}}}
- "{{{{{2   IndexDataDashboard(...)   批量把指数数据面板填充
-     "{{{{{3 注释
-     "}}}}
- function! IndexDataDashboard(...)
-     "{{{{{3 变量定义
-     let dict = {}
-     let idx1 = 0
-     let list = ["a"]
-     let lists = []
-     let datadashboard = []
-     let boardkeys = []
-     let databasekeys = []
-     let indexfiledict = {}
-     let countnumber = 0
-     "}}}}
-     let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
-     let dict = CutIndexPanel(lists)
-     let boardkeys = sort(keys(dict))
-     let datadashboard = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
-     let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
-     let databasekeys = sort(keys(indexfiledict))
-     echo databasekeys
-     let idx1 = 0
-     let lists = []
-     while idx1 < len(databasekeys)
-         let list = []
-         if count(boardkeys,databasekeys[idx1]) ==# 0
+    let tail = 0
+    let idx1 = 0
+    let idj1 = 0
+    let list = ["a"]
+    let lists = a:1
+    "}}}}
+    "let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let int = lists[0]
+    let list =  repeat(list,int)
+    while idx1 < len(lists)
+        if idx1 ==# len(lists) - 1
+            let list[idj1] = lists[src:idx1]
+        endif
+        if len(split(lists[idx1],"|")) ==# 2
+            if src ==# 0
+                let src = idx1
+            else
+                let tail = idx1
+                let list[idj1] = lists[src:tail - 1]
+                let tail = 0
+                let src = idx1
+                "echo src
+                let idj1 +=1
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    let idx1 = 0
+    while idx1 < len(list)
+        let time = split(list[idx1][0],"|")[1]
+        let dict[time] = list[idx1]
+        let idx1 += 1
+    endwhile
+    return dict
+endfunction
+"}}}}}
+"{{{{{2   IndexDataDashboardsort(...)
+    "{{{{{3 注释
+    "}}}}
+function! IndexDataDashboardsort(...)
+    "{{{{{3 变量定义
+    let dict = {}
+    let idx1 = 0
+    let list = ["a"]
+    let lists = []
+    let datadashboard = []
+    let keys = []
+    let tempkey = []
+    let isversion = 0
+    let Orderedlist  = []
+    let currentfilelist = []
+    let Parameterslists = []
+    let idx1 = 0
+    let templist = [""]
+    let idj1 = 0
+    let index = 0
+    "}}}}
+    if a:0 ==# 0
+        let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+        let dict = CutIndexPanel(lists)
+        let keys = sort(keys(dict))
+        let datadashboard = add(datadashboard,lists[0])
+        let idx1 = 0
+        while idx1 < len(keys)
+            let datadashboard = extend(datadashboard,dict[keys[idx1]])
+            let idx1 += 1
+        endwhile
+        if len(datadashboard) < 3
+            return
+        endif
+        call writefile(datadashboard ,Homedir("test/fund/zhishu/panelindexvalue"))
+    else
+        let Parameterslists = a:1
+        let Orderedlist  = a:2
+        let currentfilelist = GetOneOfTheColumns(Parameterslists,"|",0)
+        let templist =  repeat(templist,len(Parameterslists))
+        let templist[0] =  Parameterslists[0]
+        let idx1 = 1
+        let idj1 = len(currentfilelist) - 1
+        while idx1 < len(currentfilelist)
+            if  0 !=  count(Orderedlist,currentfilelist[idx1])
+                let index = index(Orderedlist,currentfilelist[idx1])
+                let index += 1
+                let templist[index] =  Parameterslists[idx1]
+            else
+                let index = index(Parameterslists,currentfilelist[idx1])
+                let templist[idj1] = Parameterslists[idx1]
+                let idj1 -= 1
+            endif
+            let idx1 += 1
+        endwhile
+        return templist
+    endif
+endfunction
+"}}}}}
+"{{{{{2   IndexDataDashboard(...)   批量把指数数据面板填充
+"{{{{{3 注释
+"}}}}
+function! IndexDataDashboard(...)
+    "{{{{{3 变量定义
+    let dict = {}
+    let idx1 = 0
+    let list = ["a"]
+    let lists = []
+    let datadashboard = []
+    let boardkeys = []
+    let databasekeys = []
+    let indexfiledict = {}
+    let countnumber = 0
+    "}}}}
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let dict = CutIndexPanel(lists)
+    let boardkeys = sort(keys(dict))
+    let datadashboard = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let databasekeys = sort(keys(indexfiledict))
+    echo databasekeys
+    let idx1 = 0
+    let lists = []
+    while idx1 < len(databasekeys)
+        let list = []
+        if count(boardkeys,databasekeys[idx1]) ==# 0
             echo databasekeys[idx1]
             let list = PythonGetIndexValuation(indexfiledict[databasekeys[idx1]]["indexvalua"])
             let list =  SplicingData(list)
@@ -3440,8 +3495,8 @@ function! CutIndexPanel(...)
 endfunction
 "}}}}}
 "{{{{{2   PopulateTheIndexDatabase(...)  填充数据库
-    "{{{{{3 注释
-    "}}}}
+"{{{{{3 注释
+"}}}}
 function! PopulateTheIndexDatabase(...)
     "{{{{{3 变量定义
     let lists = []
@@ -3522,9 +3577,9 @@ function! PopulateTheIndexDatabase(...)
 endfunction
 "}}}}}
 "{{{{{2  IndexParametersPanel(...)     单个参数面板
-    "{{{{{3 注释
-    "参数面板
-    "}}}}
+"{{{{{3 注释
+"参数面板
+"}}}}
 function! IndexParametersPanel(...)
     "{{{{{3 变量定义
     let Parameterslists = []
@@ -3574,9 +3629,19 @@ function! IndexParametersPanel(...)
         endif
         let idx1 += 1
     endwhile
-    let Parameterslists = ListTo1D(Parameterslists,charinterval)
-    let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)
-    call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue"))
+    let Parameterslists = ListTo1D(Parameterslists,charinterval)                                                                  
+    let tempkey = copy(reverse(indexkeylist))                                                                                     
+    call AddNumber(tempkey)                                                                                                       
+    let isversion = input("排序日期")                                                                                             
+    let Orderedlist  =  repeat([""],len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"]))                   
+    let idx1 = 0                                                                                                                  
+    while idx1 < len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"])                                       
+        let Orderedlist[idx1]  = indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"][idx1]["name"]              
+        let idx1 += 1                                                                                                             
+    endwhile                                                                                                                      
+    let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)                                                          
+    let Parameterslists =  IndexDataDashboardsort(Parameterslists,Orderedlist)                                                    
+    call writefile(Parameterslists,Homedir("test/fund/zhishu/panelPDvalue"))
 endfunction
 "}}}}}
 "{{{{{2   IndexCorrespondingFunds(...)指数对应的基金
