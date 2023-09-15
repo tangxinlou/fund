@@ -777,7 +777,7 @@ function! DictTest()
         let idex += 1
     endwhile
     let indexfile = readfile("fund2index.txt")
-	let idx = index(indexfile, "300红利LV.*|")
+    let idx = index(indexfile, "300红利LV.*|")
     let idx1 = count(indexfile,"300红利LV.*|")
     echo  "在列表" . idx . "行"
     echo  "在列表" . idx1 . "行"
@@ -956,27 +956,27 @@ endfunction
 "{{{{test
 "{{{{{2  TestTest(...)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
 function! TestTest(...)
-   let files = []
-   let idx1 = 0
-   let files1 = readfile("/d/txl/test/1.csv")
-   echo len(files1)
-   let temp_files = [' ']
-   let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
-   echo temp_files
-   while idx1 < len(files1)
-       let temp_files[idx1 / 2] = join([files1[idx1],files1[idx1 + 1]])
-       let idx1 += 2
-   endwhile
-   echo temp_files
-   call writefile(temp_files,"/d/txl/test/2.csv")
-   silent execute "normal! :e /d/txl/test/2.csv\<cr>"
-   silent execute "normal! :%s/？ /？ ,/g\<cr>"
-   silent execute "normal! :%s/A、/,A、/g\<cr>"
-   silent execute "normal! :%s/B、/,B、/g\<cr>"
-   silent execute "normal! :%s/C、/,C、/g\<cr>"
-   silent execute "normal! :%s/D、/,D、/g\<cr>"
-   silent execute "normal! :%s/E、/,E、/g\<cr>"
-   silent execute "normal! :write!"
+    let files = []
+    let idx1 = 0
+    let files1 = readfile("/d/txl/test/1.csv")
+    echo len(files1)
+    let temp_files = [' ']
+    let temp_files =  repeat(temp_files,len(files1) / 2 + 1)
+    echo temp_files
+    while idx1 < len(files1)
+        let temp_files[idx1 / 2] = join([files1[idx1],files1[idx1 + 1]])
+        let idx1 += 2
+    endwhile
+    echo temp_files
+    call writefile(temp_files,"/d/txl/test/2.csv")
+    silent execute "normal! :e /d/txl/test/2.csv\<cr>"
+    silent execute "normal! :%s/？ /？ ,/g\<cr>"
+    silent execute "normal! :%s/A、/,A、/g\<cr>"
+    silent execute "normal! :%s/B、/,B、/g\<cr>"
+    silent execute "normal! :%s/C、/,C、/g\<cr>"
+    silent execute "normal! :%s/D、/,D、/g\<cr>"
+    silent execute "normal! :%s/E、/,E、/g\<cr>"
+    silent execute "normal! :write!"
 
 endfunction
 "}}}}}
@@ -1004,10 +1004,10 @@ function! AddLineNumber(...)
         while idx1 <= len(readfile(expand("%:p")))
             let char = getline(idx1)
             if neglect ==# 1
-               if  char != "```c" && char != "```" && char != ""
-                   let char = idx1 . " " . char
-                   call setline(idx1,char)
-               endif
+                if  char != "```c" && char != "```" && char != ""
+                    let char = idx1 . " " . char
+                    call setline(idx1,char)
+                endif
             else
                 if  "》》》》》》》"  ==# matchstr(char,"》》》》》》》")
                     let neglect = 1
@@ -1137,9 +1137,9 @@ function! ListRemoveSpaces(...)
 endfunction
 "}}}}}
 "{{{{{2   AdjustThePositionOfTwoColumns(...)  "调整两列的位置
-    "{{{{{3 注释
-    "调整两列的位置
-    "}}}}
+"{{{{{3 注释
+"调整两列的位置
+"}}}}
 function! AdjustThePositionOfTwoColumns(...)
     "{{{{{3 变量定义
     let filelist = a:1
@@ -1165,9 +1165,9 @@ function! AdjustThePositionOfTwoColumns(...)
 endfunction
 "}}}}}
 "{{{{{2   GetOneOfTheColumns(...)  "获取单独一列
-    "{{{{{3 注释
-    "调整两列的位置
-    "}}}}
+"{{{{{3 注释
+"调整两列的位置
+"}}}}
 function! GetOneOfTheColumns(...)
     "{{{{{3 变量定义
     let filelist = copy(a:1)
@@ -3395,8 +3395,8 @@ function! CutIndexPanel(...)
 endfunction
 "}}}}}
 "{{{{{2   IndexDataDashboardsort(...)
-    "{{{{{3 注释
-    "}}}}
+"{{{{{3 注释
+"}}}}
 function! IndexDataDashboardsort(...)
     "{{{{{3 变量定义
     let dict = {}
@@ -4904,9 +4904,9 @@ function! VisualiZationcsv(...)
     let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
     call writefile(dimensional1,expand("%:p"))
     if mode ==# 1
-    execute "normal! :e " .  expand("%:p") . "\<cr>"
+        execute "normal! :e " .  expand("%:p") . "\<cr>"
     else
-       call system("iconv -f utf-8 -t cp936 " . expand("%:p") . " -o " . expand("%:p"))
+        call system("iconv -f utf-8 -t cp936 " . expand("%:p") . " -o " . expand("%:p"))
     endif
 endfunction
 "}}}}}
@@ -4924,16 +4924,16 @@ function! ExpansionAndContraction(...)
     let templistlength = 0
     "}}}}
     if mode ==# 1
-    let filelists = ListAddSpaces(filelists,charinterval)
+        let filelists = ListAddSpaces(filelists,charinterval)
     elseif mode ==# 2
-    let filelists = ListRemoveSpaces(filelists,charinterval)
+        let filelists = ListRemoveSpaces(filelists,charinterval)
     endif
     return  filelists
 endfunction
 "}}}}}
 
 "}}}
- "{{{{  python
+"{{{{  python
 "{{{{{2   OpenPythonfile(...) 打开python文件触发
 function! OpenPythonfile()
     "{{{{{3 变量定义
@@ -4950,15 +4950,15 @@ function! PythonTest()
     let path = "par from vimscript into python"
     "}}}}
 python <<EOM
-import vim
-import os
-var = vim.eval("path")
-print(var)
-var = "%s,add string in python now"%var
-vim.command("let path = '%s'"%var)
+    import vim
+    import os
+    var = vim.eval("path")
+    print(var)
+    var = "%s,add string in python now"%var
+    vim.command("let path = '%s'"%var)
 EOM
-echo "tangxinlou"
-echo path
+    echo "tangxinlou"
+    echo path
 endfunction
 "}}}}}
 
