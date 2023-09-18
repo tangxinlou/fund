@@ -328,6 +328,31 @@ nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>
 nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
+"{{{{{2   全局变量
+let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
+            \ 'android_packages_apps_Bluetooth',
+            \ 'android_system_bt',
+            \ 'android_frameworks_base',
+            \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+            \ 'android_device_mediatek_vendor_common',
+            \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+            \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+            \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+            \ "android_kernel-4.14",
+            \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+            \ "android_packages_modules_Bluetooth",
+            \ "android_prebuilts_module_sdk_Bluetooth",
+            \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
+            \ "vendor_vivo_source_frameworks_services",
+            \ "android_cts",
+            \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+            \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+            \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+            \ "android_vendor_mediatek_proprietary_tinysys_common",
+            \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+            \ "android_device_mediatek_common",
+            \ "android_vendor_mediatek_proprietary_custom"]
+"}}}}}
 "{{{{{2   Homedir(...) 家目录
 let g:homedir = "/d"
 function! Homedir(...)
@@ -1706,30 +1731,7 @@ function! IsVersion(...)
     let idx1 = 0
     let idx2 = 0
     let listlen = 0
-    let projectlist = ['vendor_vivo_bluetoothInteropConf',
-                \ 'android_packages_apps_Bluetooth',
-                \ 'android_system_bt',
-                \ 'android_frameworks_base',
-                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
-                \ 'android_device_mediatek_vendor_common',
-                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
-                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
-                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
-                \ "android_kernel-4.14",
-                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
-                \ "android_packages_modules_Bluetooth",
-                \ "android_prebuilts_module_sdk_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
-                \ "vendor_vivo_source_frameworks_services",
-                \ "android_cts",
-                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
-                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
-                \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
-                \ "android_device_mediatek_common",
-                \ "android_vendor_mediatek_proprietary_custom"]
-
+    let projectlist = g:projectlist
     let lenproject = len(projectlist)
     let branchandcommit = ["1"]
     let branchandcommit =  repeat(branchandcommit,lenproject * 2 + 2)
@@ -1802,29 +1804,7 @@ function! IsUpdate()
     let isupdate6 = "tangxinlou"
     let idx1 = 0
     let idx2 = 0
-    let projectlist = ['vendor_vivo_bluetoothInteropConf',
-                \ 'android_packages_apps_Bluetooth',
-                \ 'android_system_bt',
-                \ 'android_frameworks_base',
-                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
-                \ 'android_device_mediatek_vendor_common',
-                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
-                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
-                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
-                \ "android_kernel-4.14",
-                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
-                \ "android_packages_modules_Bluetooth",
-                \ "android_prebuilts_module_sdk_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
-                \ "vendor_vivo_source_frameworks_services",
-                \ "android_cts",
-                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
-                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
-                \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
-                \ "android_device_mediatek_common",
-                \ "android_vendor_mediatek_proprietary_custom"]
+    let projectlist = g:projectlist
     let lenproject = len(projectlist)
     let curpath = []
     let curpath1 = []
@@ -2076,29 +2056,7 @@ endfunction
 function! CompareVersion()
     let leftversion = []
     let rightversion = []
-    let projectlist = ['vendor_vivo_bluetoothInteropConf',
-                \ 'android_packages_apps_Bluetooth',
-                \ 'android_system_bt',
-                \ 'android_frameworks_base',
-                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
-                \ 'android_device_mediatek_vendor_common',
-                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
-                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
-                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
-                \ "android_kernel-4.14",
-                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
-                \ "android_packages_modules_Bluetooth",
-                \ "android_prebuilts_module_sdk_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
-                \ "vendor_vivo_source_frameworks_services",
-                \ "android_cts",
-                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
-                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
-                \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
-                \ "android_device_mediatek_common",
-                \ "android_vendor_mediatek_proprietary_custom"]
+    let projectlist = g:projectlist
     let lenproject = len(projectlist)
     let cmplist = []
     let isupdate = system("ls -F \| grep -Esi \"/$\"")
@@ -2403,29 +2361,7 @@ function! FindMergedVersion()
     let searchpath = ""
     let runofresults = ""
     let idx = 0
-    let projectlist = ['vendor_vivo_bluetoothInteropConf',
-                \ 'android_packages_apps_Bluetooth',
-                \ 'android_system_bt',
-                \ 'android_frameworks_base',
-                \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
-                \ 'android_device_mediatek_vendor_common',
-                \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
-                \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
-                \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
-                \ "android_kernel-4.14",
-                \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
-                \ "android_packages_modules_Bluetooth",
-                \ "android_prebuilts_module_sdk_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
-                \ "vendor_vivo_source_frameworks_services",
-                \ "android_cts",
-                \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
-                \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
-                \ "android_vendor_mediatek_proprietary_tinysys_common",
-                \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
-                \ "android_device_mediatek_common",
-                \ "android_vendor_mediatek_proprietary_custom"]
+    let projectlist = g:projectlist
     let index2  = 0
     let branchlist = []
     let index3  = 0
@@ -3686,6 +3622,12 @@ function! IndexCorrespondingFunds(...)
     "}}}}
     let IndexArchiveDatabase   = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
     let indexkey = sort(keys(IndexArchiveDatabase["index_code"]))
+    if has_key(IndexArchiveDatabase,"fundcode") ==# 0
+        let IndexArchiveDatabase["fundcode"] = {}
+    endif
+    if has_key(IndexArchiveDatabase,"fundname") ==# 0
+        let IndexArchiveDatabase["fundname"] = {}
+    endif
     let idx1 = 0
     while idx1 < len(indexkey)
         let indexnum = indexkey[idx1]
@@ -3707,6 +3649,12 @@ function! IndexCorrespondingFunds(...)
                 let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["fd_name"] = i["fd_name"]
                 let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["fd_code"] = i["fd_code"]
                 let IndexArchiveDatabase["fundtoindex"][IndexArchiveDatabase["index_code"][indexnum]][i["fd_name"]]["scale"] = i["scale"]
+                if has_key(IndexArchiveDatabase["fundname"],i["fd_name"]) ==# 0
+                    let IndexArchiveDatabase["fundname"][i["fd_name"]] = i["fd_code"]
+                endif
+                if has_key(IndexArchiveDatabase["fundcode"],i["fd_code"]) ==# 0
+                    let IndexArchiveDatabase["fundcode"][i["fd_code"]] = i["fd_name"]
+                endif
             endfor
         endif
         call delete(tempfilesname)
