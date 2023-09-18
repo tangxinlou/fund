@@ -75,7 +75,7 @@ set nowrap
 set ve=all
 set smartindent
 "set cindent
-set autoindent
+"set autoindent
 "set indentexpr
 set backspace=2
 "set spell
@@ -93,7 +93,8 @@ set cursorline cursorcolumn
 set guioptions=mrb
 set diffopt=context:3
 "set scrolloff=999
-
+"隐藏一些提示信息
+set hidden
 "}}}}}
 "vimdiff 颜色配置{{{
 if &diff
@@ -440,7 +441,7 @@ function! OpenQuickfix(...)
     :exec "normal! \<c-w>J"
 endfunction
 "}}}}}
-"{{{{{2 function! s:MarkdownPreview()            markdown 模式切换 现在不用了
+"{{{{{2  s:MaMarkdownPreview()
 let g:tang = 1
 function! s:MarkdownPreview()
     if g:tang
@@ -563,8 +564,7 @@ function! MakeCompressedPackage()
     silent execute "normal! :e ./cp/cp64.host.R.bat\<cr>"
     silent execute "normal! \<c-v>G$A\<c-v>\<c-m>\<esc>"
     silent execute "normal! :wq\<cr>"
-    call system("tar -cvf copyfile.tar ./cp")
-    let zipname = "tar -cvf " .  split(split(system("pwd"),"/")[-1],"\n")[0]  . ".tar" . " ./cp"
+    let zipname = "tar -cvf " .  split(split(system("pwd"),"/")[-1],"\n")[0]  . ".rar" . " ./cp"
     call system(zipname)
 endfunction
 "}}}}}
@@ -1116,6 +1116,7 @@ function! ListRemoveSpaces(...)
     let charinterval = a:2
     let idx1 = 0
     let idj1 = 0
+    let templen = 0
     "}}}}
     "let listof1d = readfile("PEvaluepanel.txt")
     let listof2d = ListTo2D(listof1d,charinterval)
@@ -1123,9 +1124,13 @@ function! ListRemoveSpaces(...)
     while idx1 < len(listof2d)
         let idj1 = 0
         while idj1 < len(listof2d[idx1])
-            if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
-                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
-            else
+            "有些空口只有一个，去不掉
+            let templen = len(listof2d[idx1][idj1])       if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
+            let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
+            if templen  ==# len(listof2d[idx1][idj1])
+                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," ")[0]
+            endif
+        else
                 let listof2d[idx1][idj1] = ""
             endif
             let idj1 += 1
@@ -1149,7 +1154,7 @@ function! AdjustThePositionOfTwoColumns(...)
     let tempchar = ""
     let charinterval = a:4
     "}}}}
-    "let filelist = readfile(Homedir("test/fund/zhishu/panelPDvalue"))
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
     let filelist =  ListRemoveSpaces(filelist,charinterval)
     let filelist = ListTo2D(filelist,charinterval)
 
@@ -1189,6 +1194,20 @@ function! GetOneOfTheColumns(...)
         let idx1 += 1
     endwhile
     return templist
+endfunction
+"}}}}}
+"{{{{{2  WaveformGraph(...)  波形图
+nnoremap test :call WaveformGraph()<cr>
+"{{{{{3 注释
+"}}}}
+function! WaveformGraph(...)
+    "{{{{{3 变量定义
+    let  WaveformGraph = ""
+    let Rowcoordinates = ""
+    let Columncoordinates = ""
+    "}}}}
+    let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    let Rowcoordinates = split(filelist,"|")[0]
 endfunction
 "}}}}}
 
@@ -3283,7 +3302,7 @@ function! PythonGetIndexValuation(...)
     let datestring = split(system("date +%F"),"-")[0]
     "let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
     let numbereddatabase = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
-    let tempindexdata = indexfiledict["data"]["items"]
+    let tempindexdata = copy(indexfiledict["data"]["items"])
     "echo "debug"
     "echo tempindexdata = indexfiledict["data"]["items"][0]
     let indx1 = 0
@@ -3414,6 +3433,7 @@ function! IndexDataDashboardsort(...)
     let templist = [""]
     let idj1 = 0
     let index = 0
+    let populatechar = "|-"
     "}}}}
     if a:0 ==# 0
         let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
@@ -3428,7 +3448,7 @@ function! IndexDataDashboardsort(...)
         if len(datadashboard) < 3
             return
         endif
-        call writefile(datadashboard ,Homedir("test/fund/zhishu/panelindexvalue"))
+        call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
     else
         let Parameterslists = a:1
         let Orderedlist  = a:2
@@ -3443,7 +3463,9 @@ function! IndexDataDashboardsort(...)
                 let index += 1
                 let templist[index] =  Parameterslists[idx1]
             else
-                let index = index(Parameterslists,currentfilelist[idx1])
+                if len(split(Parameterslists[idx1])) < len(split(Parameterslists[0]))
+                    let Parameterslists[idx1]  = Parameterslists[idx1] . repeat(populatechar,len(split(Parameterslists[0])) - len(split(Parameterslists[idx1])))
+                endif
                 let templist[idj1] = Parameterslists[idx1]
                 let idj1 -= 1
             endif
@@ -3491,7 +3513,7 @@ function! IndexDataDashboard(...)
     let datadashboard[0] = datadashboard[0]  + countnumber
     let datadashboard = extend(datadashboard,lists)
     call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
-    call writefile(IndexDataDashboardsort() ,Homedir("work/fund/zhishu/panelindexvalue"))
+    call IndexDataDashboardsort()
 endfunction
 "}}}}}
 "{{{{{2   PopulateTheIndexDatabase(...)  填充数据库
@@ -3593,6 +3615,9 @@ function! IndexParametersPanel(...)
     let idj1 = 0
     let firstcolumn = []
     let index = 0
+    let tempkey = []
+    let Orderedlist  = []
+    let currentfilelist = []
     "}}}}
     let Parameterslists = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
     let Parameterslists =  ListRemoveSpaces(Parameterslists,charinterval)
@@ -3629,19 +3654,19 @@ function! IndexParametersPanel(...)
         endif
         let idx1 += 1
     endwhile
-    let Parameterslists = ListTo1D(Parameterslists,charinterval)                                                                  
-    let tempkey = copy(reverse(indexkeylist))                                                                                     
-    call AddNumber(tempkey)                                                                                                       
-    let isversion = input("排序日期")                                                                                             
-    let Orderedlist  =  repeat([""],len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"]))                   
-    let idx1 = 0                                                                                                                  
-    while idx1 < len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"])                                       
-        let Orderedlist[idx1]  = indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"][idx1]["name"]              
-        let idx1 += 1                                                                                                             
-    endwhile                                                                                                                      
-    let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)                                                          
-    let Parameterslists =  IndexDataDashboardsort(Parameterslists,Orderedlist)                                                    
-    call writefile(Parameterslists,Homedir("test/fund/zhishu/panelPDvalue"))
+    let Parameterslists = ListTo1D(Parameterslists,charinterval)
+    let tempkey = copy(reverse(indexkeylist))
+    call AddNumber(tempkey)
+    let isversion = input("排序日期")
+    let Orderedlist  =  repeat([""],len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"]))
+    let idx1 = 0
+    while idx1 < len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"])
+        let Orderedlist[idx1]  = indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"][idx1]["name"]
+        let idx1 += 1
+    endwhile
+    let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)
+    let Parameterslists =  IndexDataDashboardsort(Parameterslists,Orderedlist)
+    call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue"))
 endfunction
 "}}}}}
 "{{{{{2   IndexCorrespondingFunds(...)指数对应的基金
@@ -4870,7 +4895,7 @@ function! VisualiZationcsv(...)
     let dimensional2 = []   "二维表格
     let idx1 = 0
     let mode = a:1            "1 增加空格，2减少空格
-    let templist = [""]
+    let templist = ["-"]       "手动修改默认添加的字符串
     let LenOfListHead =  0  "表格第一行有多少列
     let LenOfListcur =   0  "表格当前行有多少列
     let charinterval = a:2
@@ -4882,6 +4907,9 @@ function! VisualiZationcsv(...)
         endif
     endif
     let dimensional1 = readfile(expand("%:p"))
+    if count(dimensional1[0],"|")  > 2
+        let charinterval = "|"
+    endif
     if mode ==# 1
         let LenOfListHead = count(dimensional1[0],charinterval)
         let idx1 = 0
