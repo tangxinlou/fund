@@ -75,7 +75,7 @@ set nowrap
 set ve=all
 set smartindent
 "set cindent
-"set autoindent
+set autoindent
 "set indentexpr
 set backspace=2
 "set spell

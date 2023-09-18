@@ -4,8 +4,6 @@ import urllib.parse
 import time
 import os
 
-
-
 localtime = time.localtime(time.time())
 print (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
@@ -17,6 +15,8 @@ logs.append(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n')
 print(logs)
 os.chdir("D:\work\\fund\zhishu")
 ##############################################################
+print("开始获取今天的指数数据")
+logs.append("开始获取今天的指数数据" + '\n')
 url = 'https://danjuanfunds.com/djapi/index_eva/dj'  # 菜鸟教程搜索页面
 #keyword = 'Python 教程'
 #key_code = urllib.request.quote(keyword)  # 对请求进行编码
@@ -82,6 +82,10 @@ if indexvalua != "":
 else:
     print("指数估值是空的")
     logs.append("指数估值是空的" + '\n')
+
+print("今天的指数数据获取结束")
+logs.append("今天的指数数据获取结束" + '\n')
+
 
 logs.append(logs[0])
 logs.append('\n')
