@@ -11,7 +11,8 @@ logs = []
 print("开始获取今天的净值数据")
 logs.append("开始获取今天的净值数据" + '\n')
 def getworthdata(fundcode):
-    url = "https://danjuanfunds.com/djapi/fund/growth/" + fundcode  + "?day=all"
+    url = "https://danjuanfunds.com/djapi/fund/growth/" + fundcode
+    #+ "?day=all"
     header = {'User-Agent':'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     request = urllib.request.Request(url,headers=header)
     reponse = urllib.request.urlopen(request).read()
@@ -26,7 +27,7 @@ def getworthdata(fundcode):
         logs.append("获取到净值" + '\n')
         worthdata = eval(worthdata )
         if str(type(worthdata)) == "<class 'dict'>" :
-            print("净值数据是字典",fundcode)
+            print("净值数据是字典",fundcode,len(worthdata["data"]["fund_nav_growth"]))
             return worthdata["data"]["fund_nav_growth"]
         else:
             print("净值数据不是字典",fundcode)
@@ -64,12 +65,24 @@ def setworthdata():
     worthdatabase = eval(worthdatabase)
     idx1 = 0
     while idx1 < len(fundlist):
-        worthdatabase.setdefault(fundlist[idx1],tempdict)
+        if fundlist[idx1] in  worthdatabase:
+            print(fundlist[idx1],"已经有了")
+        else:
+            worthdatabase[fundlist[idx1]] =  tempdict
         worthdatalist = getworthdata(fundlist[idx1])
+        print("基金代码 ",fundlist[idx1],"当前基金有 ",len(worthdatabase[fundlist[idx1]].keys()),"当前搜索基金 ",len(worthdatalist))
+        print(worthdatalist)
+        print("tangxinlou")
         idj1 = 0 
         while idj1 < len(worthdatalist):
-            worthdatabase[fundlist[idx1]].setdefault(worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"])
+            if worthdatalist[idj1]["date"] in  worthdatabase[fundlist[idx1]]:
+                print(worthdatalist[idj1]["date"],"已经有了")
+            else:
+                worthdatabase[fundlist[idx1]][worthdatalist[idj1]["date"]] =  worthdatalist[idj1]["nav"]
             idj1 += 1
+        print(worthdatabase[fundlist[idx1]],"基金代码",fundlist[idx1])
+        print("tangxinldfjkdfk")
+        print(worthdatabase)
         idx1 += 1
 
     f = open("./worthdatabase","w",encoding='utf-8')    # 将文件写入到当前目录中

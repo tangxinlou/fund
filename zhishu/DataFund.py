@@ -83,7 +83,7 @@ else:
     print("指数估值是空的")
     logs.append("指数估值是空的" + '\n')
 print("今天的指数数据获取结束")
-logs.append("今天的指数数据获取结束" + '\n') 
+logs.append("今天的指数数据获取结束" + '\n')
 
 ###############################################################
 print("开始获取今天的净值数据")
@@ -104,13 +104,14 @@ def getworthdata(fundcode):
         worthdata = eval(worthdata )
         if str(type(worthdata)) == "<class 'dict'>" :
             print("净值数据是字典",fundcode)
+            logs.append("净值数据是字典 " + fundcode +'\n')
             return worthdata["data"]["fund_nav_growth"]
         else:
             print("净值数据不是字典",fundcode)
             logs.append("净值数据不是字典 " + fundcode +'\n')
     else:
         print("净值数据没有获取到")
-        logs.append("净值数据没有获取到" + '\n')       
+        logs.append("净值数据没有获取到" + '\n')
 
 def setworthdata():
     idx1 = 0
@@ -124,7 +125,7 @@ def setworthdata():
     numbereddatabasestr = open("./numbereddatabase","r+",encoding='utf-8')
     numbereddatabase = numbereddatabasestr .readline()
     numbereddatabasestr.close()
-    logs.append("开始循环获取净值" + '\n')       
+    logs.append("开始循环获取净值" + '\n')
     numbereddatabase = eval(numbereddatabase)
     indexkey =  list(numbereddatabase["fundtoindex"].keys())
     while idx1 < len(indexkey):
@@ -134,32 +135,34 @@ def setworthdata():
             fundlist.append(numbereddatabase["fundtoindex"][indexkey[idx1]][fundkey[idj1]]["fd_code"])
             idj1 += 1
         idx1 += 1
-    print("需要查找净值的基金代码",fundlist)
+    print("需要查找净值的基金代码")
+    print(fundlist)
     worthdatabasestr = open("./worthdatabase","r+",encoding='utf-8')
     worthdatabase = worthdatabasestr .readline()
     worthdatabasestr.close()
     worthdatabase = eval(worthdatabase)
     idx1 = 0
     while idx1 < len(fundlist):
-        worthdatabase.setdefault(fundlist[idx1],tempdict)
+        worthdatabase.setdefault(fundlist[idx1],{})
         worthdatalist = getworthdata(fundlist[idx1])
         idj1 = len(list(worthdatabase[fundlist[idx1]].keys()))
         if idj1 == len(worthdatalist):
             print("净值已经写入了",fundlist[idx1])
-            logs.append("净值已经写入了" + len(worthdatalist) +  fundlist[idx1] + '\n')
+            logs.append("净值已经写入了" + str(idj1) + "个"+  fundlist[idx1] + '\n')
         else:
-            print("净值已经不相等",len(worthdatalist),idj1, fundlist[idx1])
+            print("净值已经不相等需要写入","当前最新基金有多少个净值 ",str(len(worthdatalist)),"已经写入了多少基金",idj1, fundlist[idx1])
+            logs.append("净值已经不相等需要写入" + "当前最新基金有多少个净值 " + str(len(worthdatalist)) + "已经写入了多少基金" + str(idj1) + "基金代码是 " + fundlist[idx1] + '\n')
         while idj1 < len(worthdatalist):
             worthdatabase[fundlist[idx1]].setdefault(worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"])
-            print("写入的净值",worthdatalist[idj1]["date"],fundlist[idx1])
-            logs.append("写入的净值 " + worthdatalist[idj1]["date"] +  fundlist[idx1] + '\n')       
+            print("写入的净值",worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"],fundlist[idx1])
+            logs.append("写入的净值 " + "日期" + worthdatalist[idj1]["date"] + "净值是" + worthdatalist[idj1]["nav"] + "基金代码是" + fundlist[idx1] + '\n')
             idj1 += 1
         idx1 += 1
 
     f = open("./worthdatabase","w",encoding='utf-8')    # 将文件写入到当前目录中
     f.write(str(worthdatabase))
     f.close()
-    logs.append("结束循环获取净值" + '\n')       
+    logs.append("结束循环获取净值" + '\n')
 setworthdata()
 
 print("今天的净值数据获取结束")
