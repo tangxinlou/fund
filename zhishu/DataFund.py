@@ -89,7 +89,7 @@ logs.append("今天的指数数据获取结束" + '\n')
 print("开始获取今天的净值数据")
 logs.append("开始获取今天的净值数据" + '\n')
 def getworthdata(fundcode):
-    url = "https://danjuanfunds.com/djapi/fund/growth/" + fundcode  + "?day=all"
+    url = "https://danjuanfunds.com/djapi/fund/growth/" + fundcode  + "?day=1y"
     header = {'User-Agent':'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     request = urllib.request.Request(url,headers=header)
     reponse = urllib.request.urlopen(request).read()
@@ -145,20 +145,16 @@ def setworthdata():
     while idx1 < len(fundlist):
         worthdatabase.setdefault(fundlist[idx1],{})
         worthdatalist = getworthdata(fundlist[idx1])
-        idj1 = len(list(worthdatabase[fundlist[idx1]].keys()))
-        if idj1 == len(worthdatalist):
-            print("净值已经写入了",fundlist[idx1])
-            logs.append("净值已经写入了" + str(idj1) + "个"+  fundlist[idx1] + '\n')
-        else:
-            print("净值已经不相等需要写入","当前最新基金有多少个净值 ",str(len(worthdatalist)),"已经写入了多少基金",idj1, fundlist[idx1])
-            logs.append("净值已经不相等需要写入" + "当前最新基金有多少个净值 " + str(len(worthdatalist)) + "已经写入了多少基金" + str(idj1) + "基金代码是 " + fundlist[idx1] + '\n')
+        print("当前基金号",fundlist[idx1],"当前最新基金净值是 ",worthdatalist[-1]["date"],"已经写入的最后净值日期是",sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1])
+        logs.append("当前基金号" + fundlist[idx1]  + "当前最新基金净值是 " + worthdatalist[-1]["date"] + "已经写入的最后净值日期是" + sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1] + '\n')
+        idj1 = 0
         while idj1 < len(worthdatalist):
-            worthdatabase[fundlist[idx1]].setdefault(worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"])
-            print("写入的净值",worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"],fundlist[idx1])
-            logs.append("写入的净值 " + "日期" + worthdatalist[idj1]["date"] + "净值是" + worthdatalist[idj1]["nav"] + "基金代码是" + fundlist[idx1] + '\n')
+            if worthdatalist[idj1]["date"] not in  worthdatabase[fundlist[idx1]]:
+                worthdatabase[fundlist[idx1]].setdefault(worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"])
+                print("写入的净值",worthdatalist[idj1]["date"],worthdatalist[idj1]["nav"],fundlist[idx1])
+                logs.append("写入的净值 " + "日期" + worthdatalist[idj1]["date"] + "净值是" + worthdatalist[idj1]["nav"] + "基金代码是" + fundlist[idx1] + '\n')
             idj1 += 1
         idx1 += 1
-
     f = open("./worthdatabase","w",encoding='utf-8')    # 将文件写入到当前目录中
     f.write(str(worthdatabase))
     f.close()
