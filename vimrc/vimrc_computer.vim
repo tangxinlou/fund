@@ -161,7 +161,8 @@ augroup filetype_csv
     autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
 augroup END
 augroup filetype_python
-    autocmd BufNewFile *.py      :call OpenPythonfile()
+    autocmd BufNewFile *.py      :call Openfile()
+    autocmd BufNewFile *.sh      :call Openfile()
 augroup END
 "保存文件打印
 augroup testgroup
@@ -307,11 +308,11 @@ nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
-nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "nnoremap <leader>vhc :execute "vimgrep!" shellescape(expand("<cword>")) " **/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
-nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
-nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.2)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "执行命令
 nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 ""}}}}
@@ -351,7 +352,8 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_tinysys_common",
             \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
             \ "android_device_mediatek_common",
-            \ "android_vendor_mediatek_proprietary_custom"]
+            \ "android_vendor_mediatek_proprietary_custom",
+            \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 let g:homedir = "/d"
@@ -360,6 +362,13 @@ function! Homedir(...)
     let dirpath = a:1
     "}}}}
     let dirpath = g:homedir . "/" . dirpath
+    if "" ==# findfile(dirpath)
+        call system("touch " . dirpath)
+        echo dirpath . "没有这个文件现在新建这个文件"
+        call input("需要新建文件")
+    else
+        echo dirpath
+    endif
     return dirpath
 endfunction
 "}}}}}
@@ -1149,13 +1158,14 @@ function! ListRemoveSpaces(...)
     while idx1 < len(listof2d)
         let idj1 = 0
         while idj1 < len(listof2d[idx1])
-            "有些空口只有一个，去不掉
-            let templen = len(listof2d[idx1][idj1])       if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
-            let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
-            if templen  ==# len(listof2d[idx1][idj1])
-                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," ")[0]
-            endif
-        else
+            if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
+                "有些空口只有一个，去不掉
+                let templen = len(listof2d[idx1][idj1])
+                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
+                if templen  ==# len(listof2d[idx1][idj1])
+                    let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," ")[0]
+                endif
+            else
                 let listof2d[idx1][idj1] = ""
             endif
             let idj1 += 1
@@ -1207,7 +1217,7 @@ function! GetOneOfTheColumns(...)
     let templist = [" "]
     let typelist = 0
     "}}}}
-    "let filelist = readfile(Homedir("test/fund/zhishu/panelPDvalue"))
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
     let typelist = type(filelist[0])
     let templist  =  repeat(templist,len(filelist))
     if  typelist ==# 1
@@ -1232,7 +1242,21 @@ function! WaveformGraph(...)
     let Columncoordinates = ""
     "}}}}
     let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    let filelist =  ListRemoveSpaces(filelist,"|")
     let Rowcoordinates = split(filelist,"|")[0]
+    let Columncoordinates = split(filelist,"|")[1]
+endfunction
+"}}}}}
+"{{{{{2   Openfile(...) 打开python文件触发
+function! Openfile()
+    "{{{{{3 变量定义
+    let pythonfile = ""
+    "}}}}
+    if &filetype ==# "python"
+        call setline(1,"#!/usr/bin/python3")
+    elseif  &filetype ==# "sh"
+        call setline(1,"#!/bin/bash")
+    endif
 endfunction
 "}}}}}
 
@@ -1436,7 +1460,7 @@ endfunction
 "   echom "tangxinlou"
 "endif
 "}}}}
-"{{{{{ 有意思的代码
+"{{{{{ 获取键盘输入
 "{{{{{2  s:getchar()
 "function! s:getchar()
 "    let c = getchar()
@@ -2651,7 +2675,7 @@ function! ParseFund(...)
     let idj1 = 0
     let list = ["a"]
     let lists = []
-    let lists = readfile("fund.txt")
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
     let int = lists[0]
     "echo int
     let list =  repeat(list,int)
@@ -2900,7 +2924,6 @@ function! CalculateAmount(...)
         endif
         let idx1 += 1
     endwhile
-    call input("2343")
     call insert(amountlow,amounthead)
     "call append(line('.'),amountlow)
     "call append(line('.'),amountmid)
@@ -4778,6 +4801,7 @@ function! UpdateTreeContens(...)
         endwhile
     else
         echo "第一次生成目录"
+        return
     endif
     let curcontesfile = insert(curcontesfile,"<<<<<<<<<<<<<<<<")
     let curcontesfile = add(curcontesfile,">>>>>>>>>>>>>>>")

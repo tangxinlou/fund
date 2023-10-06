@@ -103,8 +103,8 @@ def getworthdata(fundcode):
         print("获取到净值")
         worthdata = eval(worthdata )
         if str(type(worthdata)) == "<class 'dict'>" :
-            print("净值数据是字典",fundcode)
-            logs.append("净值数据是字典 " + fundcode +'\n')
+            #print("净值数据是字典",fundcode)
+            #logs.append("净值数据是字典 " + fundcode +'\n')
             return worthdata["data"]["fund_nav_growth"]
         else:
             print("净值数据不是字典",fundcode)
@@ -145,8 +145,9 @@ def setworthdata():
     while idx1 < len(fundlist):
         worthdatabase.setdefault(fundlist[idx1],{})
         worthdatalist = getworthdata(fundlist[idx1])
-        print("当前基金号",fundlist[idx1],"当前最新基金净值是 ",worthdatalist[-1]["date"],"已经写入的最后净值日期是",sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1])
-        logs.append("当前基金号" + fundlist[idx1]  + "当前最新基金净值是 " + worthdatalist[-1]["date"] + "已经写入的最后净值日期是" + sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1] + '\n')
+        if  worthdatalist[-1]["date"] != sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1]:
+            print("当前基金号",fundlist[idx1],"当前最新基金净值是 ",worthdatalist[-1]["date"],"已经写入的最后净值日期是",sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1])
+            logs.append("当前基金号" + fundlist[idx1]  + "当前最新基金净值是 " + worthdatalist[-1]["date"] + "已经写入的最后净值日期是" + sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1] + '\n')
         idj1 = 0
         while idj1 < len(worthdatalist):
             if worthdatalist[idj1]["date"] not in  worthdatabase[fundlist[idx1]]:
