@@ -343,7 +343,6 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
             \ "android_packages_modules_Bluetooth",
             \ "android_prebuilts_module_sdk_Bluetooth",
-            \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth",
             \ "vendor_vivo_source_frameworks_services",
             \ "android_cts",
             \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
@@ -1216,6 +1215,7 @@ function! GetOneOfTheColumns(...)
     let columns = a:3
     let templist = [" "]
     let typelist = 0
+    let Clearchar = ""
     "}}}}
     "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
     let typelist = type(filelist[0])
@@ -1224,11 +1224,24 @@ function! GetOneOfTheColumns(...)
         let filelist =  ListRemoveSpaces(filelist,charinterval)
         let filelist = ListTo2D(filelist,charinterval)
     endif
-    while idx1 < len(filelist)
-        let templist[idx1] = filelist[idx1][columns]
-        let idx1 += 1
-    endwhile
-    return templist
+    if a:0 ==# 4
+        let Clearchar = a:4
+        while idx1 < len(filelist)
+            if columns ==# -1
+                let filelist[idx1] = add(Clearchar[idx1]," ")
+            else
+                let filelist[idx1][columns] = Clearchar[idx1]
+            endif
+            let idx1 += 1
+        endwhile
+        return  filelist
+    else
+        while idx1 < len(filelist)
+            let templist[idx1] = filelist[idx1][columns]
+            let idx1 += 1
+        endwhile
+        return templist
+    endif
 endfunction
 "}}}}}
 "{{{{{2  WaveformGraph(...)  波形图
@@ -1243,8 +1256,10 @@ function! WaveformGraph(...)
     "}}}}
     let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
     let filelist =  ListRemoveSpaces(filelist,"|")
-    let Rowcoordinates = split(filelist,"|")[0]
-    let Columncoordinates = split(filelist,"|")[1]
+    let Rowcoordinates = split(filelist[0],"|")[1:]
+    let Columncoordinates = split(filelist[1],"|")[1:]
+    echo max(Columncoordinates)
+    echo min(Columncoordinates)
 endfunction
 "}}}}}
 "{{{{{2   Openfile(...) 打开python文件触发
@@ -2532,16 +2547,34 @@ function! ModifyCorrespondingCommit(...)
     let commitcomand = "git  log --oneline  --decorate --pretty=format:\"\%H\" --all  --grep  "
     let branchcomand = "git branch -a --contains "
     let idx1 = 0
+    let allbranch = []
+    let isdelete = 0
+    let templist = []
     "}}}}
     let ModifyChar = input("请输入修改")
+    if input("是否取反") ==# "yes"
+        let isdelete = 1
+    endif
     let commitcomand = commitcomand . ModifyChar
     let commitlist = split(system(commitcomand),"\n")
     echo commitlist
     while idx1 < len(commitlist)
-        echo  split(system(branchcomand . commitlist[idx1]))
+        "echo  split(system(branchcomand . commitlist[idx1]))
         let branchlist = extend(branchlist,split(system(branchcomand . commitlist[idx1])))
         let idx1 += 1
     endwhile
+    if  isdelete ==# 1
+        let allbranch = split(system("git branch -a "))
+        let templist = branchlist
+        let branchlist = []
+        let idx1 = 0
+        while idx1 < len(allbranch)
+            if count(templist,allbranch[idx1]) ==# 0
+                let branchlist = add(branchlist,allbranch[idx1])
+            endif
+            let idx1 += 1
+        endwhile
+    endif
     echo len(branchlist)
     echo len(uniq(sort(branchlist)))
     "echo  uniq(sort(branchlist))
@@ -3233,7 +3266,6 @@ function! ObtainAmount()
 endfunction
 "}}}}
 "{{{{{2   PythonGetIndexValuation(...) 使用python方式获取指数估值
-nnoremap <F3> :call PythonGetIndexValuation()<cr>
 function! PythonGetIndexValuation(...)
     "{{{{{3 变量定义
     let fundtitle = "指数名称,指数类型,PE,PE%,PB,PB%,股息率,ROE,预测PEG,指数编号"
@@ -3629,7 +3661,6 @@ function! IndexParametersPanel(...)
 endfunction
 "}}}}}
 "{{{{{2   IndexCorrespondingFunds(...)指数对应的基金
-nnoremap test :call IndexCorrespondingFunds()<cr>
 function! IndexCorrespondingFunds(...)
     "{{{{{3 变量定义
     let indexnum = ""
@@ -3684,6 +3715,46 @@ function! IndexCorrespondingFunds(...)
         let idx1 += 1
     endwhile
     call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
+endfunction
+"}}}}}
+"{{{{{2   FillingAcountDataBase(...)  填充资金数据库
+nnoremap test :call FillingAcountDataBase()<cr>
+function! FillingAcountDataBase(...)
+    "{{{{{3 变量定义
+    let amountDatabase = []
+    let amountPanel = []
+    let charinterval  = "|"
+    let idx1 = 0
+    let idj1 = 0
+    let templist = []
+    "}}}}
+    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount"))
+    let amountPanel =  ListRemoveSpaces(amountPanel,charinterval)
+    let amountPanel = ListTo2D(amountPanel,charinterval)
+    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase"))[0])
+    let idx1 = 1
+    while idx1 < len(amountPanel)
+        if has_key(amountDatabase,amountPanel[idx1][0]) ==# 0
+            let amountDatabase[amountPanel[idx1][0]] = {}
+        endif
+        let idj1 = 1
+        while idj1 < len(amountPanel[idx1]) - 1
+            if has_key(amountDatabase[amountPanel[idx1][0]],amountPanel[0][idj1]) ==# 0
+                let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]] = {}
+            endif
+            let templist = split(amountPanel[idx1][idj1],'\^')
+            if len(templist) ==# 1
+                let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]] = templist[0]
+            else
+                let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]]["amount"] = templist[0]
+                let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]]["actualpurchase"] = templist[1]
+                let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]]["eva_type"] = templist[2]
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
 endfunction
 "}}}}}
 
@@ -4503,6 +4574,29 @@ function! StructureDefinition(...)
 endfunction
 "}}}}}
 
+"{{{{{2   GetFoldLevel(...) 获取每行的foldlevel
+function! GetFoldLevel(...)
+    "{{{{{3 变量定义
+    let filename = ""
+    let filelist = []
+    let foldlist = []
+    let idx1 = 0
+    "}}}}
+    let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    let filelist = readfile(filename)
+    let foldlist = copy(filelist)
+    execute "normal! :e " . filename . " \<cr>"
+    setlocal foldmethod=syntax
+    redraw
+    while idx1 < len(foldlist)
+        let foldlist[idx1] = foldlevel(idx1)
+        let idx1 += 1
+    endwhile
+    "execute "normal! :bd\<cr>"
+    return foldlist
+endfunction
+"}}}}}
+
 "}}}}}
 "{{{{ 定时器
 
@@ -4872,6 +4966,9 @@ function! VisualiZationcsv(...)
     let LenOfListcur =   0  "表格当前行有多少列
     let charinterval = a:2
     "}}}}
+    if &filetype ==# "csv"
+    let templist = [""]       "手动修改默认添加的字符串
+    endif
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     if mode ==# 1
         if "UTF-8" != matchstr(system("file " . expand("%:p")),"UTF-8")
@@ -4934,14 +5031,6 @@ endfunction
 
 "}}}
 "{{{{  python
-"{{{{{2   OpenPythonfile(...) 打开python文件触发
-function! OpenPythonfile()
-    "{{{{{3 变量定义
-    let pythonfile = ""
-    "}}}}
-    call setline(1,"#!/usr/bin/python3")
-endfunction
-"}}}}}
 
 "{{{{{2   PythonTest(...) python test 传参数
 function! PythonTest()
@@ -4949,7 +5038,7 @@ function! PythonTest()
     let pythontest = ""
     let path = "par from vimscript into python"
     "}}}}
-python <<EOM
+python3 <<EOM
     import vim
     import os
     var = vim.eval("path")
