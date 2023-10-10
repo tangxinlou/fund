@@ -120,6 +120,7 @@ def setworthdata():
     fundlist = []
     indexkey = []
     fundkey = []
+    additionalkey = [501009]
     tempchar = ""
     worthdatalist = []
     numbereddatabasestr = open("./numbereddatabase","r+",encoding='utf-8')
@@ -137,6 +138,7 @@ def setworthdata():
         idx1 += 1
     print("需要查找净值的基金代码")
     print(fundlist)
+    fundlist = fundlist + additionalkey
     worthdatabasestr = open("./worthdatabase","r+",encoding='utf-8')
     worthdatabase = worthdatabasestr .readline()
     worthdatabasestr.close()
