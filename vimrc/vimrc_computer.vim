@@ -1245,7 +1245,6 @@ function! GetOneOfTheColumns(...)
 endfunction
 "}}}}}
 "{{{{{2  WaveformGraph(...)  波形图
-nnoremap test :call WaveformGraph()<cr>
 "{{{{{3 注释
 "}}}}
 function! WaveformGraph(...)
@@ -3685,13 +3684,16 @@ function! IndexCorrespondingFunds(...)
     let idx1 = 0
     while idx1 < len(indexkey)
         let indexnum = indexkey[idx1]
-        echo IndexArchiveDatabase["index_code"][indexnum ]
+        echo IndexArchiveDatabase["index_code"][indexnum]
         let command = "wget " . url . indexnum . " -U "  . "\"" . useragent . "\"" .  " -O " . tempfilesname
         call system(command)
         if findfile(tempfilesname,".;") != ""
             let tempfilelist = eval(readfile(tempfilesname)[0])
             if has_key(IndexArchiveDatabase,"fundtoindex") ==# 0
                 let IndexArchiveDatabase["fundtoindex"] = {}
+            endif
+            if has_key(IndexArchiveDatabase,"indextofund") ==# 0
+                let IndexArchiveDatabase["indextofund"] = {}
             endif
             for i in  tempfilelist["data"]
                 if has_key(IndexArchiveDatabase["fundtoindex"],IndexArchiveDatabase["index_code"][indexnum]) ==# 0
@@ -3709,6 +3711,9 @@ function! IndexCorrespondingFunds(...)
                 if has_key(IndexArchiveDatabase["fundcode"],i["fd_code"]) ==# 0
                     let IndexArchiveDatabase["fundcode"][i["fd_code"]] = i["fd_name"]
                 endif
+                if has_key(IndexArchiveDatabase["indextofund"],i["fd_name"]) ==# 0
+                    let IndexArchiveDatabase["indextofund"][i["fd_name"]] = IndexArchiveDatabase["index_code"][indexnum]
+                endif
             endfor
         endif
         call delete(tempfilesname)
@@ -3718,7 +3723,6 @@ function! IndexCorrespondingFunds(...)
 endfunction
 "}}}}}
 "{{{{{2   FillingAcountDataBase(...)  填充资金数据库
-nnoremap test :call FillingAcountDataBase()<cr>
 function! FillingAcountDataBase(...)
     "{{{{{3 变量定义
     let amountDatabase = []
@@ -3755,6 +3759,105 @@ function! FillingAcountDataBase(...)
         let idx1 += 1
     endwhile
     call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+endfunction
+"}}}}}
+"{{{{{2   PopulateAmountPanel(...)  填充资金面板
+nnoremap test :call PopulateAmountPanel()<cr>
+function! PopulateAmountPanel(...)
+    "{{{{{3 变量定义
+    let indexfiledict = []
+    let indexkeylist = []
+    let amountPanel = []
+    let charinterval = "|"
+    let indexdatavalue = []
+    let amountDatabase = []
+    let tempkey = []
+    let datechar = ""
+    let fundname = ""
+    let indexname = ""
+    let initailamount = 500
+    let initailPE = ""
+    let curlPE = ""
+    let amount = ""
+    let ispay = ""
+    let templist = ""
+    let fund2index = ""
+    "}}}}
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let indexkeylist = reverse(sort(keys(indexfiledict)))
+    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase"))[0])
+    let fund2index = readfile(Homedir("work/fund/zhishu/fund2index"))
+    let fund2index  =  ListRemoveSpaces(fund2index,charinterval)
+    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount"))
+    let amountPanel =  ListRemoveSpaces(amountPanel,charinterval)
+    let amountPanel = ListTo2D(amountPanel,charinterval)
+
+    if a:0 ==# 1
+        let datechar = a:1
+    else
+        let tempkey = copy(indexkeylist)
+        call AddNumber(tempkey)
+        let datechar  = input("排序日期")
+        let datechar  = indexkeylist[datechar]
+    endif
+
+    let idx1 = 1
+    echo amountPanel[0]
+    let amountPanel[0] = add(amountPanel[0],"")
+    let amountPanel[0][-2] = datechar
+    echo amountPanel[0]
+    while idx1 < len(amountPanel)
+        let fundname = amountPanel[idx1][0]
+        let indexname = split(IsContain(fundname,fund2index),"|")[0]
+        let initailPE = amountDatabase[fundname]["初始PE"]
+        let indexdatavalue = GetIndexData(indexname,indexfiledict[datechar]["indexvalua"]["data"]["items"])
+        let curlPE = string(indexdatavalue["pe"])
+        let amount = str2float(initailamount) * pow(str2float(initailPE) / str2float(curlPE) ,2)
+        let amount = float2nr(amount)
+
+        if indexdatavalue["eva_type"] ==# "low"
+            let ispay = "Y"
+        else
+            let ispay = "N"
+        endif
+
+        let amount = join([amount ,"^",ispay,"^",indexdatavalue["eva_type"]],"\x00")
+        let amountPanel[idx1] = add(amountPanel[idx1],"")
+        let amountPanel[idx1][-2] = amount
+
+        if has_key(amountDatabase,fundname) ==# 0
+            let amountDatabase[fundname] = {}
+        endif
+
+        if has_key(amountDatabase[fundname],datechar) ==# 0
+            let amountDatabase[fundname][datechar] = {}
+        endif
+
+        let templist = split(amount,'\^')
+        let amountDatabase[fundname][datechar]["amount"] = templist[0]
+        let amountDatabase[fundname][datechar]["actualpurchase"] = templist[1]
+        let amountDatabase[fundname][datechar]["eva_type"] = templist[2]
+        let idx1 += 1
+    endwhile
+    let amountPanel  = ListTo1D(amountPanel,charinterval)
+    let amountPanel =  ListAddSpaces(amountPanel,charinterval)
+    call writefile(amountPanel,Homedir("work/fund/zhishu/panelamount"))
+    call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+endfunction
+"}}}}}
+"{{{{{2   GetIndexData(...)   获取指数数据
+function! GetIndexData(...)
+    "{{{{{3 变量定义
+    let indexname = a:1
+    let indexdatalist = a:2
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(indexdatalist)
+        if indexdatalist[idx1]["name"] ==#  indexname
+            return indexdatalist[idx1]
+        endif
+        let idx1 += 1
+    endwhile
 endfunction
 "}}}}}
 
