@@ -1273,7 +1273,58 @@ function! Openfile()
     endif
 endfunction
 "}}}}}
-
+"{{{{{2   SimplifySearchResults(...) 简化搜索结果
+nnoremap sim :call SimplifySearchResults()<cr>
+function! SimplifySearchResults(...)
+    "{{{{{3 变量定义
+    let searchs = "setActiveDevice"
+    let command = ""
+    let transfer = []
+    let transfer1 = []
+    let Keep = []
+    let Log = []
+    let judge = []
+    let Comment = []
+    let idx1 = 0
+    let command = ""
+    let searchstarge = a:1
+    let temchar = ""
+    let tempchar = ""
+    "}}}}
+    "let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+    "let searchstarge =  system(command)
+    let searchstarge = split(searchstarge,"\n")
+    let @/ = searchs
+    echo "tangxinlou1"
+    while idx1 < len(searchstarge)
+        let temchar = split(searchstarge[idx1],":")[2]
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":",split(searchstarge[idx1],":")[2]]
+        if len(split(temchar,"\x00")) != 1
+            if matchstr(temchar,"log") != ""
+                let Log = add(Log,tempchar)
+            elseif matchstr(temchar,";") != ""
+                if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
+                    let Keep = add(Keep,tempchar)
+                else
+                    let transfer1 = add(transfer1,tempchar)
+                endif
+            elseif matchstr(temchar," if") != "" || matchstr(temchar," for") != ""
+                let judge = add(judge,tempchar)
+            elseif matchstr(temchar,"//") != ""
+                let Comment = add(Comment,tempchar)
+            else
+                let Keep = add(Keep,tempchar)
+            endif
+        else
+            let transfer = add(transfer,tempchar)
+        endif
+        let idx1 += 1
+    endwhile
+    let Keep = ListTo1D(Keep,"图")
+    let Keep   =  ListAddSpaces(Keep,"图")
+    return Keep
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -4785,6 +4836,97 @@ function! Searcher()
         endwhile
     else
         let timer = timer_start(200, 'FindFiles', {'repeat': -1})
+        echo "开启定时器" timer
+    endif
+endfunction
+"}}}}}
+
+"{{{{{  GrepChars()  回调
+if len(timer_info()) ==# 0
+    let g:windowgrepid = 0
+    let g:firstgrepflag = 0
+    let g:lastgrepfilter = ""
+    let g:lastgreplen = 0
+endif
+function! GrepChars(timer)
+    let searchs = ""
+    let idx1 = 0
+    let idj1 = 0
+    let clear = [""]
+    let command = ""
+    let searchs = getline(1)
+    let searchstarge = []
+    let clear =  repeat(clear,g:lastgreplen)
+    if g:firstgrepflag ==# 0
+        let g:windowgrepid = win_getid()
+        let g:firstgrepflag = 1
+    endif
+    if  g:windowgrepid != win_getid()
+        return
+    endif
+    if g:lastgrepfilter ==# searchs
+        return
+    endif
+    if len(searchs) < 5
+        return
+    endif
+    let g:lastgrepfilter = searchs
+    redraw
+    let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+    echo command
+    let searchstarge =  system(command)
+    let searchstarge = SimplifySearchResults(copy(searchstarge))
+    call setline(2, clear)
+    call setline(2, searchstarge)
+    let g:lastgreplen = len(searchstarge)
+endfunction
+"}}}}}
+
+"{{{{{  SearcherChars()  grep搜索字符串普通模式<F10>调用
+nnoremap <F10> :call   SearcherChars()<cr>
+function! SearcherChars()
+    "[{'id': 1, 'repeat': -1, 'remaining': 185, 'time': 500, 'paused': 0, 'callback': function('MyHandler')}]
+    let idx1 = 0
+    let timeinfo = []
+    let funtionname = ["GrepChars"]
+    let tempname = ""
+    let timeinfo = timer_info()
+    let winwidthnum  = 0
+    if g:windowgrepid != win_getid() && g:windowgrepid != 0
+        if win_gotoid(g:windowgrepid) ==# 1
+            return
+        endif
+    else
+        if len(tabpagebuflist()) ==# 1 && g:windowgrepid ==# 0
+            "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+            let winwidthnum  = float2nr(winheight('%')  * 0.2)
+            echo winwidthnum
+            execute "normal! :new\<cr>"
+            "execute "normal! :vne\<cr>"
+            execute "normal! \<c-w>J"
+            execute "normal! :res " . winwidthnum . "\<cr>"
+            "execute "normal! :vertical res " . winwidthnum . "\<cr>"
+            redraw
+        endif
+    endif
+    echo "是否有定时器，0 没有 1有" len(timeinfo)
+    if  len(timeinfo) > 0
+        echo "准备清空定时器"
+        let idx1 = 0
+        while idx1 <  len(timeinfo)
+            let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
+            call timer_stop(timeinfo[idx1]["id"])
+            if  count(funtionname,tempname)
+                if tempname ==# "GrepChars"
+                    echo "有这个定时器回调函数"
+                    let g:firstgrepflag = 0
+                    let g:windowgrepid = 0
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    else
+        let timer = timer_start(200, 'GrepChars', {'repeat': -1})
         echo "开启定时器" timer
     endif
 endfunction

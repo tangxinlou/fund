@@ -120,7 +120,7 @@ def setworthdata():
     fundlist = []
     indexkey = []
     fundkey = []
-    additionalkey = [501009]
+    additionalkey = ["501009"]
     tempchar = ""
     worthdatalist = []
     numbereddatabasestr = open("./numbereddatabase","r+",encoding='utf-8')
@@ -147,7 +147,8 @@ def setworthdata():
     while idx1 < len(fundlist):
         worthdatabase.setdefault(fundlist[idx1],{})
         worthdatalist = getworthdata(fundlist[idx1])
-        if  worthdatalist[-1]["date"] != sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1]:
+        
+        if (len(list(worthdatabase[fundlist[idx1]].keys())) > 0) and (worthdatalist[-1]["date"] != sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1]):
             print("当前基金号",fundlist[idx1],"当前最新基金净值是 ",worthdatalist[-1]["date"],"已经写入的最后净值日期是",sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1])
             logs.append("当前基金号" + fundlist[idx1]  + "当前最新基金净值是 " + worthdatalist[-1]["date"] + "已经写入的最后净值日期是" + sorted(list(worthdatabase[fundlist[idx1]].keys()))[-1] + '\n')
         idj1 = 0
