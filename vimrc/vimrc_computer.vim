@@ -4731,23 +4731,121 @@ endfunction
 "{{{{{2   GetFoldLevel(...) 获取每行的foldlevel
 function! GetFoldLevel(...)
     "{{{{{3 变量定义
-    let filename = ""
+    let filename = a:1
     let filelist = []
     let foldlist = []
     let idx1 = 0
     "}}}}
-    let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
     let filelist = readfile(filename)
     let foldlist = copy(filelist)
     execute "normal! :e " . filename . " \<cr>"
     setlocal foldmethod=syntax
     redraw
     while idx1 < len(foldlist)
-        let foldlist[idx1] = foldlevel(idx1)
+        let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
     "execute "normal! :bd\<cr>"
     return foldlist
+endfunction
+"}}}}}
+
+"{{{{{2   ParseCodeFiles(...) 解析代码文件
+nnoremap par :call ParseCodeFiles()<cr>
+function! ParseCodeFiles(...)
+    "{{{{{3 变量定义
+    let filename = ""
+    let filelist = []
+    let foldlist = []
+    let idx1 = 0
+    let nodeformat  = {"1-dictname":"xx",
+                \"2-dictlen":"0-0",
+                \"3-dictnodemember":[""],
+                \}
+"                \"4-dictnodemembername":[],
+"                \"5-dictAssignmentmember":"0-0",
+"                \"6-filename":"xx",
+    let foldlevellist = []
+    let idx1 = 0
+    let flag = 1
+    let codedict = {}
+    let startpoint = 0
+    "}}}}
+    let filename = Homedir("txl/aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    "let filename = expand("%:p")
+    let filelist = readfile(filename)
+    let foldlevellist = GetFoldLevel(filename)
+    let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename)
+    execute "normal! :tabnew\<cr>"
+    call setline(1,string(codedict))
+    "echo codedict
+
+endfunction
+"}}}}}
+
+"{{{{{2   LoopToDillDictionary(...) 填充字典链表
+function! LoopToDillDictionary(...)
+    "{{{{{3 变量定义
+    let dictformart  = a:1
+    let nodeformat = copy(dictformart)
+    let foldlevellist = a:2
+    let listlen = a:3
+    let flag = copy(a:4)
+    let filename = a:5
+    let idx1 = 0
+    let start = 0
+    let end = 0
+    let idj1 = 0
+    let maxflag = 0
+    let startpoint = 0
+    let endpoint = 0
+    let endnodeformat  = {}
+    let idj1 = 0
+    "}}}}
+    if listlen ==# ""
+        let startpoint = 0
+        let endpoint = len(foldlevellist)
+    else
+        let startpoint = split(listlen,'-')[0]
+        let endpoint = split(listlen,'-')[1]
+    endif
+    let idx1 = startpoint
+    while idx1 < endpoint
+        if flag ==# foldlevellist[idx1]
+            let &foldlevel=flag -1
+            let start = foldclosed(idx1 + 1)
+            let end = foldclosedend(idx1 + 1)
+            let nodeformat["1-dictname"] = getline(idx1 + 1)
+            let nodeformat["2-dictlen"] = string(start -1) . '-' . string(end -1)
+            "let nodeformat["6-filename"] = filename
+            echo flag . nodeformat["1-dictname"]
+            let listlen = string(start -1) . '-' . string(end -1)
+            let idj1 += 1
+            "if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
+            if flag < 2
+                while start < end
+                    "echom flag . "tangxinlou3"
+                    echom nodeformat["3-dictnodemember"]
+                    let endnodeformat  = LoopToDillDictionary(nodeformat,foldlevellist,listlen,flag + 1,filename)
+                    let nodeformat["3-dictnodemember"] = add(nodeformat["3-dictnodemember"],"")
+                    let nodeformat["3-dictnodemember"][-2] = endnodeformat
+                    let start = str2nr(split(endnodeformat["2-dictlen"],'-')[1]) + 1
+                    let listlen = string(split(endnodeformat["2-dictlen"],"-")[1] + 1) . '-' . string(end -1)
+                    "echom flag . "tangxinlou4"
+                endwhile
+            else
+                "echo flag . "tangxinlou2"
+            endif
+            let idx1 = endpoint
+        endif
+        let idx1 += 1
+    endwhile
+    if flag ==# 1
+        echom "tangfdgkljdl;kgjklad"
+        echom nodeformat["3-dictnodemember"]
+    end
+    return nodeformat
 endfunction
 "}}}}}
 
