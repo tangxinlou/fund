@@ -326,7 +326,7 @@ nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
 nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 "打开find搜索的文件
-nnoremap <leader>zz  0v$hy:tabnew<cr>q:ie <esc>p<cr>
+nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
 "{{{{{2   全局变量
@@ -387,6 +387,7 @@ function! s:GrepOperator(type)
     let winwidthnum  = float2nr(winheight('%')  * 0.2)
     copen
     set modifiable
+    let @/ = @@
     silent execute "!clear"
     silent execute "normal! \<c-w>J"
     execute "normal! :res " . winwidthnum . "\<cr>"
@@ -1049,7 +1050,8 @@ function! AddLineNumber(...)
             let idx1 += 1
         endwhile
     else
-        execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+        "execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+        execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
     endif
 
     "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
@@ -1279,12 +1281,12 @@ function! SimplifySearchResults(...)
     "{{{{{3 变量定义
     let searchs = "setActiveDevice"
     let command = ""
-    let transfer = []
-    let transfer1 = []
-    let Keep = []
-    let Log = []
-    let judge = []
-    let Comment = []
+    let transfer = []         "长度小于1被识别成调用
+    let transfer1 = []        "语句里面有分号识别调用
+    let definition = []       "定义
+    let Log = []              "打印
+    let judge = []            "判断
+    let Comment = []          "注释
     let idx1 = 0
     let command = ""
     let searchstarge = a:1
@@ -1294,17 +1296,15 @@ function! SimplifySearchResults(...)
     "let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
     "let searchstarge =  system(command)
     let searchstarge = split(searchstarge,"\n")
-    let @/ = searchs
-    echo "tangxinlou1"
     while idx1 < len(searchstarge)
         let temchar = split(searchstarge[idx1],":")[2]
-        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":",split(searchstarge[idx1],":")[2]]
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":",join(split(searchstarge[idx1],":")[2:])]
         if len(split(temchar,"\x00")) != 1
             if matchstr(temchar,"log") != ""
                 let Log = add(Log,tempchar)
             elseif matchstr(temchar,";") != ""
                 if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
-                    let Keep = add(Keep,tempchar)
+                    let definition  = add(definition,tempchar)
                 else
                     let transfer1 = add(transfer1,tempchar)
                 endif
@@ -1313,16 +1313,20 @@ function! SimplifySearchResults(...)
             elseif matchstr(temchar,"//") != ""
                 let Comment = add(Comment,tempchar)
             else
-                let Keep = add(Keep,tempchar)
+                if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                    let Comment = add(Comment,tempchar)
+                else
+                    let definition = add(definition,tempchar)
+                endif
             endif
         else
             let transfer = add(transfer,tempchar)
         endif
         let idx1 += 1
     endwhile
-    let Keep = ListTo1D(Keep,"图")
-    let Keep   =  ListAddSpaces(Keep,"图")
-    return Keep
+    let definition = ListTo1D(definition,"█")
+    let definition = ListAddSpaces(definition,"█")
+    return definition
 endfunction
 "}}}}}
 "}}}}
@@ -3454,7 +3458,7 @@ function! CutIndexPanel(...)
     return dict
 endfunction
 "}}}}}
-"{{{{{2   IndexDataDashboardsort(...)
+"{{{{{2   IndexDataDashboardsort(...) 排序panelPEvalue,排序panelindexvalue
 "{{{{{3 注释
 "}}}}
 function! IndexDataDashboardsort(...)
@@ -3557,7 +3561,7 @@ function! IndexDataDashboard(...)
     call IndexDataDashboardsort()
 endfunction
 "}}}}}
-"{{{{{2   PopulateTheIndexDatabase(...)  填充数据库
+"{{{{{2   PopulateTheIndexDatabase(...)  填充指数数据库
 "{{{{{3 注释
 "}}}}
 function! PopulateTheIndexDatabase(...)
@@ -3639,7 +3643,7 @@ function! PopulateTheIndexDatabase(...)
     call writefile([string(indexfiledict)],Homedir("work/fund/zhishu/indexdatabase"))
 endfunction
 "}}}}}
-"{{{{{2  IndexParametersPanel(...)     单个参数面板
+"{{{{{2  IndexParametersPanel(...)     指数单个参数面板
 "{{{{{3 注释
 "参数面板
 "}}}}
@@ -3664,7 +3668,7 @@ function! IndexParametersPanel(...)
     let Parameterslists =  ListRemoveSpaces(Parameterslists,charinterval)
     let Parameterslists  = ListTo2D(Parameterslists,charinterval)
     let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
-    let indexkeylist = sort(keys(indexfiledict))
+    let indexkeylist = reverse(sort(keys(indexfiledict)))
 
     while idx1 < len(indexkeylist)
         if 0 ==# count(Parameterslists[0],indexkeylist[idx1])
@@ -3696,7 +3700,7 @@ function! IndexParametersPanel(...)
         let idx1 += 1
     endwhile
     let Parameterslists = ListTo1D(Parameterslists,charinterval)
-    let tempkey = copy(reverse(indexkeylist))
+    let tempkey = copy(indexkeylist)
     call AddNumber(tempkey)
     let isversion = input("排序日期")
     let Orderedlist  =  repeat([""],len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"]))
@@ -4729,6 +4733,7 @@ endfunction
 "}}}}}
 
 "{{{{{2   GetFoldLevel(...) 获取每行的foldlevel
+nnoremap getfold :call GetFoldLevel()<cr>
 function! GetFoldLevel(...)
     "{{{{{3 变量定义
     let filename = a:1
@@ -4737,15 +4742,17 @@ function! GetFoldLevel(...)
     let idx1 = 0
     "}}}}
     "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    "let filename = expand("%:p")
     let filelist = readfile(filename)
     let foldlist = copy(filelist)
-    execute "normal! :e " . filename . " \<cr>"
+    execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
     setlocal foldmethod=syntax
     redraw
     while idx1 < len(foldlist)
         let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
+    "execute "normal! :q!\<cr>"
     "execute "normal! :bd\<cr>"
     return foldlist
 endfunction
@@ -4761,7 +4768,7 @@ function! ParseCodeFiles(...)
     let idx1 = 0
     let nodeformat  = {"1-dictname":"xx",
                 \"2-dictlen":"0-0",
-                \"3-dictnodemember":[""],
+                \"3-dictnodemember":[],
                 \}
 "                \"4-dictnodemembername":[],
 "                \"5-dictAssignmentmember":"0-0",
@@ -4788,7 +4795,7 @@ endfunction
 function! LoopToDillDictionary(...)
     "{{{{{3 变量定义
     let dictformart  = a:1
-    let nodeformat = copy(dictformart)
+    let nodeformat = {}
     let foldlevellist = a:2
     let listlen = a:3
     let flag = copy(a:4)
@@ -4801,7 +4808,7 @@ function! LoopToDillDictionary(...)
     let startpoint = 0
     let endpoint = 0
     let endnodeformat  = {}
-    let idj1 = 0
+    let nodeformat = deepcopy(dictformart)
     "}}}}
     if listlen ==# ""
         let startpoint = 0
@@ -4813,38 +4820,34 @@ function! LoopToDillDictionary(...)
     let idx1 = startpoint
     while idx1 < endpoint
         if flag ==# foldlevellist[idx1]
+            "设置头结点字典成员
             let &foldlevel=flag -1
             let start = foldclosed(idx1 + 1)
             let end = foldclosedend(idx1 + 1)
             let nodeformat["1-dictname"] = getline(idx1 + 1)
             let nodeformat["2-dictlen"] = string(start -1) . '-' . string(end -1)
             "let nodeformat["6-filename"] = filename
-            echo flag . nodeformat["1-dictname"]
+            echo "idx1 " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
             let listlen = string(start -1) . '-' . string(end -1)
-            let idj1 += 1
+            "设置条件判断是否循环获取下一结点
             "if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
-            if flag < 2
+            if flag < 3
                 while start < end
-                    "echom flag . "tangxinlou3"
-                    echom nodeformat["3-dictnodemember"]
-                    let endnodeformat  = LoopToDillDictionary(nodeformat,foldlevellist,listlen,flag + 1,filename)
-                    let nodeformat["3-dictnodemember"] = add(nodeformat["3-dictnodemember"],"")
-                    let nodeformat["3-dictnodemember"][-2] = endnodeformat
-                    let start = str2nr(split(endnodeformat["2-dictlen"],'-')[1]) + 1
-                    let listlen = string(split(endnodeformat["2-dictlen"],"-")[1] + 1) . '-' . string(end -1)
-                    "echom flag . "tangxinlou4"
+                    let endnodeformat  = LoopToDillDictionary(dictformart,foldlevellist,listlen,flag + 1,filename)
+                    if endnodeformat["2-dictlen"] != "0-0"
+                        let nodeformat["3-dictnodemember"] = add(nodeformat["3-dictnodemember"],endnodeformat)
+                        let start = str2nr(split(endnodeformat["2-dictlen"],'-')[1]) + 1
+                        let listlen = string(split(endnodeformat["2-dictlen"],"-")[1] + 1) . '-' . string(end -1)
+                    else
+                        let start = end
+                    endif
                 endwhile
             else
-                "echo flag . "tangxinlou2"
             endif
             let idx1 = endpoint
         endif
         let idx1 += 1
     endwhile
-    if flag ==# 1
-        echom "tangfdgkljdl;kgjklad"
-        echom nodeformat["3-dictnodemember"]
-    end
     return nodeformat
 endfunction
 "}}}}}
@@ -4853,9 +4856,12 @@ endfunction
 "{{{{ 定时器
 
 "{{{{{  FindFiles()  回调
-let g:windowfindid = 0
-let g:firstfindflag = 0
-let g:lastfilter = ""
+if len(timer_info()) ==# 0
+    let g:windowfindid = 0
+    let g:firstfindflag = 0
+    let g:lastfilter = ""
+    let g:lastfindlen = 0
+endif
 function! FindFiles(timer)
     let searchs = ""
     let idx1 = 0
@@ -4864,7 +4870,6 @@ function! FindFiles(timer)
     let command = ""
     let searchs = getline(1)
     let searchstarge = []
-    let clear =  repeat(clear,50)
     if g:firstfindflag ==# 0
         let g:windowfindid = win_getid()
         let g:firstfindflag = 1
@@ -4875,17 +4880,21 @@ function! FindFiles(timer)
     if g:lastfilter ==# searchs
         return
     endif
-    if searchs ==# ""
+    if len(searchs) < 2
         return
     endif
     let command = "find -iname " . "'*" . searchs ."*'"
     echo command
     let searchstarge =  system(command)
     let searchstarge = split(searchstarge,"\n")
-    "let searchstarge = insert(searchstarge,searchs)
+    if len(searchstarge) > 300
+        let searchstarge  = searchstarge[0:300]
+    endif
+    let clear =  repeat([""],g:lastfindlen)
+    call setline(2, clear)
     call setline(2, searchstarge)
-    call setline(len(searchstarge) + 2,clear)
     let g:lastfilter = searchs
+    let g:lastfindlen = len(searchstarge)
 endfunction
 "}}}}}
 
@@ -4922,10 +4931,10 @@ function! Searcher()
         let idx1 = 0
         while idx1 <  len(timeinfo)
             let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
+            call timer_stop(timeinfo[idx1]["id"])
             if  count(funtionname,tempname)
-                call timer_stop(timeinfo[idx1]["id"])
-                echo "有这个定时器回调函数"
                 if tempname ==# "FindFiles"
+                    echo "有这个定时器回调函数"
                     let g:firstfindflag = 0
                     let g:windowfindid = 0
                 endif
@@ -4935,6 +4944,7 @@ function! Searcher()
     else
         let timer = timer_start(200, 'FindFiles', {'repeat': -1})
         echo "开启定时器" timer
+        redraw
     endif
 endfunction
 "}}}}}
@@ -4954,7 +4964,6 @@ function! GrepChars(timer)
     let command = ""
     let searchs = getline(1)
     let searchstarge = []
-    let clear =  repeat(clear,g:lastgreplen)
     if g:firstgrepflag ==# 0
         let g:windowgrepid = win_getid()
         let g:firstgrepflag = 1
@@ -4965,18 +4974,36 @@ function! GrepChars(timer)
     if g:lastgrepfilter ==# searchs
         return
     endif
-    if len(searchs) < 5
+    if len(searchs) < 4
         return
     endif
     let g:lastgrepfilter = searchs
-    redraw
+    if @/ != searchs
+        let @/ = searchs
+    endif
+    let searchs =  substitute(searchs , '(', '\\(', 'g')
+    let searchs =  split(searchs,"\x00",1)
+    if searchs[0] ==# ''
+        let tempchar = searchs[1:]
+        let searchs = ' ' . join(tempchar,".*")
+    else
+        let searchs = join(searchs,".*")
+    endif
     let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
     echo command
+    if @/ != searchs
+        let @/ = substitute(searchs , '\\(', '(', 'g')
+    endif
     let searchstarge =  system(command)
     let searchstarge = SimplifySearchResults(copy(searchstarge))
+    if len(searchstarge) > 300
+        let searchstarge  = searchstarge[0:300]
+    endif
+    let clear =  repeat([""],g:lastgreplen)
     call setline(2, clear)
     call setline(2, searchstarge)
     let g:lastgreplen = len(searchstarge)
+    redraw
 endfunction
 "}}}}}
 
@@ -5026,6 +5053,7 @@ function! SearcherChars()
     else
         let timer = timer_start(200, 'GrepChars', {'repeat': -1})
         echo "开启定时器" timer
+        redraw
     endif
 endfunction
 "}}}}}
@@ -5397,7 +5425,6 @@ endfunction
 "}}}
 "{{{{  调整窗口
 "{{{{{2   WidChanged(...) 调整窗口
-nnoremap <F10> :call WidChanged()<cr>
 "let g:windowid = 0
 function! WidChanged()
     "{{{{{3 变量定义
