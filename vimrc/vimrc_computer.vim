@@ -243,10 +243,10 @@ nnoremap <leader>n :let @" = expand("%:p").':'.line(".").':'<cr>
 "删除window下添加^M
 nnoremap <leader>vm :%s/<c-v><c-M>/<cr>/g
 "自动复制文本所在的当前行及文件名
-vnoremap <leader>a "dy<esc>:let @c= expand("%:p").':'.line(".").':'<cr>
+"vnoremap <leader>a "dy<esc>:let @c= expand("%:p").':'.line(".").':'<cr>
 "复制文本及当前行
 "nnoremap <leader>p i```c<cr>```<esc>O<esc>0"cpli<cr><esc>0"dp
-nnoremap <leader>p i<cr>```c<cr><cr><cr>```<esc>O<cr><esc>kkk"7pjj0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
+"nnoremap <leader>p i<cr>```c<cr><cr><cr>```<esc>O<cr><esc>kkk"7pjj0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
 nnoremap <leader>txl :tabnew<cr>:e ~/tang1.txt<cr>
 "nnoremap <leader>co :copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>co :call <SID>QuckfixToggle()<cr>
@@ -833,6 +833,23 @@ function! DictTest()
         let idx1 += 1
     endwhile
     call writefile(indexfile,"/d/work/fund/zhishu/indexvaluepanel")
+
+    let listlist1 = [1,3,4]
+    let listlist2 = []
+
+    let listlist2 = copy(listlist1)
+    let listlist2[0] = 2
+    let listlist2 = add(listlist2,7)
+    echo listlist1
+    echo listlist2
+    echo nodeformat
+    let listlist3 = copy(nodeformat)
+    let listlist3["5structuremember"] = add(listlist3["5structuremember"],"56")
+    let listlist3["2structname"] = "1235"
+    let listlist3["5structuremember"] = add(listlist3["5structuremember"],"")
+    let listlist3["5structuremember"][-1] = "4567"
+    echo nodeformat
+    echo listlist3
 
 endfunction
 "}}}}
@@ -2598,12 +2615,16 @@ function! ModifyCorrespondingCommit(...)
     let ModifyChar = "同步lea相关修改"
     let commitlist = []
     let branchlist = []
-    let commitcomand = "git  log --oneline  --decorate --pretty=format:\"\%H\" --all  --grep  "
+    let negatebranch = []
+    let commitcomand = "git  log --oneline --date=format:\%Y-\%m-\%d --decorate --pretty=format:\%cd+\%H --all  --grep  "
     let branchcomand = "git branch -a --contains "
     let idx1 = 0
     let allbranch = []
     let isdelete = 0
     let templist = []
+    let idj1 = 0
+    let date = 0
+    let commit = ""
     "}}}}
     let ModifyChar = input("请输入修改")
     if input("是否取反") ==# "yes"
@@ -2613,13 +2634,22 @@ function! ModifyCorrespondingCommit(...)
     let commitlist = split(system(commitcomand),"\n")
     echo commitlist
     while idx1 < len(commitlist)
-        "echo  split(system(branchcomand . commitlist[idx1]))
-        let branchlist = extend(branchlist,split(system(branchcomand . commitlist[idx1])))
+        let date = split(commitlist[idx1],'+')[0]
+        let commit = split(commitlist[idx1],'+')[1]
+        let templist = split(system(branchcomand . commit))
+        let negatebranch = extend(negatebranch,templist)
+        let idj1 = 0
+        while idj1 < len(templist)
+            let templist[idj1] = date . " " . templist[idj1]
+            let idj1 += 1
+        endwhile
+        let branchlist = extend(branchlist,templist)
         let idx1 += 1
     endwhile
+    let templist = []
     if  isdelete ==# 1
         let allbranch = split(system("git branch -a "))
-        let templist = branchlist
+        let templist = negatebranch
         let branchlist = []
         let idx1 = 0
         while idx1 < len(allbranch)
@@ -3413,7 +3443,7 @@ function! CalculatePE(...)
     "}}}}
 endfunction
 "}}}}}
-"{{{{{2  CutIndexPanel(...)
+"{{{{{2  CutIndexPanel(...) 分割panelindexvalue
 "{{{{{3 注释
 "}}}}
 function! CutIndexPanel(...)
@@ -4160,7 +4190,7 @@ function! ListKeyWords(...)
                 \ 'private',
                 \ 'public']
     while idx1 < len(listwords)
-        if "" != matchstr(listwords[idx1],"\/txl.*\/.*\/")
+        if "" != matchstr(listwords[idx1],g:homedir)
             let tempvalue = split(listwords[0],"|")
             "echo "debug" tempvalue[1]  idx1
             let tempvalue[1] =  idx1 + tempvalue[1] + 1
@@ -4775,11 +4805,12 @@ function! ParseCodeFiles(...)
 "                \"6-filename":"xx",
     let foldlevellist = []
     let idx1 = 0
-    let flag = 1
-    let codedict = {}
+    let flag = 0
+    let codedict = []
     let startpoint = 0
     "}}}}
     let filename = Homedir("txl/aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
     "let filename = expand("%:p")
     let filelist = readfile(filename)
     let foldlevellist = GetFoldLevel(filename)
@@ -4791,7 +4822,7 @@ function! ParseCodeFiles(...)
 endfunction
 "}}}}}
 
-"{{{{{2   LoopToDillDictionary(...) 填充字典链表
+"{{{{{2   LoopToDillDictionary(...) 填充本节点，循环填下一节点
 function! LoopToDillDictionary(...)
     "{{{{{3 变量定义
     let dictformart  = a:1
@@ -4808,26 +4839,34 @@ function! LoopToDillDictionary(...)
     let startpoint = 0
     let endpoint = 0
     let endnodeformat  = {}
-    let nodeformat = deepcopy(dictformart)
     "}}}}
+    "字典拷贝一定要deepcopy,不然字典里面第二层成员还是同一个地址
+    let nodeformat = deepcopy(dictformart)
     if listlen ==# ""
         let startpoint = 0
         let endpoint = len(foldlevellist)
     else
-        let startpoint = split(listlen,'-')[0]
-        let endpoint = split(listlen,'-')[1]
+        let startpoint = str2nr(split(listlen,'-')[0])
+        let endpoint = str2nr(split(listlen,'-')[1])
     endif
     let idx1 = startpoint
     while idx1 < endpoint
         if flag ==# foldlevellist[idx1]
             "设置头结点字典成员
-            let &foldlevel=flag -1
-            let start = foldclosed(idx1 + 1)
-            let end = foldclosedend(idx1 + 1)
-            let nodeformat["1-dictname"] = getline(idx1 + 1)
-            let nodeformat["2-dictlen"] = string(start -1) . '-' . string(end -1)
-            "let nodeformat["6-filename"] = filename
-            echo "idx1 " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
+            if flag != 0
+                let &foldlevel=flag -1
+                let start = foldclosed(idx1 + 1)
+                let end = foldclosedend(idx1 + 1)
+                let nodeformat["1-dictname"] = getline(idx1 + 1)
+                let nodeformat["2-dictlen"] = string(start -1) . '-' . string(end -1)
+                "let nodeformat["6-filename"] = filename
+                if matchstr(nodeformat["1-dictname"],'\/\*') ==# ""
+                    echo "idx1 " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
+                endif
+            else
+                let start = 1
+                let end = endpoint
+            endif
             let listlen = string(start -1) . '-' . string(end -1)
             "设置条件判断是否循环获取下一结点
             "if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
@@ -4835,7 +4874,10 @@ function! LoopToDillDictionary(...)
                 while start < end
                     let endnodeformat  = LoopToDillDictionary(dictformart,foldlevellist,listlen,flag + 1,filename)
                     if endnodeformat["2-dictlen"] != "0-0"
-                        let nodeformat["3-dictnodemember"] = add(nodeformat["3-dictnodemember"],endnodeformat)
+                        "通过这个值控制是否加入到数据库
+                        if matchstr(endnodeformat["1-dictname"],'\/\*') ==# ""
+                            let nodeformat["3-dictnodemember"] = add(nodeformat["3-dictnodemember"],endnodeformat)
+                        endif
                         let start = str2nr(split(endnodeformat["2-dictlen"],'-')[1]) + 1
                         let listlen = string(split(endnodeformat["2-dictlen"],"-")[1] + 1) . '-' . string(end -1)
                     else
@@ -4852,6 +4894,25 @@ function! LoopToDillDictionary(...)
 endfunction
 "}}}}}
 
+"{{{{{2   ExtractKeyCodes(...) 提取关键代码
+nnoremap <leader>a :call ExtractKeyCodes()<cr>
+"nnoremap <leader>p i<cr>```c<cr><cr><cr>```<esc>O<cr><esc>kkk"7pjj0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
+function! ExtractKeyCodes(...)
+    "{{{{{3 变量定义
+    let curline = 0
+    let filename = ""
+    let filelist = []
+    let foldlevel = 0
+    "}}}}
+    let curline = line(".")
+    echo curline
+    let filename = expand("%:p")
+    let filelist = readfile(filename)
+    let foldlevel = foldlevel(curline)
+    echo foldlevel
+    echo "tangxinlou1"
+endfunction
+"}}}}}
 "}}}}}
 "{{{{ 定时器
 
@@ -4964,6 +5025,7 @@ function! GrepChars(timer)
     let command = ""
     let searchs = getline(1)
     let searchstarge = []
+    let tempchar = ""
     if g:firstgrepflag ==# 0
         let g:windowgrepid = win_getid()
         let g:firstgrepflag = 1
