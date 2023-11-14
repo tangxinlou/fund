@@ -140,8 +140,6 @@ augroup filetype_make
 augroup END
 augroup filetype_markdown
     "autocmd FileType markdown  setlocal foldmethod=manual syntax marker
-    "autocmd FileType markdown  setlocal foldmethod=indent
-    "autocmd FileType markdown  setlocal foldignore=
     autocmd FileType markdown  setlocal foldmethod=expr
     autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
     autocmd FileType text  setlocal foldmethod=expr
@@ -720,7 +718,7 @@ function! DictTest()
     let nodeformat = {'0path':'xx',
                 \'1matchchar':'xx',
                 \'2structname':'xx',
-                \'5structuremember':'xx',
+                \'5structuremember':[],
                 \'00structuremembername':'xx',
                 \'3structtype':'xx'}
     let char[1003] = "txlws"
@@ -1280,7 +1278,7 @@ function! WaveformGraph(...)
     echo min(Columncoordinates)
 endfunction
 "}}}}}
-"{{{{{2   Openfile(...) 打开python文件触发
+"{{{{{2   Openfile(...) 添加特殊文件头
 function! Openfile()
     "{{{{{3 变量定义
     let pythonfile = ""
@@ -3847,7 +3845,6 @@ function! FillingAcountDataBase(...)
 endfunction
 "}}}}}
 "{{{{{2   PopulateAmountPanel(...)  填充资金面板
-nnoremap test :call PopulateAmountPanel()<cr>
 function! PopulateAmountPanel(...)
     "{{{{{3 变量定义
     let indexfiledict = []
@@ -4782,7 +4779,7 @@ function! GetFoldLevel(...)
         let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
-    "execute "normal! :q!\<cr>"
+    execute "normal! :q!\<cr>"
     "execute "normal! :bd\<cr>"
     return foldlist
 endfunction
@@ -4800,25 +4797,49 @@ function! ParseCodeFiles(...)
                 \"2-dictlen":"0-0",
                 \"3-dictnodemember":[],
                 \}
-"                \"4-dictnodemembername":[],
-"                \"5-dictAssignmentmember":"0-0",
-"                \"6-filename":"xx",
+    "                \"4-dictnodemembername":[],
+    "                \"5-dictAssignmentmember":"0-0",
+    "                \"6-filename":"xx",
     let foldlevellist = []
     let idx1 = 0
     let flag = 0
     let codedict = []
     let startpoint = 0
+    let codelist = []
+    let winwidthnum = 0
+    let line = 0
+    let col = 0
+    let winnrnum = 0
     "}}}}
-    let filename = Homedir("txl/aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    let winnrnum = tabpagewinnr(tabpagenr(),'$')
+    echo winnrnum
+    if winnrnum  >  1
+        execute "normal! \<c-w>h"
+        execute "normal! :q!\<cr>"
+        execute "normal! :tabn\<cr>"
+        execute "normal! :q!\<cr>"
+    endif
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
     "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
-    "let filename = expand("%:p")
+    let filename = expand("%:p")
+    let line = line('.')
+    let col = col('.')
+    call FormatCode(filename)
     let filelist = readfile(filename)
     let foldlevellist = GetFoldLevel(filename)
-    let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename)
+    let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
+    let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+    execute "normal! :vne\<cr>"
+    execute "vert resize " . winwidthnum
+    call setline(1,codelist)
     execute "normal! :tabnew\<cr>"
     call setline(1,string(codedict))
+    execute "normal! :tabp\<cr>"
+    execute "normal! \<c-w>l"
+    call cursor(line,col)
+    let &foldlevel=100
+    let @/ = " 1 .*$"
     "echo codedict
-
 endfunction
 "}}}}}
 
@@ -4831,6 +4852,7 @@ function! LoopToDillDictionary(...)
     let listlen = a:3
     let flag = copy(a:4)
     let filename = a:5
+    let codelist1 = a:6
     let idx1 = 0
     let start = 0
     let end = 0
@@ -4839,6 +4861,9 @@ function! LoopToDillDictionary(...)
     let startpoint = 0
     let endpoint = 0
     let endnodeformat  = {}
+    let tempchar = ""
+    let tempchar1 = "├── "
+    let tempchar2 = "│   "
     "}}}}
     "字典拷贝一定要deepcopy,不然字典里面第二层成员还是同一个地址
     let nodeformat = deepcopy(dictformart)
@@ -4861,7 +4886,10 @@ function! LoopToDillDictionary(...)
                 let nodeformat["2-dictlen"] = string(start -1) . '-' . string(end -1)
                 "let nodeformat["6-filename"] = filename
                 if matchstr(nodeformat["1-dictname"],'\/\*') ==# ""
-                    echo "idx1 " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
+                    "echo "line " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
+                    let tempchar = ""
+                    let tempchar =  repeat(tempchar2,flag - 1) . tempchar1
+                    let codelist1 = add(codelist1,(idx1 + 1) .  " " . flag . " " . tempchar .  split(nodeformat["1-dictname"],"^\\s\\+")[0])
                 endif
             else
                 let start = 1
@@ -4870,9 +4898,9 @@ function! LoopToDillDictionary(...)
             let listlen = string(start -1) . '-' . string(end -1)
             "设置条件判断是否循环获取下一结点
             "if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
-            if flag < 3
+            if flag < 4
                 while start < end
-                    let endnodeformat  = LoopToDillDictionary(dictformart,foldlevellist,listlen,flag + 1,filename)
+                    let endnodeformat  = LoopToDillDictionary(dictformart,foldlevellist,listlen,flag + 1,filename,codelist1)
                     if endnodeformat["2-dictlen"] != "0-0"
                         "通过这个值控制是否加入到数据库
                         if matchstr(endnodeformat["1-dictname"],'\/\*') ==# ""
@@ -4896,21 +4924,133 @@ endfunction
 
 "{{{{{2   ExtractKeyCodes(...) 提取关键代码
 nnoremap <leader>a :call ExtractKeyCodes()<cr>
-"nnoremap <leader>p i<cr>```c<cr><cr><cr>```<esc>O<cr><esc>kkk"7pjj0"cpli<cr><esc>0"dpi<bs><esc>lki<bs><esc>
 function! ExtractKeyCodes(...)
     "{{{{{3 变量定义
     let curline = 0
     let filename = ""
     let filelist = []
     let foldlevel = 0
+    let codelist = []
+    let idx1 = 0
+    let start = 0
+    let lastfoldlevel = 0
     "}}}}
+    let lastfoldlevel = &foldlevel
+    setlocal foldmethod=syntax
     let curline = line(".")
     echo curline
     let filename = expand("%:p")
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
     echo foldlevel
-    echo "tangxinlou1"
+    let codelist = add(codelist,getline(curline))
+    let idx1 = foldlevel
+    while idx1 > 0
+        let &foldlevel=idx1 -1
+        let start = foldclosed(curline)
+        let codelist = insert(codelist,getline(start))
+        let idx1 -= 1
+    endwhile
+    let codelist = insert(codelist,expand("%:p").':'. curline .':')
+    let &foldlevel=lastfoldlevel
+    let @d = string(codelist)
+endfunction
+"}}}}}
+
+"{{{{{2   FillInNotes(...) 填充关键代码
+nnoremap <leader>p :call FillInNotes()<cr>
+"```c
+"由什么搜索过来的
+"代码流程图上的注释
+"文件+行数
+"code
+"```
+function! FillInNotes(...)
+    "{{{{{3 变量定义
+    let codelist = []
+    "}}}}
+    let codelist = eval(@d)
+    let codelist = insert(codelist,"")
+    let codelist = insert(codelist,@7)
+    let codelist = insert(codelist,"")
+    let codelist = insert(codelist,"")
+    let codelist = insert(codelist,"```c")
+    let codelist = add(codelist,"```")
+    call setline(line("."),codelist)
+endfunction
+"}}}}}
+
+"{{{{{2   FormatCode(...) 格式化文件
+nnoremap test  :call FormatCode()<cr>
+function! FormatCode(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let filelist = []
+    let filelen = 0
+    let idx1 = 0
+    let left = 0
+    let right = 0
+    let tempchar = 0
+    let start = 0
+    let end = 0
+    let flag = 0
+    let up = 0
+    let middle = 0
+    let down = 0
+    let col = 0
+    let col1 = 0
+    "}}}}
+    "把所有括号变成一行
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
+    execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+    setlocal foldmethod=syntax
+    let filelen = line('$')
+    let idx1 = 1
+    let tempchar = ""
+    while idx1 <= filelen
+        let flag = 0
+        let tempchar = getline(idx1)
+        let left = count(tempchar,'(')
+        let right = count(tempchar,')')
+        if  matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)
+            call cursor(idx1,0)
+            let end = idx1
+            execute "normal! $F)%"
+            let start = line('.')
+            if left != right && start < end
+                let flag = 1
+            endif
+            if flag ==# 1
+                execute ":" . (start + 1) . "," . end . "y"
+                let tempchar = @@
+                if matchstr(tempchar,"//") != ""
+                    execute ":" . (start + 1) . "," . end . "s/\\/\\/.*$//g"
+                endif
+                execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
+                call cursor(start,0)
+                execute ":" . start . "," . (end - 1) . ":s/\\n//g"
+                execute "normal! \<esc>"
+                let filelen = line('$')
+                let idx1 = start -3
+            endif
+        else
+            if left != right
+                call cursor(idx1,0)
+                let start = idx1
+                call execute("normal! 0f(")
+                let col = col('.')
+                call execute("normal! 0f(%")
+                let col1 = col('.')
+                let end = line('.')
+                if start ==# end && count(tempchar,'(') != 0 && col ==# col1
+                    call cursor(idx1,0)
+                    execute "normal! dd"
+                endif
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    execute "normal! :wq!\<cr>"
 endfunction
 "}}}}}
 "}}}}}
@@ -5031,6 +5171,10 @@ function! GrepChars(timer)
         let g:firstgrepflag = 1
     endif
     if  g:windowgrepid != win_getid()
+        if @@ != ""
+            call setline(1,@@)
+            call cursor(1,0)
+        endif
         return
     endif
     if g:lastgrepfilter ==# searchs
@@ -5400,7 +5544,7 @@ function! VisualiZationcsv(...)
     let charinterval = a:2
     "}}}}
     if &filetype ==# "csv"
-    let templist = [""]       "手动修改默认添加的字符串
+        let templist = [""]       "手动修改默认添加的字符串
     endif
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     if mode ==# 1
@@ -5471,14 +5615,14 @@ function! PythonTest()
     let pythontest = ""
     let path = "par from vimscript into python"
     "}}}}
-python3 <<EOM
+    python3 <<EOM
     import vim
     import os
     var = vim.eval("path")
     print(var)
     var = "%s,add string in python now"%var
     vim.command("let path = '%s'"%var)
-EOM
+    EOM
     echo "tangxinlou"
     echo path
 endfunction
@@ -5497,7 +5641,7 @@ function! WidChanged()
     let windowinfo[0].width = 50
     let windowinfo[0].height = 6
     "echo windowinfo
-    call  execute(["1resize 46","vert 1resize 135"])
+    call  execute(["1resize 32","vert 1resize 135"])
     "call  execute("vert resize 135")
     "call  execute('vert 1resize 135')
 endfunction
@@ -5513,3 +5657,6 @@ endfunction
 
 "forgroundTimeForWifi.\{,20}",
 "%g!/唐新楼重新指派了缺陷/d
+"g/```c\_.\{-}\ze```/yank B | quit
+"%s/```c\_.\{-}\ze```/\=setreg('A', submatch(0), 'l')/gn
+"find -iname . -type d -name 'out_*' | xargs rm -rf
