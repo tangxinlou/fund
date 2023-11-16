@@ -112,7 +112,7 @@ endif
 "iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname
-iabbrev grep grep -Esinr
+iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
 iabbrev gitstatus git status .
 iabbrev gitreflog git reflog
@@ -320,7 +320,8 @@ nnoremap <leader>lcd :lcd %:p:h
 "打开选中的的文件,并新开一个tap
 "omap i:  f:lvf:h
 "nnoremap <leader>y :normal! yt:<cr>
-nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
+"nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
+nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>
 nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
 "打开find搜索的文件
@@ -1302,46 +1303,109 @@ function! SimplifySearchResults(...)
     let Log = []              "打印
     let judge = []            "判断
     let Comment = []          "注释
+    let TEST = []             "test
     let idx1 = 0
     let command = ""
-    let searchstarge = a:1
+    let judgechar = ["if","for"]
+    let searchstarge = ""
     let temchar = ""
     let tempchar = ""
     "}}}}
-    "let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
-    "let searchstarge =  system(command)
-    let searchstarge = split(searchstarge,"\n")
+    if a:0 ==# 0
+        let searchstarge = []
+        let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+        let searchstarge =  system(command)
+        let searchstarge = split(searchstarge,"\n")
+    else
+        let searchstarge = a:1
+        let searchstarge = split(searchstarge,"\n")
+        if len(searchstarge) ==# 0
+            return []
+        endif
+    endif
     while idx1 < len(searchstarge)
         let temchar = split(searchstarge[idx1],":")[2]
-        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":",join(split(searchstarge[idx1],":")[2:])]
-        if len(split(temchar,"\x00")) != 1
-            if matchstr(temchar,"log") != ""
-                let Log = add(Log,tempchar)
-            elseif matchstr(temchar,";") != ""
-                if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
-                    let definition  = add(definition,tempchar)
-                else
-                    let transfer1 = add(transfer1,tempchar)
-                endif
-            elseif matchstr(temchar," if") != "" || matchstr(temchar," for") != ""
-                let judge = add(judge,tempchar)
-            elseif matchstr(temchar,"//") != ""
-                let Comment = add(Comment,tempchar)
-            else
-                if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]             
+        if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
+            if len(split(temchar,"\x00")) != 1
+                if matchstr(temchar,"log") != ""
+                    let Log = add(Log,tempchar)
+                elseif matchstr(temchar,";") != ""
+                    if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
+                        let definition  = add(definition,tempchar)
+                    else
+                        let transfer1 = add(transfer1,tempchar)
+                    endif
+                elseif JudgeString(judgechar,temchar)
+                    let judge = add(judge,tempchar)
+                elseif matchstr(temchar,"//") != ""
                     let Comment = add(Comment,tempchar)
                 else
-                    let definition = add(definition,tempchar)
+                    if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                        let Comment = add(Comment,tempchar)
+                    else
+                        let definition = add(definition,tempchar)
+                    endif
                 endif
+            else
+                let transfer = add(transfer,tempchar)
             endif
         else
-            let transfer = add(transfer,tempchar)
+            let TEST = add(TEST,tempchar)
         endif
         let idx1 += 1
     endwhile
+    let definition = insert(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = insert(definition,["定义"])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["长度小于1被识别成调用"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,transfer)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["语句里面有分号识别调用"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,transfer1)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["判断"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,judge)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["打印"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,Log)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["注释"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,Comment)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    "let definition = add(definition,["test"])
+    "let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    "let definition = extend(definition,TEST)
+    "let definition = add(definition,[">>>>>>>>>>>>>>>"])
     let definition = ListTo1D(definition,"█")
     let definition = ListAddSpaces(definition,"█")
-    return definition
+    if a:0 ==# 0
+        call append(line('.'),definition)
+    else
+        return definition
+    endif
+endfunction
+"}}}}}
+"{{{{{2   JudgeString(...) 判断string是否对应char
+function! JudgeString(...)
+    "{{{{{3 变量定义
+    let idx1 = 0
+    let char = a:1
+    let string = a:2
+    "}}}}
+    let idx1 = 0
+    while idx1 < len(char)
+        if matchstr(string,char[idx1]) != ""
+            return 1
+        endif
+        let idx1 += 1
+    endwhile
+    return 0
 endfunction
 "}}}}}
 "}}}}
@@ -4934,12 +4998,14 @@ function! ExtractKeyCodes(...)
     let idx1 = 0
     let start = 0
     let lastfoldlevel = 0
+    let tempchar = ""
     "}}}}
     let lastfoldlevel = &foldlevel
     setlocal foldmethod=syntax
-    let curline = line(".")
-    echo curline
+    let tempchar = getline(line('.'))
     let filename = expand("%:p")
+    call FormatCode(filename)
+    let curline = search(tempchar)
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
     echo foldlevel
@@ -4981,7 +5047,6 @@ endfunction
 "}}}}}
 
 "{{{{{2   FormatCode(...) 格式化文件
-nnoremap test  :call FormatCode()<cr>
 function! FormatCode(...)
     "{{{{{3 变量定义
     let filename = a:1
@@ -5015,21 +5080,21 @@ function! FormatCode(...)
         if  matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)
             call cursor(idx1,0)
             let end = idx1
-            execute "normal! $F)%"
+            silent execute "normal! $F)%"
             let start = line('.')
             if left != right && start < end
                 let flag = 1
             endif
             if flag ==# 1
-                execute ":" . (start + 1) . "," . end . "y"
+                silent execute ":" . (start + 1) . "," . end . "y"
                 let tempchar = @@
                 if matchstr(tempchar,"//") != ""
-                    execute ":" . (start + 1) . "," . end . "s/\\/\\/.*$//g"
+                    silent execute ":" . (start + 1) . "," . end . "s/\\/\\/.*$//g"
                 endif
-                execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
+                silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
-                execute ":" . start . "," . (end - 1) . ":s/\\n//g"
-                execute "normal! \<esc>"
+                silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
+                silent execute "normal! \<esc>"
                 let filelen = line('$')
                 let idx1 = start -3
             endif
@@ -5037,14 +5102,14 @@ function! FormatCode(...)
             if left != right
                 call cursor(idx1,0)
                 let start = idx1
-                call execute("normal! 0f(")
+                silent call execute("normal! 0f(")
                 let col = col('.')
-                call execute("normal! 0f(%")
+                silent call execute("normal! 0f(%")
                 let col1 = col('.')
                 let end = line('.')
                 if start ==# end && count(tempchar,'(') != 0 && col ==# col1
                     call cursor(idx1,0)
-                    execute "normal! dd"
+                    silent execute "normal! dd"
                 endif
             endif
         endif
@@ -5109,6 +5174,8 @@ function! Searcher()
     let tempname = ""
     let timeinfo = timer_info()
     let winwidthnum  = 0
+    let timerflag = 0
+    let timerid = 0
     if g:windowfindid != win_getid() && g:windowfindid != 0
         if win_gotoid(g:windowfindid) ==# 1
             return
@@ -5126,22 +5193,25 @@ function! Searcher()
             redraw
         endif
     endif
-    echo "是否有定时器，0 没有 1有" len(timeinfo)
     if  len(timeinfo) > 0
-        echo "准备清空定时器"
         let idx1 = 0
         while idx1 <  len(timeinfo)
             let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
-            call timer_stop(timeinfo[idx1]["id"])
             if  count(funtionname,tempname)
                 if tempname ==# "FindFiles"
-                    echo "有这个定时器回调函数"
-                    let g:firstfindflag = 0
-                    let g:windowfindid = 0
+                    let timerflag = 1
+                    let timerid = idx1
                 endif
             endif
             let idx1 += 1
         endwhile
+    endif
+    if  timerflag  ==#  1
+        echo "有这个定时器回调函数清除"
+        call timer_stop(timeinfo[timerid]["id"])
+        let g:firstfindflag = 0
+        let g:windowfindid = 0
+
     else
         let timer = timer_start(200, 'FindFiles', {'repeat': -1})
         echo "开启定时器" timer
@@ -5161,20 +5231,17 @@ function! GrepChars(timer)
     let searchs = ""
     let idx1 = 0
     let idj1 = 0
-    let clear = [""]
     let command = ""
     let searchs = getline(1)
     let searchstarge = []
     let tempchar = ""
+    let line = 0
+    let col = 0
     if g:firstgrepflag ==# 0
         let g:windowgrepid = win_getid()
         let g:firstgrepflag = 1
     endif
     if  g:windowgrepid != win_getid()
-        if @@ != ""
-            call setline(1,@@)
-            call cursor(1,0)
-        endif
         return
     endif
     if g:lastgrepfilter ==# searchs
@@ -5193,22 +5260,30 @@ function! GrepChars(timer)
         let tempchar = searchs[1:]
         let searchs = ' ' . join(tempchar,".*")
     else
+        if searchs[-1] ==# ''
+            call remove(searchs,-1)
+        endif
         let searchs = join(searchs,".*")
     endif
-    let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+    let command = "grep -EsinR --include=*{.c,.cc,.cpp,.java,.h} " . "'" . searchs . "'"
     echo command
     if @/ != searchs
         let @/ = substitute(searchs , '\\(', '(', 'g')
     endif
     let searchstarge =  system(command)
     let searchstarge = SimplifySearchResults(copy(searchstarge))
-    if len(searchstarge) > 300
-        let searchstarge  = searchstarge[0:300]
+    if line('$') > 3
+        let line = line('.')
+        let col = col('.')
+        execute "normal! \<esc>"
+        silent execute ":" . 2 . "," . line('$') . "d"
+        execute "normal! i"
+        call cursor(line,col)
+        redraw
     endif
-    let clear =  repeat([""],g:lastgreplen)
-    call setline(2, clear)
-    call setline(2, searchstarge)
+    call setline(2,searchstarge)
     let g:lastgreplen = len(searchstarge)
+    let @@ = ""
     redraw
 endfunction
 "}}}}}
@@ -5223,8 +5298,14 @@ function! SearcherChars()
     let tempname = ""
     let timeinfo = timer_info()
     let winwidthnum  = 0
+    let timerflag = 0
+    let timerid = 0
     if g:windowgrepid != win_getid() && g:windowgrepid != 0
         if win_gotoid(g:windowgrepid) ==# 1
+            if @@ != ""
+                call setline(1,@@)
+                call cursor(1,0)
+            endif
             return
         endif
     else
@@ -5240,22 +5321,27 @@ function! SearcherChars()
             redraw
         endif
     endif
-    echo "是否有定时器，0 没有 1有" len(timeinfo)
+    "是否有当前搜索器
     if  len(timeinfo) > 0
-        echo "准备清空定时器"
         let idx1 = 0
         while idx1 <  len(timeinfo)
             let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
-            call timer_stop(timeinfo[idx1]["id"])
             if  count(funtionname,tempname)
                 if tempname ==# "GrepChars"
-                    echo "有这个定时器回调函数"
-                    let g:firstgrepflag = 0
-                    let g:windowgrepid = 0
+                    let timerflag  = 1
+                    let timerid = idx1
                 endif
             endif
             let idx1 += 1
         endwhile
+    endif
+
+    "有搜索器就把当前搜索器停掉,没有就新建
+    if  timerflag ==#  1
+        echo "有这个定时器回调函数,清除"
+        call timer_stop(timeinfo[timerid]["id"])
+        let g:firstgrepflag = 0
+        let g:windowgrepid = 0
     else
         let timer = timer_start(200, 'GrepChars', {'repeat': -1})
         echo "开启定时器" timer
@@ -5615,14 +5701,14 @@ function! PythonTest()
     let pythontest = ""
     let path = "par from vimscript into python"
     "}}}}
-    python3 <<EOM
-    import vim
-    import os
-    var = vim.eval("path")
-    print(var)
-    var = "%s,add string in python now"%var
-    vim.command("let path = '%s'"%var)
-    EOM
+python3 <<EOM
+import vim
+import os
+var = vim.eval("path")
+print(var)
+var = "%s,add string in python now"%var
+vim.command("let path = '%s'"%var)
+EOM
     echo "tangxinlou"
     echo path
 endfunction
@@ -5654,7 +5740,6 @@ endfunction
 "echo winheight('%') winwidth('%')
 "set lines=35 columns=118
 "winrestcmd()
-
 "forgroundTimeForWifi.\{,20}",
 "%g!/唐新楼重新指派了缺陷/d
 "g/```c\_.\{-}\ze```/yank B | quit
