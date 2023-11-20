@@ -321,11 +321,11 @@ nnoremap <leader>lcd :lcd %:p:h
 "omap i:  f:lvf:h
 "nnoremap <leader>y :normal! yt:<cr>
 "nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
-nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>
-nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
-nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>
+nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
 "打开find搜索的文件
-nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>q:ie <esc>p<cr>
+nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
 "{{{{{2   全局变量
@@ -509,6 +509,7 @@ function! s:Shellfunc(type)
     while c <= a:Order[3]
         call cursor(c,1)
         silent execute "normal! ^v$hy"
+        silent echo  a:instruc . " " . @@
         silent call system(a:instruc . " " . @@)
         let c += 1
     endwhile
@@ -1066,8 +1067,8 @@ function! AddLineNumber(...)
             let idx1 += 1
         endwhile
     else
-        "execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
-        execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
+        execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+        "execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
     endif
 
     "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
@@ -1325,7 +1326,7 @@ function! SimplifySearchResults(...)
     endif
     while idx1 < len(searchstarge)
         let temchar = split(searchstarge[idx1],":")[2]
-        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]             
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
         if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
             if len(split(temchar,"\x00")) != 1
                 if matchstr(temchar,"log") != ""
@@ -4500,7 +4501,7 @@ function! SelectCode(...)
 endfunction
 "}}}}}
 
-"{{{{{2   TraverseNodes(...) 遍历结构体
+"{{{{{2 function!  TraverseNodes(...)            遍历结构体                    普通模式<F8>调用
 "nnoremap <F8>  :call TraverseNodes("/opt6/tangxinlouosc/aosp/packages/modules/Bluetooth/system/bta/av/bta_av_int.h","union tBTA_AV_DATA {")<cr>
 nnoremap <F8>  :call TraverseNodes("tBTA_AV_DATA")<cr>
 "nnoremap <F8>  :call TraverseNodes("tAVRC_MSG")<cr>
@@ -4844,12 +4845,12 @@ function! GetFoldLevel(...)
         let idx1 += 1
     endwhile
     execute "normal! :q!\<cr>"
-    "execute "normal! :bd\<cr>"
+    execute "normal! :bd" . bufnr('$') ."\<cr>"
     return foldlist
 endfunction
 "}}}}}
 
-"{{{{{2   ParseCodeFiles(...) 解析代码文件
+"{{{{{2 function!  ParseCodeFiles(...)           解析代码文件                  普通模式par调用
 nnoremap par :call ParseCodeFiles()<cr>
 function! ParseCodeFiles(...)
     "{{{{{3 变量定义
@@ -4999,8 +5000,12 @@ function! ExtractKeyCodes(...)
     let start = 0
     let lastfoldlevel = 0
     let tempchar = ""
+    let realityline = 0
+    let col = 0
     "}}}}
     let lastfoldlevel = &foldlevel
+    let realityline = line('.')
+    let col = col('.')
     setlocal foldmethod=syntax
     let tempchar = getline(line('.'))
     let filename = expand("%:p")
@@ -5017,7 +5022,10 @@ function! ExtractKeyCodes(...)
         let codelist = insert(codelist,getline(start))
         let idx1 -= 1
     endwhile
-    let codelist = insert(codelist,expand("%:p").':'. curline .':')
+    let codelist = insert(codelist,expand("%:p").':'. realityline  .':')
+    silent call system("git checkout .")
+    silent execute "normal! :e " . filename "\<cr>"
+    silent call cursor(realityline,col)
     let &foldlevel=lastfoldlevel
     let @d = string(codelist)
 endfunction
@@ -5116,6 +5124,7 @@ function! FormatCode(...)
         let idx1 += 1
     endwhile
     execute "normal! :wq!\<cr>"
+    execute "normal! :bd" . bufnr('$') ."\<cr>"
 endfunction
 "}}}}}
 "}}}}}
@@ -5209,6 +5218,7 @@ function! Searcher()
     if  timerflag  ==#  1
         echo "有这个定时器回调函数清除"
         call timer_stop(timeinfo[timerid]["id"])
+        silent execute "normal! :close " . g:windowfindid . "\<cr>"
         let g:firstfindflag = 0
         let g:windowfindid = 0
 
@@ -5340,6 +5350,7 @@ function! SearcherChars()
     if  timerflag ==#  1
         echo "有这个定时器回调函数,清除"
         call timer_stop(timeinfo[timerid]["id"])
+        silent execute "normal! :close " . g:windowgrepid . "\<cr>"
         let g:firstgrepflag = 0
         let g:windowgrepid = 0
     else
