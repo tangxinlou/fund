@@ -321,7 +321,8 @@ nnoremap <leader>lcd :lcd %:p:h
 "omap i:  f:lvf:h
 "nnoremap <leader>y :normal! yt:<cr>
 "nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
-nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+"nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+nnoremap <leader>cd  :call SmartFileSwitching()<cr>
 nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
 nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
 "打开find搜索的文件
@@ -1379,10 +1380,10 @@ function! SimplifySearchResults(...)
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
     let definition = extend(definition,Comment)
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    "let definition = add(definition,["test"])
-    "let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    "let definition = extend(definition,TEST)
-    "let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["test"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,TEST)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
     let definition = ListTo1D(definition,"█")
     let definition = ListAddSpaces(definition,"█")
     if a:0 ==# 0
@@ -1407,6 +1408,71 @@ function! JudgeString(...)
         let idx1 += 1
     endwhile
     return 0
+endfunction
+"}}}}}
+"{{{{{2   SmartFileSwitching(...) 智能切换文件
+function! SmartFileSwitching(...)
+    "{{{{{3 变量定义
+    let filename = ""
+    let path = ""
+    let line = 1
+    let curwinid = 0
+    let targetwinid = 0
+    let bufinfo = ""
+    let curlinestring = ""
+    let bufinfoflag = 0
+    let idx1 = 0
+    "}}}}
+    let curlinestring  = getline('.')
+    let curwinid = win_getid()
+    let bufinfo = getbufinfo()
+    "call setline(1,string(getbufinfo()))
+    "call setline(2,string(split(execute(":ls"),'\n')))
+    if curwinid ==# g:windowfindid
+        let path = curlinestring
+        let filename = split(path,'/')[-1]
+        echo filename
+    elseif curwinid ==# g:windowgrepid
+        let curlinestring = split(curlinestring,'█')[0]
+        let path = split(curlinestring,':')[0]
+        let line = split(curlinestring,':')[1]
+        let filename = split(path,'/')[-1]
+    else
+        let path = split(curlinestring,'|')[0]
+        let line = split(curlinestring,'|')[1]
+        let filename = split(path,'/')[-1]
+    endif
+    let idx1 = 0
+    while idx1 < len(bufinfo)
+        if matchstr(string(bufinfo[idx1]),filename) != ""
+            if len(bufinfo[idx1]["windows"]) > 0
+                let targetwinid = bufinfo[idx1]["windows"][0]
+            else
+                let targetwinid = 0
+            endif
+            if line ==# 1
+                let line = bufinfo[idx1]["lnum"]
+            endif
+            let bufinfoflag = bufinfo[idx1]["bufnr"]
+        endif
+        let idx1 += 1
+    endwhile
+    if bufinfoflag ==# 0
+        silent execute "normal! \<c-w>k"
+        silent execute "normal! :e "  . path . "\<cr>"
+        call cursor(line,0)
+    else
+        if targetwinid ==# 0
+            silent execute "normal! \<c-w>k"
+            silent execute "normal! :b" . bufinfoflag . "\<cr>"
+            call cursor(line,0)
+        else
+            silent call win_gotoid(targetwinid)
+            call cursor(line,0)
+        endif
+    endif
+    setlocal foldmethod=syntax
+    let &foldlevel=100
 endfunction
 "}}}}}
 "}}}}
@@ -4875,31 +4941,33 @@ function! ParseCodeFiles(...)
     let line = 0
     let col = 0
     let winnrnum = 0
+    let winid = 0
     "}}}}
     let winnrnum = tabpagewinnr(tabpagenr(),'$')
     echo winnrnum
     if winnrnum  >  1
         execute "normal! \<c-w>h"
         execute "normal! :q!\<cr>"
-        execute "normal! :tabn\<cr>"
-        execute "normal! :q!\<cr>"
+        "execute "normal! :tabn\<cr>"
+        "execute "normal! :q!\<cr>"
     endif
-    "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
-    "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
+    let winid = win_getid()
     let filename = expand("%:p")
     let line = line('.')
     let col = col('.')
     call FormatCode(filename)
     let filelist = readfile(filename)
     let foldlevellist = GetFoldLevel(filename)
+    call win_gotoid(winid)
     let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
     let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+    call win_gotoid(winid)
     execute "normal! :vne\<cr>"
     execute "vert resize " . winwidthnum
     call setline(1,codelist)
-    execute "normal! :tabnew\<cr>"
-    call setline(1,string(codedict))
-    execute "normal! :tabp\<cr>"
+    "execute "normal! :tabnew\<cr>"
+    "call setline(1,string(codedict))
+    "execue "normal! :tabp\<cr>"
     execute "normal! \<c-w>l"
     call cursor(line,col)
     let &foldlevel=100
@@ -5170,6 +5238,7 @@ function! FindFiles(timer)
     call setline(2, searchstarge)
     let g:lastfilter = searchs
     let g:lastfindlen = len(searchstarge)
+    redraw
 endfunction
 "}}}}}
 
@@ -5534,12 +5603,11 @@ function! UpdateTreeContens(...)
     let len = 0
     let idx1 = 0
     let index = 0
-    let tempchar = ""
-    let tempchar1 = ""
+    let filename = ""
+    let description = ""
     "}}}}
     let contensfile = readfile(expand("%:p"))
-    let curcontesfile = split(system("tree -L 4"),"\n")[1:-3]
-    echo curcontesfile
+    let curcontesfile = split(system("tree -L 20"),"\n")[1:-3]
     if count(contensfile ,"<<<<<<<<<<<<<<<<") && count(contensfile ,">>>>>>>>>>>>>>>")
         echo "之前修改过"
         let src = index(contensfile,"<<<<<<<<<<<<<<<<")
@@ -5547,36 +5615,27 @@ function! UpdateTreeContens(...)
         let prvcontesfile = contensfile[src + 1:tail - 1]
         call remove(contensfile,src,tail)
         echo src tail
-        let idx1 = 0
-        while idx1 < len(curcontesfile)
-            if len(split(curcontesfile[idx1])) > 1
-                let tempchar =  split(curcontesfile[idx1])[1]
-                let tempchar1 = ""
-                let tempchar1 = IsContain(tempchar,prvcontesfile)
-                if tempchar1 != ""
-                    "echo "tangxinlou1"
-                    let curcontesfile[idx1] = tempchar1
-                else
-                    echo  tempchar
-                    let tempchar1 = GetItemFromFile("Description  ",tempchar)
-                    if tempchar1 != ""
-                        let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ",52 - strwidth(curcontesfile[idx1]) - 1),join(split(split(tempchar1,":")[1],"\x00"))],"|")
-                    endif
-                    echo "tangxinlou2"
-                endif
-            endif
-            let idx1 += 1
-        endwhile
     else
         echo "第一次生成目录"
-        return
     endif
+    let idx1 = 0
+    while idx1 < len(curcontesfile)
+        if len(split(curcontesfile[idx1])) > 1
+            let filename  =  split(curcontesfile[idx1])[-1]
+            let description = GetItemFromFile("Description  :",filename)
+            if description != ""
+                echo  filename
+                echo description
+                let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ", 80 - strwidth(curcontesfile[idx1]) - 1),"  " . join(split(split(description,":")[1],"\x00"))],"█")
+            endif
+        endif
+        let idx1 += 1
+    endwhile
     let curcontesfile = insert(curcontesfile,"<<<<<<<<<<<<<<<<")
     let curcontesfile = add(curcontesfile,">>>>>>>>>>>>>>>")
     call extend(contensfile,curcontesfile,9)
-    if "yes" ==# input("是否更新目录")
-        call writefile(contensfile,expand("%:p"))
-    endif
+    call writefile(contensfile,expand("%:p"))
+    silent execute "normal! :e "  . expand("%:p") . "\<cr>"
 endfunction
 "}}}}}
 "{{{{{2 GetItemFromFile(...)             获取对应文件的某一项
@@ -5590,17 +5649,16 @@ function! GetItemFromFile(...)
     "}}}}
     let string = a:1
     let files = a:2
-    let tempresult = system("find -iname " . files)
+    let tempresult = system("find -iname " . files . " -type f")
     if  len(split(tempresult,"\n")) ==# 1
         let path = split(tempresult,"\n")[0]
+        let files = readfile(path)
+        let tempchar1 = ""
+        let tempchar1 = IsContain(string,files)
+        return  tempchar1
     else
-        echo "有相同文件名的文件"
-        return
+        return ""
     endif
-    let files = readfile(path)
-    let tempchar1 = ""
-    let tempchar1 = IsContain(string,files)
-    return  tempchar1
 endfunction
 "}}}}}
 "}}}}
