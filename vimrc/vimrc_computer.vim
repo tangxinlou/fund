@@ -169,6 +169,35 @@ augroup testgroup
     "保存文件是自动打印
     autocmd BufWrite * :echom "cat"
 augroup END
+"开始清除寄存器
+""ab7lud已使用
+"g 定时器 grep 历史搜素词
+"f 定时器 find 历史搜素词
+"let @" = ""
+"let @0 = ""
+"let @1 = ""
+"let @2 = ""
+"let @3 = ""
+"let @4 = ""
+"let @5 = ""
+"let @6 = ""
+"let @7 = ""
+"let @8 = ""
+"let @9 = ""
+"let @a = ""
+"let @b = ""
+"let @c = ""
+"let @d = ""
+"let @h = ""
+"let @i = ""
+"let @j = ""
+"let @k = ""
+"let @l = ""
+"let @s = ""
+"let @u = ""
+"let @w = ""
+"let @z = ""
+"let @- = ""
 "}}}
 "简单的映射i{{{
 "保存
@@ -1306,6 +1335,7 @@ function! SimplifySearchResults(...)
     let judge = []            "判断
     let Comment = []          "注释
     let TEST = []             "test
+    let XML = []              "xml
     let idx1 = 0
     let command = ""
     let judgechar = ["if","for"]
@@ -1328,6 +1358,7 @@ function! SimplifySearchResults(...)
     while idx1 < len(searchstarge)
         let temchar = split(searchstarge[idx1],":")[2]
         let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
+        if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
         if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
             if len(split(temchar,"\x00")) != 1
                 if matchstr(temchar,"log") != ""
@@ -1355,6 +1386,9 @@ function! SimplifySearchResults(...)
         else
             let TEST = add(TEST,tempchar)
         endif
+    else
+        let XML = add(XML,tempchar)
+    endif
         let idx1 += 1
     endwhile
     let definition = insert(definition,["<<<<<<<<<<<<<<<<"])
@@ -1383,6 +1417,10 @@ function! SimplifySearchResults(...)
     let definition = add(definition,["test"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
     let definition = extend(definition,TEST)
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["XML"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,XML)
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
     let definition = ListTo1D(definition,"█")
     let definition = ListAddSpaces(definition,"█")
@@ -1422,6 +1460,7 @@ function! SmartFileSwitching(...)
     let curlinestring = ""
     let bufinfoflag = 0
     let idx1 = 0
+    let register = ""
     "}}}}
     let curlinestring  = getline('.')
     let curwinid = win_getid()
@@ -1431,12 +1470,21 @@ function! SmartFileSwitching(...)
     if curwinid ==# g:windowfindid
         let path = curlinestring
         let filename = split(path,'/')[-1]
-        echo filename
+        let register = getline(1)
+        echo split(@f,'█')
+        if count(split(@f,'█'),register) ==# 0
+            let @f = @f . '█'  . register
+        endif
     elseif curwinid ==# g:windowgrepid
         let curlinestring = split(curlinestring,'█')[0]
         let path = split(curlinestring,':')[0]
         let line = split(curlinestring,':')[1]
         let filename = split(path,'/')[-1]
+        let register = getline(1)
+        echo split(@g,'█')
+        if count(split(@g,'█'),register) ==# 0
+            let @g = @g . '█'  . register
+        endif
     else
         let path = split(curlinestring,'|')[0]
         let line = split(curlinestring,'|')[1]
@@ -5287,7 +5335,7 @@ function! Searcher()
     if  timerflag  ==#  1
         echo "有这个定时器回调函数清除"
         call timer_stop(timeinfo[timerid]["id"])
-        silent execute "normal! :close " . g:windowfindid . "\<cr>"
+        silent execute "normal! :q!\<cr>"
         let g:firstfindflag = 0
         let g:windowfindid = 0
 
@@ -5344,7 +5392,7 @@ function! GrepChars(timer)
         endif
         let searchs = join(searchs,".*")
     endif
-    let command = "grep -EsinR --include=*{.c,.cc,.cpp,.java,.h} " . "'" . searchs . "'"
+    let command = "grep -EsinR --include=*{.c,.cc,.cpp,.xml,.java,.h} " . "'" . searchs . "'"
     echo command
     if @/ != searchs
         let @/ = substitute(searchs , '\\(', '(', 'g')
@@ -5419,7 +5467,7 @@ function! SearcherChars()
     if  timerflag ==#  1
         echo "有这个定时器回调函数,清除"
         call timer_stop(timeinfo[timerid]["id"])
-        silent execute "normal! :close " . g:windowgrepid . "\<cr>"
+        silent execute "normal! :q!\<cr>"
         let g:firstgrepflag = 0
         let g:windowgrepid = 0
     else
