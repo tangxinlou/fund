@@ -170,9 +170,7 @@ augroup testgroup
     autocmd BufWrite * :echom "cat"
 augroup END
 "开始清除寄存器
-""ab7lud已使用
-"g 定时器 grep 历史搜素词
-"f 定时器 find 历史搜素词
+""abc7lud已使用
 "let @" = ""
 "let @0 = ""
 "let @1 = ""
@@ -181,13 +179,15 @@ augroup END
 "let @4 = ""
 "let @5 = ""
 "let @6 = ""
-"let @7 = ""
+"let @7 = "" "保存着当前次数搜索的行
 "let @8 = ""
 "let @9 = ""
-"let @a = ""
-"let @b = ""
-"let @c = ""
-"let @d = ""
+"let @a = "" "保存文件路径
+"let @b = "" "保存文件行数
+"let @c = "" "关键代码行
+"let @d = "" "写文档时关键日志列表
+"let @f = "" "定时器 find 历史搜素词
+"let @g = "" "定时器 grep 历史搜素词
 "let @h = ""
 "let @i = ""
 "let @j = ""
@@ -351,8 +351,9 @@ nnoremap <leader>lcd :lcd %:p:h
 "nnoremap <leader>y :normal! yt:<cr>
 "nnoremap <leader>cd :tabnew<cr>:execute "e" expand(@@)<cr>
 "nnoremap <leader>cd  0"ayt:0f:lvf:h"by0<c-w>k:execute "e" expand(@a)<cr>:@b<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
-nnoremap <leader>cd  :call SmartFileSwitching()<cr>
-nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+nnoremap <leader>cd  :call SmartFileSwitching(1)<cr>
+"nnoremap <leader>cv  0"ayt:0f:lvf:h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
+nnoremap <leader>cv  :call SmartFileSwitching(2)<cr>
 nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>:@b<cr>:tabm<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>
 "打开find搜索的文件
 nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>q:ie <esc>p<cr>
@@ -1461,7 +1462,9 @@ function! SmartFileSwitching(...)
     let bufinfoflag = 0
     let idx1 = 0
     let register = ""
+    let flag = a:1
     "}}}}
+    if flag ==# 1
     let curlinestring  = getline('.')
     let curwinid = win_getid()
     let bufinfo = getbufinfo()
@@ -1471,7 +1474,7 @@ function! SmartFileSwitching(...)
         let path = curlinestring
         let filename = split(path,'/')[-1]
         let register = getline(1)
-        echo split(@f,'█')
+        "echo split(@f,'█')
         if count(split(@f,'█'),register) ==# 0
             let @f = @f . '█'  . register
         endif
@@ -1481,7 +1484,7 @@ function! SmartFileSwitching(...)
         let line = split(curlinestring,':')[1]
         let filename = split(path,'/')[-1]
         let register = getline(1)
-        echo split(@g,'█')
+        "echo split(@g,'█')
         if count(split(@g,'█'),register) ==# 0
             let @g = @g . '█'  . register
         endif
@@ -1517,6 +1520,20 @@ function! SmartFileSwitching(...)
         else
             silent call win_gotoid(targetwinid)
             call cursor(line,0)
+        endif
+    endif
+    elseif flag ==# 2
+        silent execute  "normal! 0\"ayt:0f:lvf:h\"by0"
+        let path = @a
+        let line = @b
+        if &filetype != "markdown"
+            execute "normal! :tabnew " . path  . "\<cr>"
+            silent call cursor(line,0)
+        else
+            let register = getline(line('.') - 2)
+            execute "normal! :tabnew " . path  . "\<cr>"
+            let line = search(register)
+            silent call cursor(line,0)
         endif
     endif
     setlocal foldmethod=syntax
@@ -5120,12 +5137,13 @@ function! ExtractKeyCodes(...)
     let col = 0
     "}}}}
     let lastfoldlevel = &foldlevel
-    let realityline = line('.')
-    let col = col('.')
+    
     setlocal foldmethod=syntax
     let tempchar = getline(line('.'))
     let filename = expand("%:p")
     call FormatCode(filename)
+    let realityline = line('.')
+    let col = col('.')
     let curline = search(tempchar)
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
@@ -5139,7 +5157,7 @@ function! ExtractKeyCodes(...)
         let idx1 -= 1
     endwhile
     let codelist = insert(codelist,expand("%:p").':'. realityline  .':')
-    silent call system("git checkout .")
+    "silent call system("git checkout .")
     silent execute "normal! :e " . filename "\<cr>"
     silent call cursor(realityline,col)
     let &foldlevel=lastfoldlevel
@@ -5151,6 +5169,7 @@ endfunction
 nnoremap <leader>p :call FillInNotes()<cr>
 "```c
 "由什么搜索过来的
+"当前关键代码行
 "代码流程图上的注释
 "文件+行数
 "code
@@ -5161,12 +5180,18 @@ function! FillInNotes(...)
     "}}}}
     let codelist = eval(@d)
     let codelist = insert(codelist,"")
-    let codelist = insert(codelist,@7)
+    let codelist = insert(codelist,codelist[-1]) 
+    if len(@7) > 2
+        let codelist = insert(codelist,@7)
+    else
+        let codelist = insert(codelist,"")
+    endif
     let codelist = insert(codelist,"")
     let codelist = insert(codelist,"")
     let codelist = insert(codelist,"```c")
     let codelist = add(codelist,"```")
     call setline(line("."),codelist)
+    let @7 = ""
 endfunction
 "}}}}}
 
@@ -5428,6 +5453,7 @@ function! SearcherChars()
     let timerflag = 0
     let timerid = 0
     if g:windowgrepid != win_getid() && g:windowgrepid != 0
+        let @7 = getline('.')
         if win_gotoid(g:windowgrepid) ==# 1
             if @@ != ""
                 call setline(1,@@)
