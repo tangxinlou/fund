@@ -1495,7 +1495,7 @@ function! SmartFileSwitching(...)
     endif
     let idx1 = 0
     while idx1 < len(bufinfo)
-        if matchstr(string(bufinfo[idx1]),filename) != ""
+        if matchstr(string(bufinfo[idx1]),split(path,'\./')[0]) != ""
             if len(bufinfo[idx1]["windows"]) > 0
                 let targetwinid = bufinfo[idx1]["windows"][0]
             else
@@ -4346,6 +4346,7 @@ endfunction
 
 "{{{{{  ListKeyWords()  获取关键词
 function! ListKeyWords(...)
+    "{{{{{3 变量定义
     let listwords = a:1
     let idx1 = 0
     let line = ""
@@ -4382,22 +4383,34 @@ function! ListKeyWords(...)
                 \ 'const',
                 \ 'private',
                 \ 'public']
+    let codeidx1 = 0
+    "}}}}}
     while idx1 < len(listwords)
         if "" != matchstr(listwords[idx1],g:homedir)
-            let tempvalue = split(listwords[0],"|")
-            "echo "debug" tempvalue[1]  idx1
-            let tempvalue[1] =  idx1 + tempvalue[1] + 1
-            let listwords[0] = join(tempvalue,"|")
             let filename = split(split(listwords[idx1],":")[0],"/")
             let filename = filename[len(filename) - 1]
-            let line = split(listwords[idx1],":")[1]
             let filenameidx1 = idx1
+        endif
+        if "" != matchstr(listwords[idx1],") {") && "" ==# matchstr(listwords[idx1],";") &&  "" != matchstr(listwords[idx1],"(") && len(split(split(listwords[idx1],"(")[0])) > 1
+            let tempvalue = split(listwords[0],"|")
+            "echo "debug" tempvalue[1]  idx1
+            let tempvalue[1] =  idx1 + tempvalue[1]
+            let listwords[0] = join(tempvalue,"|")
+            let codeidx1 = idx1
         endif
         let idx1 += 1
     endwhile
-    let codeline = split(listwords[0],"|")[1]
     "找到了文件名，刷选文件名下一行的关键词
-    let templist = split(listwords[filenameidx1 + 1],"\x00")
+    if codeidx1 ==# 0 
+        let tempvalue = split(listwords[0],"|")
+        "echo "debug" tempvalue[1]  idx1
+        let tempvalue[1] =  idx1 + tempvalue[1]
+        let listwords[0] = join(tempvalue,"|")
+        let codeidx1 = filenameidx1 + 1
+    endif
+    "echo listwords[0] debug 行数
+    let codeline = split(listwords[0],"|")[1]
+    let templist = split(listwords[codeidx1],"\x00")
     echo templist
     if count(storagekeywords,templist[0])
         let isstorage = 1
@@ -5144,7 +5157,7 @@ function! ExtractKeyCodes(...)
     call FormatCode(filename)
     let realityline = line('.')
     let col = col('.')
-    let curline = search(tempchar)
+    let curline = line('.')
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
     echo foldlevel
@@ -5181,7 +5194,7 @@ function! FillInNotes(...)
     let codelist = eval(@d)
     let codelist = insert(codelist,"")
     let codelist = insert(codelist,codelist[-1]) 
-    if len(@7) > 2
+    if len(@7) > 1
         let codelist = insert(codelist,@7)
     else
         let codelist = insert(codelist,"")
