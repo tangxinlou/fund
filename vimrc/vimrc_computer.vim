@@ -169,8 +169,11 @@ augroup testgroup
     "保存文件是自动打印
     autocmd BufWrite * :echom "cat"
 augroup END
+
+"}}}
+"寄存器{{{
 "开始清除寄存器
-""abc7lud已使用
+""abcilud已使用
 "let @" = ""
 "let @0 = ""
 "let @1 = ""
@@ -179,17 +182,17 @@ augroup END
 "let @4 = ""
 "let @5 = ""
 "let @6 = ""
-"let @7 = "" "保存着当前次数搜索的行
+"let @7 = ""
 "let @8 = ""
 "let @9 = ""
 "let @a = "" "保存文件路径
 "let @b = "" "保存文件行数
 "let @c = "" "关键代码行
 "let @d = "" "写文档时关键日志列表
-"let @f = "" "定时器 find 历史搜素词
-"let @g = "" "定时器 grep 历史搜素词
+let @f = "" "定时器 find 历史搜素词
+let @g = "" "定时器 grep 历史搜素词
 "let @h = ""
-"let @i = ""
+let @i = "" "保存着当前次数搜索的行
 "let @j = ""
 "let @k = ""
 "let @l = ""
@@ -335,11 +338,11 @@ nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
-nnoremap <leader>gc "7yy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>gc "iyy:execute "grep! -R " shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "nnoremap <leader>vhc :execute "vimgrep!" shellescape(expand("<cword>")) " **/*.h"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
-nnoremap <leader>vh "7yy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
-nnoremap <leader>vc "7yy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
-nnoremap <leader>vj "7yy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vh "iyy:execute "grep! -Esinr --include=*.h "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vc "iyy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
+nnoremap <leader>vj "iyy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "执行命令
 nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
 ""}}}}
@@ -1463,6 +1466,7 @@ function! SmartFileSwitching(...)
     let idx1 = 0
     let register = ""
     let flag = a:1
+    let templine = 0
     "}}}}
     if flag ==# 1
     let curlinestring  = getline('.')
@@ -1530,14 +1534,21 @@ function! SmartFileSwitching(...)
             execute "normal! :tabnew " . path  . "\<cr>"
             silent call cursor(line,0)
         else
+            if matchstr(path,"/opt6/tangxinlouosc") ==# ""
+                let path = g:homedir . '/' . path
+            endif
             let register = getline(line('.') - 2)
             execute "normal! :tabnew " . path  . "\<cr>"
-            let line = search(register)
+            let templine = search(register)
+            if templine != 0
+                let line = templine
+            endif
             silent call cursor(line,0)
         endif
     endif
     setlocal foldmethod=syntax
     let &foldlevel=100
+    silent execute  "normal! m`"
 endfunction
 "}}}}}
 "}}}}
@@ -4360,6 +4371,7 @@ function! ListKeyWords(...)
     let listkeywords = ""
     let notes = ""
     let tempvalue = 0
+    let flag = 0
     let returnkeywords = ['void',
                 \ 'int',
                 \ 'char',
@@ -4386,29 +4398,32 @@ function! ListKeyWords(...)
     let codeidx1 = 0
     "}}}}}
     while idx1 < len(listwords)
-        if "" != matchstr(listwords[idx1],g:homedir)
+        if "" != matchstr(listwords[idx1],"/.*/.*/")
             let filename = split(split(listwords[idx1],":")[0],"/")
             let filename = filename[len(filename) - 1]
             let filenameidx1 = idx1
         endif
         if "" != matchstr(listwords[idx1],") {") && "" ==# matchstr(listwords[idx1],";") &&  "" != matchstr(listwords[idx1],"(") && len(split(split(listwords[idx1],"(")[0])) > 1
+            if flag ==# 0
             let tempvalue = split(listwords[0],"|")
             "echo "debug" tempvalue[1]  idx1
             let tempvalue[1] =  idx1 + tempvalue[1]
             let listwords[0] = join(tempvalue,"|")
             let codeidx1 = idx1
+            let flag = 1
+            endif
         endif
         let idx1 += 1
     endwhile
     "找到了文件名，刷选文件名下一行的关键词
-    if codeidx1 ==# 0 
+    if codeidx1 ==# 0
         let tempvalue = split(listwords[0],"|")
         "echo "debug" tempvalue[1]  idx1
-        let tempvalue[1] =  idx1 + tempvalue[1]
+        let tempvalue[1] =  filenameidx1 + tempvalue[1] + 1
         let listwords[0] = join(tempvalue,"|")
         let codeidx1 = filenameidx1 + 1
     endif
-    "echo listwords[0] debug 行数
+    "debug 行数
     let codeline = split(listwords[0],"|")[1]
     let templist = split(listwords[codeidx1],"\x00")
     echo templist
@@ -5148,9 +5163,9 @@ function! ExtractKeyCodes(...)
     let tempchar = ""
     let realityline = 0
     let col = 0
+    let path = ""
     "}}}}
     let lastfoldlevel = &foldlevel
-    
     setlocal foldmethod=syntax
     let tempchar = getline(line('.'))
     let filename = expand("%:p")
@@ -5169,7 +5184,9 @@ function! ExtractKeyCodes(...)
         let codelist = insert(codelist,getline(start))
         let idx1 -= 1
     endwhile
-    let codelist = insert(codelist,expand("%:p").':'. realityline  .':')
+    let path = expand("%:p")
+    let path =  substitute(path , g:homedir . '/' , '', 'g')
+    let codelist = insert(codelist,path.':'. realityline  .':')
     "silent call system("git checkout .")
     silent execute "normal! :e " . filename "\<cr>"
     silent call cursor(realityline,col)
@@ -5193,18 +5210,18 @@ function! FillInNotes(...)
     "}}}}
     let codelist = eval(@d)
     let codelist = insert(codelist,"")
-    let codelist = insert(codelist,codelist[-1]) 
-    if len(@7) > 1
-        let codelist = insert(codelist,@7)
+    let codelist = insert(codelist,codelist[-1])
+    if len(@i) > 1 && @i != codelist[-1]
+        let codelist = insert(codelist,@i)
     else
-        let codelist = insert(codelist,"")
+        let codelist = insert(codelist," ")
     endif
     let codelist = insert(codelist,"")
     let codelist = insert(codelist,"")
     let codelist = insert(codelist,"```c")
     let codelist = add(codelist,"```")
     call setline(line("."),codelist)
-    let @7 = ""
+    let @i = ""
 endfunction
 "}}}}}
 
@@ -5466,7 +5483,7 @@ function! SearcherChars()
     let timerflag = 0
     let timerid = 0
     if g:windowgrepid != win_getid() && g:windowgrepid != 0
-        let @7 = getline('.')
+        let @i = getline('.')
         if win_gotoid(g:windowgrepid) ==# 1
             if @@ != ""
                 call setline(1,@@)
@@ -5479,6 +5496,7 @@ function! SearcherChars()
             "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
             let winwidthnum  = float2nr(winheight('%')  * 0.2)
             echo winwidthnum
+            silent execute  "normal! :cle\<cr>"
             execute "normal! :new\<cr>"
             "execute "normal! :vne\<cr>"
             execute "normal! \<c-w>J"
