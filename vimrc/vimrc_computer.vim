@@ -1363,36 +1363,36 @@ function! SimplifySearchResults(...)
         let temchar = split(searchstarge[idx1],":")[2]
         let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
         if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
-        if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
-            if len(split(temchar,"\x00")) != 1
-                if matchstr(temchar,"log") != ""
-                    let Log = add(Log,tempchar)
-                elseif matchstr(temchar,";") != ""
-                    if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
-                        let definition  = add(definition,tempchar)
-                    else
-                        let transfer1 = add(transfer1,tempchar)
-                    endif
-                elseif JudgeString(judgechar,temchar)
-                    let judge = add(judge,tempchar)
-                elseif matchstr(temchar,"//") != ""
-                    let Comment = add(Comment,tempchar)
-                else
-                    if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+            if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
+                if len(split(temchar,"\x00")) != 1
+                    if matchstr(temchar,"log") != ""
+                        let Log = add(Log,tempchar)
+                    elseif matchstr(temchar,";") != ""
+                        if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
+                            let definition  = add(definition,tempchar)
+                        else
+                            let transfer1 = add(transfer1,tempchar)
+                        endif
+                    elseif JudgeString(judgechar,temchar)
+                        let judge = add(judge,tempchar)
+                    elseif matchstr(temchar,"//") != ""
                         let Comment = add(Comment,tempchar)
                     else
-                        let definition = add(definition,tempchar)
+                        if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                            let Comment = add(Comment,tempchar)
+                        else
+                            let definition = add(definition,tempchar)
+                        endif
                     endif
+                else
+                    let transfer = add(transfer,tempchar)
                 endif
             else
-                let transfer = add(transfer,tempchar)
+                let TEST = add(TEST,tempchar)
             endif
         else
-            let TEST = add(TEST,tempchar)
+            let XML = add(XML,tempchar)
         endif
-    else
-        let XML = add(XML,tempchar)
-    endif
         let idx1 += 1
     endwhile
     let definition = insert(definition,["<<<<<<<<<<<<<<<<"])
@@ -1469,63 +1469,63 @@ function! SmartFileSwitching(...)
     let templine = 0
     "}}}}
     if flag ==# 1
-    let curlinestring  = getline('.')
-    let curwinid = win_getid()
-    let bufinfo = getbufinfo()
-    "call setline(1,string(getbufinfo()))
-    "call setline(2,string(split(execute(":ls"),'\n')))
-    if curwinid ==# g:windowfindid
-        let path = curlinestring
-        let filename = split(path,'/')[-1]
-        let register = getline(1)
-        "echo split(@f,'█')
-        if count(split(@f,'█'),register) ==# 0
-            let @f = @f . '█'  . register
-        endif
-    elseif curwinid ==# g:windowgrepid
-        let curlinestring = split(curlinestring,'█')[0]
-        let path = split(curlinestring,':')[0]
-        let line = split(curlinestring,':')[1]
-        let filename = split(path,'/')[-1]
-        let register = getline(1)
-        "echo split(@g,'█')
-        if count(split(@g,'█'),register) ==# 0
-            let @g = @g . '█'  . register
-        endif
-    else
-        let path = split(curlinestring,'|')[0]
-        let line = split(curlinestring,'|')[1]
-        let filename = split(path,'/')[-1]
-    endif
-    let idx1 = 0
-    while idx1 < len(bufinfo)
-        if matchstr(string(bufinfo[idx1]),split(path,'\./')[0]) != ""
-            if len(bufinfo[idx1]["windows"]) > 0
-                let targetwinid = bufinfo[idx1]["windows"][0]
-            else
-                let targetwinid = 0
+        let curlinestring  = getline('.')
+        let curwinid = win_getid()
+        let bufinfo = getbufinfo()
+        "call setline(1,string(getbufinfo()))
+        "call setline(2,string(split(execute(":ls"),'\n')))
+        if curwinid ==# g:windowfindid
+            let path = curlinestring
+            let filename = split(path,'/')[-1]
+            let register = getline(1)
+            "echo split(@f,'█')
+            if count(split(@f,'█'),register) ==# 0
+                let @f = @f . '█'  . register
             endif
-            if line ==# 1
-                let line = bufinfo[idx1]["lnum"]
+        elseif curwinid ==# g:windowgrepid
+            let curlinestring = split(curlinestring,'█')[0]
+            let path = split(curlinestring,':')[0]
+            let line = split(curlinestring,':')[1]
+            let filename = split(path,'/')[-1]
+            let register = getline(1)
+            "echo split(@g,'█')
+            if count(split(@g,'█'),register) ==# 0
+                let @g = @g . '█'  . register
             endif
-            let bufinfoflag = bufinfo[idx1]["bufnr"]
+        else
+            let path = split(curlinestring,'|')[0]
+            let line = split(curlinestring,'|')[1]
+            let filename = split(path,'/')[-1]
         endif
-        let idx1 += 1
-    endwhile
-    if bufinfoflag ==# 0
-        silent execute "normal! \<c-w>k"
-        silent execute "normal! :e "  . path . "\<cr>"
-        call cursor(line,0)
-    else
-        if targetwinid ==# 0
+        let idx1 = 0
+        while idx1 < len(bufinfo)
+            if matchstr(string(bufinfo[idx1]),split(path,'\./')[0]) != ""
+                if len(bufinfo[idx1]["windows"]) > 0
+                    let targetwinid = bufinfo[idx1]["windows"][0]
+                else
+                    let targetwinid = 0
+                endif
+                if line ==# 1
+                    let line = bufinfo[idx1]["lnum"]
+                endif
+                let bufinfoflag = bufinfo[idx1]["bufnr"]
+            endif
+            let idx1 += 1
+        endwhile
+        if bufinfoflag ==# 0
             silent execute "normal! \<c-w>k"
-            silent execute "normal! :b" . bufinfoflag . "\<cr>"
+            silent execute "normal! :e "  . path . "\<cr>"
             call cursor(line,0)
         else
-            silent call win_gotoid(targetwinid)
-            call cursor(line,0)
+            if targetwinid ==# 0
+                silent execute "normal! \<c-w>k"
+                silent execute "normal! :b" . bufinfoflag . "\<cr>"
+                call cursor(line,0)
+            else
+                silent call win_gotoid(targetwinid)
+                call cursor(line,0)
+            endif
         endif
-    endif
     elseif flag ==# 2
         silent execute  "normal! 0\"ayt:0f:lvf:h\"by0"
         let path = @a
@@ -2872,11 +2872,26 @@ endfunction
 "}}}}}
 "}}}
 "{{{{ fund
-"每次需要调用 24 WriteFile 把新的数据写到fund中
-"需要调用 31  CalculateInvest 选2  把pe写到analyze
-"把pe写到analyze,调用30 WriteFund2Index 选3把analyze格式化
-"调用  31CalculateInvest 金额，选1 把金额写到index中
-"调用  30 WriteFund2Index 选2把index格式化
+"amountdatabase  指数 {时间}
+"买的基金金额数据库,每次计算金额的时候，从数据库读金额填充，资金面板
+"DataFund.py
+"通过python 脚本从网络端获取指数数据和净值
+"fund2index
+"展示指数和基金的对应关系
+"indexdatabase
+"指数数据库
+"logs
+"从网络端获取指数和净值的日志
+"numbereddatabase
+"指数，基金 name 和 code 之间的对应关系
+"panelamount
+"金额购买面板
+"panelindexvalue
+"指数面板
+"panelPEvalue
+"市盈率面板
+"worthdatabase
+"净值数据库
 "{{{{2  GetFundValue() 通过xml获取元数据
 function! GetFundValue(...)
     let fundfilename = "2022-02-17.html"
@@ -3642,7 +3657,7 @@ function! CalculateAmount(...)
     "}}}}
 endfunction
 "}}}}}
-"{{{{{2   CalculatePE(...)
+"{{{{{2   CalculateData(...)
 function! CalculatePE(...)
     "{{{{{3 变量定义
     "}}}}
@@ -4405,12 +4420,12 @@ function! ListKeyWords(...)
         endif
         if "" != matchstr(listwords[idx1],") {") && "" ==# matchstr(listwords[idx1],";") &&  "" != matchstr(listwords[idx1],"(") && len(split(split(listwords[idx1],"(")[0])) > 1
             if flag ==# 0
-            let tempvalue = split(listwords[0],"|")
-            "echo "debug" tempvalue[1]  idx1
-            let tempvalue[1] =  idx1 + tempvalue[1]
-            let listwords[0] = join(tempvalue,"|")
-            let codeidx1 = idx1
-            let flag = 1
+                let tempvalue = split(listwords[0],"|")
+                "echo "debug" tempvalue[1]  idx1
+                let tempvalue[1] =  idx1 + tempvalue[1]
+                let listwords[0] = join(tempvalue,"|")
+                let codeidx1 = idx1
+                let flag = 1
             endif
         endif
         let idx1 += 1
@@ -5876,12 +5891,12 @@ function! PythonTest()
     let path = "par from vimscript into python"
     "}}}}
 python3 <<EOM
-import vim
-import os
-var = vim.eval("path")
-print(var)
-var = "%s,add string in python now"%var
-vim.command("let path = '%s'"%var)
+    import vim
+    import os
+    var = vim.eval("path")
+    print(var)
+    var = "%s,add string in python now"%var
+    vim.command("let path = '%s'"%var)
 EOM
     echo "tangxinlou"
     echo path
