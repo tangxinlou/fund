@@ -456,7 +456,7 @@ function! s:Copy2file(type)
         endwhile
     else
         echo "复制到公共文件"
-        call writefile(templist,relativepath)
+        silent call writefile(templist,relativepath)
     endif
     "silent execute "grep! -EsinR " . shellescape(@@) . " ."
 
@@ -626,7 +626,7 @@ function! MakeCompressedPackage()
         let templist = join(split(batfile[11])[1:])
         let batfile[11] = templist
     endif
-    call writefile(batfile,"./cp/cp64.host.R.bat")
+    silent call writefile(batfile,"./cp/cp64.host.R.bat")
     call append(line("."),batfile)
     silent execute "normal! :tabnew\<cr>"
     silent execute "normal! :e ./cp/cp64.host.R.bat\<cr>"
@@ -866,7 +866,7 @@ function! DictTest()
         endif
         let idx1 += 1
     endwhile
-    call writefile(indexfile,"/d/work/fund/zhishu/indexvaluepanel")
+    silent call writefile(indexfile,"/d/work/fund/zhishu/indexvaluepanel")
 
     let listlist1 = [1,3,4]
     let listlist2 = []
@@ -938,7 +938,7 @@ function! WriteFund2Index(...)
     endif
     if char ==# "1"
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"fund2index.txt")
+            silent call writefile(list2fmt,"fund2index.txt")
         endif
     elseif char ==# "2"
         let list2fmt2 = copy(list2fmt)
@@ -946,12 +946,12 @@ function! WriteFund2Index(...)
         call append(line('.'),list2fmt2)
         redraw
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"index.txt")
+            silent call writefile(list2fmt,"index.txt")
         endif
     elseif char ==# "3"
         let list2fmt = RestoreOrder(list2fmt)
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"analyze.txt")
+            silent call writefile(list2fmt,"analyze.txt")
         endif
     endif
 endfunction
@@ -1018,7 +1018,7 @@ function! WriteFund2Index1(...)
     endwhile
     if char ==# "1"
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"fund2index.txt")
+            silent call writefile(list2fmt,"fund2index.txt")
         endif
     elseif char ==# "2"
         let list2fmt2 = copy(list2fmt)
@@ -1026,12 +1026,12 @@ function! WriteFund2Index1(...)
         call append(line('.'),list2fmt2)
         redraw
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"index.txt")
+            silent call writefile(list2fmt,"index.txt")
         endif
     elseif char ==# "3"
         let list2fmt = RestoreOrder(list2fmt)
         if "yes" ==# input("是否写入")
-            call writefile(list2fmt,"analyze.txt")
+            silent call writefile(list2fmt,"analyze.txt")
         endif
     elseif char ==# "4"
         return list2fmt
@@ -1053,7 +1053,7 @@ function! TestTest(...)
         let idx1 += 2
     endwhile
     echo temp_files
-    call writefile(temp_files,"/d/txl/test/2.csv")
+    silent call writefile(temp_files,"/d/txl/test/2.csv")
     silent execute "normal! :e /d/txl/test/2.csv\<cr>"
     silent execute "normal! :%s/？ /？ ,/g\<cr>"
     silent execute "normal! :%s/A、/,A、/g\<cr>"
@@ -1158,9 +1158,9 @@ function! ListAddSpaces(...)
     "}}}}
     "let listof1d = readfile("PEvaluepanel.txt")
     let listof2d = ListTo2D(listof1d,charinterval)
-    "计算哪行最长
+    "计算最长是多长
     while idx1 < len(listof2d)
-        if len(listlength) < len(listof2d[idx1])
+        if listlength < len(listof2d[idx1])
             let listlength =  len(listof2d[idx1])
         endif
         let idx1 += 1
@@ -1743,7 +1743,7 @@ endfunction
 "call append(line('.'), readfile("1.txt"))
 "call setline(line('.'), readfile("1.txt"))
 "call setline(5, ['aaa', 'bbb', 'ccc'])
-"call writefile(["tangxinlog"], "1.txt", "a")
+"silent call writefile(["tangxinlog"], "1.txt", "a")
 "echo matchstr("testing", "ing", 5)
 "if input("Coffee or beer? ") == "beer"
 "   echom "Cheers!"
@@ -2221,7 +2221,7 @@ function! IsUpdate()
         endif
         let idx1 += 1
     endwhile
-    call writefile(curxmlfile,"1.txt")
+    silent call writefile(curxmlfile,"1.txt")
 endfunction
 "}}}}}
 "{{{{{2 function! FunList()                      目前实现的函数                普通模式<F4>调用
@@ -2293,7 +2293,7 @@ function! IsAddDiff()
         let tempchar = input("是否选择文件比较no 选择左边文件，yes选择文件")
         if "no" ==# tempchar
             let curadddiff = add(curadddiff,isadddiff)
-            call writefile(curadddiff,isdiffpatch)
+            silent call writefile(curadddiff,isdiffpatch)
             echo "选择左边文件\n"
         elseif  "yes" ==# tempchar
             let curadddiff = reverse(curadddiff)
@@ -2308,12 +2308,12 @@ function! IsAddDiff()
     elseif 1 ==# len(curadddiff2)
         if "yes" ==# input("是否选择右边文件")
             let curadddiff[len(curadddiff) - 1] = join([curadddiff[len(curadddiff) - 1] ," " ,isadddiff])
-            call writefile(curadddiff,isdiffpatch)
+            silent call writefile(curadddiff,isdiffpatch)
             echo "选择右边文件\n"
         endif
     else
         let curadddiff = add(curadddiff,isadddiff)
-        call writefile(curadddiff,isdiffpatch)
+        silent call writefile(curadddiff,isdiffpatch)
         echo "第一次比较，文件是空的"
         return
 
@@ -2403,7 +2403,7 @@ function! CompareVersion()
     else
         let cmplist = add(cmplist ,rightversion[len(rightversion) - 1])
         let cmplist = add(cmplist ,leftversion[len(leftversion) - 1])
-        call writefile(cmplist,relativepath )
+        silent call writefile(cmplist,relativepath )
         let cmplist =  split(system("sort -V " . relativepath),"\n")
         echo cmplist
         if  cmplist[1] ==#  rightversion[len(rightversion) - 1]
@@ -2488,7 +2488,7 @@ function! CompareVersion()
             let idx1 += 1
         endwhile
         let versiondiff = extend(versiondiff ,rightversion)
-        call writefile(versiondiff,"version.vim")
+        silent call writefile(versiondiff,"version.vim")
     endif
 endfunction
 "}}}}
@@ -2636,22 +2636,22 @@ function! s:DynamicDiff(type)
             execute "normal! :tabnew " . relativepath1 . "\<cr>"
             execute "normal! :vsplit " . relativepath . "\<cr>"
             if "yes" ==# input("是否清空两个文件，yes 是清空")
-                call writefile([],relativepath)
-                call writefile([],relativepath1)
+                silent call writefile([],relativepath)
+                silent call writefile([],relativepath1)
             endif
         else
             echo "两个文件有内容把复制的内容保存在左边"
-            call writefile(templist,relativepath)
-            call writefile([],relativepath1)
+            silent call writefile(templist,relativepath)
+            silent call writefile([],relativepath1)
         endif
     elseif len(templeft) ==# 0 &&  len(tempright) ==# 0
 
         echo "两个文件都是空的，把复制的内容保存在左边"
-        call writefile(templist,relativepath)
+        silent call writefile(templist,relativepath)
     elseif len(templeft) != 0 &&  len(tempright) ==# 0
 
         echo "左边内容已存在，把复制的内容保存在右边"
-        call writefile(templist,relativepath1)
+        silent call writefile(templist,relativepath1)
     endif
     call input("是否继续")
     let @@ = saved_unnamed_register
@@ -3154,9 +3154,9 @@ function! CalculateInvest(...)
     redraw
     if "yes" ==# input("是否写入")
         if char ==# 1
-            call writefile(curinvests,"index.txt")
+            silent call writefile(curinvests,"index.txt")
         elseif char ==# 2
-            call writefile(curinvests,"analyze.txt")
+            silent call writefile(curinvests,"analyze.txt")
         endif
     endif
 endfunction
@@ -3550,9 +3550,9 @@ function! SumColumn(...)
     return   indexinvestlist
 endfunction
 "}}}}}
-"{{{{2 function! InputData()                       一键输入数据
+"{{{{2  InputData()                       一键输入数据
 function! InputData()
-    call WriteFile()
+    silent call writefile()
     echo "获取PE选2"
     call CalculateInvest()
     echo "analyze.txt 选3"
@@ -3560,7 +3560,7 @@ function! InputData()
 
 endfunction
 "}}}}
-"{{{{2 function! ObtainAmount()                    一键计算金额
+"{{{{2  ObtainAmount()                    一键计算金额
 function! ObtainAmount()
     echo "金额选1"
     call CalculateInvest()
@@ -3647,20 +3647,28 @@ function! PythonGetIndexValuation(...)
     call insert(indexdata[1],logmid)
     call insert(indexdata[2],loghigh)
     call insert(indexdata[3],logunsort)
-    call writefile([string(numbereddatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
+    silent call writefile([string(numbereddatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
     return  indexdata
 endfunction
 "}}}}}
-"{{{{{2   CalculateAmount(...)
+"{{{{{2  function! CalculateAmount(...) 同步金额面板
 function! CalculateAmount(...)
     "{{{{{3 变量定义
     "}}}}
+    call FillingAcountDataBase()
+    call PopulateAmountPanel()
 endfunction
 "}}}}}
-"{{{{{2   CalculateData(...)
-function! CalculatePE(...)
+"{{{{{2  function! CalculateData(...)  同步指数净值面板
+"指数和净值数据库的数据库从网络端获取
+"把数据库的数据反馈到面板 
+"panelindexvalue  panelPEvalue
+function! CalculateData(...)
     "{{{{{3 变量定义
     "}}}}
+   call IndexDataDashboard()
+   call IndexCorrespondingFunds()
+   call IndexParametersPanel(1)
 endfunction
 "}}}}}
 "{{{{{2  CutIndexPanel(...) 分割panelindexvalue
@@ -3743,7 +3751,7 @@ function! IndexDataDashboardsort(...)
         if len(datadashboard) < 3
             return
         endif
-        call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+        silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
     else
         let Parameterslists = a:1
         let Orderedlist  = a:2
@@ -3807,11 +3815,11 @@ function! IndexDataDashboard(...)
     endwhile
     let datadashboard[0] = datadashboard[0]  + countnumber
     let datadashboard = extend(datadashboard,lists)
-    call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+    silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
     call IndexDataDashboardsort()
 endfunction
 "}}}}}
-"{{{{{2   PopulateTheIndexDatabase(...)  填充指数数据库
+"{{{{{2   PopulateTheIndexDatabase(...)  填充指数数据库 不需要经常操作
 "{{{{{3 注释
 "}}}}
 function! PopulateTheIndexDatabase(...)
@@ -3890,10 +3898,11 @@ function! PopulateTheIndexDatabase(...)
         endif
         let idx1 += 1
     endwhile
-    call writefile([string(indexfiledict)],Homedir("work/fund/zhishu/indexdatabase"))
+    silent call writefile([string(indexfiledict)],Homedir("work/fund/zhishu/indexdatabase"))
 endfunction
 "}}}}}
 "{{{{{2  IndexParametersPanel(...)     指数单个参数面板
+nnoremap test :call IndexParametersPanel()<cr>
 "{{{{{3 注释
 "参数面板
 "}}}}
@@ -3918,8 +3927,7 @@ function! IndexParametersPanel(...)
     let Parameterslists =  ListRemoveSpaces(Parameterslists,charinterval)
     let Parameterslists  = ListTo2D(Parameterslists,charinterval)
     let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
-    let indexkeylist = reverse(sort(keys(indexfiledict)))
-
+    let indexkeylist = sort(keys(indexfiledict))
     while idx1 < len(indexkeylist)
         if 0 ==# count(Parameterslists[0],indexkeylist[idx1])
             let tempparalist = indexfiledict[indexkeylist[idx1]]["indexvalua"]["data"]["items"]
@@ -3950,9 +3958,13 @@ function! IndexParametersPanel(...)
         let idx1 += 1
     endwhile
     let Parameterslists = ListTo1D(Parameterslists,charinterval)
-    let tempkey = copy(indexkeylist)
-    call AddNumber(tempkey)
-    let isversion = input("排序日期")
+    if a:0 ==# 0
+        let tempkey = copy(reverse(indexkeylist))
+        call AddNumber(tempkey) 
+        let isversion = input("排序日期")
+    else
+        let isversion = len(indexkeylist) - 1
+    endif
     let Orderedlist  =  repeat([""],len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"]))
     let idx1 = 0
     while idx1 < len(indexfiledict[indexkeylist[isversion]]["indexvalua"]["data"]["items"])
@@ -3961,7 +3973,7 @@ function! IndexParametersPanel(...)
     endwhile
     let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)
     let Parameterslists =  IndexDataDashboardsort(Parameterslists,Orderedlist)
-    call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue"))
+    silent call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue"))
 endfunction
 "}}}}}
 "{{{{{2   IndexCorrespondingFunds(...)指数对应的基金
@@ -4024,7 +4036,7 @@ function! IndexCorrespondingFunds(...)
         call delete(tempfilesname)
         let idx1 += 1
     endwhile
-    call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
+    silent call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
 endfunction
 "}}}}}
 "{{{{{2   FillingAcountDataBase(...)  填充资金数据库
@@ -4063,7 +4075,7 @@ function! FillingAcountDataBase(...)
         endwhile
         let idx1 += 1
     endwhile
-    call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
 endfunction
 "}}}}}
 "{{{{{2   PopulateAmountPanel(...)  填充资金面板
@@ -4145,8 +4157,8 @@ function! PopulateAmountPanel(...)
     endwhile
     let amountPanel  = ListTo1D(amountPanel,charinterval)
     let amountPanel =  ListAddSpaces(amountPanel,charinterval)
-    call writefile(amountPanel,Homedir("work/fund/zhishu/panelamount"))
-    call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+    silent call writefile(amountPanel,Homedir("work/fund/zhishu/panelamount"))
+    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
 endfunction
 "}}}}}
 "{{{{{2   GetIndexData(...)   获取指数数据
@@ -4311,7 +4323,7 @@ function! AnalyzeCode()
             let codedict[dictkeys[idx1]] = ParseCode(codedict[dictkeys[idx1]],"```c|```")
             let idx1 += 1
         endwhile
-        "call writefile(codedict[dictkeys[4]],"/opt6/tangxinlouosc/txl/parse")
+        "silent call writefile(codedict[dictkeys[4]],"/opt6/tangxinlouosc/txl/parse")
         let idx1 = 0
         while idx1 < len(dictkeys)
             let tempdictlist = codedict[dictkeys[idx1]]
@@ -4347,9 +4359,9 @@ function! AnalyzeCode()
         endwhile
         let tempdictlist = insert(tempdictlist,"《《《《《《《")
         let tempdictlist = add(tempdictlist,"》》》》》》》")
-        call writefile(tempdictlist,relativepath)
+        silent call writefile(tempdictlist,relativepath)
         call extend(codefile,tempdictlist,8)
-        call writefile(codefile,expand("%:p"))
+        silent call writefile(codefile,expand("%:p"))
         execute "normal! :e " .  expand("%:p") . "\<cr>"
     else
         let codedict = ParseCode(codefile,"```c|```")
@@ -4362,9 +4374,9 @@ function! AnalyzeCode()
         let codedict =  ListAddSpaces(codedict,"|")
         let codedict = insert(codedict,"《《《《《《《")
         let codedict = add(codedict,"》》》》》》》")
-        call writefile(codedict,relativepath)
+        silent call writefile(codedict,relativepath)
         call extend(codefile,codedict,8)
-        call writefile(codefile,expand("%:p"))
+        silent call writefile(codefile,expand("%:p"))
         execute "normal! :e " .  expand("%:p") . "\<cr>"
     endif
 endfunction
@@ -5623,7 +5635,7 @@ function! ProcessFiles(...)
     echo  ReplaceList
     let forwardlist = extend(forwardlist  ,ReplaceList)
     let forwardlist = extend(forwardlist  ,backlist)
-    call writefile(forwardlist,filename)
+    silent call writefile(forwardlist,filename)
 endfunction
 "}}}}}
 "}}}}
@@ -5684,7 +5696,7 @@ function! ParsingRej(...)
     endwhile
     silent execute "normal! :tabnew\<cr>"
     call append(0,rejfile)
-    "call writefile(rejfile,rejfiles)
+    "silent call writefile(rejfile,rejfiles)
 
 endfunction
 "}}}}}
@@ -5754,7 +5766,7 @@ function! UpdateTreeContens(...)
     let curcontesfile = insert(curcontesfile,"<<<<<<<<<<<<<<<<")
     let curcontesfile = add(curcontesfile,">>>>>>>>>>>>>>>")
     call extend(contensfile,curcontesfile,9)
-    call writefile(contensfile,expand("%:p"))
+    silent call writefile(contensfile,expand("%:p"))
     silent execute "normal! :e "  . expand("%:p") . "\<cr>"
 endfunction
 "}}}}}
@@ -5851,7 +5863,7 @@ function! VisualiZationcsv(...)
     endif
     let dimensional2 = copy(dimensional1)
     let dimensional1 = ExpansionAndContraction(dimensional2,mode,charinterval)
-    call writefile(dimensional1,expand("%:p"))
+    silent call writefile(dimensional1,expand("%:p"))
     if mode ==# 1
         execute "normal! :e " .  expand("%:p") . "\<cr>"
     else
