@@ -162,6 +162,7 @@ augroup filetype_python
     autocmd BufNewFile *.py      :call Openfile()
     autocmd BufNewFile *.sh      :call Openfile()
 augroup END
+autocmd VimEnter * :cle
 "保存文件打印
 augroup testgroup
     "清除组命令
@@ -298,7 +299,8 @@ nnoremap  <Down> ]c
 nnoremap  <Up>   [c
 "cherry pick 后解冲突
 nnoremap <leader>cn /<<<<<<<<cr>v/=====<cr>$ddd/>>>>>>><cr>v$ddd
-nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo tangxinlou modify for B211201-1894 end<esc>Oif (Log.isHostLoggable && Log.isLoggableModel) {}<esc>i<cr><esc>O<esc>p?//vivo tangxinlou<cr>v/// vivo tangaolin add .*end<cr>=
+"nnoremap <leader>cp i//vivo tangxinlou modify for B211201-1894 begin<cr>//vivo tangxinlou modify for B211201-1894 end<esc>Oif (Log.isHostLoggable && Log.isLoggableModel) {}<esc>i<cr><esc>O<esc>p?//vivo tangxinlou<cr>v/// vivo tangaolin add .*end<cr>=
+nnoremap <leader>cp i//vivo tangxinlou modify for B231223-81342 begin<cr>//vivo tangxinlou modify for B231223-81342 end<esc>O<esc>p
 "inoremap <F3>  <cr><esc>gg0jvG$dk0v$hyq:0ir!find -iname '*<esc>pa*'<cr>gg0$a
 "早期debug 映射
 nnoremap <leader>rm :echom "hello"
@@ -386,6 +388,7 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_device_mediatek_common",
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
+let g:debugid = 0
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 let g:homedir = "/d"
@@ -1480,7 +1483,7 @@ function! SmartFileSwitching(...)
             let register = getline(1)
             "echo split(@f,'█')
             if count(split(@f,'█'),register) ==# 0
-                let @f = @f . '█'  . register
+                let @f = register . '█'  . @f
             endif
         elseif curwinid ==# g:windowgrepid
             let curlinestring = split(curlinestring,'█')[0]
@@ -1490,7 +1493,13 @@ function! SmartFileSwitching(...)
             let register = getline(1)
             "echo split(@g,'█')
             if count(split(@g,'█'),register) ==# 0
-                let @g = @g . '█'  . register
+                let register = register . '█'  . @g
+                if len(split(register,"█")) > 10
+                    let register = split(register,"█")
+                    let register = register[0:9]
+                    let register = join(register,"█")
+                endif
+                let @g = register
             endif
         else
             let path = split(curlinestring,'|')[0]
@@ -2508,11 +2517,13 @@ function! CompareversionBranch(...)
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2])
     let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+    "let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ")
     "let isupdate2 =   system(" git fetch ; git checkout tag_PD2069_ROM13_5.0.0")
     "let isupdate2 =   system(" git pull --rebase ; git reset --hard  87acb2a52f65fd97318943152abac894f1c2fa75")
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile1[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile1[idx2])
     let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+    "let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ")
 
     echo  curxmlfile[idx2]  curxmlfile1[idx2]  "分支不同 " isupdate3
     let version1 = split(version1,"\n")
@@ -2870,6 +2881,55 @@ function! ModifyCorrespondingCommit(...)
     call append(line("."),branchlist)
 endfunction
 "}}}}}
+"{{{{{2 function! AddNotes(...)      添加注释                  普通模式下 逗号 + add 调用
+nnoremap <leader>add :call AddNotes()<cr>
+function! AddNotes(...)
+    "{{{{{3 变量定义
+    let bugchar = "B211201-1894"
+    let startnotes = "//vivo tangxinlou modify for ." . bugchar . "begin"
+    let endnotes = "//vivo tangxinlou modify for ." . bugchar . "end"
+    let filelen = 0
+    let idx1 = 0
+    let notesflag = 0
+    let noteslastflag = 0
+    let noteslinechar = ""
+    let notesline = 0
+    let spacechar = ""
+    "}}}}
+    let filelen = line('$')
+    while idx1 < filelen
+        let spacechar = ""
+        if matchstr(getline(idx1 + 1),"@@ -") != ""
+            let noteslinechar = split(getline(idx1 + 1))
+            let notesline =  join([split(noteslinechar[2],",")[0], 2 + split(noteslinechar[2],",")[1]],",")
+            let noteslinechar[2] = notesline
+            call setline(idx1 + 1,join(noteslinechar))
+            echo join(noteslinechar)
+        endif
+        if matchstr(getline(idx1 + 1),"^+") != ""  && matchstr(getline(idx1 + 1),"+++") != "+++"
+            let notesflag = 1
+        else
+            let notesflag = 0
+        endif
+        if notesflag ==# 1  && noteslastflag ==# 0
+            let spacechar = matchstr(getline(idx1 + 1),'+\s\+')
+            if spacechar ==# ""
+                let spacechar = "+    "
+            endif
+            call append(idx1,spacechar . startnotes)
+        elseif notesflag ==# 0 && noteslastflag ==# 1
+            let spacechar = matchstr(getline(idx1 - 1),'+\s\+')
+            if spacechar ==# ""
+                let spacechar = "+    "
+            endif
+            call append(idx1,spacechar . endnotes)
+        endif
+        let noteslastflag = notesflag
+        let filelen = line('$')
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}
 "}}}
 "{{{{ fund
 "amountdatabase  指数 {时间}
@@ -3118,8 +3178,7 @@ function! CutData(...)
     return lists
 endfunction
 "}}}}}
-"{{{{{2 function!  CalculateInvest(...) 计算投资 普通模式<F5>调用
-noremap <F5> :call  CalculateInvest()
+"{{{{{2   CalculateInvest(...) 计算投资
 function! CalculateInvest(...)
     let idx1 = 0
     let indexdict = {}
@@ -3661,7 +3720,7 @@ endfunction
 "}}}}}
 "{{{{{2  function! CalculateData(...)  同步指数净值面板
 "指数和净值数据库的数据库从网络端获取
-"把数据库的数据反馈到面板 
+"把数据库的数据反馈到面板
 "panelindexvalue  panelPEvalue
 function! CalculateData(...)
     "{{{{{3 变量定义
@@ -3902,7 +3961,6 @@ function! PopulateTheIndexDatabase(...)
 endfunction
 "}}}}}
 "{{{{{2  IndexParametersPanel(...)     指数单个参数面板
-nnoremap test :call IndexParametersPanel()<cr>
 "{{{{{3 注释
 "参数面板
 "}}}}
@@ -3960,7 +4018,7 @@ function! IndexParametersPanel(...)
     let Parameterslists = ListTo1D(Parameterslists,charinterval)
     if a:0 ==# 0
         let tempkey = copy(reverse(indexkeylist))
-        call AddNumber(tempkey) 
+        call AddNumber(tempkey)
         let isversion = input("排序日期")
     else
         let isversion = len(indexkeylist) - 1
@@ -5204,6 +5262,9 @@ function! ExtractKeyCodes(...)
     let foldlevel = foldlevel(curline)
     echo foldlevel
     let codelist = add(codelist,getline(curline))
+    if matchstr(getline(curline - 1),"case.*:") != ""
+        let codelist = insert(codelist,getline(curline - 1))
+    endif
     let idx1 = foldlevel
     while idx1 > 0
         let &foldlevel=idx1 -1
@@ -5292,10 +5353,11 @@ function! FormatCode(...)
                 let flag = 1
             endif
             if flag ==# 1
-                silent execute ":" . (start + 1) . "," . end . "y"
+                "去除多行里面的注释
+                silent execute ":" . (start) . "," . end . "y"
                 let tempchar = @@
                 if matchstr(tempchar,"//") != ""
-                    silent execute ":" . (start + 1) . "," . end . "s/\\/\\/.*$//g"
+                    silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
                 endif
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
@@ -5318,11 +5380,54 @@ function! FormatCode(...)
                     silent execute "normal! dd"
                 endif
             endif
+            if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
+                call cursor(idx1,0)
+                silent execute "normal! dd"
+                let idx1 -= 3
+            endif
         endif
         let idx1 += 1
     endwhile
     execute "normal! :wq!\<cr>"
     execute "normal! :bd" . bufnr('$') ."\<cr>"
+endfunction
+"}}}}}
+
+"{{{{{2  AddDebugLog(...) 添加debug日志
+nnoremap <F5> :call AddDebugLog()<cr>
+"package jni stack 添加debug日志
+function! AddDebugLog(...)
+    "{{{{{3 变量定义
+    let packagechar = "Log.e"
+    let jnichar = "ALOGE"
+    let stackchar = "LOG_ERROR"
+    let debugchar = "tangxinlou debug "
+    let line = 0
+    "}}}}
+    let line = line('.')
+    if matchstr(@%,".cpp") ==# ".cpp"
+        let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
+        call append(line('.'),jnichar)
+    elseif  matchstr(@%,".cc") ==# ".cc"
+        echo
+        if search("#include\.*log\.h") ==# 0
+            call search("#include")
+            call append(line('.'),"#include \"os/log.h\"")
+        endif
+        let stackchar = stackchar . "(\"" . debugchar . g:debugid ."\");"
+        call append(line,stackchar)
+        call cursor(line,0)
+    elseif  matchstr(@%,".java") ==# ".java"
+        if search("import \.*.Log;") ==# 0
+            call search("import ")
+            call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+        endif
+        let packagechar  = packagechar   . "(\"" . debugchar . g:debugid ."\");"
+        call append(line,packagechar)
+        call cursor(line,0)
+    endif
+
+    let g:debugid += 1
 endfunction
 "}}}}}
 "}}}}}
@@ -5481,6 +5586,7 @@ function! GrepChars(timer)
     endif
     let searchstarge =  system(command)
     let searchstarge = SimplifySearchResults(copy(searchstarge))
+    let searchstarge = insert(searchstarge,@g)
     if line('$') > 3
         let line = line('.')
         let col = col('.')
