@@ -4116,7 +4116,7 @@ function! FillingAcountDataBase(...)
         if has_key(amountDatabase,amountPanel[idx1][0]) ==# 0
             let amountDatabase[amountPanel[idx1][0]] = {}
         endif
-        let idj1 = 1
+        let idj1 = 4
         while idj1 < len(amountPanel[idx1]) - 1
             if has_key(amountDatabase[amountPanel[idx1][0]],amountPanel[0][idj1]) ==# 0
                 let amountDatabase[amountPanel[idx1][0]][amountPanel[0][idj1]] = {}
@@ -5138,6 +5138,7 @@ function! ParseCodeFiles(...)
     let foldlevellist = GetFoldLevel(filename)
     call win_gotoid(winid)
     let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
+    let codelist = ListFunctionAamesAndClassNames(codelist)
     let winwidthnum  = float2nr(winwidth('%')  * 0.3)
     call win_gotoid(winid)
     execute "normal! :vne\<cr>"
@@ -5149,7 +5150,7 @@ function! ParseCodeFiles(...)
     execute "normal! \<c-w>l"
     call cursor(line,col)
     let &foldlevel=100
-    let @/ = " 1 .*$"
+    let @/ = "█1█.*$"
     "echo codedict
 endfunction
 "}}}}}
@@ -5200,7 +5201,7 @@ function! LoopToDillDictionary(...)
                     "echo "line " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
                     let tempchar = ""
                     let tempchar =  repeat(tempchar2,flag - 1) . tempchar1
-                    let codelist1 = add(codelist1,(idx1 + 1) .  " " . flag . " " . tempchar .  split(nodeformat["1-dictname"],"^\\s\\+")[0])
+                    let codelist1 = add(codelist1,start ."-" .end .  "█" . flag . "█" . tempchar .  "█" . split(nodeformat["1-dictname"],"^\\s\\+")[0])
                 endif
             else
                 let start = 1
@@ -5208,8 +5209,8 @@ function! LoopToDillDictionary(...)
             endif
             let listlen = string(start -1) . '-' . string(end -1)
             "设置条件判断是否循环获取下一结点
-            "if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
-            if flag < 4
+            if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
+            "if flag < 4
                 while start < end
                     let endnodeformat  = LoopToDillDictionary(dictformart,foldlevellist,listlen,flag + 1,filename,codelist1)
                     if endnodeformat["2-dictlen"] != "0-0"
@@ -5345,6 +5346,7 @@ function! FormatCode(...)
         let left = count(tempchar,'(')
         let right = count(tempchar,')')
         if  matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)
+            "锁定行中带){的行
             call cursor(idx1,0)
             let end = idx1
             silent execute "normal! $F)%"
@@ -5364,9 +5366,14 @@ function! FormatCode(...)
                 silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
                 silent execute "normal! \<esc>"
                 let filelen = line('$')
-                let idx1 = start -3
+                let idx1 = start - 5
             endif
-        else
+        elseif (count(tempchar,'{') != 0) && (count(tempchar,')') ==# 0)  && split(tempchar)[0] ==# '{'
+           "锁定关键词和{不在同一行
+            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
+            let idx1 = start - 5
+        else 
+            "行中有不成对的小括号这种行会造成折叠不准确，直接删除
             if left != right
                 call cursor(idx1,0)
                 let start = idx1
@@ -5383,7 +5390,7 @@ function! FormatCode(...)
             if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
                 call cursor(idx1,0)
                 silent execute "normal! dd"
-                let idx1 -= 3
+                let idx1 -= 5
             endif
         endif
         let idx1 += 1
@@ -5430,6 +5437,45 @@ function! AddDebugLog(...)
     let g:debugid += 1
 endfunction
 "}}}}}
+
+"{{{{{2  ListFunctionAamesAndClassNames(...) 列出函数名和类名
+"列出函数名和类名
+function! ListFunctionAamesAndClassNames(...)
+    "{{{{{3 变量定义
+    let codelist = copy(a:1)
+    let idx1 = 0      
+    "在这个列表就不选中
+    let uncheck = ["if(",
+                \"if (",
+                \"try{",
+                \"try {",
+                \"for(",
+                \"for (",
+                \"synchronized (",
+                \"switch (",
+                \"switch(",
+                \"do {",
+                \"do{"]  
+    let uncheckflag = 0
+    let tempcodelist = []
+    "}}}}
+    
+    while idx1 < len(codelist)
+        let uncheckflag = 0
+        for char in uncheck
+            if "" != matchstr(codelist[idx1],char)
+                let uncheckflag = 1
+            endif
+        endfor
+        if uncheckflag ==# 0
+            let tempcodelist = add(tempcodelist,codelist[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    let codelist = tempcodelist 
+    return codelist
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{ 定时器
 
