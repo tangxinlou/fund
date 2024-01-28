@@ -591,6 +591,7 @@ function! MakeCompressedPackage()
     let batfile = "cp64.host.R.bat"
     let command = ""
     let iscopyconf = ""
+    let iscopyiotconf = ""
     let iscopyapk = ""
     let iscopyso = ""
     let templist = []
@@ -601,6 +602,7 @@ function! MakeCompressedPackage()
     call system("rm *.tar")
     call system("rm  -rf cp")
     let iscopyconf = input("是否打包conf 文件")
+    let iscopyiotconf = input("是否打包iot conf 文件")
     let iscopyapk = input("是否打包apk 文件")
     let iscopyso = input("是否打包so 文件")
     let curpath = system(command)
@@ -610,10 +612,16 @@ function! MakeCompressedPackage()
     if iscopyso ==# "yes"
         let command = "cp -rf libbluetooth_jni.so libbluetooth.so ./cp/cp/system/lib64 "
         call system(command)
-        let templist = join(split(batfile[9])[1:])
-        let batfile[9] = templist
-        let templist = join(split(batfile[10])[1:])
-        let batfile[10] = templist
+
+        let templist = join(split(batfile[11])[1:])
+        let batfile[11] = templist
+        let templist = join(split(batfile[12])[1:])
+        let batfile[12] = templist
+
+        let templist = join(split(batfile[14])[1:])
+        let batfile[14] = templist
+        let templist = join(split(batfile[15])[1:])
+        let batfile[15] = templist
     endif
 
     if iscopyapk ==# "yes"
@@ -621,13 +629,25 @@ function! MakeCompressedPackage()
         call system(command)
         let templist = join(split(batfile[8])[1:])
         let batfile[8] = templist
+        let templist = join(split(batfile[9])[1:])
+        let batfile[9] = templist
     endif
 
     if iscopyconf ==# "yes"
         let command = "cp -rf interop_database.conf  ./cp/cp/system "
         call system(command)
-        let templist = join(split(batfile[11])[1:])
-        let batfile[11] = templist
+        let templist = join(split(batfile[17])[1:])
+        let batfile[17] = templist
+        let templist = join(split(batfile[18])[1:])
+        let batfile[18] = templist
+    endif
+    if iscopyiotconf ==# "yes"
+        let command = "cp -rf iot_device_list_json.conf  ./cp/cp/system "
+        call system(command)
+        let templist = join(split(batfile[20])[1:])
+        let batfile[20] = templist
+        let templist = join(split(batfile[21])[1:])
+        let batfile[21] = templist
     endif
     silent call writefile(batfile,"./cp/cp64.host.R.bat")
     call append(line("."),batfile)
@@ -5372,7 +5392,7 @@ function! FormatCode(...)
            "锁定关键词和{不在同一行
             silent execute ":" . (idx1 - 1) . ":s/\\n//g"
             let idx1 = start - 5
-        else 
+        else
             "行中有不成对的小括号这种行会造成折叠不准确，直接删除
             if left != right
                 call cursor(idx1,0)
@@ -5443,7 +5463,7 @@ endfunction
 function! ListFunctionAamesAndClassNames(...)
     "{{{{{3 变量定义
     let codelist = copy(a:1)
-    let idx1 = 0      
+    let idx1 = 0
     "在这个列表就不选中
     let uncheck = ["if(",
                 \"if (",
@@ -5455,11 +5475,10 @@ function! ListFunctionAamesAndClassNames(...)
                 \"switch (",
                 \"switch(",
                 \"do {",
-                \"do{"]  
+                \"do{"]
     let uncheckflag = 0
     let tempcodelist = []
     "}}}}
-    
     while idx1 < len(codelist)
         let uncheckflag = 0
         for char in uncheck
@@ -5472,10 +5491,10 @@ function! ListFunctionAamesAndClassNames(...)
         endif
         let idx1 += 1
     endwhile
-    let codelist = tempcodelist 
+    let codelist = tempcodelist
     return codelist
 endfunction
-"}}}}} 
+"}}}}}
 "}}}}}
 "{{{{ 定时器
 
@@ -5682,6 +5701,15 @@ function! SearcherChars()
             execute "normal! :res " . winwidthnum . "\<cr>"
             "execute "normal! :vertical res " . winwidthnum . "\<cr>"
             redraw
+        else
+            if line('.') ==# 2
+                execute "normal! yw"
+                if @@ != ""
+                    call setline(1,@@)
+                    call cursor(1,0)
+                endif
+                return
+            endif
         endif
     endif
     "是否有当前搜索器
@@ -6046,6 +6074,162 @@ endfunction
 "}}}}}
 
 "}}}
+"{{{{  自动分析日志
+"{{{{{2 function!  FtpDownLoadFile(...) ftp 下载文件
+function! FtpDownLoadFile(...)
+    "{{{{{3 变量定义
+    "lftp -u stability,ofhmE5899  172.25.102.85
+    let ftp_host='172.25.102.85'
+    let ftp_user='stability'
+    let ftp_passwd='ofhmE5899'
+    let remote_file = 'triage_result.txt'
+    let local_file = '/opt6/tangxinlouosc/autoanaly/triage_result.txt'
+    let remote_dir = '/stability/WHQ/2346/1-23-21'
+    let local_dir = '/opt6/tangxinlouosc/autoanaly'
+    let base_ls_cmd = " -e ' ls -l " . remote_dir
+    let base_quit_cmd = ";quit'"
+    let base_cmd = "lftp -u " . ftp_user . "," . ftp_passwd . " " . ftp_host
+    let lftp_ls_cmd = base_cmd . base_ls_cmd . base_quit_cmd
+    let downloadlogfile = Homedir("autoanaly/download")
+    let downlog = []
+    let idx1 = 0
+    "}}}}
+
+    let downlog = readfile(downloadlogfile )
+    let downlog = add(downlog, "###########################")
+    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始下载" .  remote_dir )
+    let local_dir = local_dir . '/' . split(remote_dir,'/')[-1]
+    if "" ==# findfile(local_dir)
+        call system("mkdir " . local_dir)
+    else
+        echo local_dir
+    endif
+
+    "获取远端目录
+    let directory = system(lftp_ls_cmd)
+    let directory = split(directory, "\n")
+    let directory = ListTo2D(directory,"")
+    let directory = GetOneOfTheColumns(directory,"",len(directory[0]) - 1)
+    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . remote_dir . "有" .string(directory))
+    "获取文件
+    while idx1 < len(directory)
+        let remote_file = directory[idx1]
+        let local_file = local_dir . '/' . remote_file
+        if "" ==# findfile(local_file )
+            let base_get_cmd = " -e 'get " . remote_dir . '/' . remote_file . " -o " . local_file
+            let lftp_download_cmd = base_cmd . base_get_cmd . base_quit_cmd
+            let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始下载" .  remote_file )
+
+            let lftp_return = system(lftp_download_cmd)
+            if lftp_return != ""
+                let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "下载失败" .  remote_file )
+            else
+                let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "下载成功" .  remote_file )
+            endif
+
+            if "auto_export" ==# matchstr(directory[idx1],"auto_export")
+                if "" ==# findfile(string(split(local_file,".zip")[0]))
+                    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始解压" .  directory[idx1])
+                    call system("unzip " . local_file . " -d " . local_dir)
+                    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  directory[idx1])
+                endif
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+
+    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "下载完成" .  remote_dir )
+    let downlog = add(downlog, "###########################")
+    call writefile(downlog,downloadlogfile )
+
+endfunction
+"}}}}}
+
+"{{{{{2 function!  DifferentiateLogFiles(...) 区分log文件
+function! DifferentiateLogFiles(...)
+    "{{{{{3定义
+    let filespathdict = {'main':[],
+                \ 'adsp': []}
+    let findcmd = "find -iname "
+    let findresult = []
+    "}}}}
+    let findcmd = "find -iname " . "'*main_log*'"
+    let findresult = system(findcmd)
+    if  findresult != ""
+        let filespathdict["main"] = sort(split(findresult,"\n"))
+    endif
+
+    let findcmd = "find -iname " . "'*adsp_0_log*'"
+    let findresult = system(findcmd)
+    if  findresult != ""
+        let filespathdict["adsp"] = sort(split(findresult,"\n"))
+    endif
+    return filespathdict
+endfunction
+"}}}}}
+
+"{{{{{2   SearchFile(...)搜索拼接日志文件
+function! SearchFile(...)
+    "{{{{{3 变量定义
+    let path = copy(a:1)
+    let filterchar = a:2
+    let grepcmd = "grep -Esinr \"" . a:2 . "\" "
+    let idx1 = 0
+    let grepresult = []
+    let tempresult = []
+    "}}}}
+    if type(path) ==# 1
+    elseif type(path) ==# 3
+        while idx1 < len(path)
+            let tempresult  =  system(grepcmd . path[idx1])
+            if tempresult != ""
+                let grepresult = extend(grepresult,split(tempresult,"\n"))
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+    return grepresult
+endfunction
+"}}}}}
+
+"{{{{{2 function!  AutoAnalyzer(...)自动分析
+function! AutoAnalyzer(...)
+    "{{{{{3 变量定义
+    let filedict = {}
+    let resultlist = []
+    let filterchar = {
+                \"扫描":"startdiscovery|createbond|DeviceFoundHandler"}
+    let fileindexchar = ""
+    let idx1 = 0
+    let filterkey = []
+    let filterkeytem = []
+    let indexfilter = 0
+    if a:0 ==# 1
+        let modeflag = a:1
+    endif
+    "}}}}
+    if a:0 ==# 0
+        let filterkey = keys(filterchar)
+        let filterkeytem = copy(filterkey)
+        call AddNumber(filterkeytem)
+        let indexfilter = input("请输入mode")
+    endif
+    let filedict = DifferentiateLogFiles()
+    while idx1 < len(filterkey)
+        if filterkey[indexfilter] ==# "卡音"
+            let fileindexchar = "adsp"
+            let resultlist = SearchFile(filedict[fileindexchar],filterchar[filterkey[indexfilter]])
+        else
+            let fileindexchar = "main"
+            let resultlist = SearchFile(filedict[fileindexchar],filterchar[filterkey[indexfilter]])
+            call append(line('.'), resultlist)
+        endif
+        let idx1 += 1
+    endwhile
+    call input("11")
+endfunction
+"}}}}}
+"}}}
 "{{{{  python
 
 "{{{{{2   PythonTest(...) python test 传参数
@@ -6071,7 +6255,7 @@ endfunction
 "{{{{  调整窗口
 "{{{{{2   WidChanged(...) 调整窗口
 "let g:windowid = 0
-function! WidChanged()
+function! WidChanged(...)
     "{{{{{3 变量定义
     let windowinfo = ""
     "}}}}
