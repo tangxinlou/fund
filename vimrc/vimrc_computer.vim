@@ -5512,7 +5512,10 @@ function! ListFunctionAamesAndClassNames(...)
                 \"for (",
                 \"synchronized (",
                 \"switch (",
-                \"switch(",
+                \"else{",
+                \"else {",
+                \"case ",
+                \"default:",
                 \"do {",
                 \"do{"]
     let uncheckflag = 0
