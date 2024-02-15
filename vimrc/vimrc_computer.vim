@@ -5511,13 +5511,17 @@ function! ListFunctionAamesAndClassNames(...)
                 \"for(",
                 \"for (",
                 \"synchronized (",
+                \"synchronized(",
                 \"switch (",
                 \"else{",
                 \"else {",
                 \"case ",
                 \"default:",
                 \"do {",
-                \"do{"]
+                \"do {",
+                \"switch",
+                \"static {",
+                \"static{"]
     let uncheckflag = 0
     let tempcodelist = []
     "}}}}
