@@ -196,7 +196,7 @@ let @g = "" "定时器 grep 历史搜素词
 let @i = "" "保存着当前次数搜索的行
 "let @j = ""
 "let @k = ""
-"let @l = ""
+"let @l = "" "log搜索器的历史关键词
 "let @s = ""
 "let @u = ""
 "let @w = ""
@@ -335,7 +335,8 @@ nnoremap <leader>tt :source ~/.vimrc_tt<cr>
 "搜索命令{{{{
 nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/tang.txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>:tabm<cr>
-nnoremap <leader>f  :execute "grep! -Esirn" shellescape(expand(@@))  "%:p"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
+"nnoremap <leader>f  :execute "grep! -Esirn  " shellescape(expand(@@))  "%:p" <cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>J
+"nnoremap <leader>f  :cexpr system('grep -Esinr  -RnI --exclude-dir={.git,.svn} --include=*{.c,.cc,.cpp,.java,.h} "BluetoothBondStateMachine"')
 "在vimrc文件中|不可以映射，可以使用<bar>代替|
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
@@ -389,6 +390,13 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 let g:debugid = 0
+let g:smallestunitdict = {
+            \"扫描":[["BluetoothAdapterService: startDiscovery",0,"发起扫描"],["BluetoothAdapterService: cancelDiscovery",13000,"停止扫描"]],
+            \"bond" : [['BluetoothBondStateMachine: Bond State Change Intent:48:8A:E8:DE:5D:D9 BOND_NONE =>', 0.0, ''], ['aclStateChangeCallback', 2367.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:48:8A:E8:DE:5D:D9 BOND_BONDING =>', 4695.0, '']]}
+let g:filterchar = {
+            \"扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
+            \"bond" : "bluetoothbondstate.*=>|aclStateChangeCallback",
+            \"temp" : "temptemptem"}
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 let g:homedir = "/d"
@@ -596,11 +604,14 @@ function! MakeCompressedPackage()
     let iscopyso = ""
     let templist = []
     let zipname = ""
+    let isvos = ""
     "}}}}}
     let command = "pwd"
     "set fileformats=dos
     call system("rm *.tar")
     call system("rm  -rf cp")
+
+    let isvos = input("是否外销")
     let iscopyconf = input("是否打包conf 文件")
     let iscopyiotconf = input("是否打包iot conf 文件")
     let iscopyapk = input("是否打包apk 文件")
@@ -608,6 +619,11 @@ function! MakeCompressedPackage()
     let curpath = system(command)
     call system("cp -rf " . intentpath . " ./ ")
     let batfile = readfile("./cp/cp64.host.R.bat")
+
+    if isvos  != "yes"
+        let templist = join(split(batfile[3])[1:])
+        let batfile[3] = templist
+    endif
 
     if iscopyso ==# "yes"
         let command = "cp -rf libbluetooth_jni.so libbluetooth.so ./cp/cp/system/lib64 "
@@ -762,7 +778,7 @@ function! List2Format(...)
     return list2fmt
 endfunction
 "}}}}
-"{{{{2 function! DictTest()                      测试字典
+"{{{{2  DictTest()                      测试字典
 function! DictTest()
     let char1 = "aaaaaaaa"
     let char2 = "指数名称"
@@ -979,7 +995,7 @@ function! WriteFund2Index(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2  function! WriteFund2Index1(...) 格式化fund2index
+"{{{{{2   WriteFund2Index1(...) 格式化fund2index
 function! WriteFund2Index1(...)
     let list2fmt = []
     let list2fmt1 = []
@@ -1124,8 +1140,8 @@ function! AddLineNumber(...)
             let idx1 += 1
         endwhile
     else
-        execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
-        "execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
+        "execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+        execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
     endif
 
     "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
@@ -1580,6 +1596,21 @@ function! SmartFileSwitching(...)
     silent execute  "normal! m`"
 endfunction
 "}}}}}
+"{{{{{2 ParseTimestamp(...) 解析时间戳
+function! ParseTimestamp(...)
+    "{{{{{3 变量定义
+    let timestamp = copy(a:1)
+    let mstime = 0
+    let ustime= 0
+    "}}}}
+    let ustime = split(timestamp,'\.')[1]
+    let mstime = (split(split(timestamp,'\.')[0],":")[0] * 3600) + (split(split(timestamp,'\.')[0],":")[1] * 60) + (split(split(timestamp,'\.')[0],":")[2])
+    let mstime = mstime * 1000
+    let ustime = ustime / 1000
+    let mstime = mstime + ustime
+    return str2float(mstime . ".0")
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -1862,7 +1893,7 @@ function! GitStatus()
     return Preadd
 endfunction
 "}}}}}
-"{{{{{2 function! GitAdd()                       git add 为git commit 做准备
+"{{{{{2  GitAdd()                       git add 为git commit 做准备
 function! GitAdd()
     let Gitadd1 = "tangxinlou"
     let Precommit = []
@@ -1918,7 +1949,7 @@ function! IsStatus()
     return  isstatus
 endfunction
 "}}}}
-"{{{{{2 function! GitCommit()                    git comit 之后可以在这个函数添加push的指令
+"{{{{{2  GitCommit()                    git comit 之后可以在这个函数添加push的指令
 function! GitCommit()
     let iscommit = "tangxinlou"
     call GitAdd()
@@ -1968,7 +1999,7 @@ function! GitBranch()
     return Prebranch
 endfunction
 "}}}}}
-"{{{2 function! GitCheckout()                    checkout 切换分支 既可以从列表选一个分支，也可以切换到a分支
+"{{{2  GitCheckout()                    checkout 切换分支 既可以从列表选一个分支，也可以切换到a分支
 function! GitCheckout(...)
     let GitCheckout = "tangxinlou"
     let ischeckout1 = "tangxinlou"
@@ -2023,7 +2054,7 @@ function! GitCheckout(...)
     echom "分支不存在"
 endfunction
 "}}}
-"{{{{{2 function! GitPatch()                     可以 批量切换2.txt 文件中的分支，然后分别打patch commit
+"{{{{{2  GitPatch()                     可以 批量切换2.txt 文件中的分支，然后分别打patch commit
 function! GitPatch()
     let ispatch = "tangxinlou"
     let Prepatch = []
@@ -2537,13 +2568,14 @@ function! CompareversionBranch(...)
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2])
     let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
-    "let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ")
+    "let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
     "let isupdate2 =   system(" git fetch ; git checkout tag_PD2069_ROM13_5.0.0")
     "let isupdate2 =   system(" git pull --rebase ; git reset --hard  87acb2a52f65fd97318943152abac894f1c2fa75")
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile1[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile1[idx2])
     let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
-    "let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ")
+
+    "let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
 
     echo  curxmlfile[idx2]  curxmlfile1[idx2]  "分支不同 " isupdate3
     let version1 = split(version1,"\n")
@@ -2688,7 +2720,7 @@ function! s:DynamicDiff(type)
     let @@ = saved_unnamed_register
 endfunction
 "}}}}
-"{{{{{2 function! FindMergedVersion()            寻找某笔提交什么版本合入
+"{{{{{2  FindMergedVersion()            寻找某笔提交什么版本合入
 function! FindMergedVersion()
     "{{{{{3 变量定义
     let function = "2183"
@@ -3047,7 +3079,7 @@ function! GetFundValue(...)
     return fundvalues1
 endfunction
 "}}}}}
-"{{{{{2  function! WriteFile(...)                  获取指数源数据写入fund文件
+"{{{{{2   WriteFile(...)                  获取指数源数据写入fund文件
 function! WriteFile(...)
     "{{{{{3 变量定义
     let  indexdict  = {}  "fund.txt 中的已有的指数数据
@@ -3240,7 +3272,7 @@ function! CalculateInvest(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2  function! CalculateAmount(...)          investall , fund2indexall,indexall ,time  flag 计算金额
+"{{{{{2   CalculateAmount(...)          investall , fund2indexall,indexall ,time  flag 计算金额
 function! CalculateAmount(...)
     let amounthead = ""
     let amountlow = []
@@ -3354,7 +3386,7 @@ function! CalculateAmount(...)
     return invests
 endfunction
 "}}}}}
-"{{{{{2 function!  ConsolidateData(...)          整合index 文件，使数据化
+"{{{{{2   ConsolidateData(...)          整合index 文件，使数据化
 function! ConsolidateData(...)
     let indexfilelist = []
     let list2fmt1 = []
@@ -3730,7 +3762,7 @@ function! PythonGetIndexValuation(...)
     return  indexdata
 endfunction
 "}}}}}
-"{{{{{2  function! CalculateAmount(...) 同步金额面板
+"{{{{{2  function! CalculateAmount(...) 后同步金额面板
 function! CalculateAmount(...)
     "{{{{{3 变量定义
     "}}}}
@@ -3738,7 +3770,7 @@ function! CalculateAmount(...)
     call PopulateAmountPanel()
 endfunction
 "}}}}}
-"{{{{{2  function! CalculateData(...)  同步指数净值面板
+"{{{{{2  function! CalculateData(...)  先同步指数净值面板
 "指数和净值数据库的数据库从网络端获取
 "把数据库的数据反馈到面板
 "panelindexvalue  panelPEvalue
@@ -5194,8 +5226,8 @@ function! LoopToDillDictionary(...)
     let endpoint = 0
     let endnodeformat  = {}
     let tempchar = ""
-    let tempchar1 = "├── "
-    let tempchar2 = "│   "
+    let tempchar1 = "├──"
+    let tempchar2 = "│  █"
     "}}}}
     "字典拷贝一定要deepcopy,不然字典里面第二层成员还是同一个地址
     let nodeformat = deepcopy(dictformart)
@@ -5380,6 +5412,8 @@ function! FormatCode(...)
                 let tempchar = @@
                 if matchstr(tempchar,"//") != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
+                elseif  matchstr(tempchar,'\/\*') != ""
+                    silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
                 endif
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
@@ -5390,8 +5424,13 @@ function! FormatCode(...)
             endif
         elseif (count(tempchar,'{') != 0) && (count(tempchar,')') ==# 0)  && split(tempchar)[0] ==# '{'
            "锁定关键词和{不在同一行
-            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
-            let idx1 = start - 5
+           if matchstr(getline((idx1 - 1)),"//") != ""
+               silent execute ":" (idx1 - 1) . end . "s/\\/\\/.*$//g"
+           elseif  matchstr(getline((idx1 - 1)),'\/\*') != ""
+               silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
+           endif
+           silent execute ":" . (idx1 - 1) . ":s/\\n//g"
+           let idx1 = start - 5
         else
             "行中有不成对的小括号这种行会造成折叠不准确，直接删除
             if left != right
@@ -5449,7 +5488,7 @@ function! AddDebugLog(...)
             call search("import ")
             call append(line('.'),"import com.android.bluetooth.vivo.Log;")
         endif
-        let packagechar  = packagechar   . "(\"" . debugchar . g:debugid ."\");"
+        let packagechar  = packagechar   . "(TAG,\"" . debugchar . g:debugid ."\");"
         call append(line,packagechar)
         call cursor(line,0)
     endif
@@ -5472,10 +5511,17 @@ function! ListFunctionAamesAndClassNames(...)
                 \"for(",
                 \"for (",
                 \"synchronized (",
+                \"synchronized(",
                 \"switch (",
-                \"switch(",
+                \"else{",
+                \"else {",
+                \"case ",
+                \"default:",
                 \"do {",
-                \"do{"]
+                \"do {",
+                \"switch",
+                \"static {",
+                \"static{"]
     let uncheckflag = 0
     let tempcodelist = []
     "}}}}
@@ -5605,6 +5651,7 @@ if len(timer_info()) ==# 0
     let g:firstgrepflag = 0
     let g:lastgrepfilter = ""
     let g:lastgreplen = 0
+    let g:lastgrepfile = ""
 endif
 function! GrepChars(timer)
     let searchs = ""
@@ -5644,7 +5691,11 @@ function! GrepChars(timer)
         endif
         let searchs = join(searchs,".*")
     endif
-    let command = "grep -EsinR --include=*{.c,.cc,.cpp,.xml,.java,.h} " . "'" . searchs . "'"
+    if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
+    else
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h} " . "'" . searchs . "'"
+    endif
     echo command
     if @/ != searchs
         let @/ = substitute(searchs , '\\(', '(', 'g')
@@ -5680,8 +5731,10 @@ function! SearcherChars()
     let winwidthnum  = 0
     let timerflag = 0
     let timerid = 0
+
     if g:windowgrepid != win_getid() && g:windowgrepid != 0
         let @i = getline('.')
+        let g:lastgrepfile = expand("%:p")
         if win_gotoid(g:windowgrepid) ==# 1
             if @@ != ""
                 call setline(1,@@)
@@ -5986,7 +6039,11 @@ function! GetPotionFold(lnum)
     elseif  getline(a:lnum) =~? "<<<<<<<<<<<<<<<<" || getline(a:lnum) =~? ">>>>>>>>>>>>>>>"
         return '0'
     elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
-        return count(split(getline(a:lnum)),'│  ')
+        if matchstr(getline(a:lnum),"█") ==# "█"
+            return count(split(getline(a:lnum),'█'),'│  ')
+        else
+            return count(split(getline(a:lnum)),'│  ')
+        endif
     else
         return '1'
     endif
@@ -6075,6 +6132,7 @@ endfunction
 
 "}}}
 "{{{{  自动分析日志
+"\([0-9A-Fa-f]\{2\}:\)\{5\}[0-9A-Fa-f]\{2\}
 "{{{{{2 function!  FtpDownLoadFile(...) ftp 下载文件
 function! FtpDownLoadFile(...)
     "{{{{{3 变量定义
@@ -6084,9 +6142,9 @@ function! FtpDownLoadFile(...)
     let ftp_passwd='ofhmE5899'
     let remote_file = 'triage_result.txt'
     let local_file = '/opt6/tangxinlouosc/autoanaly/triage_result.txt'
-    let remote_dir = '/stability/WHQ/2346/1-23-21'
+    let remote_dir = 'stability/xjw/2346F/'
     let local_dir = '/opt6/tangxinlouosc/autoanaly'
-    let base_ls_cmd = " -e ' ls -l " . remote_dir
+    let base_ls_cmd = " -e ' set ftp:charset \"gbk\" ;set file:charset \"UTF-8\" ; ls -l " . remote_dir
     let base_quit_cmd = ";quit'"
     let base_cmd = "lftp -u " . ftp_user . "," . ftp_passwd . " " . ftp_host
     let lftp_ls_cmd = base_cmd . base_ls_cmd . base_quit_cmd
@@ -6116,7 +6174,7 @@ function! FtpDownLoadFile(...)
         let remote_file = directory[idx1]
         let local_file = local_dir . '/' . remote_file
         if "" ==# findfile(local_file )
-            let base_get_cmd = " -e 'get " . remote_dir . '/' . remote_file . " -o " . local_file
+            let base_get_cmd = " -e 'set ftp:charset \"gbk\" ;set file:charset \"UTF-8\" ; get " . remote_dir . '/' . remote_file . " -o " . local_file
             let lftp_download_cmd = base_cmd . base_get_cmd . base_quit_cmd
             let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始下载" .  remote_file )
 
@@ -6132,6 +6190,7 @@ function! FtpDownLoadFile(...)
                     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始解压" .  directory[idx1])
                     call system("unzip " . local_file . " -d " . local_dir)
                     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  directory[idx1])
+                    call system("rm -rf " . local_file)
                 endif
             endif
         endif
@@ -6145,7 +6204,7 @@ function! FtpDownLoadFile(...)
 endfunction
 "}}}}}
 
-"{{{{{2 function!  DifferentiateLogFiles(...) 区分log文件
+"{{{{{2   DifferentiateLogFiles(...) 区分log文件
 function! DifferentiateLogFiles(...)
     "{{{{{3定义
     let filespathdict = {'main':[],
@@ -6197,36 +6256,274 @@ function! AutoAnalyzer(...)
     "{{{{{3 变量定义
     let filedict = {}
     let resultlist = []
-    let filterchar = {
-                \"扫描":"startdiscovery|createbond|DeviceFoundHandler"}
+    let loglist = []
+    let filterchar = g:filterchar
     let fileindexchar = ""
     let idx1 = 0
     let filterkey = []
     let filterkeytem = []
     let indexfilter = 0
+    let indexfilter1 = 0
+    let allresultlist = []
+    let tempfilterchar = ""
     if a:0 ==# 1
         let modeflag = a:1
     endif
     "}}}}
+    let filterkey = keys(filterchar)
     if a:0 ==# 0
-        let filterkey = keys(filterchar)
         let filterkeytem = copy(filterkey)
         call AddNumber(filterkeytem)
-        let indexfilter = input("请输入mode")
+        let indexfilter1 = input("请输入mode a 是全搜索")
     endif
     let filedict = DifferentiateLogFiles()
     while idx1 < len(filterkey)
-        if filterkey[indexfilter] ==# "卡音"
+        let loglist = []
+        let resultlist = []
+        if a:0 ==# 0 && indexfilter1 != 'a'
+            let idx1 = len(filterkey) - 1
+            let indexfilter = filterkey[indexfilter1]
+            if indexfilter ==# "temp"
+                let tempfilterchar = input("输入关键词")
+            endif
+        else
+            let indexfilter = filterkey[idx1]
+        endif
+        if indexfilter ==# "卡音"
             let fileindexchar = "adsp"
-            let resultlist = SearchFile(filedict[fileindexchar],filterchar[filterkey[indexfilter]])
+            let loglist = SearchFile(filedict[fileindexchar],filterchar[indexfilter])
+
+        elseif indexfilter ==# "temp"
+            if indexfilter1 != 'a'
+                let fileindexchar = "main"
+                let loglist = SearchFile(filedict[fileindexchar],tempfilterchar)
+                let @/ = substitute(tempfilterchar, '|', '\\|', 'g')
+            endif
         else
             let fileindexchar = "main"
-            let resultlist = SearchFile(filedict[fileindexchar],filterchar[filterkey[indexfilter]])
-            call append(line('.'), resultlist)
+            let loglist = SearchFile(filedict[fileindexchar],filterchar[indexfilter])
+            let resultlist = AnalyzeLogResults(loglist,indexfilter)
+
+            let resultlist = insert(resultlist,"<<<<<<<<<<<<<<<<")
+            let resultlist = insert(resultlist,indexfilter . " 结果分析")
+            let resultlist = add(resultlist,">>>>>>>>>>>>>>>")
+
+            let loglist = insert(loglist,"<<<<<<<<<<<<<<<<")
+            let loglist = insert(loglist,indexfilter . " 源数据")
+            let loglist = add(loglist,">>>>>>>>>>>>>>>")
+        endif
+        let allresultlist  = extend(allresultlist,resultlist)
+        let allresultlist  = extend(allresultlist,loglist)
+        let idx1 += 1
+    endwhile
+    call writefile(allresultlist,"./analy.txt")
+
+endfunction
+"}}}}}
+
+"{{{{{2   AnalyzeLogResults(...)分析日志结果
+function! AnalyzeLogResults(...)
+    "{{{{{3 变量定义
+    let loglist = copy(a:1)
+    let fileindexchar = a:2
+
+    "["keywords","时间","msg"]
+    let smallestunit = g:smallestunitdict[fileindexchar]
+    let idx1 = 0
+    let idj1 = 0
+    let resultlist = []
+    let keywords = []
+    let timelength = []
+    let msg = []
+    "}}}}
+    let keywords = GetOneOfTheColumns(smallestunit,"",0)
+    let timelength  = GetOneOfTheColumns(smallestunit,"",1)
+    let msg = GetOneOfTheColumns(smallestunit,"",2)
+    let lasttime = -1
+    let curltime = -1
+    let lastlogtime = 0
+    let curllogtime = 0
+    while idx1 < len(loglist)
+            let idj1 = 0
+            while idj1 < len(keywords)
+                if matchstr(loglist[idx1],keywords[idj1]) != ""
+                    if timelength[idj1] != -1
+                        let curltime = timelength[idj1]
+                        let curllogtime = ParseTimestamp(split(loglist[idx1])[1])
+                        let resultlist = add(resultlist,msg[idj1])
+                        if lasttime != -1 && curltime != 1 && curltime > lasttime
+                            if ((curllogtime - lastlogtime)) > ((curltime - lasttime) * 1.25)
+                                let resultlist[-1] = resultlist[-1]  . " 花费 " .  string((curllogtime - lastlogtime) / 1000) . "s标准是"  . string(((curltime - lasttime) * 1.25))
+                            endif
+                        endif
+                        let resultlist = add(resultlist,loglist[idx1])
+                    endif
+                endif
+                let idj1 += 1
+            endwhile
+            let lasttime = curltime
+            let lastlogtime = curllogtime
+            let idx1 += 1
+        endwhile
+    return resultlist
+endfunction
+"}}}}}
+
+"{{{{{2 function!  EntryStandardProcess(...) 录入标准流程
+function! EntryStandardProcess(...)
+    "{{{{{3 变量定义
+    let path = Homedir("autoanaly/process")
+    let processlist = []
+    let filterchar = g:filterchar
+    let idx1 = 0
+    let filterkey = []
+    let filterkeytem = []
+    let filterlist = []
+    let firsttime = 0
+    "}}}}
+    let filterkey = keys(filterchar)
+    let filterkeytem = copy(filterkey)
+    call AddNumber(filterkeytem)
+    let indexfilter = input("请输入mode")
+    let indexfilter = filterkey[indexfilter]
+    let processlist = readfile(path)
+    let firsttime = ParseTimestamp(split(processlist[0])[1])
+    echo filterchar[indexfilter]
+    echo processlist[0]
+    echo substitute(filterchar[indexfilter], '|', '\\|', 'g')
+    while idx1 < len(processlist)
+        let filterlist = add(filterlist,[])
+        let filterlist[-1] = ["","",""]
+        let filterlist[-1][0] = matchstr(processlist[idx1],substitute(filterchar[indexfilter], '|', '\\|', 'g'))
+        let filterlist[-1][1] = ParseTimestamp(split(processlist[idx1])[1]) - firsttime
+        let idx1 += 1
+    endwhile
+    call append(line('.'),string(filterlist))
+endfunction
+"}}}}}
+
+"{{{{{2 function!  UnzipFiles(...) extract 解压文件
+function! UnzipFiles(...)
+    "{{{{{3 变量定义
+    let downloadlogfile = Homedir("autoanaly/zipDetails")
+    let filetype = ".zip"
+    let filename = []
+    let targetfilepath = ""
+    let findcmd = ""
+    let idx1 = 0
+    let findmode = ""
+    let extractcmd = "unzip "
+    let isdelete = ""
+    let tempfilename = ""
+    "}}}}
+    if input("1 当前目录，2递归") ==# 2
+        let findmode = ""
+    else
+        let findmode = "-maxdepth 1"
+    endif
+
+    if input("是否删除") ==# "yes"
+        let isdelete = "yes"
+    endif
+    let findcmd = "find " . findmode . " -iname '*"  . filetype . "'"
+    echo findcmd
+    let filename = split(system(findcmd),"\n")
+    let downlog = readfile(downloadlogfile )
+    let downlog = add(downlog, "###########################")
+    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始解压" .  filetype)
+    while idx1 < len(filename)
+        if "" ==# matchstr(filename[idx1],"(")
+            let targetfilepath = split(filename[idx1],filetype)[0]
+            if finddir(targetfilepath) ==# ""
+                call system(extractcmd  . filename[idx1] . " -d " . targetfilepath)
+                let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压end" .  filename[idx1])
+            endif
+            if isdelete ==# "yes"
+                call system("rm -rf " . filename[idx1])
+            endif
+        else
+            let tempfilename = split(filename[idx1],"/")
+            let  tempfilename[-1] = "'" . tempfilename[-1] . "'"
+            let tempfilename = join(tempfilename,"/")
+            call system("rm -rf " . tempfilename)
+            let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "删除了" .  tempfilename)
         endif
         let idx1 += 1
     endwhile
-    call input("11")
+    let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  filetype)
+    let downlog = add(downlog, "###########################")
+    call writefile(downlog,downloadlogfile )
+
+endfunction
+"}}}}}
+
+"{{{{{2 function!  LogSearcher(...) 日志搜索器
+nnoremap <leader>f :call LogSearcher()<cr>
+function! LogSearcher()
+    "{{{{{3 变量定义
+    let keywords = ""
+    let grepchar = "grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}  "
+    let path = expand("%:p")
+    let grepcmd  = ""
+    "let grepcmd  = grepchar  .keywords
+    let result = []
+    let historysele = []
+    let temphistorysele = []
+    let  flag = ""
+    "}}}}
+    let historysele = split(@l,'█')
+    let temphistorysele = copy(historysele)
+    call AddNumber2(temphistorysele)
+    let flag = input("请输入搜索的关键词")
+    echo flag
+    echo len(flag)
+    if flag ==# "no"
+        let keywords = @@
+    else
+        if len(flag) > 3
+            let keywords = flag
+        else
+            let keywords = historysele[flag]
+        endif
+    endif
+    let grepcmd  = grepchar . " \"" .  keywords . "\" " . path
+    "echo split(@l,'█')
+    if count(split(@l,'█'),keywords) ==# 0
+        let keywords = keywords . '█'  . @l
+        if len(split(keywords,"█")) > 10
+            let keywords = split(keywords,"█")
+            let keywords = keywords[0:9]
+            let keywords = join(keywords,"█")
+        endif
+        let @l = keywords
+    endif
+    execute "normal! :copen\<cr>"
+    execute "normal! :set modifiable\<cr>"
+    silent execute "normal! \<c-w>J"
+    :cexpr system(grepcmd)
+endfunction
+"}}}}}
+
+"{{{{{2 function!  LoopAnalysis(...) 循环分析
+function! LoopAnalysis(...)
+    "{{{{{3 变量定义
+    let paths = []
+    let findcmd = "find -iname  'mobilelog' -type d"
+    let directory = ""
+    let idx1 = 1
+    "}}}}
+    let paths = split(system(findcmd),"\n")
+    while idx1 < len(paths)
+        let directory = split(paths[idx1],'/')[1]
+        execute 'cd ' . directory
+        call AutoAnalyzer(1)
+        execute 'cd ..'
+        let idx1 += 1
+    endwhile
+    echo paths
+    "execute 'cd auto_export_20240125184947_20240125200343_234883337'
+
+
 endfunction
 "}}}}}
 "}}}
