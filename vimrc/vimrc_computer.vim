@@ -5140,7 +5140,7 @@ function! GetFoldLevel(...)
         let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
-    execute "normal! :q!\<cr>"
+    execute "normal! :wq!\<cr>"
     execute "normal! :bd" . bufnr('$') ."\<cr>"
     return foldlist
 endfunction
@@ -5172,38 +5172,73 @@ function! ParseCodeFiles(...)
     let col = 0
     let winnrnum = 0
     let winid = 0
+    let resultdict = {}
+    let mode = 0
     "}}}}
-    let winnrnum = tabpagewinnr(tabpagenr(),'$')
-    echo winnrnum
-    if winnrnum  >  1
-        execute "normal! \<c-w>h"
-        execute "normal! :q!\<cr>"
-        "execute "normal! :tabn\<cr>"
-        "execute "normal! :q!\<cr>"
+    if a:0 ==# 0
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+            "execute "normal! :tabn\<cr>"
+            "execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        let filename = a:1
+        let mode = a:2
+        "execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
     endif
-    let winid = win_getid()
-    let filename = expand("%:p")
-    let line = line('.')
-    let col = col('.')
-    call FormatCode(filename)
-    let filelist = readfile(filename)
-    let foldlevellist = GetFoldLevel(filename)
-    call win_gotoid(winid)
-    let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
-    let codelist = ListFunctionAamesAndClassNames(codelist)
-    let winwidthnum  = float2nr(winwidth('%')  * 0.3)
-    call win_gotoid(winid)
-    execute "normal! :vne\<cr>"
-    execute "vert resize " . winwidthnum
-    call setline(1,codelist)
-    "execute "normal! :tabnew\<cr>"
-    "call setline(1,string(codedict))
-    "execue "normal! :tabp\<cr>"
-    execute "normal! \<c-w>l"
-    call cursor(line,col)
-    let &foldlevel=100
-    let @/ = "█1█.*$"
-    "echo codedict
+
+    if a:0 ==# 0
+        let winid = win_getid()
+        let line = line('.')
+        let col = col('.')
+        call FormatCode(filename)
+        let filelist = readfile(filename)
+        let foldlevellist = GetFoldLevel(filename)
+        call win_gotoid(winid)
+        let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
+        let codelist = ListFunctionAamesAndClassNames(codelist)
+        let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+        call win_gotoid(winid)
+        execute "normal! :vne\<cr>"
+        execute "vert resize " . winwidthnum
+        call setline(1,codelist)
+        "execute "normal! :tabnew\<cr>"
+        "call setline(1,string(codedict))
+        "execue "normal! :tabp\<cr>"
+        execute "normal! \<c-w>l"
+        let @/ = "█1█.*$"
+    else
+        echo filename . "tangxinloubegin"
+        let winid = win_getid()
+        let line = line('.')
+        let col = col('.')
+        echo filename . "tangxinlou1"
+        call FormatCode(filename)
+        echo filename . "tangxinlou2"
+        let filelist = readfile(filename)
+        let foldlevellist = GetFoldLevel(filename)
+        call win_gotoid(winid)
+        echo filename . "tangxinlou3"
+        let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
+        echo filename . "tangxinlou4"
+        if mode ==# 1
+            "let codelist = ListFunctionAamesAndClassNames(codelist)
+            echo filename . "tangxinlou5"
+        endif
+        "call win_gotoid(winid)
+        let resultdict["codelist"] =  codelist
+        let resultdict["codedict"] =  codedict
+        echo filename . "tangxinlouend"
+        "execute "normal! :wq!\<cr>"
+        "execute "normal! :bd" . bufnr('$') ."\<cr>"
+        call cursor(line,col)
+        let &foldlevel=100
+        return resultdict
+    endif
 endfunction
 "}}}}}
 
@@ -5239,8 +5274,10 @@ function! LoopToDillDictionary(...)
         let endpoint = str2nr(split(listlen,'-')[1])
     endif
     let idx1 = startpoint
+    "echo filename . "tangxin begin" . "listlen " . startpoint  . " - "  . endpoint  . "flag" . flag
     while idx1 < endpoint
         if flag ==# foldlevellist[idx1]
+            "echo filename . "tangxinlog begin" . "listlen " . startpoint  . " - "  . endpoint  . "flag" . flag
             "设置头结点字典成员
             if flag != 0
                 let &foldlevel=flag -1
@@ -5260,6 +5297,7 @@ function! LoopToDillDictionary(...)
                 let end = endpoint
             endif
             let listlen = string(start -1) . '-' . string(end -1)
+            "echo listlen
             "设置条件判断是否循环获取下一结点
             if max(foldlevellist[start -1:end -1]) != min(foldlevellist[start -1:end -1])
             "if flag < 4
@@ -5279,9 +5317,14 @@ function! LoopToDillDictionary(...)
             else
             endif
             let idx1 = endpoint
+            "echo filename . "tangxinlog end" . "listlen " . startpoint  . " - "  . endpoint . "flag" . flag
+            "if input("123") ==# "123"
+            "    return
+            "endif
         endif
         let idx1 += 1
     endwhile
+    "echo filename . "tangxin end" . "listlen " . startpoint  . " - "  . endpoint  . "flag" . flag
     return nodeformat
 endfunction
 "}}}}}
@@ -5397,7 +5440,7 @@ function! FormatCode(...)
         let tempchar = getline(idx1)
         let left = count(tempchar,'(')
         let right = count(tempchar,')')
-        if  matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)
+        if  (matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)) || (matchstr(tempchar,");") ==# ");"  ||  (count(tempchar,')') != 0 && count(tempchar,';') != 0))
             "锁定行中带){的行
             call cursor(idx1,0)
             let end = idx1
@@ -5412,9 +5455,12 @@ function! FormatCode(...)
                 let tempchar = @@
                 if matchstr(tempchar,"//") != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
-                elseif  matchstr(tempchar,'\/\*') != ""
+                endif
+                if  matchstr(tempchar,'\/\*') != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
                 endif
+                "echo tempchar
+                "echo "tangxinlou1"
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
                 silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
@@ -5426,7 +5472,8 @@ function! FormatCode(...)
            "锁定关键词和{不在同一行
            if matchstr(getline((idx1 - 1)),"//") != ""
                silent execute ":" (idx1 - 1) . end . "s/\\/\\/.*$//g"
-           elseif  matchstr(getline((idx1 - 1)),'\/\*') != ""
+           endif
+           if  matchstr(getline((idx1 - 1)),'\/\*') != ""
                silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
            endif
            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
@@ -5451,6 +5498,11 @@ function! FormatCode(...)
                 silent execute "normal! dd"
                 let idx1 -= 5
             endif
+            "if matchstr(tempchar,"<---------------") != ""
+            "    call cursor(idx1,0)
+            "    silent execute "normal! dd"
+            "    let idx1 -= 5
+            "endif
         endif
         let idx1 += 1
     endwhile
@@ -5520,6 +5572,9 @@ function! ListFunctionAamesAndClassNames(...)
                 \"do {",
                 \"do {",
                 \"switch",
+                \"while (",
+                \"while(",
+                \"<-----",
                 \"static {",
                 \"static{"]
     let uncheckflag = 0
@@ -5539,6 +5594,31 @@ function! ListFunctionAamesAndClassNames(...)
     endwhile
     let codelist = tempcodelist
     return codelist
+endfunction
+"}}}}}
+
+"{{{{{2 function!  OrganizeJavaCodeLogic(...) 整理代码逻辑
+function! OrganizeJavaCodeLogic(...)
+    "{{{{{3 变量定义
+    let files = []
+    let filename = ""
+    let classdict = {}
+    let idx1 = 0
+    "}}}}
+    let files = split(system("find -iname '*.java'"),"\n")
+    while idx1 < len(files)
+        let filename = split(files[idx1],'/')[-1]
+        "execute "normal! :e " . filename . " \<cr>"
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        let classdict[filename] = ParseCodeFiles(files[idx1],1)
+        execute "normal! :wq!\<cr>"
+        redraw
+        let idx1 += 1
+    endwhile
+   " execute "normal! :e ./A2dpService.java \<cr>"
+   " let classdict["A2dpService.java"] = ParseCodeFiles("./A2dpService.java",1)
+    call append(line('.'),string(classdict))
 endfunction
 "}}}}}
 "}}}}}
@@ -6579,3 +6659,4 @@ endfunction
 "g/```c\_.\{-}\ze```/yank B | quit
 "%s/```c\_.\{-}\ze```/\=setreg('A', submatch(0), 'l')/gn
 "find -iname . -type d -name 'out_*' | xargs rm -rf
+"repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-13.0.0_r1
