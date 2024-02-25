@@ -1631,6 +1631,40 @@ function! ParseTimestamp(...)
     return str2float(mstime . ".0")
 endfunction
 "}}}}}
+"{{{{{2 SortByExpression(...) 通过表达式排序
+function! SortByExpression(...)
+    "{{{{{3 变量定义
+    "let charlist = a:1
+    let charlist = ""
+    let expression = ""
+    let templist = []
+    let tmepcharlist = []
+    let idx1 = 0
+    let idj1 = 0
+    "}}}}
+    "let expression = "split(echo)"
+    let charlist = readfile("./1.txt")
+    "call map(charlist,split(v:val,"__")[-1])
+    for item in charlist 
+        let templist = add(templist,split(item,"__")[-1])
+    endfor
+    let templist = sort(templist)
+    let tmepcharlist = copy(charlist) 
+    while idx1 < len(tmepcharlist)
+        let idj1 = 0
+        while idj1 < len(templist)
+            if matchstr(tmepcharlist[idx1],templist[idj1]) != ""
+                let charlist[idj1] = tmepcharlist[idx1]
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    echo templist
+    call append(1,charlist)
+    
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
