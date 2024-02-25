@@ -111,7 +111,7 @@ endif
 "iabbrev com tangxinlou@wingtech.com
 "iabbrev txl tangxinlou
 "iabbrev r r!
-iabbrev find find -iname
+iabbrev find find -iname '*mobilelog*'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
 iabbrev gitstatus git status .
@@ -328,6 +328,7 @@ inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords")<cr>
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
@@ -392,9 +393,11 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
 let g:debugid = 0
 let g:smallestunitdict = {
             \"扫描":[["BluetoothAdapterService: startDiscovery",0,"发起扫描"],["BluetoothAdapterService: cancelDiscovery",13000,"停止扫描"]],
+            \"auto_connect":[['BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on', 28631.0, ''], ['BluetoothPhonePolicy: autoConnect:HFP Device', 28634.0, ''], ['autoConnectHeadset: Connecting HFP with', 28634.0, ''], ['BluetoothPhonePolicy: autoConnect:A2DP Device', 28635.0, ''], ['BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP', 28635.0, '']],
             \"bond" : [['BluetoothBondStateMachine: Bond State Change Intent:48:8A:E8:DE:5D:D9 BOND_NONE =>', 0.0, ''], ['aclStateChangeCallback', 2367.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:48:8A:E8:DE:5D:D9 BOND_BONDING =>', 4695.0, '']]}
 let g:filterchar = {
             \"扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
+            \"auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"bond" : "bluetoothbondstate.*=>|aclStateChangeCallback",
             \"temp" : "temptemptem"}
 "}}}}}
@@ -408,7 +411,6 @@ function! Homedir(...)
     if "" ==# findfile(dirpath)
         call system("touch " . dirpath)
         echo dirpath . "没有这个文件现在新建这个文件"
-        call input("需要新建文件")
     else
         echo dirpath
     endif
@@ -623,21 +625,30 @@ function! MakeCompressedPackage()
     if isvos  != "yes"
         let templist = join(split(batfile[3])[1:])
         let batfile[3] = templist
+    else
+        let templist = join(split(batfile[3])[1:])
+        let batfile[3] = templist
+        let batfile[3] =  substitute(batfile[3], 'vivoroot', 'root', 'g')
     endif
 
     if iscopyso ==# "yes"
         let command = "cp -rf libbluetooth_jni.so libbluetooth.so ./cp/cp/system/lib64 "
         call system(command)
 
+        let templist = join(split(batfile[10])[1:])
+        let batfile[10] = templist
         let templist = join(split(batfile[11])[1:])
         let batfile[11] = templist
+
         let templist = join(split(batfile[12])[1:])
         let batfile[12] = templist
-
-        let templist = join(split(batfile[14])[1:])
-        let batfile[14] = templist
-        let templist = join(split(batfile[15])[1:])
-        let batfile[15] = templist
+        let templist = join(split(batfile[13])[1:])
+        let batfile[13] = templist
+    else
+        let batfile[10] = ""
+        let batfile[11] = ""
+        let batfile[12] = ""
+        let batfile[13] = ""
     endif
 
     if iscopyapk ==# "yes"
@@ -647,23 +658,32 @@ function! MakeCompressedPackage()
         let batfile[8] = templist
         let templist = join(split(batfile[9])[1:])
         let batfile[9] = templist
+    else
+        let batfile[8] = ""
+        let batfile[9] = ""
     endif
 
     if iscopyconf ==# "yes"
         let command = "cp -rf interop_database.conf  ./cp/cp/system "
         call system(command)
-        let templist = join(split(batfile[17])[1:])
-        let batfile[17] = templist
-        let templist = join(split(batfile[18])[1:])
-        let batfile[18] = templist
+        let templist = join(split(batfile[14])[1:])
+        let batfile[14] = templist
+        let templist = join(split(batfile[15])[1:])
+        let batfile[15] = templist
+    else
+        let batfile[14] = ""
+        let batfile[15] = ""
     endif
     if iscopyiotconf ==# "yes"
         let command = "cp -rf iot_device_list_json.conf  ./cp/cp/system "
         call system(command)
-        let templist = join(split(batfile[20])[1:])
-        let batfile[20] = templist
-        let templist = join(split(batfile[21])[1:])
-        let batfile[21] = templist
+        let templist = join(split(batfile[16])[1:])
+        let batfile[16] = templist
+        let templist = join(split(batfile[17])[1:])
+        let batfile[17] = templist
+    else
+        let batfile[16] = ""
+        let batfile[17] = ""
     endif
     silent call writefile(batfile,"./cp/cp64.host.R.bat")
     call append(line("."),batfile)
@@ -5140,7 +5160,7 @@ function! GetFoldLevel(...)
         let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
-    execute "normal! :wq!\<cr>"
+    execute "normal! :q!\<cr>"
     execute "normal! :bd" . bufnr('$') ."\<cr>"
     return foldlist
 endfunction
@@ -5188,7 +5208,9 @@ function! ParseCodeFiles(...)
     else
         let filename = a:1
         let mode = a:2
-        "execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
     endif
 
     if a:0 ==# 0
@@ -5232,11 +5254,11 @@ function! ParseCodeFiles(...)
         "call win_gotoid(winid)
         let resultdict["codelist"] =  codelist
         let resultdict["codedict"] =  codedict
-        echo filename . "tangxinlouend"
-        "execute "normal! :wq!\<cr>"
-        "execute "normal! :bd" . bufnr('$') ."\<cr>"
         call cursor(line,col)
         let &foldlevel=100
+        echo filename . "tangxinlouend"
+        execute "normal! :wq!\<cr>"
+        execute "normal! :bd" . bufnr('$') ."\<cr>"
         return resultdict
     endif
 endfunction
@@ -5476,6 +5498,7 @@ function! FormatCode(...)
            if  matchstr(getline((idx1 - 1)),'\/\*') != ""
                silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
            endif
+           silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
            let idx1 = start - 5
         else
@@ -5493,16 +5516,17 @@ function! FormatCode(...)
                     silent execute "normal! dd"
                 endif
             endif
+            "//{ 和//}的注释行直接删除
             if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
                 call cursor(idx1,0)
                 silent execute "normal! dd"
                 let idx1 -= 5
             endif
-            "if matchstr(tempchar,"<---------------") != ""
-            "    call cursor(idx1,0)
-            "    silent execute "normal! dd"
-            "    let idx1 -= 5
-            "endif
+            if matchstr(tempchar,"<---------------") != ""
+                call cursor(idx1,0)
+                silent execute "normal! dd"
+                let idx1 -= 5
+            endif
         endif
         let idx1 += 1
     endwhile
@@ -5523,6 +5547,7 @@ function! AddDebugLog(...)
     let line = 0
     "}}}}
     let line = line('.')
+    echo "g:debugid" . g:debugid
     if matchstr(@%,".cpp") ==# ".cpp"
         let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
         call append(line('.'),jnichar)
@@ -5609,11 +5634,10 @@ function! OrganizeJavaCodeLogic(...)
     while idx1 < len(files)
         let filename = split(files[idx1],'/')[-1]
         "execute "normal! :e " . filename . " \<cr>"
-        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
-        setlocal foldmethod=syntax
+        "execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        "setlocal foldmethod=syntax
         let classdict[filename] = ParseCodeFiles(files[idx1],1)
-        execute "normal! :wq!\<cr>"
-        redraw
+        "execute "normal! :wq!\<cr>"
         let idx1 += 1
     endwhile
    " execute "normal! :e ./A2dpService.java \<cr>"
@@ -6212,7 +6236,10 @@ endfunction
 
 "}}}
 "{{{{  自动分析日志
-"\([0-9A-Fa-f]\{2\}:\)\{5\}[0-9A-Fa-f]\{2\}
+"\([0-9A-Fa-fxX]\{2\}:\)\{5\}[0-9A-Fa-fxX]\{2\}
+"bluetoothbond.*=> \w\+  vim
+"bluetoothbond.*=>\s*\w+ notepad ++
+"echo matchstr("59157:02-21 19:43:30.190671 12806 12900 D A2dpStateMachine: Connection state CC:81:2A:DC:F2:12: CONNECTING->CONNECTED","A2dpStateMachine: Connection state.*->\w\+")
 "{{{{{2 function!  FtpDownLoadFile(...) ftp 下载文件
 function! FtpDownLoadFile(...)
     "{{{{{3 变量定义
@@ -6350,6 +6377,7 @@ function! AutoAnalyzer(...)
         let modeflag = a:1
     endif
     "}}}}
+    :%d
     let filterkey = keys(filterchar)
     if a:0 ==# 0
         let filterkeytem = copy(filterkey)
@@ -6396,12 +6424,21 @@ function! AutoAnalyzer(...)
         let allresultlist  = extend(allresultlist,loglist)
         let idx1 += 1
     endwhile
+    call append(1,allresultlist)
     call writefile(allresultlist,"./analy.txt")
 
 endfunction
 "}}}}}
 
 "{{{{{2   AnalyzeLogResults(...)分析日志结果
+"蓝牙打开了几次，什么时候打开，打开耗时多少
+"蓝牙连接了多少个设备，什么时候连接，连接耗时，是否有失败
+"蓝牙有发起几次播放，什么时候播放，播放了多久，每次播放耗时是否正常
+"蓝牙有发起了几次通话，什么时候通话，通话了多久，通路是什么
+"audio 发起的播放和通话时间是否符合要求
+"播放和通话的编解码器和采样率，音量
+"gatt 发起连接扫描时间，上报的设备
+"卡音关键词，蓝牙打不开关键，服务进程死掉
 function! AnalyzeLogResults(...)
     "{{{{{3 变量定义
     let loglist = copy(a:1)
@@ -6433,7 +6470,7 @@ function! AnalyzeLogResults(...)
                         let resultlist = add(resultlist,msg[idj1])
                         if lasttime != -1 && curltime != 1 && curltime > lasttime
                             if ((curllogtime - lastlogtime)) > ((curltime - lasttime) * 1.25)
-                                let resultlist[-1] = resultlist[-1]  . " 花费 " .  string((curllogtime - lastlogtime) / 1000) . "s标准是"  . string(((curltime - lasttime) * 1.25))
+                                let resultlist[-1] = resultlist[-1]  . " 花费 " .  string((curllogtime - lastlogtime) / 1000) . "s标准是"  . string(((curltime - lasttime) * 1.25)) . "ms"
                             endif
                         endif
                         let resultlist = add(resultlist,loglist[idx1])
@@ -6542,7 +6579,7 @@ nnoremap <leader>f :call LogSearcher()<cr>
 function! LogSearcher()
     "{{{{{3 变量定义
     let keywords = ""
-    let grepchar = "grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}  "
+    let grepchar = "grep -Esinr  "
     let path = expand("%:p")
     let grepcmd  = ""
     "let grepcmd  = grepchar  .keywords
@@ -6555,8 +6592,8 @@ function! LogSearcher()
     let temphistorysele = copy(historysele)
     call AddNumber2(temphistorysele)
     let flag = input("请输入搜索的关键词")
-    echo flag
-    echo len(flag)
+    "echo flag
+    "echo len(flag)
     if flag ==# "no"
         let keywords = @@
     else
@@ -6577,10 +6614,11 @@ function! LogSearcher()
         endif
         let @l = keywords
     endif
-    execute "normal! :copen\<cr>"
-    execute "normal! :set modifiable\<cr>"
+    let @/ = substitute(keywords, '|', '\\|', 'g')
+    silent cgetexpr  system(grepcmd)
+    silent redraw | silent copen
+    silent set modifiable
     silent execute "normal! \<c-w>J"
-    :cexpr system(grepcmd)
 endfunction
 "}}}}}
 
@@ -6596,6 +6634,7 @@ function! LoopAnalysis(...)
     while idx1 < len(paths)
         let directory = split(paths[idx1],'/')[1]
         execute 'cd ' . directory
+        echo directory
         call AutoAnalyzer(1)
         execute 'cd ..'
         let idx1 += 1
@@ -6660,3 +6699,8 @@ endfunction
 "%s/```c\_.\{-}\ze```/\=setreg('A', submatch(0), 'l')/gn
 "find -iname . -type d -name 'out_*' | xargs rm -rf
 "repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-13.0.0_r1
+"let item = {}
+"let item.filename = "com/android/bluetooth/a2dp/A2dpService.java"
+"let item.lnum = 1229
+"let item.text = "Log.e(TAG, \"setActiveDeviceInternal(\" + device + \"): Cannot set as active"
+"call setqflist([item])
