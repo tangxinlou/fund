@@ -349,7 +349,7 @@ nnoremap <leader>vh "iyy:execute "grep! -Esinr --include=*.h "shellescape(expand
 nnoremap <leader>vc "iyy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 nnoremap <leader>vj "iyy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "执行命令
-nnoremap <leader>xx <esc>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>
+nnoremap <leader>xx <esc>:let @t=@*<cr>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>:let @*=@t<cr>:let @t=""<cr>
 ""}}}}
 "文件路径切换{{{{
 "更改到当前文件所在的目录
@@ -392,10 +392,12 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 let g:debugid = 0
+"sdpdefs.h uuid
+"hci_error_code.h  error code
 let g:smallestunitdict = {
-            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, ''], ['BtGatt.GattService: clientDisconnect', -2, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', -2, '']],
-            \"10aclconnectstate": [['aclStateChangeCallback: Adapter State: ON Connected', 0.0, ''], ['aclStateChangeCallback: Adapter State: ON Disconnected', 1000.0, '']],
-            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,"发起扫描"],["BluetoothAdapterService: cancelDiscovery",13000,"停止扫描"]],
+            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, 'gatt连接成功'], ['BtGatt.GattService: clientDisconnect', [-2,4703.0], ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', 5714.0, 'gatt断开连接']],
+            \"10aclconnectstate": [['aclStateChangeCallback: Adapter State: ON Connected', 0.0, ''], ['aclStateChangeCallback: Adapter State: ON Disconnected', [-2,1000.0], '']],
+            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,"发起扫描"],["BluetoothAdapterService: cancelDiscovery",-2,"停止扫描"]],
             \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, '']],
             \"07hfpVirtual_simple_start_call": [['HeadsetService: startScoUsingVirtualVoiceCall', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 260.0, '']],
             \"06hfp_simple_start_call": [['Telecom: Telecom: VivoCallsManager: setCallState CONNECTING -> DIALING', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 2917.0, '']],
@@ -406,6 +408,12 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [23]",
+            \"15volume" : "volumedebug.*streamType:[23]",
+            \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
+            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|: t-neptune-mp",
+            \"12scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback",
             \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery",
@@ -469,6 +477,7 @@ function! s:GrepOperator(type)
 endfunction
 "}}}}}
 "{{{{{2 function! s:Copy2file(type)              拷贝内容到本地                可视模式下逗号 + m 调用
+"通过把命令写到一个bat文件中，为这个bat文件右键属性设置快捷键
 "powershell -command "Get-Clipboard" > Z:\tangxinlou\transplant.txt  这个命令会在windows 环境拷贝剪贴板的内容到transplant.txt
 vnoremap <leader>m :<c-u>call <SID>Copy2file(visualmode())<cr>
 function! s:Copy2file(type)
@@ -736,6 +745,11 @@ function! MyCompare(i1, i2)
 endfunction
 func! MyCompare1(i1, i2)
     return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
+endfunc
+func! MyCompareTimestamp(i1, i2)
+    let i1timestamp = ParseTimestamp(split(a:i1)[1])
+    let i2timestamp = ParseTimestamp(split(a:i2)[1])
+    return i2timestamp ==#  i1timestamp ? 0 : i1timestamp > i2timestamp ? 1 : -1
 endfunc
 function! MyCompareVersion(i1, i2)
     let idex = 0
@@ -1658,7 +1672,7 @@ function! ParseTimestamp(...)
     return str2float(mstime . ".0")
 endfunction
 "}}}}}
-"{{{{{2 SortByExpression(...) 通过表达式排序
+"{{{{{2 SortByExpression(...) 通过表达式排序log 文件
 function! SortByExpression(...)
     "{{{{{3 变量定义
     let charlist = copy(a:1)
@@ -1671,9 +1685,14 @@ function! SortByExpression(...)
     let index = 0
     "}}}}
     for item in charlist
-        let templist = add(templist,split(item,"__")[-1])
+        if matchstr(item,"curf") ==# ""
+            let templist = add(templist,split(item,"__")[-1])
+        else
+            let templist = add(templist,split(item,"log_")[-1])
+        endif
     endfor
     let templist = sort(templist)
+    echo templist
     while idx1 < len(charlist)
         let tempchar = split(charlist[idx1],"__")[-1]
         let index  =  index(templist,tempchar)
@@ -1681,6 +1700,31 @@ function! SortByExpression(...)
         let idx1 += 1
     endwhile
     return templist
+endfunction
+"}}}}}
+"{{{{{2 UniqueList(...) 列表项去重
+function! UniqueList(...)
+  let list = copy(a:1)
+  let result = []
+  for item in list
+    if index(result, item) == -1
+      call add(result, item)
+    endif
+  endfor
+  return result
+endfunction
+"}}}}}
+"{{{{{2 DictValue2Key(...) 字典通过值找到key
+function! DictValue2Key(...)
+let myDict = a:1
+let targetValue = a:2
+for key in keys(myDict)
+  if myDict[key] == targetValue
+    echo "当前key" . key
+    return key
+    break
+  endif
+endfor
 endfunction
 "}}}}}
 "}}}}
@@ -1806,7 +1850,10 @@ function! AddNumber(...)
     let isnumber = "tangxinlou"
     let isnumber2 = []
     let isnumber3 = []
+    let @t=@*
     execute "normal! $lvG$d0"
+    let @*=@t
+    let @t=""
     if a:0 ==# 1 && 3 ==# type(a:1)
         let isnumber2 = a:1
         let idx1 = 0
@@ -2639,15 +2686,14 @@ function! CompareversionBranch(...)
     "let isupdate2 =   system(" git pull --rebase ; git reset --hard  1f81f7d4231609e4e0a38e061fde0fbb97862065")
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile[idx2])
-    "let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
-    let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
+    let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+    "let version1 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
     "let isupdate2 =   system(" git fetch ; git checkout tag_PD2069_ROM13_5.0.0")
     "let isupdate2 =   system(" git pull --rebase ; git reset --hard  87acb2a52f65fd97318943152abac894f1c2fa75")
     let isupdate2 =   system(isupdate3 . " ; git fetch ; git checkout " . curxmlfile1[idx2 + 1])
     let isupdate2 =   system(isupdate3 . "; git pull --rebase ; git reset --hard  " . curxmlfile1[idx2])
-    "let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
-
-    let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
+    let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%cr \%cn \%h \%s\" ")
+    "let version2 = system(isupdate3 . " ; git log    --pretty=format:\"\%s\" ") "去重使用这个
 
     echo  curxmlfile[idx2]  curxmlfile1[idx2]  "分支不同 " isupdate3
     let version1 = split(version1,"\n")
@@ -6292,6 +6338,7 @@ endfunction
 "bluetoothbond.*=> \w\+  vim
 "bluetoothbond.*=>\s*\w+ notepad ++
 "echo matchstr("59157:02-21 19:43:30.190671 12806 12900 D A2dpStateMachine: Connection state CC:81:2A:DC:F2:12: CONNECTING->CONNECTED","A2dpStateMachine: Connection state.*->\w\+")
+"windows git-bash 运行脚本时，可以把git-bash 加入到系统环境变量,这样可以快速调出git-bash
 "{{{{{2 function!  FtpDownLoadFile(...) ftp 下载文件
 function! FtpDownLoadFile(...)
     "{{{{{3 变量定义
@@ -6391,7 +6438,7 @@ function! SearchFile(...)
     "{{{{{3 变量定义
     let path = copy(a:1)
     let filterchar = a:2
-    let grepcmd = "grep -Esinr \"" . a:2 . "\" "
+    let grepcmd = "grep -Esi \"" . a:2 . "\" "
     let idx1 = 0
     let grepresult = []
     let tempresult = []
@@ -6407,6 +6454,7 @@ function! SearchFile(...)
             let idx1 += 1
         endwhile
     endif
+    let grepresult = UniqueList(grepresult)
     return grepresult
 endfunction
 "}}}}}
@@ -6418,6 +6466,7 @@ function! AutoAnalyzer(...)
     let resultlist = []
     let loglist = []
     let filterchar = g:filterchar
+    let smallestunit = g:smallestunitdict
     let fileindexchar = ""
     let idx1 = 0
     let filterkey = []
@@ -6432,10 +6481,13 @@ function! AutoAnalyzer(...)
     let historysele = []
     let temphistorysele = []
     let systemversion = ""
+    let fwversion = ""
     "}}}}
 
-    let systemversion = BinaryFileSearch("properties","ro.vivo.product.version")
+    let systemversion = BinaryFileSearch("properties","\\[ro.vivo.product.version\\]")
+    let fwversion = BinaryFileSearch("properties","vendor.connsys.bt_fw_ver\\]")
     let allresultlist = add(allresultlist,systemversion)
+    let allresultlist = add(allresultlist,fwversion)
     let filterkey = sort(keys(filterchar))
     if a:0 ==# 0
         let filterkeytem = copy(filterkey)
@@ -6492,12 +6544,13 @@ function! AutoAnalyzer(...)
         else
             let fileindexchar = "main"
             let loglist = SearchFile(filedict[fileindexchar],filterchar[indexfilter])
-            let resultlist = AnalyzeLogResults(loglist,indexfilter)
-            if len(loglist) != 0
+            if has_key(smallestunit,indexfilter) ==# 1 && len(loglist) != 0
+                let resultlist = AnalyzeLogResults(loglist,indexfilter)
                 let resultlist = insert(resultlist,"<<<<<<<<<<<<<<<<")
                 let resultlist = insert(resultlist,indexfilter . " 结果分析")
                 let resultlist = add(resultlist,">>>>>>>>>>>>>>>")
-
+            endif
+            if len(loglist) != 0
                 let loglist = insert(loglist,"<<<<<<<<<<<<<<<<")
                 let loglist = insert(loglist,indexfilter . " 源数据")
                 let loglist = add(loglist,">>>>>>>>>>>>>>>")
@@ -6523,6 +6576,11 @@ endfunction
 "播放和通话的编解码器和采样率，音量
 "gatt 发起连接扫描时间，上报的设备
 "卡音关键词，蓝牙打不开关键，服务进程死掉
+
+
+"开发计划
+" g:smallestunitdict 每个项关键词都编个号码，以便后期多维度分析.每个项都分0 -1 -2 三个flag，分别是0显示计算，-2 只显示, -1 不计算不显示
+" g:filterchar 多添加一些日志好在源数据中看出问题（后期也要做到自动化分析里面）
 "{{{{{4  BinaryFileSearch(...) 二进制文件搜索
 function! BinaryFileSearch(...)
     "{{{{{3 变量定义
@@ -6532,7 +6590,7 @@ function! BinaryFileSearch(...)
     let cmd = ""
     "}}}}
     let filename = join(split(system("find -iname " . filename)))
-    let cmd = "strings " . filename . " | grep \"" . fiterchar . "\""
+    let cmd = " grep -Esi -a \"" . fiterchar . "\" " . filename
     echo cmd
     if filename ==# ""
         return
@@ -6569,6 +6627,7 @@ function! AnalyzeLogResults(...)
     let deviceaddr = []
     let idx1 = 0
     let flag = 0
+    let typeflag = 0
     while idx1 < len(loglist)
         let tempaddr = matchstr(loglist[idx1],'\([0-9A-Fa-fxX]\{2\}:\)\{5\}[0-9A-Fa-fxX]\{2\}')
         if tempaddr != "" && (count(deviceaddr,tempaddr) ==# 0)
@@ -6594,6 +6653,7 @@ function! AnalyzeLogResults(...)
             while idj1 < len(keywords)
                 if matchstr(loglist[idx1],keywords[idj1]) != ""
                     let flag = 0
+                    let typeflag = 0
                     if tempaddr ==# ""
                         let flag = 1
                     else
@@ -6606,19 +6666,24 @@ function! AnalyzeLogResults(...)
                         endif
                     endif
                     if flag
-                        if timelength[idj1] != -1
+                        if type(timelength[idj1]) ==# 3
+                            let curltime = timelength[idj1][1]
+                            let typeflag = timelength[idj1][0]
+                        else
                             let curltime = timelength[idj1]
+                            let typeflag = 0
+                        endif
+                        if curltime != -1
                             let curllogtime = ParseTimestamp(split(loglist[idx1])[1])
+                            let resultlist = add(resultlist,loglist[idx1])
                             if msg[idj1] != ""
-                                let resultlist = add(resultlist,msg[idj1])
+                                let resultlist[-1] = resultlist[-1] . msg[idj1]
                             endif
-                            if lasttime != -1 && curltime != -1 && curltime > lasttime
+                            if lasttime != -1  && typeflag != -2 && curltime > lasttime
                                 if ((curllogtime - lastlogtime)) > ((curltime - lasttime) * 1.25)
-                                    let resultlist = add(resultlist,"")
                                     let resultlist[-1] = resultlist[-1]  . " 花费 " .  string((curllogtime - lastlogtime) / 1000) . "s标准是"  . string(((curltime - lasttime) * 1.25)) . "ms"
                                 endif
                             endif
-                            let resultlist = add(resultlist,loglist[idx1])
                         endif
                     endif
                 endif
@@ -6693,6 +6758,7 @@ function! UnzipFiles(...)
     let isdelete = ""
     let tempfilename = ""
     let changetime = ""
+    let pathsstring = ""
     "}}}}
     if input("1 当前目录，2递归") ==# 2
         let findmode = ""
@@ -6703,6 +6769,7 @@ function! UnzipFiles(...)
     if input("是否删除") ==# "yes"
         let isdelete = "yes"
     endif
+    let pathsstring = system("find  . -mindepth 1 -maxdepth 1 -type d")
     let findcmd = "find " . findmode . " -iname '*"  . filetype . "'"
     echo findcmd
     let filename = split(system(findcmd),"\n")
@@ -6712,7 +6779,7 @@ function! UnzipFiles(...)
     while idx1 < len(filename)
         if "" ==# matchstr(filename[idx1],"(")
             let targetfilepath = split(filename[idx1],filetype)[0]
-            if finddir(targetfilepath) ==# ""
+            if matchstr(pathsstring,targetfilepath) ==# ""
                 call system(extractcmd  . filename[idx1] . " -d " . targetfilepath)
                 let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压end" .  filename[idx1])
             endif
@@ -6733,6 +6800,7 @@ function! UnzipFiles(...)
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  filetype)
     let downlog = add(downlog, "###########################")
     call writefile(downlog,downloadlogfile )
+    call ChangeDirectoryName()
 
 endfunction
 "}}}}}
@@ -6807,6 +6875,39 @@ function! LoopAnalysis(...)
     "execute 'cd auto_export_20240125184947_20240125200343_234883337'
 endfunction
 "}}}}}
+
+"{{{{{2 function!  ChangeDirectoryName(...) 改变目录名字
+"echo split("./20240112_86629XXXXX35756_8931_272035",'/')
+"echo systemlist('find 20240305_86989XXXXX70873_70952_354028 -name "*_core" -type d')
+function! ChangeDirectoryName(...)
+    "{{{{{3 变量定义
+    let paths = []
+    let keyword = ["delay_*_core",
+                \"delay_*_common",
+                \"delay_*_third_pvt",
+                \"delay_*_common_pvt",
+                \"delay_*_modem_audio_pvt",
+                \]
+    let findcmd = ""
+    let resultchar = ""
+    "}}}}
+    let paths = split(system("find  . -mindepth 1 -maxdepth 1 -type d"),"\n")
+    let paths  = map(paths, 'split(v:val, "/")[1]')
+    for item in paths
+        if matchstr(item,"delay_") ==# ""
+            for item1 in keyword
+                let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
+                let resultchar = systemlist(findcmd)
+                if len(resultchar) != 0
+                    call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    echo findcmd
+                    break
+                endif
+            endfor
+        endif
+    endfor
+endfunction
+"}}}}}
 "}}}
 "{{{{  python
 
@@ -6866,3 +6967,10 @@ endfunction
 "let item.lnum = 1229
 "let item.text = "Log.e(TAG, \"setActiveDeviceInternal(\" + device + \"): Cannot set as active"
 "call setqflist([item])
+"grep -Esinr参数
+"-E 表示使用扩展的正则表达式进行匹配。
+"-s 表示禁止输出错误信息。
+"-o 表示只显示匹配的部分，而不是整行。
+"-i 表示忽略大小写进行匹配。
+"-n 表示显示匹配的行号。
+"let splitStrings = map(strings, 'split(v:val, ",")')
