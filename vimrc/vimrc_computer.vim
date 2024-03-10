@@ -430,7 +430,7 @@ let g:filterchar = {
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
-    let g:homedir = "/opt6/tangxinlouosc"
+    let g:homedir = $HOME
 else
     if finddir("/z") != ""
         let g:homedir = "/z"
@@ -6949,6 +6949,12 @@ function! WidChanged(...)
 endfunction
 "}}}}}
 "}}}
+ "{{{{  拉安卓代码
+"下载repo
+"windows python3 找不到可以去安装路径复制一个python3
+"./git-repo/repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-13.0.0_r1
+
+"}}}      
 
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
