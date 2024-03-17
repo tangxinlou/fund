@@ -112,6 +112,7 @@ endif
 "iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname '*mobilelog*'
+iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
 iabbrev gitstatus git status .
@@ -408,23 +409,28 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
+            \"21tool" : "collectresult|UnitRunner: running case|interop_database_match",
+            \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
+            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig",
+            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
-            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [23]",
-            \"15volume" : "volumedebug.*streamType:[23]",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [23]|getNewOutputDevices selected",
+            \"15volume" : "volumedebug.*streamType:[23]|onTrackStateCallback.*appname.*sessionid",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
-            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|: t-neptune-mp",
+            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND",
             \"12scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback",
             \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery",
-            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+',
+            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+',
-            \"03bond" : 'bluetoothbondstate.*=> \w+',
+            \"03bond" : 'bluetoothbondstate.*=> \w+|Remote device name is|Remote device alias is|BTM_GetRemoteDeviceName, NV name =',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
-            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+',
+            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>',
             \"00temp" : "temptemptem"}
 
 "}}}}}
@@ -1725,6 +1731,17 @@ for key in keys(myDict)
     break
   endif
 endfor
+endfunction
+"}}}}}
+"{{{{{2 CheckAndDeleteFolder(...) 查看当前文件夹是不是大于8天
+function! CheckAndDeleteFolder(...)
+    let folderName = a:1  " 替换为你要操作的文件夹路径
+    let currentTime = system('date +%s')
+    let folderTime = system('stat -c %Y '.folderName)
+
+    if str2nr(currentTime) - str2nr(folderTime) > 691200  " 14天的秒数是 1209600
+        call system('rm -rf ' . folderName)
+    endif
 endfunction
 "}}}}}
 "}}}}
@@ -5258,8 +5275,8 @@ function! GetFoldLevel(...)
         let foldlist[idx1] = foldlevel(idx1 + 1)
         let idx1 += 1
     endwhile
-    execute "normal! :q!\<cr>"
     execute "normal! :bd" . bufnr('$') ."\<cr>"
+    execute "normal! :q!\<cr>"
     return foldlist
 endfunction
 "}}}}}
@@ -5355,8 +5372,8 @@ function! ParseCodeFiles(...)
         call cursor(line,col)
         let &foldlevel=100
         echo filename . "tangxinlouend"
+        "execute "normal! :bd" . bufnr('$') ."\<cr>"
         execute "normal! :wq!\<cr>"
-        execute "normal! :bd" . bufnr('$') ."\<cr>"
         return resultdict
     endif
 endfunction
@@ -5628,8 +5645,8 @@ function! FormatCode(...)
         endif
         let idx1 += 1
     endwhile
-    execute "normal! :wq!\<cr>"
     execute "normal! :bd" . bufnr('$') ."\<cr>"
+    execute "normal! :wq!\<cr>"
 endfunction
 "}}}}}
 
@@ -6558,6 +6575,7 @@ function! AutoAnalyzer(...)
         endif
         let allresultlist  = extend(allresultlist,resultlist)
         let allresultlist  = extend(allresultlist,loglist)
+        redraw
         let idx1 += 1
     endwhile
     silent execute ":" . 1. "," . line('$') . "d"
@@ -6758,6 +6776,7 @@ function! UnzipFiles(...)
     let isdelete = ""
     let tempfilename = ""
     let changetime = ""
+    let curtime = ""
     let pathsstring = ""
     "}}}}
     if input("1 当前目录，2递归") ==# 2
@@ -6769,6 +6788,9 @@ function! UnzipFiles(...)
     if input("是否删除") ==# "yes"
         let isdelete = "yes"
     endif
+    echo system('date')
+    let curtime = system('date +%s')
+    let pathsstring = ""
     let pathsstring = system("find  . -mindepth 1 -maxdepth 1 -type d")
     let findcmd = "find " . findmode . " -iname '*"  . filetype . "'"
     echo findcmd
@@ -6783,9 +6805,9 @@ function! UnzipFiles(...)
                 call system(extractcmd  . filename[idx1] . " -d " . targetfilepath)
                 let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压end" .  filename[idx1])
             endif
-            let changetime = split(system("stat " . filename[idx1] . " | grep \"Change\""))[1]
-            "echo  isdelete ==# "yes" && changetime != split(system("date +\\%F"))[0]
-            if isdelete ==# "yes" && changetime != split(system("date +\\%F"))[0]
+            let changetime = system('stat -c %Y '. filename[idx1])
+            "echo  isdelete ==# "yes" && (str2nr(curtime) - str2nr(changetime) > 86400)
+            if isdelete ==# "yes" && (str2nr(curtime) - str2nr(changetime) > 86400)
                 call system("rm -rf " . filename[idx1])
             endif
         else
@@ -6800,8 +6822,10 @@ function! UnzipFiles(...)
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  filetype)
     let downlog = add(downlog, "###########################")
     call writefile(downlog,downloadlogfile )
+    echo system('date')
     call ChangeDirectoryName()
-
+    echo system('date')
+    call input('111')
 endfunction
 "}}}}}
 
@@ -6890,20 +6914,29 @@ function! ChangeDirectoryName(...)
                 \]
     let findcmd = ""
     let resultchar = ""
+    let currentTime = ""
+    let folderTime = ""
     "}}}}
+    let currentTime = system('date +%s')
     let paths = split(system("find  . -mindepth 1 -maxdepth 1 -type d"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
     for item in paths
-        if matchstr(item,"delay_") ==# ""
-            for item1 in keyword
-                let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
-                let resultchar = systemlist(findcmd)
-                if len(resultchar) != 0
-                    call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
-                    echo findcmd
-                    break
-                endif
-            endfor
+        let folderTime = system('stat -c %Y '. item)
+        if str2nr(currentTime) - str2nr(folderTime) > 691200  " 14天的秒数是 1209600
+            call system('rm -rf ' . item)
+            break
+        else
+            if matchstr(item,"delay_") ==# ""
+                for item1 in keyword
+                    let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
+                    let resultchar = systemlist(findcmd)
+                    if len(resultchar) != 0
+                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                        echo findcmd
+                        break
+                    endif
+                endfor
+            endif
         endif
     endfor
 endfunction
@@ -6949,7 +6982,8 @@ function! WidChanged(...)
 endfunction
 "}}}}}
 "}}}
- "{{{{  拉安卓代码
+"{{{{  拉安卓代码
+"https://blog.csdn.net/qq_26914291/article/details/127729612
 "下载repo
 "windows python3 找不到可以去安装路径复制一个python3
 "./git-repo/repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-13.0.0_r1
