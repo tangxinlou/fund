@@ -395,11 +395,23 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
 let g:debugid = 0
 "sdpdefs.h uuid
 "hci_error_code.h  error code
+let g:Removeduplicates = [
+            \ 'AudioFlinger_Threads: volumedebug',
+            \ 'getNewOutputDevices selected devices',
+            \]
+let g:DimensionalAnalysis  = [
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING',101],
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING',102],
+            \['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn',103],
+            \]
+"第二个参数[-2,1000] 
+"第一位是flag -1 既不计算也不显示，-2不计算但是显示
+"第二位是时间，虽然这一行不计算，但是下一行还需要这个值计算
 let g:smallestunitdict = {
-            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, 'gatt连接成功'], ['BtGatt.GattService: clientDisconnect', [-2,4703.0], ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', 5714.0, 'gatt断开连接']],
+            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, ''], ['BtGatt.GattService: clientDisconnect', [-2,4703.0], ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', 5714.0, '']],
             \"10aclconnectstate": [['aclStateChangeCallback: Adapter State: ON Connected', 0.0, ''], ['aclStateChangeCallback: Adapter State: ON Disconnected', [-2,1000.0], '']],
-            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,"发起扫描"],["BluetoothAdapterService: cancelDiscovery",-2,"停止扫描"]],
-            \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, '']],
+            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,''],["BluetoothAdapterService: cancelDiscovery",-2,'']],
+            \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING', [-2,1000.0], '']],
             \"07hfpVirtual_simple_start_call": [['HeadsetService: startScoUsingVirtualVoiceCall', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 260.0, '']],
             \"06hfp_simple_start_call": [['Telecom: Telecom: VivoCallsManager: setCallState CONNECTING -> DIALING', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 2917.0, '']],
             \"05a2dp_simple_connect": [['A2dpStateMachine: Connection state .*: DISCONNECTED->CONNECTING', 0.0, ''], ['A2dpStateMachine: Connection state .*: CONNECTING->CONNECTED', 672.0, '']],
@@ -409,21 +421,25 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"26btelevel" : "BTE_InitTraceLevels",
+            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback",
+            \"24battery" : "sendBatteryLevelChangedBroadcast",
+            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult|UnitRunner: running case|interop_database_match",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig",
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
-            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [23]|getNewOutputDevices selected",
-            \"15volume" : "volumedebug.*streamType:[23]|onTrackStateCallback.*appname.*sessionid",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
+            \"15volume" : "volumedebug.*streamType:[234]|onTrackStateCallback.*appname.*sessionid",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
-            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND",
-            \"12scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback",
+            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser",
+            \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
             \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected",
-            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery",
-            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=',
+            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
+            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+',
@@ -3008,6 +3024,60 @@ function! DownloadManifest(...) "1项目 2 是否外销 3 是否系统版本
     let downloadcmd = join([downloadcmd,downloadpath,"  ",downloadlink,"PD",function,isexport,"/",issystem,"/"],"\x00")
     echo downloadcmd
     call system(downloadcmd)
+endfunction
+"}}}}
+"{{{{{2 function! DownloadManifest1() 根据版本号下载manifest
+function! DownloadManifest1(...) "根据版本号下载manifest
+    "curl -s http://manifests.vivo.xyz/gerrit/manifests/ | grep -oE 'href="[^"#]*"' | cut -d'"' -f2 | grep '/$'
+    "{{{{{3 变量定义
+    let Version = ""
+    let Versionend = ""
+    let product = ""
+    let  product1 = ""
+    let curl = "http://manifests.vivo.xyz/gerrit/manifests/"
+    let tempcurl = ""
+    let index = 0
+    let outputpath = Homedir("ftp")
+    "}}}}
+    let product = input("项目")
+    let product =  split(QueryCurlSubdirectory(curl,product),'\n')
+    let Versionend = input("版本")
+    for item1 in product
+        echo item1
+        let Version = split(QueryCurlSubdirectory(curl . item1  . "SystemTest/",Versionend. ".*vivo_mtk"),'\n')
+        let tempcurl = curl . item1  . "SystemTest/"
+        for item in Version 
+            if matchstr(item,"modem") ==# ""  &&  matchstr(item,"_pre") ==# "" 
+                if findfile(outputpath . '/' . item,".;") ==# ""
+                    echo item
+                    call system("wget -P " .  outputpath . " " . tempcurl . item)
+                else
+                    echo item . "已经存在"
+                endif
+            endif
+        endfor
+    endfor
+    call input("11")
+endfunction
+"}}}}
+"{{{{{2  QueryCurlSubdirectory() 查curl子目录
+function! QueryCurlSubdirectory(...) "查curl子目录
+    "curl -s http://manifests.vivo.xyz/gerrit/manifests/ | grep -oE 'href="[^"#]*"' | cut -d'"' -f2 | grep '/$'
+    "{{{{{3 变量定义
+    let subdirectory = ""
+    let curlstring = a:1
+    let querycmdbegin = "curl -s "
+    let querycmdend = " | grep -oE 'href=\"[^\"#]*\"' | sed -e 's/^href=\"//' -e 's/\"$//'"
+    let filterchar = ""
+    "}}}}
+    if a:0 ==# 1
+        let subdirectory = system(querycmdbegin . curlstring . querycmdend)
+    elseif a:0 ==# 2
+        let filterchar = a:2
+        let subdirectory = system(querycmdbegin . curlstring . querycmdend . " | grep \"" . filterchar . "\"")
+        echo querycmdbegin . curlstring . querycmdend . " | grep \"" . filterchar . "\""
+    endif
+    return subdirectory
 endfunction
 "}}}}
 "{{{{{2  function! ModifyCorrespondingCommit(...)  根据提交信息，找到有哪些tag 线
@@ -6484,6 +6554,7 @@ function! AutoAnalyzer(...)
     let loglist = []
     let filterchar = g:filterchar
     let smallestunit = g:smallestunitdict
+    let Removeduplicates = g:Removeduplicates
     let fileindexchar = ""
     let idx1 = 0
     let filterkey = []
@@ -6492,6 +6563,9 @@ function! AutoAnalyzer(...)
     let indexfilter1 = 0
     let allresultlist = []
     let tempfilterchar = ""
+    let downloadpin = ""
+    let index = 0
+    let saveresult = Homedir("autoanaly/result")
     if a:0 ==# 1
         let modeflag = a:1
     endif
@@ -6499,18 +6573,24 @@ function! AutoAnalyzer(...)
     let temphistorysele = []
     let systemversion = ""
     let fwversion = ""
+    let hcifiles = ""
+    let curitem = ""
+    let preitem = ""
+    let daildate = ""
     "}}}}
-
-    let systemversion = BinaryFileSearch("properties","\\[ro.vivo.product.version\\]")
-    let fwversion = BinaryFileSearch("properties","vendor.connsys.bt_fw_ver\\]")
-    let allresultlist = add(allresultlist,systemversion)
-    let allresultlist = add(allresultlist,fwversion)
+    let daildate = daildate ."开始" .  system("date")
     let filterkey = sort(keys(filterchar))
     if a:0 ==# 0
         let filterkeytem = copy(filterkey)
         call AddNumber(filterkeytem)
         let indexfilter1 = input("请输入mode a 是全搜索")
     endif
+    let systemversion = BinaryFileSearch("properties","\\[ro.vivo.product.version\\]")
+    let fwversion = BinaryFileSearch("properties","vendor.connsys.bt_fw_ver\\]")
+    let allresultlist = add(allresultlist,systemversion)
+    let allresultlist = add(allresultlist,fwversion)
+    let hcifiles = Findbluetoothlogs()
+    let allresultlist = extend(allresultlist,hcifiles)
     let filedict = DifferentiateLogFiles()
     while idx1 < len(filterkey)
         let loglist = []
@@ -6561,8 +6641,21 @@ function! AutoAnalyzer(...)
         else
             let fileindexchar = "main"
             let loglist = SearchFile(filedict[fileindexchar],filterchar[indexfilter])
+            for item in copy(loglist)
+                for item1 in Removeduplicates
+                    if matchstr(item,item1) != ''
+                        let curitem = join(split(item)[5:-2])
+                        if curitem ==# preitem && preitem != ""
+                            call remove(loglist, index(loglist, item))
+                        endif
+                        let preitem = curitem
+                        break
+                    endif
+                endfor
+            endfor
             if has_key(smallestunit,indexfilter) ==# 1 && len(loglist) != 0
                 let resultlist = AnalyzeLogResults(loglist,indexfilter)
+                let resultlist = MultidimensionalAnalysis(resultlist)
                 let resultlist = insert(resultlist,"<<<<<<<<<<<<<<<<")
                 let resultlist = insert(resultlist,indexfilter . " 结果分析")
                 let resultlist = add(resultlist,">>>>>>>>>>>>>>>")
@@ -6579,8 +6672,17 @@ function! AutoAnalyzer(...)
         let idx1 += 1
     endwhile
     silent execute ":" . 1. "," . line('$') . "d"
+    let downloadpin = system("pwd")
+    let downloadpin = split(downloadpin,'_')
+    let index = index(downloadpin,"delay")
+    let downloadpin = downloadpin[index -2] . "_" . downloadpin[index -1] 
+    let saveresult = saveresult . '/' . downloadpin 
     call append(1,allresultlist)
     call writefile(allresultlist,"./analy.txt")
+    call writefile(allresultlist,saveresult)
+    let daildate = daildate ."结束" .  system("date")
+    echo daildate
+    call input("112")
 endfunction
 "}}}}}
 
@@ -6594,6 +6696,9 @@ endfunction
 "播放和通话的编解码器和采样率，音量
 "gatt 发起连接扫描时间，上报的设备
 "卡音关键词，蓝牙打不开关键，服务进程死掉
+
+"自动分析策划
+"1 确认整份日志通路，分割通路，记录每次蓝牙通路段，记录蓝牙通路端的stream 3的音量
 
 
 "开发计划
@@ -6618,6 +6723,117 @@ function! BinaryFileSearch(...)
     endif
 endfunction
 "}}}}}
+"{{{{{4  Findbluetoothlogs(...) 查找hci日志和fw日志
+function! Findbluetoothlogs(...)
+    "{{{{{3 变量定义
+    let homedir = ""
+    let downloadpin = ""
+    let index = ""
+    let findcmd = ""
+    let hcipath = ""
+    let hcifileresult = []
+    let templist = []
+    let hcilist = []
+    let fwlist = []
+    let a2dpdumplist = []
+    let vmlist = []
+    "}}}}
+    let hcifileresult = add(hcifileresult,"hci fw log")
+    let hcifileresult = add(hcifileresult,"<<<<<<<<<<<<<<<<")
+    let homedir = system("pwd")             
+    if matchstr(homedir,"debuglogger") != ""
+    elseif matchstr(homedir,"_delay_core") != ""
+        let downloadpin = split(matchstr(homedir,'[0-9]\{6\}_delay_core'),"_delay_core")[0]
+        let index = index(split(homedir,'/'),"mobilelog")
+        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*delay_common_pvt*' | grep \"" . downloadpin . "\"" 
+        let hcipath = split(system(findcmd),'\n')
+        if len(hcipath) ==# 1
+            let findcmd = "find " .  hcipath[0] . " -iname " 
+            let hcifileresult = add(hcifileresult,"固件日志和hci日志在" . hcipath[0])
+            let templist = split(system(findcmd . '*BT_HCI*'),'\n')
+            if len(templist) != 0
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                let templist = map(templist,'split(v:val, "/")[-1]')
+                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
+                let hcilist =  uniq(sort(templist))
+                let hcifileresult = add(hcifileresult,"hci日志".'-'. hcilist[0] . "-" . hcilist[-1])
+            endif
+            let templist = split(system(findcmd . '*BT_FW*'),'\n')
+            if len(templist) != 0
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                let templist = map(templist,'split(v:val, "/")[-1]')
+                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
+                let fwlist =  uniq(sort(templist))
+                let hcifileresult = add(hcifileresult,"fw日志".'-'. fwlist[0] . "-" . fwlist[-1])
+            endif
+            if hcilist[0] - fwlist[0] > 0 ||  hcilist[-1] - fwlist[-1] < 0
+                let hcifileresult = add(hcifileresult,"fw 日志可能没有抓到")
+            endif
+        endif
+        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*delay_third_pvt*' | grep \"" . downloadpin . "\"" 
+        let hcipath = split(system(findcmd),'\n')
+        if len(hcipath) ==# 1
+            let findcmd = "find " .  hcipath[0] . " -iname " 
+            let templist = split(system(findcmd . '*.mp4'),'\n')
+            if len(templist) != 0
+                let hcifileresult = add(hcifileresult,"录屏在". hcipath[0])
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                let templist = map(templist,'split(v:val, "/")[-1]')
+                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{8\\}_\\d\\{6\\}"),"_","","g")')
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                let templist =  uniq(sort(templist))
+                let hcifileresult = add(hcifileresult,"录屏".'-'. templist[0] . "-" . templist[-1])
+            endif
+        endif
+        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*modem_audio_pvt*' | grep \"" . downloadpin . "\"" 
+        let hcipath = split(system(findcmd),'\n')
+        if len(hcipath) != 0
+            let findcmd = "find " .  hcipath[0] . " -iname " 
+            let templist = split(system(findcmd . 'streamout.*pcm.*AudioALSAStreamOut.*.wav'),'\n')
+            if len(templist) != 0
+                let hcifileresult = add(hcifileresult,"audio dump在". hcipath[0])
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                let templist = map(templist,'split(v:val, "/")[-1]')
+                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{8\\}_\\d\\{6\\}"),"_","","g")')
+                let a2dpdumplist =  uniq(sort(templist))
+                let hcifileresult = add(hcifileresult,"a2dpdump日志".'-'. a2dpdumplist[0] . "-" . a2dpdumplist[-1])
+            endif
+            let templist = split(system(findcmd . 'VML*.vm'),'\n')
+            if len(templist) != 0
+                let hcifileresult = add(hcifileresult,"vm log在". hcipath[0])
+                let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
+                if len(templist) ==# 0
+                    let hcifileresult = add(hcifileresult,"log 大小为0")
+                endif
+                let templist = map(templist,'split(v:val, "/")[-1]')
+                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{2\\}_\\d\\{2\\}_\\d\\{6\\}"),"_","","g")')
+                let vmlist  =  uniq(sort(templist))
+                let hcifileresult = add(hcifileresult,"vmlog日志".'-'. vmlist[0] . "-" . vmlist[-1])
+            endif
+        endif
+    endif
+    let hcifileresult = add(hcifileresult,">>>>>>>>>>>>>>>")
+    return hcifileresult
+endfunction
+"}}}}} 
+"{{{{{4  MultidimensionalAnalysis(...) 多维度分析
+function! MultidimensionalAnalysis(...)
+    "{{{{{3 变量定义
+    let DimensionalAnalysis = g:DimensionalAnalysis
+    let keywords = GetOneOfTheColumns(DimensionalAnalysis,"",0)
+    let label = GetOneOfTheColumns(DimensionalAnalysis,"",1)
+    let analyloglist = copy(a:1)
+    "}}}}
+    for item in analyloglist 
+        for item1 in keywords
+            if matchstr(item,item1) != ''
+                let analyloglist[index(analyloglist,item)] = label[index(keywords,item1)] . '█' . item
+            endif
+        endfor
+    endfor
+    return analyloglist
+endfunction
+"}}}}}
 "}}}}}
 function! AnalyzeLogResults(...)
     "{{{{{3 变量定义
@@ -6634,6 +6850,8 @@ function! AnalyzeLogResults(...)
     let timelength = []
     let msg = []
     let tempaddr = ""
+    let curitem = ""
+    let preitem = ""
     "}}}}
     let keywords = GetOneOfTheColumns(smallestunit,"",0)
     let timelength  = GetOneOfTheColumns(smallestunit,"",1)
@@ -6646,6 +6864,7 @@ function! AnalyzeLogResults(...)
     let idx1 = 0
     let flag = 0
     let typeflag = 0
+
     while idx1 < len(loglist)
         let tempaddr = matchstr(loglist[idx1],'\([0-9A-Fa-fxX]\{2\}:\)\{5\}[0-9A-Fa-fxX]\{2\}')
         if tempaddr != "" && (count(deviceaddr,tempaddr) ==# 0)
@@ -6778,6 +6997,7 @@ function! UnzipFiles(...)
     let changetime = ""
     let curtime = ""
     let pathsstring = ""
+    let deletefile = []
     "}}}}
     if input("1 当前目录，2递归") ==# 2
         let findmode = ""
@@ -6798,6 +7018,8 @@ function! UnzipFiles(...)
     let downlog = readfile(downloadlogfile )
     let downlog = add(downlog, "###########################")
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始解压" .  filetype)
+    echo system('date')
+    echo "tangxinlou4"
     while idx1 < len(filename)
         if "" ==# matchstr(filename[idx1],"(")
             let targetfilepath = split(filename[idx1],filetype)[0]
@@ -6805,11 +7027,8 @@ function! UnzipFiles(...)
                 call system(extractcmd  . filename[idx1] . " -d " . targetfilepath)
                 let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压end" .  filename[idx1])
             endif
-            let changetime = system('stat -c %Y '. filename[idx1])
+            "let changetime = system('stat -c %Y '. filename[idx1])
             "echo  isdelete ==# "yes" && (str2nr(curtime) - str2nr(changetime) > 86400)
-            if isdelete ==# "yes" && (str2nr(curtime) - str2nr(changetime) > 86400)
-                call system("rm -rf " . filename[idx1])
-            endif
         else
             let tempfilename = split(filename[idx1],"/")
             let  tempfilename[-1] = "'" . tempfilename[-1] . "'"
@@ -6819,6 +7038,16 @@ function! UnzipFiles(...)
         endif
         let idx1 += 1
     endwhile
+    let deletefile = split(system(findcmd .  " -mtime +1"),'\n')
+    echo system('date')
+    echo "tangxinlou5"
+    echo findcmd .  " -mtime +1"
+    if isdelete ==# "yes" && len(deletefile)  != 0
+        echo deletefile
+        for item in deletefile
+            call system("rm -rf " . item)
+        endfor
+    endif
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  filetype)
     let downlog = add(downlog, "###########################")
     call writefile(downlog,downloadlogfile )
@@ -6917,25 +7146,31 @@ function! ChangeDirectoryName(...)
     let currentTime = ""
     let folderTime = ""
     "}}}}
+    echo system('date')
     let currentTime = system('date +%s')
-    let paths = split(system("find  . -mindepth 1 -maxdepth 1 -type d"),"\n")
+    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +30 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
+    echo system('date')
     for item in paths
-        let folderTime = system('stat -c %Y '. item)
-        if str2nr(currentTime) - str2nr(folderTime) > 691200  " 14天的秒数是 1209600
-            call system('rm -rf ' . item)
-            break
-        else
+        call system('rm -rf ' . item)
+    endfor
+    let paths = []
+    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d"),"\n")
+    let paths  = map(paths, 'split(v:val, "/")[1]')
+    echo system('date')
+    for item in paths
+        if matchstr(item,"delay_") ==# ""
+            for item1 in keyword
+                let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
+                let resultchar = systemlist(findcmd)
+                if len(resultchar) != 0
+                    echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
+                    call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    break
+                endif
+            endfor
             if matchstr(item,"delay_") ==# ""
-                for item1 in keyword
-                    let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
-                    let resultchar = systemlist(findcmd)
-                    if len(resultchar) != 0
-                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
-                        echo findcmd
-                        break
-                    endif
-                endfor
+                call system("mv " . item . " " . item . "_" . "delay_temp")
             endif
         endif
     endfor
