@@ -401,13 +401,24 @@ let g:Removeduplicates = [
             \'Remote device name is',
             \'interop_database_match',
             \]
+ let g:MultiDimensionalAnalysisSolution =  [ 
+             \['101','102','201',"a2dp 播放及通路",'A'],
+             \['103','104','201',"a2dp 通话及通路",'A'],
+             \]
 let g:DimensionalAnalysis  = [
-            \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING',101],
-            \['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING',102],
-            \['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn',103],
-            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected',104],
-            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioDisconnecting -> Connected',104],
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING','101'],
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING','102'],
+            \['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn','103'],
+            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected','104'],
+            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioDisconnecting -> Connected','104'],
+            \['APM_AudioPolicyManager: getNewOutputDevices selected devices','201'],
             \]
+let g:Dimensionalmsg = {
+            \'101' : "开启播放",
+            \'102' : "停止播放",
+            \'103' : "建立sco",
+            \'104' : "断开sco",
+            \}
 let g:Dimensionalflag = []
 "第二个参数[-2,1000]
 "第一位是flag -1 既不计算也不显示，-2不计算但是显示
@@ -440,7 +451,7 @@ let g:filterchar = {
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
-            \"15volume" : "volumedebug.*streamType:[234]|onTrackStateCallback.*appname.*sessionid",
+            \"15volume" : "volumedebug.*streamType:[234]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
@@ -807,6 +818,14 @@ func! MyCompareTimestamp(i1, i2)
     let i1timestamp = ParseTimestamp(split(a:i1)[1])
     let i2timestamp = ParseTimestamp(split(a:i2)[1])
     return i2timestamp ==#  i1timestamp ? 0 : i1timestamp > i2timestamp ? 1 : -1
+endfunc
+func! MyCompareTimeChar(i1, i2)
+    let i1timestamp = matchstr(a:i1,'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
+    let i2timestamp = matchstr(a:i2,'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
+    "从小到大
+    return i2timestamp ==#  i1timestamp ? 0 : i1timestamp > i2timestamp ? 1 : -1
+    "从大到小
+    "return i1timestamp ==#  i2timestamp ? 0 : i2timestamp > i1timestamp ? 1 : -1
 endfunc
 function! MyCompareVersion(i1, i2)
     let idex = 0
@@ -6617,6 +6636,8 @@ function! AutoAnalyzer(...)
     let emptylist = []
     let Multidimensionaldict = {}
     let Multidimensionalresult = []
+    let Multidimensionallist = []
+    let templist = []
     "}}}}
     let g:Dimensionalflag = []
     silent execute "normal! :tabnew \<cr>"
@@ -6718,6 +6739,16 @@ function! AutoAnalyzer(...)
         let idx1 += 1
     endwhile
     silent execute ":" . 1 . "," . line('$') . "d"
+    let Multidimensionallist = []
+    echo "tangxinlou123"
+    let filterkey = sort(keys(Multidimensionaldict))
+    for item in filterkey
+        let templist = copy(Multidimensionaldict[item])
+        let templist = filter(templist, 'matchstr(v:val,"█") ==# ""')
+        let Multidimensionallist = extend(Multidimensionallist,Multidimensionaldict[item])
+    endfor
+    call MultidimensionalAnalyst(Multidimensionallist )
+    echo "tkadkj"
     let downloadpin = split(system("pwd"),'\n')[0]
     let allresultlist = insert(allresultlist,downloadpin)
     let downloadpin = split(downloadpin,'_')
@@ -6739,6 +6770,8 @@ function! AutoAnalyzer(...)
     "call append(1,allresultlist)
     "silent execute "normal! :e ./analy.txt  \<cr>"
     silent execute "normal! :e  " . saveresult . "\<cr>"
+    echo g:Dimensionalflag
+    call input("11")
     redraw
 endfunction
 "}}}}}
@@ -6794,6 +6827,7 @@ function! Findbluetoothlogs(...)
     let fwlist = []
     let a2dpdumplist = []
     let vmlist = []
+    let tempflag = 0
     "}}}}
     let hcifileresult = add(hcifileresult,"hci fw log")
     let hcifileresult = add(hcifileresult,"<<<<<<<<<<<<<<<<")
@@ -6808,10 +6842,15 @@ function! Findbluetoothlogs(...)
             let findcmd = "find " .  hcipath[0] . " -iname "
             let hcifileresult = add(hcifileresult,"固件日志和hci日志在" . hcipath[0])
             let templist = split(system(findcmd . '*BT_HCI*'),'\n')
+            "find -iname '*BT_HCI*' -o -iname '*bt_hci*'
             if len(templist) != 0
                 let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
                 let templist = map(templist,'split(v:val, "/")[-1]')
-                let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
+                if matchstr(templist[0], "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}") ==# ''
+                    let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{8\\}_\\d\\{6\\}"),"_","","g")')
+                else
+                    let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
+                endif
                 let hcilist =  uniq(sort(templist))
                 let hcifileresult = add(hcifileresult,"hci日志".'-'. hcilist[0] . "-" . hcilist[-1])
             endif
@@ -6896,6 +6935,77 @@ function! MultidimensionalAnalysis(...)
         endfor
     endfor
     return Multidimensionalresult
+endfunction
+"}}}}}
+"{{{{{4  MultidimensionalAnalysisToObtainOperationTime(...)多维度分析获取操作时长
+function! MultidimensionalAnalysisToObtainOperationTime(...)
+    "{{{{{3 变量定义
+    let begin = a:1
+    let end = a:2
+    let loglist = copy(a:3)
+    let resultlist = []
+    let tempaddr = ""
+    let beginflag = -1
+    let src = -1
+    let tail = -1
+    let idx1 = 0
+    "}}}}
+    if count(g:Dimensionalflag,a:1) ==# 0 || count(g:Dimensionalflag,a:2) ==# 0
+        return []
+    endif
+    "\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}
+    " echo matchstr("",'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
+    let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin || split(v:val, "█")[0] ==# end')
+    call uniq(sort(loglist,"MyCompareTimeChar"))
+    while idx1 < len(loglist)
+        if matchstr(loglist[idx1],begin . '█') ==#  begin . '█'
+            let src = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
+        endif
+        if matchstr(loglist[idx1],end . '█') ==#  end . '█'
+            let tail = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
+            if tail > src
+                let resultlist = add(resultlist,src . '█' . tail)
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
+"{{{{{4  MultidimensionalAnalyst(...)多维度分析
+function! MultidimensionalAnalyst(...)
+    "{{{{{3 变量定义
+    let Multidimensionallist  = copy(a:1)
+    let MultiDimensionalAnalysisSolution = g:MultiDimensionalAnalysisSolution
+    let period = []
+    let Asolutionlist = []
+    let tempsolution = []
+    let temptime = []
+    "}}}}
+    for item in MultiDimensionalAnalysisSolution
+        if item[-1] ==# 'A'
+            let period = MultidimensionalAnalysisToObtainOperationTime(item[0],item[1],Multidimensionallist )
+            let Asolutionlist = MultidimensionalAnalystExtract(item[2],Multidimensionallist)
+            for item1 in period
+                let temptime = split(item1,'█')
+                echo temptime
+                let tempsolution = copy(Asolutionlist)
+                let tempsolution = filter(tempsolution,'matchstr(v:val, ''\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}'') > temptime[0] && matchstr(v:val, ''\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}'') < temptime[1]' )
+                echo tempsolution
+            endfor
+        endif
+    endfor
+endfunction
+"}}}}}
+"{{{{{4  MultidimensionalAnalystExtract(...) 提取一个参数
+function! MultidimensionalAnalystExtract(...)
+    "{{{{{3 变量定义
+    let begin = a:1
+    let loglist = copy(a:2)
+    "}}}}
+    let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin')
+    call uniq(sort(loglist,"MyCompareTimeChar"))
+    return loglist
 endfunction
 "}}}}}
 "}}}}}
@@ -7086,7 +7196,7 @@ function! UnzipFiles(...)
         endif
         let idx1 += 1
     endwhile
-    let deletefile = split(system(findcmd .  " -mtime +2"),'\n')
+    let deletefile = split(system(findcmd .  " -mtime +5"),'\n')
     echo system('date')
     echo "tangxinlou5"
     call system("rm -rf *.7z")
@@ -7248,15 +7358,48 @@ function! PythonTest()
     let path = "par from vimscript into python"
     "}}}}
 python3 <<EOM
-    import vim
-    import os
-    var = vim.eval("path")
-    print(var)
-    var = "%s,add string in python now"%var
-    vim.command("let path = '%s'"%var)
+import vim
+import os
+var = vim.eval("path")
+print(var)
+var = "%s,add string in python now"%var
+vim.command("let path = '%s'"%var)
 EOM
     echo "tangxinlou"
     echo path
+endfunction
+"}}}}}
+"{{{{{2  function! ExecutePythonScript(...) 查看当前android.bp编译了哪些文件
+" 执行 Python 脚本
+function! ExecutePythonScript()
+python3 << EOF
+import os
+import ast
+
+# 递归遍历目录
+def traverse_directory(directory):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('Android.bp'):
+                android_bp_path = os.path.join(root, file)
+                with open(android_bp_path, 'r') as f:
+                    content = f.read()
+                    try:
+                        tree = ast.parse(content)
+                        # 提取编译规则中的文件信息
+                        for node in ast.walk(tree):
+                            if isinstance(node, ast.Call) and hasattr(node.func, 'id') and node.func.id == 'cc_library':
+                                if 'srcs' in [keyword.arg for keyword in node.keywords]:
+                                    srcs_node = [keyword.value.elts for keyword in node.keywords if keyword.arg == 'srcs'][0]
+                                    srcs = [os.path.join(root, src.s) for src in srcs_node]
+                                    print(f"{android_bp_path} 编译了以下文件：{srcs}")
+                    except SyntaxError as e:
+                        print(f"在解析文件 {android_bp_path} 时出现语法错误：{e}")
+
+# 调用递归遍历函数
+traverse_directory('.')
+EOF
+call input("11")
 endfunction
 "}}}}}
 
