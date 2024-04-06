@@ -1322,7 +1322,7 @@ function! ListTo2D(...)
     return  listof1d
 endfunction
 "}}}}}
-"{{{{{2   ListAddSpaces(...)
+"{{{{{2   ListAddSpaces(...)添加多余空格
 function! ListAddSpaces(...)
     "{{{{{3 变量定义
     let listof1d = a:1   "一维表格
@@ -1370,7 +1370,7 @@ function! ListAddSpaces(...)
     return listof1d
 endfunction
 "}}}}}
-"{{{{{2   ListRemoveSpaces(...)
+"{{{{{2   ListRemoveSpaces(...) 去除多余空格
 function! ListRemoveSpaces(...)
     "{{{{{3 变量定义
     let listof1d = a:1   "一维表格
@@ -1674,6 +1674,22 @@ function! SmartFileSwitching(...)
                 endif
                 let @g = register
             endif
+        elseif curwinid ==# g:windowgreplogid
+            let path = g:lastgreplogfile
+            let line = split(curlinestring,':')[0]
+            let filename = split(path,'/')[-1]
+            let register = getline(1)
+            "echo split(@l,'█')
+            echo register 
+            if count(split(@l,'█'),register) ==# 0
+                let register = register . '█'  . @l
+                if len(split(register,"█")) > 10
+                    let register = split(register,"█")
+                    let register = register[0:9]
+                    let register = join(register,"█")
+                endif
+                let @l = register
+            endif
         else
             let path = split(curlinestring,'|')[0]
             let line = split(curlinestring,'|')[1]
@@ -1813,6 +1829,10 @@ function! CheckAndDeleteFolder(...)
     endif
 endfunction
 "}}}}}
+"date -d @1648939271.835907 "+%m-%d %H:%M:%S.%3N"
+"04-02 19:01:11.835
+"date -d "04-02 19:01:11.835907" "+%s.%6N"
+"1648939271.835907
 "}}}}
 "{{{{vmake 命令
 
@@ -5886,7 +5906,7 @@ endfunction
 "}}}}}
 "{{{{ 定时器
 
-"{{{{{  FindFiles()  回调
+"{{{{{  FindFiles()  find回调
 if len(timer_info()) ==# 0
     let g:windowfindid = 0
     let g:firstfindflag = 0
@@ -5987,7 +6007,7 @@ function! Searcher()
 endfunction
 "}}}}}
 
-"{{{{{  GrepChars()  回调
+"{{{{{  GrepChars()  grep回调
 if len(timer_info()) ==# 0
     let g:windowgrepid = 0
     let g:firstgrepflag = 0
@@ -6136,6 +6156,153 @@ function! SearcherChars()
     endif
 endfunction
 "}}}}}
+
+"{{{{{  GreplogChars()  grep log 回调
+if len(timer_info()) ==# 0
+    let g:windowgreplogid = 0
+    let g:firstgreplogflag = 0
+    let g:lastgreplogfilter = ""
+    let g:lastgreploglen = 0
+    let g:lastgreplogfile = ""
+endif
+function! GreplogChars(timer)
+    let searchs = ""
+    let idx1 = 0
+    let idj1 = 0
+    let command = ""
+    let searchs = getline(1)
+    let searchstarge = []
+    let tempchar = ""
+    let line = 0
+    let col = 0
+    let grepchar = "grep -Esin  "
+    if g:firstgreplogflag ==# 0
+        let g:windowgreplogid = win_getid()
+        let g:firstgreplogflag = 1
+    endif
+    if  g:windowgreplogid != win_getid()
+        return
+    endif
+    if g:lastgreplogfilter ==# searchs
+        return
+    endif
+    if len(searchs) < 4
+        return
+    endif
+    let g:lastgreplogfilter = searchs
+    if @/ != searchs
+        let @/ = searchs
+    endif
+    let searchs =  substitute(searchs , '(', '\\(', 'g')
+    let searchs =  split(searchs,"\x00",1)
+    if searchs[0] ==# ''
+        let tempchar = searchs[1:]
+        let searchs = ' ' . join(tempchar,"|")
+    else
+        if searchs[-1] ==# ''
+            call remove(searchs,-1)
+        endif
+        let searchs = join(searchs,"|")
+    endif
+    let command  = grepchar . " \"" .  searchs  . "\" " . g:lastgreplogfile
+    echo command
+    if @/ != searchs
+        let @/ = substitute(searchs , '\\(', '(', 'g')
+    endif
+    let searchstarge =  system(command)
+    let searchstarge =  split(system(command),'\n')
+    let searchstarge = insert(searchstarge,@l)
+    if line('$') > 3
+        let line = line('.')
+        let col = col('.')
+        execute "normal! \<esc>"
+        silent execute ":" . 2 . "," . line('$') . "d"
+        execute "normal! i"
+        call cursor(line,col)
+        redraw
+    endif
+    call setline(2,searchstarge)
+    let g:lastgreploglen = len(searchstarge)
+    let @@ = ""
+    redraw
+endfunction
+"}}}}}
+
+"{{{{{  SearcherlogChars()  搜索log 普通模式逗号 f 调用
+nnoremap <leader>f :call SearcherlogChars()<cr>
+function! SearcherlogChars()
+    "[{'id': 1, 'repeat': -1, 'remaining': 185, 'time': 500, 'paused': 0, 'callback': function('MyHandler')}]
+    let idx1 = 0
+    let timeinfo = []
+    let funtionname = ["GreplogChars"]
+    let tempname = ""
+    let timeinfo = timer_info()
+    let winwidthnum  = 0
+    let timerflag = 0
+    let timerid = 0
+    let g:lastgreplogfile = expand("%:p")
+
+    if g:windowgreplogid != win_getid() && g:windowgreplogid != 0
+        let @i = getline('.')
+        if win_gotoid(g:windowgreplogid) ==# 1
+            if @@ != ""
+                call setline(1,@@)
+                call cursor(1,0)
+            endif
+            return
+        endif
+    else
+        if len(tabpagebuflist()) ==# 1 && g:windowgreplogid ==# 0
+            "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+            let winwidthnum  = float2nr(winheight('%')  * 0.2)
+            echo winwidthnum
+            silent execute  "normal! :cle\<cr>"
+            execute "normal! :new\<cr>"
+            "execute "normal! :vne\<cr>"
+            execute "normal! \<c-w>J"
+            execute "normal! :res " . winwidthnum . "\<cr>"
+            "execute "normal! :vertical res " . winwidthnum . "\<cr>"
+            redraw
+        else
+            if line('.') ==# 2
+                execute "normal! yw"
+                if @@ != ""
+                    call setline(1,@@)
+                    call cursor(1,0)
+                endif
+                return
+            endif
+        endif
+    endif
+    "是否有当前搜索器
+    if  len(timeinfo) > 0
+        let idx1 = 0
+        while idx1 <  len(timeinfo)
+            let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
+            if  count(funtionname,tempname)
+                if tempname ==# "GreplogChars"
+                    let timerflag  = 1
+                    let timerid = idx1
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+
+    "有搜索器就把当前搜索器停掉,没有就新建
+    if  timerflag ==#  1
+        echo "有这个定时器回调函数,清除"
+        call timer_stop(timeinfo[timerid]["id"])
+        silent execute "normal! :q!\<cr>"
+        let g:firstgreplogflag = 0
+        let g:windowgreplogid = 0
+    else
+        let timer = timer_start(1500, 'GreplogChars', {'repeat': -1})
+        echo "开启定时器" timer
+        redraw
+    endif
+endfunction
+"}}}}} 
 
 "}}}}
 "{{{{ 批量处理
@@ -7225,7 +7392,6 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  LogSearcher(...) 日志搜索器
-nnoremap <leader>f :call LogSearcher()<cr>
 function! LogSearcher()
     "{{{{{3 变量定义
     let keywords = ""
