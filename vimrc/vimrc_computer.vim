@@ -6212,6 +6212,7 @@ function! GreplogChars(timer)
     let searchstarge =  system(command)
     let searchstarge =  split(system(command),'\n')
     let searchstarge = insert(searchstarge,@l)
+    sleep 200m
     if line('$') > 3
         let line = line('.')
         let col = col('.')
@@ -6297,7 +6298,7 @@ function! SearcherlogChars()
         let g:firstgreplogflag = 0
         let g:windowgreplogid = 0
     else
-        let timer = timer_start(1500, 'GreplogChars', {'repeat': -1})
+        let timer = timer_start(200, 'GreplogChars', {'repeat': -1})
         echo "开启定时器" timer
         redraw
     endif
