@@ -95,6 +95,8 @@ set diffopt=context:3
 "set scrolloff=999
 "隐藏一些提示信息
 set hidden
+"gitbash vim 和windows 不共用剪贴板
+set clipboard=exclude:clipboard
 "}}}}}
 "vimdiff 颜色配置{{{
 if &diff
@@ -197,7 +199,7 @@ let @g = "" "定时器 grep 历史搜素词
 let @i = "" "保存着当前次数搜索的行
 "let @j = ""
 "let @k = ""
-"let @l = "" "log搜索器的历史关键词
+let @l = "" "log搜索器的历史关键词
 "let @s = ""
 "let @u = ""
 "let @w = ""
@@ -395,15 +397,17 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
 let g:debugid = 0
 "sdpdefs.h uuid
 "hci_error_code.h  error code
+"port_api.h rfcom 断开原因
 let g:Removeduplicates = [
             \ 'AudioFlinger_Threads: volumedebug',
             \ 'getNewOutputDevices selected devices',
             \'Remote device name is',
             \'interop_database_match',
+            \'btif_dm_update_rmt_device_name',
             \]
- let g:MultiDimensionalAnalysisSolution =  [ 
-             \['101','102','201',"a2dp 播放及通路",'A'],
-             \['103','104','201',"a2dp 通话及通路",'A'],
+ let g:MultiDimensionalAnalysisSolution =  [
+             \['101','102','201',"a2dp 通路",'A'],
+             \['103','104','201',"hfp 通路",'A'],
              \]
 let g:DimensionalAnalysis  = [
             \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING','101'],
@@ -412,6 +416,7 @@ let g:DimensionalAnalysis  = [
             \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected','104'],
             \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioDisconnecting -> Connected','104'],
             \['APM_AudioPolicyManager: getNewOutputDevices selected devices','201'],
+            \['volumedebug track','202'],
             \]
 let g:Dimensionalmsg = {
             \'101' : "开启播放",
@@ -437,6 +442,7 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败",
             \"29opp" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
@@ -451,15 +457,15 @@ let g:filterchar = {
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
-            \"15volume" : "volumedebug.*streamType:[234]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index",
+            \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
-            \"13hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser",
+            \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
             \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco|bta_ag_create_sco',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
@@ -670,6 +676,8 @@ function! s:HighLightSearch(type)
         let searchchar = join(searchchar,'.*\n.*')
     endif
     let @@ = searchchar
+    let searchchar = substitute(searchchar, '|', '\\|', 'g')
+    echo searchchar
     let @/ = searchchar
     let @@ = saved_unnamed_register
 endfunction
@@ -1680,7 +1688,7 @@ function! SmartFileSwitching(...)
             let filename = split(path,'/')[-1]
             let register = getline(1)
             "echo split(@l,'█')
-            echo register 
+            echo register
             if count(split(@l,'█'),register) ==# 0
                 let register = register . '█'  . @l
                 if len(split(register,"█")) > 10
@@ -1796,13 +1804,8 @@ endfunction
 "{{{{{2 UniqueList(...) 列表项去重
 function! UniqueList(...)
   let list = copy(a:1)
-  let result = []
-  for item in list
-    if index(result, item) == -1
-      call add(result, item)
-    endif
-  endfor
-  return result
+  let list =  uniq(sort(list,"MyCompareTimeChar"))
+  return list
 endfunction
 "}}}}}
 "{{{{{2 DictValue2Key(...) 字典通过值找到key
@@ -1829,10 +1832,27 @@ function! CheckAndDeleteFolder(...)
     endif
 endfunction
 "}}}}}
+"{{{{{2 DatePlus1s(...)04-02 19:01:11 类型日期 加1s
 "date -d @1648939271.835907 "+%m-%d %H:%M:%S.%3N"
 "04-02 19:01:11.835
 "date -d "04-02 19:01:11.835907" "+%s.%6N"
 "1648939271.835907
+"printf("%.6f",str2float("1648939271.835907") + str2float("1"))
+function! DatePlus1s(...)
+    "let datestring =  "04-02 19:01:11.835907"
+    "let timevalue = "-1"
+    let datestring =  a:1
+    let timevalue = a:2
+    let datestring =  "2024-" . datestring
+    let datecmd =   "date -d \"" . datestring . "\" " . "\"+%s.%6N\""
+    let datestring =  system(datecmd)
+    let datestring = printf("%.6f",str2float(datestring) + str2float(timevalue))
+    let datecmd =   "date -d @" . datestring  . " \"+%m-%d %H:%M:%S.%6N\""
+    let datestring =  system(datecmd)
+    return datestring
+endfunction
+"}}}}}
+
 "}}}}
 "{{{{vmake 命令
 
@@ -3120,7 +3140,7 @@ function! DownloadManifest1(...) "根据版本号下载manifest
         let Version = split(QueryCurlSubdirectory(curl . item1  . "SystemTest/",Versionend. ".*vivo_"),'\n')
         let tempcurl = curl . item1  . "SystemTest/"
         for item in Version
-            if matchstr(item,"modem") ==# ""  &&  matchstr(item,"_pre") ==# "" && matchstr(item,"vusbd") ==# ""
+            if matchstr(item,"modem") ==# ""  &&  matchstr(item,"_pre") ==# "" && matchstr(item,"vusbd") ==# ""  && matchstr(item,"Bbk") ==# ""
                 if findfile(outputpath . '/' . item,".;") ==# ""
                     echo item
                     call system("wget -P " .  outputpath . " " . tempcurl . item)
@@ -6189,23 +6209,19 @@ function! GreplogChars(timer)
     if len(searchs) < 4
         return
     endif
+    if matchstr(searchs,'.$') ==# '|'
+        return
+    endif
     let g:lastgreplogfilter = searchs
     if @/ != searchs
         let @/ = searchs
     endif
     let searchs =  substitute(searchs , '(', '\\(', 'g')
-    let searchs =  split(searchs,"\x00",1)
-    if searchs[0] ==# ''
-        let tempchar = searchs[1:]
-        let searchs = ' ' . join(tempchar,"|")
-    else
-        if searchs[-1] ==# ''
-            call remove(searchs,-1)
-        endif
-        let searchs = join(searchs,"|")
-    endif
+
     let command  = grepchar . " \"" .  searchs  . "\" " . g:lastgreplogfile
     echo command
+    let searchs = substitute(searchs , '\\(', '(', 'g')
+    let searchs = substitute(searchs , '|', '\\|', 'g')
     if @/ != searchs
         let @/ = substitute(searchs , '\\(', '(', 'g')
     endif
@@ -6303,7 +6319,7 @@ function! SearcherlogChars()
         redraw
     endif
 endfunction
-"}}}}} 
+"}}}}}
 
 "}}}}
 "{{{{ 批量处理
@@ -6765,6 +6781,9 @@ function! SearchFile(...)
             let idx1 += 1
         endwhile
     endif
+    if len(grepresult) > 2000
+        let grepresult = grepresult[-2000:]
+    endif
     let grepresult = UniqueList(grepresult)
     return grepresult
 endfunction
@@ -6806,6 +6825,7 @@ function! AutoAnalyzer(...)
     let Multidimensionalresult = []
     let Multidimensionallist = []
     let templist = []
+    let MultiDimensionalAnalysresult = []
     "}}}}
     let g:Dimensionalflag = []
     silent execute "normal! :tabnew \<cr>"
@@ -6908,15 +6928,14 @@ function! AutoAnalyzer(...)
     endwhile
     silent execute ":" . 1 . "," . line('$') . "d"
     let Multidimensionallist = []
-    echo "tangxinlou123"
     let filterkey = sort(keys(Multidimensionaldict))
     for item in filterkey
         let templist = copy(Multidimensionaldict[item])
         let templist = filter(templist, 'matchstr(v:val,"█") ==# ""')
         let Multidimensionallist = extend(Multidimensionallist,Multidimensionaldict[item])
     endfor
-    call MultidimensionalAnalyst(Multidimensionallist )
-    echo "tkadkj"
+    let MultiDimensionalAnalysresult = MultidimensionalAnalyst(Multidimensionallist)
+    let allresultlist  = extend(MultiDimensionalAnalysresult,allresultlist)
     let downloadpin = split(system("pwd"),'\n')[0]
     let allresultlist = insert(allresultlist,downloadpin)
     let downloadpin = split(downloadpin,'_')
@@ -6932,12 +6951,14 @@ function! AutoAnalyzer(...)
         let emptylist = repeat([" "],10)
         let allresultlist  = extend(emptylist,allresultlist)
     endif
-    "call writefile(allresultlist,"./analy.txt")
-    call writefile(allresultlist,saveresult)
     echo daildate
-    "call append(1,allresultlist)
-    "silent execute "normal! :e ./analy.txt  \<cr>"
-    silent execute "normal! :e  " . saveresult . "\<cr>"
+    if matchstr(system("pwd"),"delay_core") ==# ""
+        call writefile(allresultlist,"./analy.txt")
+        silent execute "normal! :e ./analy.txt  \<cr>"
+    else
+        call writefile(allresultlist,saveresult)
+        silent execute "normal! :e  " . saveresult . "\<cr>"
+    endif
     echo g:Dimensionalflag
     call input("11")
     redraw
@@ -7124,14 +7145,14 @@ function! MultidimensionalAnalysisToObtainOperationTime(...)
     "\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}
     " echo matchstr("",'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
     let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin || split(v:val, "█")[0] ==# end')
-    call uniq(sort(loglist,"MyCompareTimeChar"))
+    let loglist   = UniqueList(loglist)
     while idx1 < len(loglist)
         if matchstr(loglist[idx1],begin . '█') ==#  begin . '█'
             let src = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
         endif
         if matchstr(loglist[idx1],end . '█') ==#  end . '█'
             let tail = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
-            if tail > src
+            if tail > src && src != -1
                 let resultlist = add(resultlist,src . '█' . tail)
             endif
         endif
@@ -7149,20 +7170,43 @@ function! MultidimensionalAnalyst(...)
     let Asolutionlist = []
     let tempsolution = []
     let temptime = []
+    let beginchar = ""
+    let endchar = ""
+    let outputstring = []
+    let datetime = '\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}'
+    let MultiDimensionalAnalysresult = []
     "}}}}
     for item in MultiDimensionalAnalysisSolution
         if item[-1] ==# 'A'
             let period = MultidimensionalAnalysisToObtainOperationTime(item[0],item[1],Multidimensionallist )
             let Asolutionlist = MultidimensionalAnalystExtract(item[2],Multidimensionallist)
-            for item1 in period
-                let temptime = split(item1,'█')
-                echo temptime
-                let tempsolution = copy(Asolutionlist)
-                let tempsolution = filter(tempsolution,'matchstr(v:val, ''\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}'') > temptime[0] && matchstr(v:val, ''\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}'') < temptime[1]' )
-                echo tempsolution
-            endfor
+            if len(period) > 0
+                for item1 in period
+                    let outputstring = []
+                    let temptime = split(item1,'█')
+                    let beginchar = DatePlus1s(temptime[0],"-1")
+                    let endchar = DatePlus1s(temptime[1],"-1")
+                    let tempsolution = copy(Asolutionlist)
+                    let tempsolution = filter(tempsolution,'matchstr(v:val, datetime) > beginchar && matchstr(v:val, datetime) < endchar' )
+                    for item2 in tempsolution
+                        "处理通路log行
+                        if "AUDIO_DEVICE_OUT_BLUETOOTH_SCO" ==# matchstr(item2,"AUDIO_DEVICE_OUT_BLUETOOTH_SCO")
+                            if count(outputstring,"AUDIO_DEVICE_OUT_BLUETOOTH_SCO") ==# 0
+                                let outputstring = add(outputstring,"AUDIO_DEVICE_OUT_BLUETOOTH_SCO")
+                            endif
+                        elseif "AUDIO_DEVICE_OUT_BLUETOOTH_A2DP" ==# matchstr(item2,"AUDIO_DEVICE_OUT_BLUETOOTH_A2DP")
+                            if count(outputstring,"AUDIO_DEVICE_OUT_BLUETOOTH_A2DP") ==# 0
+                                let outputstring = add(outputstring,"AUDIO_DEVICE_OUT_BLUETOOTH_A2DP")
+                            endif
+                        endif
+                    endfor
+                    "echo item[-2] . " " .  join(temptime,"-") . " 通路 ".  join(outputstring)
+                    let MultiDimensionalAnalysresult = add(MultiDimensionalAnalysresult,item[-2] . " " .  join(temptime,"-") . " 通路 ".  join(outputstring))
+                endfor
+            endif
         endif
     endfor
+    return MultiDimensionalAnalysresult
 endfunction
 "}}}}}
 "{{{{{4  MultidimensionalAnalystExtract(...) 提取一个参数
@@ -7172,7 +7216,7 @@ function! MultidimensionalAnalystExtract(...)
     let loglist = copy(a:2)
     "}}}}
     let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin')
-    call uniq(sort(loglist,"MyCompareTimeChar"))
+    let loglist = UniqueList(loglist)
     return loglist
 endfunction
 "}}}}}
@@ -7364,21 +7408,31 @@ function! UnzipFiles(...)
         endif
         let idx1 += 1
     endwhile
+    "删除5天前zip
     let deletefile = split(system(findcmd .  " -mtime +5"),'\n')
     echo system('date')
     echo "tangxinlou5"
-    call system("rm -rf *.7z")
+    "call system("rm -rf *.7z")
     if isdelete ==# "yes" && len(deletefile)  != 0
         echo deletefile
         for item in deletefile
+            if "" != matchstr(item,"(")
+                let  item = "'" . item . "'"
+                echo item
+            endif
             call system("rm -rf " . item)
         endfor
     endif
-    let deletefile = system("find . -maxdepth 1 -type f -mtime +10")
-    echo deletefile
+    echo "tangxinlou6"
+    "删除10天前的所以文件
+    let deletefile = split(system("find . -maxdepth 1 -type f -mtime +10"),'\n')
     if isdelete ==# "yes" && len(deletefile)  != 0
         echo deletefile
         for item in deletefile
+            if "" != matchstr(item,"(")
+                let  item = "'" . item . "'"
+                echo item
+            endif
             call system("rm -rf " . item)
         endfor
     endif
@@ -7487,10 +7541,16 @@ function! ChangeDirectoryName(...)
     "}}}}
     echo system('date')
     let currentTime = system('date +%s')
-    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +7 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
+    "删除7天前的目录
+    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +20 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
     echo system('date')
     for item in paths
+        echo paths
+        if "" != matchstr(item,"(")
+            let  item = "'" . item . "'"
+            echo item
+        endif
         call system('rm -rf ' . item)
     endfor
     let paths = []
@@ -7498,6 +7558,10 @@ function! ChangeDirectoryName(...)
     let paths  = map(paths, 'split(v:val, "/")[1]')
     echo system('date')
     for item in paths
+        if "" != matchstr(item,"(")
+            let  item = "'" . item . "'"
+            echo item
+        endif
         if matchstr(item,"delay_") ==# ""
             for item1 in keyword
                 let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
