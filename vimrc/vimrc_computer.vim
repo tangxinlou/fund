@@ -247,7 +247,7 @@ nnoremap >  <c-w>> 10
 "内部cd命令
 nnoremap cd :cd
 vnoremap g y
-nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>
+nnoremap <leader>s :set mouse=r<cr>:set nonumber<cr>:set wrap <cr>:set clipboard=unnamed <cr>
 "nnoremap <leader>wc :tabnew<cr>:!ls -lR |grep "^-"
 "nnoremap <leader>f viwyq:ig/<esc>pa/p<cr>
 "inoremap <C-h> <Left>
@@ -333,6 +333,7 @@ inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
 nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords")<cr>
+nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode")<cr>
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
@@ -461,15 +462,15 @@ let g:filterchar = {
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
-            \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect",
-            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed",
+            \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail",
+            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
-            \"03bond" : 'bluetoothbondstate.*=> \w+|Remote device name is|Remote device alias is|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is',
+            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>',
             \"00temp" : "temptemptem"}
@@ -569,9 +570,10 @@ let g:quickfix_is_open = 0
 function! QuckfixToggle()
     if g:quickfix_is_open
         set mouse=
+        set clipboard=exclude:clipboard
         echo  "关闭鼠标"
         let g:quickfix_is_open = 0
-        colorscheme default
+        "colorscheme default
         highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
         "call append(line('.'),split(execute("highlight"),"\n"))
@@ -580,7 +582,8 @@ function! QuckfixToggle()
     else
         let g:quickfix_is_open = 1
         set mouse=a
-        colorscheme morning
+        "colorscheme morning
+        set clipboard=unnamed
         highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
@@ -1511,7 +1514,6 @@ function! Openfile()
 endfunction
 "}}}}}
 "{{{{{2   SimplifySearchResults(...) 简化搜索结果
-nnoremap sim :call SimplifySearchResults()<cr>
 function! SimplifySearchResults(...)
     "{{{{{3 变量定义
     let searchs = "setActiveDevice"
@@ -3140,7 +3142,7 @@ function! DownloadManifest1(...) "根据版本号下载manifest
         let Version = split(QueryCurlSubdirectory(curl . item1  . "SystemTest/",Versionend. ".*vivo_"),'\n')
         let tempcurl = curl . item1  . "SystemTest/"
         for item in Version
-            if matchstr(item,"modem") ==# ""  &&  matchstr(item,"_pre") ==# "" && matchstr(item,"vusbd") ==# ""  && matchstr(item,"Bbk") ==# ""
+            if matchstr(item,"modem") ==# ""  &&  matchstr(item,"_pre") ==# "" && matchstr(item,"vusbd") ==# ""  && matchstr(item,"Bbk") ==# "" && matchstr(item,"test") ==# ""
                 if findfile(outputpath . '/' . item,".;") ==# ""
                     echo item
                     call system("wget -P " .  outputpath . " " . tempcurl . item)
@@ -5479,8 +5481,6 @@ function! ParseCodeFiles(...)
         if winnrnum  >  1
             execute "normal! \<c-w>h"
             execute "normal! :q!\<cr>"
-            "execute "normal! :tabn\<cr>"
-            "execute "normal! :q!\<cr>"
         endif
         let filename = expand("%:p")
     else
@@ -5490,52 +5490,32 @@ function! ParseCodeFiles(...)
         setlocal foldmethod=syntax
         redraw
     endif
-
+    let winid = win_getid()
+    let line = line('.')
+    let col = col('.')
+    call FormatCode(filename)
+    let filelist = readfile(filename)
+    let foldlevellist = GetFoldLevel(filename)
+    call win_gotoid(winid)
+    let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
     if a:0 ==# 0
-        let winid = win_getid()
-        let line = line('.')
-        let col = col('.')
-        call FormatCode(filename)
-        let filelist = readfile(filename)
-        let foldlevellist = GetFoldLevel(filename)
-        call win_gotoid(winid)
-        let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
         let codelist = ListFunctionAamesAndClassNames(codelist)
         let winwidthnum  = float2nr(winwidth('%')  * 0.3)
-        call win_gotoid(winid)
         execute "normal! :vne\<cr>"
         execute "vert resize " . winwidthnum
         call setline(1,codelist)
-        "execute "normal! :tabnew\<cr>"
-        "call setline(1,string(codedict))
-        "execue "normal! :tabp\<cr>"
         execute "normal! \<c-w>l"
+        call cursor(line,col)
         let @/ = "█1█.*$"
     else
-        echo filename . "tangxinloubegin"
-        let winid = win_getid()
-        let line = line('.')
-        let col = col('.')
-        echo filename . "tangxinlou1"
-        call FormatCode(filename)
-        echo filename . "tangxinlou2"
-        let filelist = readfile(filename)
-        let foldlevellist = GetFoldLevel(filename)
-        call win_gotoid(winid)
-        echo filename . "tangxinlou3"
-        let codedict = LoopToDillDictionary(nodeformat,foldlevellist,"",flag,filename,codelist)
-        echo filename . "tangxinlou4"
         if mode ==# 1
-            "let codelist = ListFunctionAamesAndClassNames(codelist)
-            echo filename . "tangxinlou5"
+            let codelist = ListFunctionAamesAndClassNames(codelist)
         endif
-        "call win_gotoid(winid)
         let resultdict["codelist"] =  codelist
         let resultdict["codedict"] =  codedict
         call cursor(line,col)
         let &foldlevel=100
         echo filename . "tangxinlouend"
-        "execute "normal! :bd" . bufnr('$') ."\<cr>"
         execute "normal! :wq!\<cr>"
         return resultdict
     endif
@@ -5727,6 +5707,7 @@ function! FormatCode(...)
     let down = 0
     let col = 0
     let col1 = 0
+    let idj1 = 0
     "}}}}
     "把所有括号变成一行
     "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
@@ -5741,7 +5722,7 @@ function! FormatCode(...)
         let left = count(tempchar,'(')
         let right = count(tempchar,')')
         if  (matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)) || (matchstr(tempchar,");") ==# ");"  ||  (count(tempchar,')') != 0 && count(tempchar,';') != 0))
-            "锁定行中带){的行
+            "锁定行中带){的行 和);的行
             call cursor(idx1,0)
             let end = idx1
             silent execute "normal! $F)%"
@@ -5753,34 +5734,77 @@ function! FormatCode(...)
                 "去除多行里面的注释
                 silent execute ":" . (start) . "," . end . "y"
                 let tempchar = @@
+                "把//注释清理
                 if matchstr(tempchar,"//") != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
                 endif
+                "把/* 注释清理
                 if  matchstr(tempchar,'\/\*') != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
                 endif
-                "echo tempchar
-                "echo "tangxinlou1"
+                "把文件开头到第一个字符的空口清理
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
+                "把换行符去掉
                 silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
                 silent execute "normal! \<esc>"
-                let filelen = line('$')
-                let idx1 = start - 5
+                let idx1 = start -1
             endif
         elseif (count(tempchar,'{') != 0) && (count(tempchar,')') ==# 0)  && split(tempchar)[0] ==# '{'
-           "锁定关键词和{不在同一行
+           "锁定关键词和{不在同一行,花括号直接占一行
+
            if matchstr(getline((idx1 - 1)),"//") != ""
-               silent execute ":" (idx1 - 1) . end . "s/\\/\\/.*$//g"
+               silent execute ":" (idx1 - 1) . "s/\\/\\/.*$//g"
            endif
            if  matchstr(getline((idx1 - 1)),'\/\*') != ""
                silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
            endif
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
-           let idx1 = start - 5
-        else
-            "行中有不成对的小括号这种行会造成折叠不准确，直接删除
+           let idx1 = idx1 -1
+       elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") ==# 0)
+           " implements 和 class 不在同一行
+           if matchstr(getline((idx1 - 1)),"//") != ""
+               silent execute ":" (idx1 - 1) . "s/\\/\\/.*$//g"
+           endif
+           if  matchstr(getline((idx1 - 1)),'\/\*') != ""
+               silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
+           endif
+           silent execute ":" . (idx1) . "s/^\\s\\+//g"
+           silent execute ":" . (idx1 - 1) . ":s/\\n/ /g"
+           let idx1 = idx1 -2
+       elseif (count(tempchar,' =') != 0) && (count(tempchar,';') ==# 0) &&  (count(tempchar,'@') ==# 0)
+           "锁定= 和;不在同一行的行
+           let start  = idx1
+           let idj1 = idx1
+           while idj1 != -1
+               if count(getline(idj1),';') != 0
+                   let end = idj1
+                   let idj1 = -1
+               else
+                   let idj1 += 1
+               endif
+           endwhile
+           "去除多行里面的注释
+           silent execute ":" . (start) . "," . end . "y"
+           let tempchar = @@
+           "把//注释清理
+           if matchstr(tempchar,"//") != ""
+               silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
+           endif
+           "把/* 注释清理
+           if  matchstr(tempchar,'\/\*') != ""
+               silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
+           endif
+           "把文件开头到第一个字符的空口清理
+           silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
+           call cursor(start,0)
+           "把换行符去掉
+           silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
+           silent execute "normal! \<esc>"
+           let idx1 = start
+       else
+           "行中有不成对的小括号这种行会造成折叠不准确，直接删除
             if left != right
                 call cursor(idx1,0)
                 let start = idx1
@@ -5792,20 +5816,63 @@ function! FormatCode(...)
                 if start ==# end && count(tempchar,'(') != 0 && col ==# col1
                     call cursor(idx1,0)
                     silent execute "normal! dd"
+                    let idx1 = idx1 -1
                 endif
             endif
             "//{ 和//}的注释行直接删除
             if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
                 call cursor(idx1,0)
                 silent execute "normal! dd"
-                let idx1 -= 5
+                let idx1 = idx1 -1
             endif
+            " <--------------- 这种行直接删除
             if matchstr(tempchar,"<---------------") != ""
                 call cursor(idx1,0)
                 silent execute "normal! dd"
-                let idx1 -= 5
+                let idx1 = idx1 -1
             endif
         endif
+        let filelen = line('$')
+        let idx1 += 1
+    endwhile
+    "删除所有注释和空行
+    let filelen = line('$')
+    let idx1 = 1
+    while idx1 <= filelen
+        let tempchar = getline(idx1)
+        if  matchstr(tempchar,'//') != ""  && count(tempchar,';') ==# 0
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+            let idx1 = idx1 -1
+        elseif matchstr(tempchar,'//') != ""  && count(tempchar,';') != 0
+            silent execute ":" idx1 . "s/\\/\\/.*$//g"
+            let idx1 = idx1 -1
+        elseif matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+            let idx1 -= 1
+        elseif matchstr(tempchar,'\/\*') != ""
+            let end = 0
+            let start  = idx1
+            let idj1 = idx1
+            while idj1 != -1
+                if count(getline(idj1),"\*\/") != 0
+                    let end = idj1
+                    let idj1 = -1
+                else
+                    let idj1 += 1
+                endif
+            endwhile
+            if end != 0
+                silent execute ":" . (start) . "," . end . "d"
+                let idx1 = start -1
+            endif
+        elseif len(tempchar) ==# 0
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+            let idx1 = idx1 -1
+        endif
+        let filelen = line('$')
         let idx1 += 1
     endwhile
     execute "normal! :bd" . bufnr('$') ."\<cr>"
@@ -5874,7 +5941,7 @@ function! ListFunctionAamesAndClassNames(...)
                 \"default:",
                 \"do {",
                 \"do {",
-                \"switch",
+                \"switch ",
                 \"while (",
                 \"while(",
                 \"<-----",
@@ -5921,6 +5988,61 @@ function! OrganizeJavaCodeLogic(...)
    " execute "normal! :e ./A2dpService.java \<cr>"
    " let classdict["A2dpService.java"] = ParseCodeFiles("./A2dpService.java",1)
     call append(line('.'),string(classdict))
+endfunction
+"}}}}}
+
+"{{{{{2 function!  SimplifyCurrentFileFunctions(...)           简化当前文件的函数                  普通模式sif调用
+nnoremap sif :call SimplifyCurrentFileFunctions()<cr>
+function! SimplifyCurrentFileFunctions(...)
+    "{{{{{3 变量定义
+    let filename = ""
+    let codedict = []
+    let codelist = []
+    let winwidthnum = 0
+    let line = 0
+    let col = 0
+    let winnrnum = 0
+    let winid = 0
+    let resultdict = {}
+    let mode = 0
+    "}}}}
+    if a:0 ==# 0
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        let filename = a:1
+        let mode = a:2
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
+    endif
+    let winid = win_getid()
+    let line = line('.')
+    let col = col('.')
+    let codedict = ParseCodeFiles(filename,1)
+    if a:0 ==# 0
+        let winwidthnum  = float2nr(winwidth('%')  * 0.3)
+        execute "normal! :vne\<cr>"
+        execute "vert resize " . winwidthnum
+        call setline(1,codedict["codelist"])
+        execute "normal! \<c-w>l"
+        call cursor(line,col)
+        let @/ = "█1█.*$"
+        redraw
+    else
+        if mode ==# 1
+            let codelist = ListFunctionAamesAndClassNames(codelist)
+        endif
+        call cursor(line,col)
+        let &foldlevel=100
+        execute "normal! :wq!\<cr>"
+        return resultdict
+    endif
 endfunction
 "}}}}}
 "}}}}}
@@ -6271,7 +6393,7 @@ function! SearcherlogChars()
     else
         if len(tabpagebuflist()) ==# 1 && g:windowgreplogid ==# 0
             "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
-            let winwidthnum  = float2nr(winheight('%')  * 0.2)
+            let winwidthnum  = float2nr(winheight('%')  * 0.4)
             echo winwidthnum
             silent execute  "normal! :cle\<cr>"
             execute "normal! :new\<cr>"
@@ -6960,7 +7082,9 @@ function! AutoAnalyzer(...)
         silent execute "normal! :e  " . saveresult . "\<cr>"
     endif
     echo g:Dimensionalflag
-    call input("11")
+    if a:0 ==# 0
+        call input("11")
+    endif
     redraw
 endfunction
 "}}}}}
@@ -7369,14 +7493,19 @@ function! UnzipFiles(...)
     let pathsstring = ""
     let deletefile = []
     "}}}}
-    if input("1 当前目录，2递归") ==# 2
-        let findmode = ""
-    else
+    if a:0 ==# 1
         let findmode = "-maxdepth 1"
-    endif
-
-    if input("是否删除") ==# "yes"
         let isdelete = "yes"
+    else
+        if input("1 当前目录，2递归") ==# 2
+            let findmode = ""
+        else
+            let findmode = "-maxdepth 1"
+        endif
+
+        if input("是否删除") ==# "yes"
+            let isdelete = "yes"
+        endif
     endif
     echo system('date')
     let curtime = system('date +%s')
@@ -7442,7 +7571,11 @@ function! UnzipFiles(...)
     echo system('date')
     call ChangeDirectoryName()
     echo system('date')
-    call input('111')
+    if a:0 ==# 0
+        call input('111')
+    else
+        redraw
+    endif
 endfunction
 "}}}}}
 
@@ -7503,11 +7636,21 @@ function! LoopAnalysis(...)
     let idx1 = 0
     let tempchar = ""
     "}}}}
+    echo ManageExtractionCode()
     let tempchar = input("输入提取码")
     if tempchar != ''
         let findcmd = findcmd . " | grep -E \"" . tempchar . "\""
     endif
     let paths = split(system(findcmd),"\n")
+    echo "123"
+    echo len(split(tempchar,'|'))
+    echo "dkfj"
+    echo split(tempchar,'|')
+    echo "dkfjkgg"
+    if len(paths) != len(split(tempchar,'|'))
+        call UnzipFiles(1)
+        let paths = split(system(findcmd),"\n")
+    endif
     echo paths
     while idx1 < len(paths)
         let directory = split(paths[idx1],'/')[1]
@@ -7530,6 +7673,7 @@ function! ChangeDirectoryName(...)
     let paths = []
     let keyword = ["delay_*_core",
                 \"delay_*_common",
+                \"fbk_*_core",
                 \"delay_*_third_pvt",
                 \"delay_*_common_pvt",
                 \"delay_*_modem_audio_pvt",
@@ -7538,6 +7682,9 @@ function! ChangeDirectoryName(...)
     let resultchar = ""
     let currentTime = ""
     let folderTime = ""
+    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode"))
+    let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
+    let tempchar = ''
     "}}}}
     echo system('date')
     let currentTime = system('date +%s')
@@ -7567,8 +7714,19 @@ function! ChangeDirectoryName(...)
                 let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
                 let resultchar = systemlist(findcmd)
                 if len(resultchar) != 0
-                    echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
-                    call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    if matchstr(item1,'fbk_') ==# 'fbk_'
+                        echo  "mv " . item . " " . item . "_delay_" . substitute(item1, '_\*', '', 'g')
+                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    else
+                        echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
+                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    endif
+                    if item1 ==# "delay_*_core" || item1 ==# "fbk_*_core"
+                        let tempchar = split(item,'_')
+                        if count(Extractioncodelist,tempchar[-1]) ==# 0
+                            let Extractioncodefile = insert(Extractioncodefile,"new,". tempchar[-1])
+                        endif
+                    endif
                     break
                 endif
             endfor
@@ -7577,6 +7735,27 @@ function! ChangeDirectoryName(...)
             endif
         endif
     endfor
+    call writefile(Extractioncodefile,Homedir("autoanaly/Extractioncode"))
+endfunction
+"}}}}}
+
+"{{{{{2   ManageExtractionCode(...)管理提取码文件Extractioncode
+function! ManageExtractionCode(...)
+    "{{{{{3 变量定义
+    "nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode")<cr>
+    let Alreadyanalyzed = ""
+    let templist = ""
+    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode"))
+    let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
+    "}}}}
+    let Alreadyanalyzed = system("ls " . Homedir("autoanaly/result"))
+    echo Extractioncodelist
+    for item in Extractioncodelist
+        if matchstr(Alreadyanalyzed,item) ==# ""
+            let templist = item . '|' . templist
+        endif
+    endfor
+    return templist
 endfunction
 "}}}}}
 "}}}
@@ -7650,6 +7829,43 @@ function! WidChanged(...)
     call  execute(["1resize 32","vert 1resize 135"])
     "call  execute("vert resize 135")
     "call  execute('vert 1resize 135')
+endfunction
+"}}}}}
+"{{{{{2 function!  ModifyColors(...) 调整颜色
+let g:ModifyColors = 0
+function! ModifyColors(...)
+    "{{{{{3 变量定义
+    let ModifyColors = g:ModifyColors
+    let colors = ["blue",
+                \"darkblue",
+                \"default",
+                \"delek",
+                \"desert",
+                \"elflord",
+                \"evening",
+                \"habamax",
+                \"industry",
+                \"koehler",
+                \"lunaperche",
+                \"morning",
+                \"murphy",
+                \"pablo",
+                \"peachpuff",
+                \"quiet",
+                \"retrobox",
+                \"ron",
+                \"shine",
+                \"slate",
+                \"sorbet",
+                \"torte",
+                \"wildcharm",
+                \"zaibatsu",
+                \"zellner",]
+    "}}}}
+    echo  colors[ModifyColors]
+    execute 'colorscheme ' . colors[ModifyColors]
+    let g:ModifyColors += 1
+    call input("111")
 endfunction
 "}}}}}
 "}}}
