@@ -462,7 +462,7 @@ let g:filterchar = {
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
-            \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail",
+            \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
@@ -810,27 +810,43 @@ function! MakeCompressedPackage()
     call system(zipname)
 endfunction
 "}}}}}
-"{{{{{2   MyCompare(i1, i2) 使用sort 排序list
+"{{{{{2   MyCompare(i1, i2) 比较字符串，在比较函数里面设置比较的格式
+let g:charinterval = ''  "切割字符
+let g:listnumber = -1    "list的index
+let g:listmembertype = ""
+let g:comparedirect = ""
 function! MyCompare(i1, i2)
     let list = []
     let list1 = []
-    let char = ""
-    let char1 = ""
-    let list = split(a:i1,"|")
-    let list1 = split(a:i2,"|")
-    "echo list
-    "echo list1
-    return list1[2] - list[2]
+    let compare = ""
+    let compare1 = ""
+    let charinterval =  g:charinterval
+    let listnumber = g:listnumber
+    let listmembertype = g:listmembertype
+    let comparedirect = g:comparedirect
+    let list = split(a:i1,charinterval)
+    let list1 = split(a:i2,charinterval)
+    let compare = list[listnumber]
+    let compare1 = list1[listnumber]
+    if listmembertype ==# "nr"
+        let compare = str2nr(compare)
+        let compare1 = str2nr(compare1)
+    endif
+    if comparedirect ==# "b-s"
+        return  compare == compare1 ? 0 : compare1  > compare    ? 1 : -1 
+    elseif comparedirect ==# "s-b"
+        return  compare == compare1 ? 0 : compare  > compare1    ? 1 : -1 
+    endif
 endfunction
 func! MyCompare1(i1, i2)
     return a:i2 == a:i1 ? 0 : a:i2 > a:i1 ? 1 : -1
 endfunc
-func! MyCompareTimestamp(i1, i2)
+func! MyCompareTimestamp(i1, i2) "时间戳换算成us比较
     let i1timestamp = ParseTimestamp(split(a:i1)[1])
     let i2timestamp = ParseTimestamp(split(a:i2)[1])
     return i2timestamp ==#  i1timestamp ? 0 : i1timestamp > i2timestamp ? 1 : -1
 endfunc
-func! MyCompareTimeChar(i1, i2)
+func! MyCompareTimeChar(i1, i2)  "两行日志通过时间比较
     let i1timestamp = matchstr(a:i1,'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
     let i2timestamp = matchstr(a:i2,'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
     "从小到大
@@ -1854,7 +1870,55 @@ function! DatePlus1s(...)
     return datestring
 endfunction
 "}}}}}
-
+"{{{{{2 LogicalJudgment(...) I 包含 D 差集
+function! LogicalJudgment(...)
+    let type = a:3
+    let parentset = a:1
+    let subset = a:2
+    let result = ''
+    let src1 = ""
+    let src2 = ""
+    let tail1 = ""
+    let tail2 = ""
+    if type ==# 'I'
+        if type(parentset) ==# 3
+            for item in parentset
+                let index = index(parentset, item) + 1
+                if index < len(parentset) - 1
+                    let nextitem = parentset[index]
+                    let src1 = str2nr(split(item,'-')[0])
+                    let tail1 = str2nr(split(nextitem,'-')[0])
+                    if subset >= src1 && subset < tail1
+                        return index(parentset, item)
+                    endif
+                else
+                    let src1 = str2nr(split(item,'-')[0])
+                    if subset >= src1
+                        return index(parentset, item)
+                    else
+                        return -1
+                    endif
+                endif
+            endfor
+        elseif type(parentset) ==# 1
+        endif
+    elseif type ==# 'D'
+        let src1 = str2nr(split(parentset,'-')[0])
+        let tail1 = str2nr(split(parentset,'-')[1])
+        let src2 = str2nr(split(subset,'-')[0])
+        let tail2 = str2nr(split(subset,'-')[1])
+        if src1 > src2  && src1 - src2 > 1
+            return (src2 + 1) . '-' . (src1 -1)
+        elseif src1 ==# src2
+            return -1
+        elseif src1 < src2 && src2 - src1 > 1
+            return (src1 + 1) . '-' . (src2 -1)
+        else
+            return -1
+        endif
+    endif
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -4586,7 +4650,25 @@ function! GetIndexData(...)
     endwhile
 endfunction
 "}}}}}
+"{{{{{2   GenerateRandomNumbers(...)   生成随机数
+function! GenerateRandomNumbers(...)
+    "{{{{{3 变量定义
+    "let initialvalue = a:1
+    "let endvalue = a:2
+    "}}}}
+    " 设置随机数种子
+    let seed = localtime()
+    call srand(seed)
 
+    let random_float = 0
+    let original_integer = rand() 
+    let float_with_decimal = original_integer / 10000000000.0
+    "let random_float = initialvalue  + float_with_decimal  * (endvalue - initialvalue)
+    let random_float = 1.7049 + float_with_decimal  * (2.3070 - 1.7049)
+    " 打印格式化的随机浮点数
+    echo "Random float between 1.7049 and 2.3070: " . printf("%.4f", random_float)
+endfunction
+"}}}}} 
 "}}}
 "{{{{{ code
 "协助写出代码流程文档
@@ -5761,7 +5843,7 @@ function! FormatCode(...)
            endif
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
-           let idx1 = idx1 -1
+           let idx1 = idx1 -2
        elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") ==# 0)
            " implements 和 class 不在同一行
            if matchstr(getline((idx1 - 1)),"//") != ""
@@ -5773,7 +5855,15 @@ function! FormatCode(...)
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n/ /g"
            let idx1 = idx1 -2
-       elseif (count(tempchar,' =') != 0) && (count(tempchar,';') ==# 0) &&  (count(tempchar,'@') ==# 0)
+       elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") != 0)
+           "删掉binder stub的代码
+           call cursor(idx1,0)
+           let start = idx1
+           silent execute "normal! 0f{%"
+           let end = line('.')
+           silent execute ":" . (start) . "," . end . "d"
+           let idx1 = start -1
+       elseif ((count(tempchar,' =') != 0) && (count(tempchar,'==') ==# 0) && (count(tempchar,';') ==# 0) &&  (count(tempchar,'@') ==# 0)) ||((count(tempchar,'append') != 0) && (count(tempchar,';') ==# 0))
            "锁定= 和;不在同一行的行
            let start  = idx1
            let idj1 = idx1
@@ -5822,7 +5912,10 @@ function! FormatCode(...)
             "//{ 和//}的注释行直接删除
             if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
                 call cursor(idx1,0)
-                silent execute "normal! dd"
+                silent execute ":" idx1 . "s/\\/\\/.*\*\\///g"
+                if len(split(getline(idx1))) ==# 0
+                    silent execute "normal! dd"
+                endif
                 let idx1 = idx1 -1
             endif
             " <--------------- 这种行直接删除
@@ -5835,23 +5928,31 @@ function! FormatCode(...)
         let filelen = line('$')
         let idx1 += 1
     endwhile
-    "删除所有注释和空行
+    "删除所有注释，log 打印和空行
     let filelen = line('$')
     let idx1 = 1
     while idx1 <= filelen
         let tempchar = getline(idx1)
         if  matchstr(tempchar,'//') != ""  && count(tempchar,';') ==# 0
             call cursor(idx1,0)
-            silent execute "normal! dd"
+            silent execute ":" idx1 . "s/\\/\\/.*$//g"
+            call cursor(idx1,0)
+            if len(split(getline(idx1))) ==# 0
+                silent execute "normal! dd"
+            endif
             let idx1 = idx1 -1
         elseif matchstr(tempchar,'//') != ""  && count(tempchar,';') != 0
             silent execute ":" idx1 . "s/\\/\\/.*$//g"
             let idx1 = idx1 -1
-        elseif matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0
+        elseif matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0 && count(tempchar,'}') ==# 0
             call cursor(idx1,0)
             silent execute "normal! dd"
             let idx1 -= 1
-        elseif matchstr(tempchar,'\/\*') != ""
+        elseif matchstr(tempchar,'log\..') != ""  && count(tempchar,';') != 0
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+            let idx1 -= 1
+        elseif matchstr(tempchar,'\/\*') != "" && matchstr(tempchar,'\*\/') ==# ""
             let end = 0
             let start  = idx1
             let idj1 = idx1
@@ -5867,6 +5968,14 @@ function! FormatCode(...)
                 silent execute ":" . (start) . "," . end . "d"
                 let idx1 = start -1
             endif
+        elseif matchstr(tempchar,'\/\*') != "" && matchstr(tempchar,'\*\/') != ""
+            call cursor(idx1,0)
+            silent execute ":" idx1 . "s/\\/\\*.*$//g"
+            call cursor(idx1,0)
+            if len(split(getline(idx1))) ==# 0
+                silent execute "normal! dd"
+            endif
+            let idx1 = idx1 -1
         elseif len(tempchar) ==# 0
             call cursor(idx1,0)
             silent execute "normal! dd"
@@ -6005,6 +6114,26 @@ function! SimplifyCurrentFileFunctions(...)
     let winid = 0
     let resultdict = {}
     let mode = 0
+    let classlist = []
+    let classmember = []
+    let binder = []
+    let functionname = []
+    let classname = []
+    let functionnameline = []
+    let functionlength = []
+    let classlength = []
+    let listlength = 0
+    let curlitem = ""
+    let nextitem = ""
+    let tempchar = ""
+    let templist = []
+    let indexnum = 0
+    let resultdict = {}
+    let resultdictkeyslist = []
+    let functionindex = -1
+    let classindex = -1
+    let tempdictkeyname = ""
+    let tempdictvaluename = ""
     "}}}}
     if a:0 ==# 0
         let winnrnum = tabpagewinnr(tabpagenr(),'$')
@@ -6025,6 +6154,78 @@ function! SimplifyCurrentFileFunctions(...)
     let line = line('.')
     let col = col('.')
     let codedict = ParseCodeFiles(filename,1)
+    let codelist = codedict["codelist"]
+    "获取函数首行和尾行
+    let functionlength = GetOneOfTheColumns(codelist,"█",0)
+    "提取关键节点,函数名列表，函数首行列表，class列表，class 成员列表
+    let listlength = len(codelist)
+    for i in range(0,listlength - 1)
+        let curlitem = codelist[i]
+        if matchstr(curlitem,"class") != ""
+            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(tempchar)
+            let indexnum = index(tempchar,"class")
+            let functionname = add(functionname,tempchar[indexnum + 1])
+            let classname = add(classname,tempchar[indexnum + 1])
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[0])
+            let functionnameline = add(functionnameline,tempchar)
+            let classlist = add(classlist,curlitem)
+            if i < listlength -1
+                let nextitem = codelist[i + 1]
+                let tempchar = LogicalJudgment(split(curlitem,'█')[0],split(nextitem,'█')[0],'D')
+                let classmember = add(classmember,tempchar)
+            endif
+        else
+            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(tempchar,'(')[0]
+            let tempchar = split(tempchar)
+            let functionname = add(functionname,tempchar[-1])
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[0])
+            let functionnameline = add(functionnameline,tempchar)
+        endif
+    endfor
+    let classlength = GetOneOfTheColumns(classlist,"█",0)
+    echo functionlength
+    echo classlength 
+    echo classlist
+    echo classmember
+    echo classname
+    echo functionname
+    echo functionnameline
+    let idx1 = 1
+    while idx1 < len(functionname)
+        let templist = EncapsulateDifferentGrep(filename,"fuc",functionname[idx1])
+        let tempnr = functionnameline[idx1]
+        let functionindex1 = LogicalJudgment(functionlength,tempnr,'I')
+        let classindex1 = LogicalJudgment(classlength,tempnr,'I')
+        let tempdictvaluename   = functionnameline[functionindex1] . '-' . classname[classindex1] . '-' .functionname[functionindex1]
+        if len(templist) != 0
+            for item in templist
+                let tempnr = split(item,':')[0]
+                if count(functionnameline,str2nr(tempnr)) ==# 0
+                    let functionindex = LogicalJudgment(functionlength,tempnr,'I')
+                    let classindex = LogicalJudgment(classlength,tempnr,'I')
+                    let tempdictkeyname  = functionnameline[functionindex] . '-' . classname[classindex] . '-' .functionname[functionindex]
+                    if has_key(resultdict,tempdictkeyname) ==# 0
+                        let resultdict[tempdictkeyname] = {}
+                    endif
+                    let resultdict[tempdictkeyname][str2nr(tempnr)] = tempdictvaluename
+                endif
+            endfor
+        endif
+        let idx1 += 1
+    endwhile
+    echo resultdict
+    let resultdictkeyslist = keys(resultdict)
+    let g:charinterval = '-'
+    let g:listnumber = 0
+    let g:listmembertype = "nr"
+    let g:comparedirect = "s-b"
+    let resultdictkeyslist = sort(resultdictkeyslist,"MyCompare")
+    echo resultdictkeyslist 
+    call input("11")
     if a:0 ==# 0
         let winwidthnum  = float2nr(winwidth('%')  * 0.3)
         execute "normal! :vne\<cr>"
@@ -6045,6 +6246,28 @@ function! SimplifyCurrentFileFunctions(...)
     endif
 endfunction
 "}}}}}
+
+"{{{{{2   EncapsulateDifferentGrep(...) 封装grep 指令
+function! EncapsulateDifferentGrep(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    if filename ==# ""
+        let grepcmd = "grep -Esinr --include=*{.c,.cc,.cpp,.java,.h} "
+    else
+        let grepcmd = "grep -Esin --include=*{.c,.cc,.cpp,.java,.h} "
+    endif
+    let result = ""
+    "}}}}
+    if greptype ==# "fuc"
+        let grepchar = '" ' . grepchar . '\(" '
+        let grepcmd = grepcmd . grepchar . filename
+        let result = split(system(grepcmd),"\n")
+    endif
+    return result
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{ 定时器
 
@@ -6332,6 +6555,9 @@ function! GreplogChars(timer)
         return
     endif
     if matchstr(searchs,'.$') ==# '|'
+        return
+    endif
+    if len(split(searchs,'|')[-1]) < 4
         return
     endif
     let g:lastgreplogfilter = searchs
@@ -7543,7 +7769,7 @@ function! UnzipFiles(...)
     echo "tangxinlou5"
     "call system("rm -rf *.7z")
     if isdelete ==# "yes" && len(deletefile)  != 0
-        echo deletefile
+        "echo deletefile
         for item in deletefile
             if "" != matchstr(item,"(")
                 let  item = "'" . item . "'"
@@ -7556,7 +7782,7 @@ function! UnzipFiles(...)
     "删除10天前的所以文件
     let deletefile = split(system("find . -maxdepth 1 -type f -mtime +10"),'\n')
     if isdelete ==# "yes" && len(deletefile)  != 0
-        echo deletefile
+        "echo deletefile
         for item in deletefile
             if "" != matchstr(item,"(")
                 let  item = "'" . item . "'"
@@ -7693,7 +7919,6 @@ function! ChangeDirectoryName(...)
     let paths  = map(paths, 'split(v:val, "/")[1]')
     echo system('date')
     for item in paths
-        echo paths
         if "" != matchstr(item,"(")
             let  item = "'" . item . "'"
             echo item
@@ -7707,7 +7932,6 @@ function! ChangeDirectoryName(...)
     for item in paths
         if "" != matchstr(item,"(")
             let  item = "'" . item . "'"
-            echo item
         endif
         if matchstr(item,"delay_") ==# ""
             for item1 in keyword
@@ -7755,7 +7979,7 @@ function! ManageExtractionCode(...)
             let templist = item . '|' . templist
         endif
     endfor
-    return templist
+    return join(split(templist,'|'),'|')
 endfunction
 "}}}}}
 "}}}
