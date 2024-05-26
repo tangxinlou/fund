@@ -97,6 +97,9 @@ set diffopt=context:3
 set hidden
 "gitbash vim 和windows 不共用剪贴板
 set clipboard=exclude:clipboard
+"let java_highlight_functions = "indent"
+"colorscheme torte
+colorscheme elflord
 "}}}}}
 "vimdiff 颜色配置{{{
 if &diff
@@ -172,6 +175,13 @@ augroup testgroup
     autocm!
     "保存文件是自动打印
     autocmd BufWrite * :echom "cat"
+    "syntax match javaFunction "\<\h\w*\>\s*("
+    autocmd FileType  cpp  syntax match javaFunction '\<\h\w*\>\ze\s*('
+    autocmd FileType  cpp   hi link javaFunction Function
+    autocmd FileType java   syntax match javaFunction '\<\h\w*\>\ze\s*('
+    autocmd FileType java    hi link javaFunction Function   
+    autocmd FileType c   syntax match javaFunction '\<\h\w*\>\ze\s*('
+    autocmd FileType c    hi link javaFunction Function
 augroup END
 
 "}}}
@@ -449,14 +459,14 @@ let g:filterchar = {
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels",
             \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback",
-            \"24battery" : "sendBatteryLevelChangedBroadcast",
+            \"24battery" : "sendBatteryLevelChangedBroadcast|tws wear state",
             \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
-            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig",
+            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference",
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
-            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb",
+            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
@@ -466,7 +476,7 @@ let g:filterchar = {
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
@@ -574,18 +584,23 @@ function! QuckfixToggle()
         echo  "关闭鼠标"
         let g:quickfix_is_open = 0
         "colorscheme default
-        highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
-        highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
+        "highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
+        "highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
         "call append(line('.'),split(execute("highlight"),"\n"))
-        highlight MyGroup1 term=reverse ctermbg=black ctermfg=White guibg=Grey40
-        let m = matchadd("MyGroup1", "_")
+        "highlight MyGroup1 term=reverse ctermbg=black ctermfg=White guibg=Grey40
+        "let m = matchadd("MyGroup1", "_")
+        "查看当前行是什么高亮组
+        "echo "Current highlight group: " . synIDattr(synID(line("."), col("."), 1), "name")
+        "verbose highlight javaMethod
+        "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+
     else
         let g:quickfix_is_open = 1
         set mouse=a
         "colorscheme morning
         set clipboard=unnamed
-        highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
-        let m = matchadd("MyGroup1", "_")
+        "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
+        "let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
     endif
 endfunction
@@ -1883,9 +1898,9 @@ function! LogicalJudgment(...)
     if type ==# 'I'
         if type(parentset) ==# 3
             for item in parentset
-                let index = index(parentset, item) + 1
+                let index = index(parentset, item)
                 if index < len(parentset) - 1
-                    let nextitem = parentset[index]
+                    let nextitem = parentset[index + 1]
                     let src1 = str2nr(split(item,'-')[0])
                     let tail1 = str2nr(split(nextitem,'-')[0])
                     if subset >= src1 && subset < tail1
@@ -1893,12 +1908,14 @@ function! LogicalJudgment(...)
                     endif
                 else
                     let src1 = str2nr(split(item,'-')[0])
-                    if subset >= src1
+                    let tail1 = str2nr(split(item,'-')[1])
+                    if subset >= src1 && subset <= tail1
                         return index(parentset, item)
                     else
                         return -1
                     endif
                 endif
+                
             endfor
         elseif type(parentset) ==# 1
         endif
@@ -6134,6 +6151,7 @@ function! SimplifyCurrentFileFunctions(...)
     let classindex = -1
     let tempdictkeyname = ""
     let tempdictvaluename = ""
+    let codelist111 = []
     "}}}}
     if a:0 ==# 0
         let winnrnum = tabpagewinnr(tabpagenr(),'$')
@@ -6195,18 +6213,28 @@ function! SimplifyCurrentFileFunctions(...)
     echo functionname
     echo functionnameline
     let idx1 = 1
+    "逐个搜索当前文件的函数
     while idx1 < len(functionname)
         let templist = EncapsulateDifferentGrep(filename,"fuc",functionname[idx1])
         let tempnr = functionnameline[idx1]
         let functionindex1 = LogicalJudgment(functionlength,tempnr,'I')
         let classindex1 = LogicalJudgment(classlength,tempnr,'I')
+        "被调用的函数
         let tempdictvaluename   = functionnameline[functionindex1] . '-' . classname[classindex1] . '-' .functionname[functionindex1]
+       " if  functionname[idx1] ==#  "ConnectionStateChangedReceiver"
+       "     echo tempnr 
+       "     echo functionindex1 
+       "     echo classindex1 
+       "     echo "tangxinlou2"
+       "     echo tempdictvaluename   
+       " endif
         if len(templist) != 0
             for item in templist
                 let tempnr = split(item,':')[0]
                 if count(functionnameline,str2nr(tempnr)) ==# 0
                     let functionindex = LogicalJudgment(functionlength,tempnr,'I')
                     let classindex = LogicalJudgment(classlength,tempnr,'I')
+                    "调用者
                     let tempdictkeyname  = functionnameline[functionindex] . '-' . classname[classindex] . '-' .functionname[functionindex]
                     if has_key(resultdict,tempdictkeyname) ==# 0
                         let resultdict[tempdictkeyname] = {}
@@ -6225,12 +6253,19 @@ function! SimplifyCurrentFileFunctions(...)
     let g:comparedirect = "s-b"
     let resultdictkeyslist = sort(resultdictkeyslist,"MyCompare")
     echo resultdictkeyslist 
+
+    let codelist111 = []
+    let resultdict = LoopThroughDictionaries(resultdict,deepcopy(resultdict),"respace",0)
+    call  LoopThroughDictionaries(resultdict,codelist111,"print",0)
+    echo resultdict
+    echo codelist111 
     call input("11")
     if a:0 ==# 0
         let winwidthnum  = float2nr(winwidth('%')  * 0.3)
         execute "normal! :vne\<cr>"
         execute "vert resize " . winwidthnum
-        call setline(1,codedict["codelist"])
+        "call setline(1,codedict["codelist"])
+        call setline(1,codelist111)
         execute "normal! \<c-w>l"
         call cursor(line,col)
         let @/ = "█1█.*$"
@@ -6268,6 +6303,71 @@ function! EncapsulateDifferentGrep(...)
     return result
 endfunction
 "}}}}} 
+
+"{{{{{2   LoopThroughDictionaries(...) 循环处理字典
+function! LoopThroughDictionaries(...)
+    "{{{{{3 变量定义
+    let Loopdict = deepcopy(a:1)
+    let Loopconstant = a:2
+    let Loopfunc = a:3
+    let loopflag = a:4
+    let looptypes = ""
+    let loopkeylist = []
+    let idx1 = 0
+    let tempmember = ""
+    let tempmemberkey = ""
+    let tempchar = ""
+    let tempchar1 = "├──"
+    let tempchar2 = "│  █"
+    "}}}}
+    let loopkeylist = keys(Loopdict)
+    let g:charinterval = '-'
+    let g:listnumber = 0
+    let g:listmembertype = "nr"
+    let g:comparedirect = "s-b"
+    let loopkeylist  = sort(loopkeylist,"MyCompare")
+    let tempkey = ""
+    if Loopfunc ==# "respace"
+        while idx1 < len(loopkeylist)
+            let tempmember = deepcopy(Loopdict[loopkeylist[idx1]])
+            let tempmemberkey = deepcopy(loopkeylist[idx1])
+            let looptypes = type(tempmember)
+            if looptypes ==# 1   "字典成员是字符
+                if has_key(Loopconstant,tempmember) ==# 1
+                    call remove(Loopdict,tempmemberkey)
+                    let tempmemberkey = tempmemberkey  . '-' . tempmember
+                    let Loopdict[tempmemberkey] = LoopThroughDictionaries(deepcopy(Loopconstant[tempmember]),Loopconstant,Loopfunc,loopflag - 1)
+                else
+                    call remove(Loopdict,tempmemberkey)
+                    let tempmemberkey = tempmemberkey  . '-' . tempmember
+                    let Loopdict[tempmemberkey] = tempmember
+                endif
+            elseif looptypes ==# 4  "字典成员是字典
+                let Loopdict[tempmemberkey] = LoopThroughDictionaries(tempmember,Loopconstant,Loopfunc,loopflag - 1)
+            endif
+            let idx1 += 1
+        endwhile
+        return Loopdict
+    elseif Loopfunc ==# "print"
+        while idx1 < len(loopkeylist)
+            let tempmember = deepcopy(Loopdict[loopkeylist[idx1]])
+            let tempmemberkey = deepcopy(loopkeylist[idx1])
+            let looptypes = type(tempmember)
+            if looptypes ==# 1   "字典成员是字符
+                let tempchar = ""
+                let tempchar =  repeat(tempchar2,loopflag) . tempchar1
+                let Loopconstant = add(Loopconstant , loopflag . "█" . tempchar .  "█" . tempmemberkey)
+            elseif looptypes ==# 4  "字典成员是字典
+                let tempchar = ""
+                let tempchar =  repeat(tempchar2,loopflag) . tempchar1
+                let Loopconstant = add(Loopconstant , loopflag . "█" . tempchar .  "█" . tempmemberkey)
+                call LoopThroughDictionaries(tempmember,Loopconstant,Loopfunc,loopflag + 1)
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+endfunction
+"}}}}}  
 "}}}}}
 "{{{{ 定时器
 
@@ -7343,7 +7443,7 @@ function! BinaryFileSearch(...)
     "}}}}
     let filename = join(split(system("find -iname " . filename)))
     let cmd = " grep -Esi -a \"" . fiterchar . "\" " . filename
-    echo cmd
+    "echo cmd
     if filename ==# ""
         return
     else
@@ -7391,7 +7491,9 @@ function! Findbluetoothlogs(...)
                     let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
                 endif
                 let hcilist =  uniq(sort(templist))
+                if len(hcilist) > 1
                 let hcifileresult = add(hcifileresult,"hci日志".'-'. hcilist[0] . "-" . hcilist[-1])
+                endif
             endif
             let templist = split(system(findcmd . '*BT_FW*'),'\n')
             if len(templist) != 0
@@ -7399,9 +7501,11 @@ function! Findbluetoothlogs(...)
                 let templist = map(templist,'split(v:val, "/")[-1]')
                 let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{4\\}_\\d\\{6\\}"),"_","","g")')
                 let fwlist =  uniq(sort(templist))
-                let hcifileresult = add(hcifileresult,"fw日志".'-'. fwlist[0] . "-" . fwlist[-1])
+                if len(fwlist) > 1
+                    let hcifileresult = add(hcifileresult,"fw日志".'-'. fwlist[0] . "-" . fwlist[-1])
+                endif
             endif
-            if hcilist[0] - fwlist[0] > 0 ||  hcilist[-1] - fwlist[-1] < 0
+            if  (len(hcilist) > 1 && len(fwlist) > 1)&& (hcilist[0] - fwlist[0] > 0 ||  hcilist[-1] - fwlist[-1] < 0)
                 let hcifileresult = add(hcifileresult,"fw 日志可能没有抓到")
             endif
         endif
@@ -7417,7 +7521,9 @@ function! Findbluetoothlogs(...)
                 let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{8\\}_\\d\\{6\\}"),"_","","g")')
                 let templist  = filter(templist, 'system("stat -c %s " . v:val) != "0\n"')
                 let templist =  uniq(sort(templist))
-                let hcifileresult = add(hcifileresult,"录屏".'-'. templist[0] . "-" . templist[-1])
+                if len(templist) > 1
+                    let hcifileresult = add(hcifileresult,"录屏".'-'. templist[0] . "-" . templist[-1])
+                endif
             endif
         endif
         let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*modem_audio_pvt*' | grep \"" . downloadpin . "\""
@@ -7431,7 +7537,9 @@ function! Findbluetoothlogs(...)
                 let templist = map(templist,'split(v:val, "/")[-1]')
                 let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{8\\}_\\d\\{6\\}"),"_","","g")')
                 let a2dpdumplist =  uniq(sort(templist))
-                let hcifileresult = add(hcifileresult,"a2dpdump日志".'-'. a2dpdumplist[0] . "-" . a2dpdumplist[-1])
+                if len(a2dpdumplist) > 1
+                    let hcifileresult = add(hcifileresult,"a2dpdump日志".'-'. a2dpdumplist[0] . "-" . a2dpdumplist[-1])
+                endif
             endif
             let templist = split(system(findcmd . 'VML*.vm'),'\n')
             if len(templist) != 0
@@ -7443,7 +7551,9 @@ function! Findbluetoothlogs(...)
                 let templist = map(templist,'split(v:val, "/")[-1]')
                 let templist = map(templist, 'substitute(matchstr(v:val, "\\d\\{4\\}_\\d\\{2\\}_\\d\\{2\\}_\\d\\{6\\}"),"_","","g")')
                 let vmlist  =  uniq(sort(templist))
-                let hcifileresult = add(hcifileresult,"vmlog日志".'-'. vmlist[0] . "-" . vmlist[-1])
+                if len(vmlist) > 1
+                    let hcifileresult = add(hcifileresult,"vmlog日志".'-'. vmlist[0] . "-" . vmlist[-1])
+                endif
             endif
         endif
     endif
@@ -7868,17 +7978,15 @@ function! LoopAnalysis(...)
         let findcmd = findcmd . " | grep -E \"" . tempchar . "\""
     endif
     let paths = split(system(findcmd),"\n")
-    echo "123"
     echo len(split(tempchar,'|'))
-    echo "dkfj"
     echo split(tempchar,'|')
-    echo "dkfjkgg"
     if len(paths) != len(split(tempchar,'|'))
         call UnzipFiles(1)
         let paths = split(system(findcmd),"\n")
     endif
     echo paths
     while idx1 < len(paths)
+        redraw
         let directory = split(paths[idx1],'/')[1]
         echo "tangxinlou 2" . directory
         execute 'cd ' . directory
@@ -7942,7 +8050,7 @@ function! ChangeDirectoryName(...)
                         echo  "mv " . item . " " . item . "_delay_" . substitute(item1, '_\*', '', 'g')
                         call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
                     else
-                        echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
+                        "echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
                         call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
                     endif
                     if item1 ==# "delay_*_core" || item1 ==# "fbk_*_core"
