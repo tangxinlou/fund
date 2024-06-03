@@ -180,6 +180,7 @@ augroup testgroup
     autocmd FileType  cpp   hi link javaFunction Function
     autocmd FileType java   syntax match javaFunction '\<\h\w*\>\ze\s*('
     autocmd FileType java    hi link javaFunction Function   
+    autocmd FileType java    hi link javaLineComment Special   
     autocmd FileType c   syntax match javaFunction '\<\h\w*\>\ze\s*('
     autocmd FileType c    hi link javaFunction Function
 augroup END
@@ -210,7 +211,7 @@ let @i = "" "保存着当前次数搜索的行
 "let @j = ""
 "let @k = ""
 let @l = "" "log搜索器的历史关键词
-"let @s = ""
+"let @s = "" "保存的debug id
 "let @u = ""
 "let @w = ""
 "let @z = ""
@@ -363,7 +364,7 @@ nnoremap <leader>vh "iyy:execute "grep! -Esinr --include=*.h "shellescape(expand
 nnoremap <leader>vc "iyy:execute "grep! -Esinr --include=*{.c,.cc} "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 nnoremap <leader>vj "iyy:execute "grep! -Esinr --include=*.java "shellescape(expand("<cword>"))"."<cr>:!clear<cr>:let winwidthnum  = float2nr(winheight('%')  * 0.3)<cr>:copen<cr>:set modifiable<cr><c-w>J:execute "res " . winwidthnum<cr>::let winwidthnum = 0<cr>
 "执行命令
-nnoremap <leader>xx <esc>:let @t=@*<cr>0v$hyGq:0ir!<esc>p<cr>o<cr><cr><esc>:let @*=@t<cr>:let @t=""<cr>
+nnoremap <leader>xx <esc>:let @t=@*<cr>0v$hyG:r!date +\\%F-\\%T<cr>q:0ir!<esc>p<cr>o<cr><cr><esc>:let @*=@t<cr>:let @t=""<cr>:r!date +\\%F-\\%T<cr>
 ""}}}}
 "文件路径切换{{{{
 "更改到当前文件所在的目录
@@ -453,14 +454,14 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
-            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败",
-            \"29opp" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action",
+            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
+            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|tangxinlou debug",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels",
             \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback",
             \"24battery" : "sendBatteryLevelChangedBroadcast|tws wear state",
-            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH",
+            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
@@ -594,6 +595,8 @@ function! QuckfixToggle()
         "verbose highlight javaMethod
         "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 
+        silent vnoremap <c-c>
+        silent nnoremap <c-v>
     else
         let g:quickfix_is_open = 1
         set mouse=a
@@ -602,6 +605,8 @@ function! QuckfixToggle()
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
+        vnoremap <c-c> y
+        nnoremap <c-v> <esc>p
     endif
 endfunction
 "}}}}}
@@ -1708,7 +1713,7 @@ function! SmartFileSwitching(...)
             "echo split(@g,'█')
             if count(split(@g,'█'),register) ==# 0
                 let register = register . '█'  . @g
-                if len(split(register,"█")) > 10
+                if len(split(register,"█")) > 100
                     let register = split(register,"█")
                     let register = register[0:9]
                     let register = join(register,"█")
@@ -1724,7 +1729,7 @@ function! SmartFileSwitching(...)
             echo register
             if count(split(@l,'█'),register) ==# 0
                 let register = register . '█'  . @l
-                if len(split(register,"█")) > 10
+                if len(split(register,"█")) > 100
                     let register = split(register,"█")
                     let register = register[0:9]
                     let register = join(register,"█")
@@ -5724,12 +5729,16 @@ function! ExtractKeyCodes(...)
     let realityline = 0
     let col = 0
     let path = ""
+    let foldstring = ""
+    let srcnum = 0
+    let tailnum = 0
+    let idj1 = 0
     "}}}}
     let lastfoldlevel = &foldlevel
     setlocal foldmethod=syntax
     let tempchar = getline(line('.'))
     let filename = expand("%:p")
-    call FormatCode(filename)
+    "call FormatCode(filename)
     let realityline = line('.')
     let col = col('.')
     let curline = line('.')
@@ -5737,14 +5746,43 @@ function! ExtractKeyCodes(...)
     let foldlevel = foldlevel(curline)
     echo foldlevel
     let codelist = add(codelist,getline(curline))
-    if matchstr(getline(curline - 1),"case.*:") != ""
-        let codelist = insert(codelist,getline(curline - 1))
-    endif
+    "if matchstr(getline(curline - 1),"case.*:") != ""
+    "    let codelist = insert(codelist,getline(curline - 1))
+    "endif
     let idx1 = foldlevel
     while idx1 > 0
         let &foldlevel=idx1 -1
         let start = foldclosed(curline)
-        let codelist = insert(codelist,getline(start))
+        let foldstring = getline(start)
+        "目标行格式不对
+        if(count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {"
+            call cursor(start,0)
+            let tailnum = start
+            silent execute "normal! $F)%"
+            let srcnum = line('.')
+            if srcnum < tailnum 
+                let tempchar = filelist[srcnum - 1:tailnum - 1] 
+                let idj1 = 0 
+                while idj1 < len(tempchar)
+                    if matchstr(tempchar[idj1],"//") != ""
+                        if len(split(tempchar[idj1],"//")) > 1
+                            let tempchar[idj1] = split(tempchar[idj1],"//")[0]
+                        else
+                            let tempchar[idj1] = ""
+                        endif
+                    endif
+                    if idj1 > 0 && idj1 < len(tempchar) -1
+                        let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+                    endif
+                    if idj1 ==# len(tempchar) -1
+                        let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+                    endif
+                    let idj1 += 1
+                endwhile
+                let foldstring = join(tempchar)
+            endif
+        endif
+        let codelist = insert(codelist,foldstring)
         let idx1 -= 1
     endwhile
     let path = expand("%:p")
@@ -5837,10 +5875,10 @@ function! FormatCode(...)
                 if matchstr(tempchar,"//") != ""
                     silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
                 endif
-                "把/* 注释清理
-                if  matchstr(tempchar,'\/\*') != ""
-                    silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
-                endif
+                "把/* 注释清理 错误了会导致问题
+                "if  matchstr(tempchar,'\/\*') != ""
+                "    silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
+                "endif
                 "把文件开头到第一个字符的空口清理
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
                 call cursor(start,0)
@@ -5855,9 +5893,9 @@ function! FormatCode(...)
            if matchstr(getline((idx1 - 1)),"//") != ""
                silent execute ":" (idx1 - 1) . "s/\\/\\/.*$//g"
            endif
-           if  matchstr(getline((idx1 - 1)),'\/\*') != ""
-               silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
-           endif
+           "if  matchstr(getline((idx1 - 1)),'\/\*') != ""
+           "    silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
+           "endif
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n//g"
            let idx1 = idx1 -2
@@ -5866,9 +5904,9 @@ function! FormatCode(...)
            if matchstr(getline((idx1 - 1)),"//") != ""
                silent execute ":" (idx1 - 1) . "s/\\/\\/.*$//g"
            endif
-           if  matchstr(getline((idx1 - 1)),'\/\*') != ""
-               silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
-           endif
+           "if  matchstr(getline((idx1 - 1)),'\/\*') != ""
+           "    silent execute ":". (idx1 - 1). "s/\\/\\*.*$//g"
+           "endif
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n/ /g"
            let idx1 = idx1 -2
@@ -5900,9 +5938,9 @@ function! FormatCode(...)
                silent execute ":" . (start) . "," . end . "s/\\/\\/.*$//g"
            endif
            "把/* 注释清理
-           if  matchstr(tempchar,'\/\*') != ""
-               silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
-           endif
+           "if  matchstr(tempchar,'\/\*') != ""
+           "    silent execute ":" . (start) . "," . end . "s/\\/\\*.*$//g"
+           "endif
            "把文件开头到第一个字符的空口清理
            silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
            call cursor(start,0)
@@ -6018,6 +6056,10 @@ function! AddDebugLog(...)
     let line = 0
     "}}}}
     let line = line('.')
+    if g:debugid ==# 0
+        echo "上一次最后保存的debugid" . string(@s)
+        let g:debugid = input("设置初始debug值")
+    endif
     echo "g:debugid" . g:debugid
     if matchstr(@%,".cpp") ==# ".cpp"
         let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
@@ -6041,6 +6083,7 @@ function! AddDebugLog(...)
         call cursor(line,0)
     endif
 
+    let @s = g:debugid
     let g:debugid += 1
 endfunction
 "}}}}}
@@ -7257,6 +7300,7 @@ function! AutoAnalyzer(...)
     let downloadpin = ""
     let index = 0
     let saveresult = Homedir("autoanaly/result")
+    redraw
     if a:0 ==# 1
         let modeflag = a:1
     endif
@@ -7948,7 +7992,7 @@ function! LogSearcher()
     "echo split(@l,'█')
     if count(split(@l,'█'),keywords) ==# 0
         let keywords = keywords . '█'  . @l
-        if len(split(keywords,"█")) > 10
+        if len(split(keywords,"█")) > 100
             let keywords = split(keywords,"█")
             let keywords = keywords[0:9]
             let keywords = join(keywords,"█")
@@ -7991,6 +8035,7 @@ function! LoopAnalysis(...)
         echo "tangxinlou 2" . directory
         execute 'cd ' . directory
         echo directory
+        redraw
         call AutoAnalyzer(1)
         execute 'cd ..'
         let idx1 += 1
@@ -8209,9 +8254,9 @@ endfunction
 
 "}}}
 "{{{{  popup 弹窗
-func ColorSelected(id, result)
+function! ColorSelected(id, result)
     " use a:result
-endfunc
+endfunction
 "call popup_menu(['red', 'green', 'blue'], #{callback: 'ColorSelected'})
 function! ShowPopupMenu()
     let choices = ['Option 1', 'Option 2', 'Option 3']
