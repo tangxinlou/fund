@@ -108,7 +108,7 @@ if &diff
     "set diffopt-=internal
     "set diffopt+=iwhite
     "diff模式关闭颜色高亮
-    colorscheme default
+    colorscheme elflord
     syntax off
 endif
 "}}}
@@ -343,8 +343,8 @@ inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords")<cr>
-nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode")<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords",1)<cr>
+nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
@@ -459,9 +459,9 @@ let g:filterchar = {
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels",
-            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback",
+            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason",
             \"24battery" : "sendBatteryLevelChangedBroadcast|tws wear state",
-            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|",
+            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
@@ -474,16 +474,16 @@ let g:filterchar = {
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
             \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail",
-            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device",
+            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close',
-            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall',
+            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
             \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
-            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>',
+            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(',
             \"00temp" : "temptemptem"}
 
 "}}}}}
@@ -500,17 +500,26 @@ endif
 function! Homedir(...)
     "{{{{{3 变量定义
     let dirpath = a:1
+    let type = ""
+    if a:0 ==# 2
+        let type = a:2
+    endif
     "}}}}
     let dirpath = g:homedir . "/" . dirpath
-    if '' ==# finddir(dirpath)
+    if type ==# 1 
         if "" ==# findfile(dirpath)
             call system("touch " . dirpath)
             echo dirpath . "没有这个文件现在新建这个文件"
         else
-            echo dirpath
+            "echo dirpath
         endif
-    else
-        echo "有这个路径" . dirpath
+    elseif type ==# 2
+        if "" ==# finddir(dirpath)
+            call system("mkdir " . dirpath)
+            echo dirpath . "没有这个文件夹现在新建这个文件夹"
+        else
+            "echo dirpath
+        endif
     endif
     return dirpath
 endfunction
@@ -556,7 +565,7 @@ function! s:Copy2file(type)
     let templist = []
     let tempchar = ""
     let tempchar = @@
-    let relativepath = Homedir("txl/transplant.txt")
+    let relativepath = Homedir("txl/transplant.txt",1)
     let templist = split(tempchar,"\n")
     if  @@ ==# " "
         let templist = readfile(relativepath)
@@ -611,7 +620,6 @@ function! QuckfixToggle()
 endfunction
 "}}}}}
 "{{{{{2   OpenQuickfix(...) 快速打开窗口
-nnoremap <F3> :call OpenQuickfix()<cr>
 function! OpenQuickfix(...)
     "{{{{{3 变量定义
     let winlist = []
@@ -709,8 +717,8 @@ endfunction
 function! MakeCompressedPackage()
     "{{{{{{3 定义变量
     let curpath = ""
-    let intentpath = Homedir("copy/cp")
-    let batfile = "cp64.host.R.bat"
+    let intentpath = Homedir("copy/cp",2)
+    let batfile = "copy.bat"
     let command = ""
     let iscopyconf = ""
     let iscopyiotconf = ""
@@ -729,7 +737,7 @@ function! MakeCompressedPackage()
     call system("rm *.tar")
     call system("rm  -rf cp")
     call system("cp -rf " . intentpath . " ./ ")
-    let batfile = readfile("./cp/cp64.host.R.bat")
+    let batfile = readfile("./cp/copy.bat")
     let isvos = input("是否外销")
     let isfirmware = input("是否push固件")
     if "yes" ==# isfirmware
@@ -819,10 +827,10 @@ function! MakeCompressedPackage()
         let batfile[16] = ""
         let batfile[17] = ""
     endif
-    silent call writefile(batfile,"./cp/cp64.host.R.bat")
+    silent call writefile(batfile,"./cp/copy.bat")
     call append(line("."),batfile)
     silent execute "normal! :tabnew\<cr>"
-    silent execute "normal! :e ./cp/cp64.host.R.bat\<cr>"
+    silent execute "normal! :e ./cp/copy.bat\<cr>"
     "每行后加VM
     silent execute "normal! \<c-v>G$A\<c-v>\<c-m>\<esc>"
     silent execute "normal! :wq\<cr>"
@@ -1464,7 +1472,7 @@ function! AdjustThePositionOfTwoColumns(...)
     let tempchar = ""
     let charinterval = a:4
     "}}}}
-    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
     let filelist =  ListRemoveSpaces(filelist,charinterval)
     let filelist = ListTo2D(filelist,charinterval)
 
@@ -1493,7 +1501,7 @@ function! GetOneOfTheColumns(...)
     let typelist = 0
     let Clearchar = ""
     "}}}}
-    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
     let typelist = type(filelist[0])
     let templist  =  repeat(templist,len(filelist))
     if  typelist ==# 1
@@ -1529,7 +1537,7 @@ function! WaveformGraph(...)
     let Rowcoordinates = ""
     let Columncoordinates = ""
     "}}}}
-    let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
     let filelist =  ListRemoveSpaces(filelist,"|")
     let Rowcoordinates = split(filelist[0],"|")[1:]
     let Columncoordinates = split(filelist[1],"|")[1:]
@@ -1689,6 +1697,7 @@ function! SmartFileSwitching(...)
     let register = ""
     let flag = a:1
     let templine = 0
+    let tempstring = ""
     "}}}}
     if flag ==# 1
         let curlinestring  = getline('.')
@@ -1711,15 +1720,19 @@ function! SmartFileSwitching(...)
             let filename = split(path,'/')[-1]
             let register = getline(1)
             "echo split(@g,'█')
-            if count(split(@g,'█'),register) ==# 0
+            let tempstring = split(copy(@g),"█")
+            if count(tempstring,register) ==# 0
                 let register = register . '█'  . @g
-                if len(split(register,"█")) > 100
-                    let register = split(register,"█")
-                    let register = register[0:9]
-                    let register = join(register,"█")
-                endif
-                let @g = register
+            else
+                call  remove(tempstring,index(tempstring,register))
+                let register = register . '█'  . join(tempstring,"█")
             endif
+            if len(split(register,"█")) > 100
+                let register = split(register,"█")
+                let register = register[0:99]
+                let register = join(register,"█")
+            endif
+            let @g = register
         elseif curwinid ==# g:windowgreplogid
             let path = g:lastgreplogfile
             let line = split(curlinestring,':')[0]
@@ -1731,7 +1744,7 @@ function! SmartFileSwitching(...)
                 let register = register . '█'  . @l
                 if len(split(register,"█")) > 100
                     let register = split(register,"█")
-                    let register = register[0:9]
+                    let register = register[0:99]
                     let register = join(register,"█")
                 endif
                 let @l = register
@@ -2669,8 +2682,8 @@ function! IsAddDiff()
     let isadddiff = "tangxinlou"
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
-    let isdiffpatch = Homedir("txl/1.txt")
-    let diffshfile = Homedir("txl/diffdir.sh")
+    let isdiffpatch = Homedir("txl/1.txt",1)
+    let diffshfile = Homedir("txl/diffdir.sh",1)
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -2772,7 +2785,7 @@ function! CompareVersion()
     let curpath1 = copy(curpath)
     let versiondiff = []
     let versionstring = ""
-    let relativepath = Homedir("txl/version")
+    let relativepath = Homedir("txl/version",1)
     if len(curpath1) > 15
         echo "路径错误"
         return
@@ -3019,9 +3032,9 @@ function! s:DynamicDiff(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
 
-    let relativepath = Homedir("txl/left")
-    let relativepath1 = Homedir("txl/right")
-    let relativepath2 = Homedir("txl/1.patch")
+    let relativepath = Homedir("txl/left",1)
+    let relativepath1 = Homedir("txl/right",1)
+    let relativepath2 = Homedir("txl/1.patch",1)
     let templeft = readfile(relativepath)
     let tempright = readfile(relativepath1)
 
@@ -3218,7 +3231,7 @@ function! DownloadManifest1(...) "根据版本号下载manifest
     let curl = "http://manifests.vivo.xyz/gerrit/manifests/"
     let tempcurl = ""
     let index = 0
-    let outputpath = Homedir("ftp")
+    let outputpath = Homedir("ftp",2)
     "}}}}
     let product = input("项目")
     let product =  split(QueryCurlSubdirectory(curl,product),'\n')
@@ -3319,7 +3332,7 @@ function! ModifyCorrespondingCommit(...)
     call append(line("."),branchlist)
 endfunction
 "}}}}}
-"{{{{{2 function! AddNotes(...)      添加注释                  普通模式下 逗号 + add 调用
+"{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + add 调用
 nnoremap <leader>add :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
@@ -3368,6 +3381,37 @@ function! AddNotes(...)
     endwhile
 endfunction
 "}}}}}
+"{{{{{2 function! CleanUpTheCodeFormat(...)     规整文件格式 先复制后调用                 普通模式下 逗号 + clf 调用
+nnoremap <leader>clf :call CleanUpTheCodeFormat()<cr>
+function! CleanUpTheCodeFormat(...)
+    "{{{{{3 变量定义
+    let startline = line('.')
+    let codelist = @@
+    let srclist = []
+    let taillist = []
+    let idx1 = 0
+    let first_part = ""
+    let second_part = ""
+    "}}}}
+    let codelist = split(codelist,"\n")
+    "规整注释//
+    let srclist = matchstrpos(codelist[0],"//")
+    let idx1 = 1
+    while idx1 < len(codelist)
+        let taillist = []
+        let first_part = ""
+        let second_part = ""
+        let taillist = matchstrpos(codelist[idx1],"//")
+        if taillist[1] != -1
+            let first_part = strpart(codelist[idx1], 0, taillist[1] -1)
+            let second_part = strpart(codelist[idx1], taillist[1] -1)
+            let codelist[idx1] = first_part .  repeat(" ",srclist[1] - taillist[1])  . second_part 
+        endif
+        let idx1 += 1
+    endwhile
+    call append(line('.'),codelist)
+endfunction
+"}}}}} 
 "}}}
 "{{{{ fund
 "amountdatabase  指数 {时间}
@@ -3510,7 +3554,7 @@ function! ParseFund(...)
     let idj1 = 0
     let list = ["a"]
     let lists = []
-    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
     let int = lists[0]
     "echo int
     let list =  repeat(list,int)
@@ -4093,7 +4137,7 @@ function! PythonGetIndexValuation(...)
     "}}}}
     let datestring = split(system("date +%F"),"-")[0]
     "let indexfiledict = eval(readfile("/d/work/fund/zhishu/IndexValuation")[0])
-    let numbereddatabase = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
+    let numbereddatabase = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase",1))[0])
     let tempindexdata = copy(indexfiledict["data"]["items"])
     "echo "debug"
     "echo tempindexdata = indexfiledict["data"]["items"][0]
@@ -4144,7 +4188,7 @@ function! PythonGetIndexValuation(...)
     call insert(indexdata[1],logmid)
     call insert(indexdata[2],loghigh)
     call insert(indexdata[3],logunsort)
-    silent call writefile([string(numbereddatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
+    silent call writefile([string(numbereddatabase)],Homedir("work/fund/zhishu/numbereddatabase",1))
     return  indexdata
 endfunction
 "}}}}}
@@ -4183,7 +4227,7 @@ function! CutIndexPanel(...)
     let list = ["a"]
     let lists = a:1
     "}}}}
-    "let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    "let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
     let int = lists[0]
     let list =  repeat(list,int)
     while idx1 < len(lists)
@@ -4236,7 +4280,7 @@ function! IndexDataDashboardsort(...)
     let populatechar = "|-"
     "}}}}
     if a:0 ==# 0
-        let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+        let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
         let dict = CutIndexPanel(lists)
         let keys = sort(keys(dict))
         let datadashboard = add(datadashboard,lists[0])
@@ -4248,7 +4292,7 @@ function! IndexDataDashboardsort(...)
         if len(datadashboard) < 3
             return
         endif
-        silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+        silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue",1))
     else
         let Parameterslists = a:1
         let Orderedlist  = a:2
@@ -4290,11 +4334,11 @@ function! IndexDataDashboard(...)
     let indexfiledict = {}
     let countnumber = 0
     "}}}}
-    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
     let dict = CutIndexPanel(lists)
     let boardkeys = sort(keys(dict))
-    let datadashboard = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
-    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let datadashboard = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase",1))[0])
     let databasekeys = sort(keys(indexfiledict))
     echo databasekeys
     let idx1 = 0
@@ -4312,7 +4356,7 @@ function! IndexDataDashboard(...)
     endwhile
     let datadashboard[0] = datadashboard[0]  + countnumber
     let datadashboard = extend(datadashboard,lists)
-    silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue"))
+    silent call writefile(datadashboard ,Homedir("work/fund/zhishu/panelindexvalue",1))
     call IndexDataDashboardsort()
 endfunction
 "}}}}}
@@ -4335,10 +4379,10 @@ function! PopulateTheIndexDatabase(...)
     let valuationtype = 0
     let  eva_type  = ""
     "}}}}
-    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue"))
+    let lists = readfile(Homedir("work/fund/zhishu/panelindexvalue",1))
     let dict = CutIndexPanel(lists)
     let boardkeys = sort(keys(dict))
-    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase",1))[0])
     let databasekeys = sort(keys(indexfiledict))
     echo len(boardkeys)
     echo len(databasekeys)
@@ -4395,7 +4439,7 @@ function! PopulateTheIndexDatabase(...)
         endif
         let idx1 += 1
     endwhile
-    silent call writefile([string(indexfiledict)],Homedir("work/fund/zhishu/indexdatabase"))
+    silent call writefile([string(indexfiledict)],Homedir("work/fund/zhishu/indexdatabase",1))
 endfunction
 "}}}}}
 "{{{{{2  IndexParametersPanel(...)     指数单个参数面板
@@ -4419,10 +4463,10 @@ function! IndexParametersPanel(...)
     let Orderedlist  = []
     let currentfilelist = []
     "}}}}
-    let Parameterslists = readfile(Homedir("work/fund/zhishu/panelPEvalue"))
+    let Parameterslists = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
     let Parameterslists =  ListRemoveSpaces(Parameterslists,charinterval)
     let Parameterslists  = ListTo2D(Parameterslists,charinterval)
-    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase",1))[0])
     let indexkeylist = sort(keys(indexfiledict))
     while idx1 < len(indexkeylist)
         if 0 ==# count(Parameterslists[0],indexkeylist[idx1])
@@ -4469,7 +4513,7 @@ function! IndexParametersPanel(...)
     endwhile
     let Parameterslists   =  ListAddSpaces(Parameterslists,charinterval)
     let Parameterslists =  IndexDataDashboardsort(Parameterslists,Orderedlist)
-    silent call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue"))
+    silent call writefile(Parameterslists,Homedir("work/fund/zhishu/panelPEvalue",1))
 endfunction
 "}}}}}
 "{{{{{2   IndexCorrespondingFunds(...)指数对应的基金
@@ -4486,7 +4530,7 @@ function! IndexCorrespondingFunds(...)
     let tempchar = ""
     let indexkey = []
     "}}}}
-    let IndexArchiveDatabase   = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase"))[0])
+    let IndexArchiveDatabase   = eval(readfile(Homedir("work/fund/zhishu/numbereddatabase",1))[0])
     let indexkey = sort(keys(IndexArchiveDatabase["index_code"]))
     if has_key(IndexArchiveDatabase,"fundcode") ==# 0
         let IndexArchiveDatabase["fundcode"] = {}
@@ -4532,7 +4576,7 @@ function! IndexCorrespondingFunds(...)
         call delete(tempfilesname)
         let idx1 += 1
     endwhile
-    silent call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase"))
+    silent call writefile([string(IndexArchiveDatabase)],Homedir("work/fund/zhishu/numbereddatabase",1))
 endfunction
 "}}}}}
 "{{{{{2   FillingAcountDataBase(...)  填充资金数据库
@@ -4545,10 +4589,10 @@ function! FillingAcountDataBase(...)
     let idj1 = 0
     let templist = []
     "}}}}
-    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount"))
+    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount",1))
     let amountPanel =  ListRemoveSpaces(amountPanel,charinterval)
     let amountPanel = ListTo2D(amountPanel,charinterval)
-    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase"))[0])
+    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase",1))[0])
     let idx1 = 1
     while idx1 < len(amountPanel)
         if has_key(amountDatabase,amountPanel[idx1][0]) ==# 0
@@ -4571,7 +4615,7 @@ function! FillingAcountDataBase(...)
         endwhile
         let idx1 += 1
     endwhile
-    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase",1))
 endfunction
 "}}}}}
 "{{{{{2   PopulateAmountPanel(...)  填充资金面板
@@ -4595,12 +4639,12 @@ function! PopulateAmountPanel(...)
     let templist = ""
     let fund2index = ""
     "}}}}
-    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase"))[0])
+    let indexfiledict = eval(readfile(Homedir("work/fund/zhishu/indexdatabase",1))[0])
     let indexkeylist = reverse(sort(keys(indexfiledict)))
-    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase"))[0])
-    let fund2index = readfile(Homedir("work/fund/zhishu/fund2index"))
+    let amountDatabase  = eval(readfile(Homedir("work/fund/zhishu/amountdatabase",1))[0])
+    let fund2index = readfile(Homedir("work/fund/zhishu/fund2index",1))
     let fund2index  =  ListRemoveSpaces(fund2index,charinterval)
-    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount"))
+    let amountPanel  = readfile(Homedir("work/fund/zhishu/panelamount",1))
     let amountPanel =  ListRemoveSpaces(amountPanel,charinterval)
     let amountPanel = ListTo2D(amountPanel,charinterval)
 
@@ -4653,8 +4697,8 @@ function! PopulateAmountPanel(...)
     endwhile
     let amountPanel  = ListTo1D(amountPanel,charinterval)
     let amountPanel =  ListAddSpaces(amountPanel,charinterval)
-    silent call writefile(amountPanel,Homedir("work/fund/zhishu/panelamount"))
-    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase"))
+    silent call writefile(amountPanel,Homedir("work/fund/zhishu/panelamount",1))
+    silent call writefile([string(amountDatabase)],Homedir("work/fund/zhishu/amountdatabase",1))
 endfunction
 "}}}}}
 "{{{{{2   GetIndexData(...)   获取指数数据
@@ -4811,7 +4855,7 @@ function! AnalyzeCode()
     let tail = 0
     let idx1 = 0
     let idj1 = 0
-    let relativepath = Homedir("txl/parse")
+    let relativepath = Homedir("txl/parse",1)
     let codefile = readfile(expand("%:p"))
     if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
         echo "之前修改过"
@@ -5533,7 +5577,7 @@ function! GetFoldLevel(...)
     let foldlist = []
     let idx1 = 0
     "}}}}
-    "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java")
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/android/app/src/com/android/bluetooth/btservice/ActiveDeviceManager.java",1)
     "let filename = expand("%:p")
     let filelist = readfile(filename)
     let foldlist = copy(filelist)
@@ -5724,6 +5768,7 @@ function! ExtractKeyCodes(...)
     let codelist = []
     let idx1 = 0
     let start = 0
+    let laststart = 0
     let lastfoldlevel = 0
     let tempchar = ""
     let realityline = 0
@@ -5733,29 +5778,32 @@ function! ExtractKeyCodes(...)
     let srcnum = 0
     let tailnum = 0
     let idj1 = 0
+    let idk1 = 0
     "}}}}
     let lastfoldlevel = &foldlevel
     setlocal foldmethod=syntax
-    let tempchar = getline(line('.'))
     let filename = expand("%:p")
     "call FormatCode(filename)
-    let realityline = line('.')
+    if a:0 ==# 0
+        let realityline = line('.')
+    elseif a:0 ==# 1
+        call cursor(a:1,0)
+        let realityline = a:1
+    endif
     let col = col('.')
-    let curline = line('.')
+    let curline = realityline 
+    let laststart = realityline 
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
     echo foldlevel
     let codelist = add(codelist,getline(curline))
-    "if matchstr(getline(curline - 1),"case.*:") != ""
-    "    let codelist = insert(codelist,getline(curline - 1))
-    "endif
     let idx1 = foldlevel
     while idx1 > 0
         let &foldlevel=idx1 -1
         let start = foldclosed(curline)
         let foldstring = getline(start)
         "目标行格式不对
-        if(count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {"
+        if ((count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {")
             call cursor(start,0)
             let tailnum = start
             silent execute "normal! $F)%"
@@ -5782,17 +5830,41 @@ function! ExtractKeyCodes(...)
                 let foldstring = join(tempchar)
             endif
         endif
+        "当前是switch
+        if matchstr(foldstring," switch")  != ""
+            "前一个不是case
+            if matchstr(codelist[0]," case .*:")  ==# "" 
+                let start = foldclosed(curline)
+                let end = foldclosedend(curline)
+                echo start 
+                echo end
+                let tempchar = filelist[start  - 1:end  - 1] 
+                let idk1 = laststart - start
+                while idk1 > 0
+                    if matchstr(tempchar[idk1]," case .*:") != ""
+                        let codelist = insert(codelist,tempchar[idk1])
+                        break
+                    endif
+                    let idk1 -= 1
+                endwhile
+            endif
+        endif
         let codelist = insert(codelist,foldstring)
+        let laststart = foldclosed(curline)
         let idx1 -= 1
     endwhile
-    let path = expand("%:p")
-    let path =  substitute(path , g:homedir . '/' , '', 'g')
-    let codelist = insert(codelist,path.':'. realityline  .':')
-    "silent call system("git checkout .")
-    silent execute "normal! :e " . filename "\<cr>"
-    silent call cursor(realityline,col)
     let &foldlevel=lastfoldlevel
-    let @d = string(codelist)
+    if a:0 ==# 0
+        let path = expand("%:p")
+        let path =  substitute(path , g:homedir . '/' , '', 'g')
+        let codelist = insert(codelist,path.':'. realityline  .':')
+        "silent execute "normal! :e " . filename "\<cr>"
+        silent call cursor(realityline,col)
+        let @d = string(codelist)
+    elseif a:0 ==# 1
+        echo codelist 
+    endif
+    
 endfunction
 "}}}}}
 
@@ -5847,7 +5919,7 @@ function! FormatCode(...)
     let idj1 = 0
     "}}}}
     "把所有括号变成一行
-    "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc")
+    "let filename = Homedir("aosp/packages/modules/Bluetooth/system/bta/av/bta_av_main.cc",1)
     execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
     setlocal foldmethod=syntax
     let filelen = line('$')
@@ -6411,6 +6483,50 @@ function! LoopThroughDictionaries(...)
     endif
 endfunction
 "}}}}}  
+
+"{{{{{2  function! TagListFiles(...) 列出当前变量在当前文件分布
+nnoremap <F3> :call TagListFiles()<cr>
+let g:Tagwindidlistvalue = []
+let g:Tagwindidlistkey = []
+function! TagListFiles(...)
+    "{{{{{3 变量定义
+    let tagwinidvalue = 0
+    let tagwinidkey = 0
+    let winwidthnum  = float2nr(winwidth('%')  * 0.2)
+    let indexnum = -1
+    let filename = expand("%:p")
+    let keywords = @@
+    let grepchar = "grep -Esin  " 
+    let searchstarge =  ""
+    "}}}}
+
+    if count(g:Tagwindidlistkey,tagwinidvalue) != 0 
+        return
+    endif
+    let command  = grepchar . " \"" .  keywords   . "\" " . filename 
+    let searchstarge =  split(system(command),'\n')
+    echo searchstarge 
+    let tagwinidvalue = win_getid()
+    if count(g:Tagwindidlistvalue,tagwinidvalue) ==# 0
+        silent execute "normal! :vne\<cr>"
+        call  execute(["vert resize " . winwidthnum])
+        let tagwinidkey = win_getid()
+        let g:Tagwindidlistvalue = add(g:Tagwindidlistvalue,tagwinidvalue)
+        let g:Tagwindidlistkey = add(g:Tagwindidlistkey,tagwinidkey)
+    else
+        let indexnum = index(g:Tagwindidlistvalue,tagwinidvalue)
+        if win_gotoid(g:Tagwindidlistkey[indexnum]) ==# 0
+            call remove(g:Tagwindidlistvalue,indexnum)
+            call remove(g:Tagwindidlistkey,indexnum)
+            silent execute "normal! :vne\<cr>"
+            call  execute(["vert resize " . winwidthnum])
+            let tagwinidkey = win_getid()
+            let g:Tagwindidlistvalue = add(g:Tagwindidlistvalue,tagwinidvalue)
+            let g:Tagwindidlistkey = add(g:Tagwindidlistkey,tagwinidkey)
+        endif
+    endif
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{ 定时器
 
@@ -7170,7 +7286,7 @@ function! FtpDownLoadFile(...)
     let base_quit_cmd = ";quit'"
     let base_cmd = "lftp -u " . ftp_user . "," . ftp_passwd . " " . ftp_host
     let lftp_ls_cmd = base_cmd . base_ls_cmd . base_quit_cmd
-    let downloadlogfile = Homedir("autoanaly/download")
+    let downloadlogfile = Homedir("autoanaly/download",1)
     let downlog = []
     let idx1 = 0
     "}}}}
@@ -7299,7 +7415,7 @@ function! AutoAnalyzer(...)
     let tempfilterchar = ""
     let downloadpin = ""
     let index = 0
-    let saveresult = Homedir("autoanaly/result")
+    let saveresult = Homedir("autoanaly/result",2)
     redraw
     if a:0 ==# 1
         let modeflag = a:1
@@ -7430,8 +7546,13 @@ function! AutoAnalyzer(...)
     let allresultlist  = extend(MultiDimensionalAnalysresult,allresultlist)
     let downloadpin = split(system("pwd"),'\n')[0]
     let allresultlist = insert(allresultlist,downloadpin)
-    let downloadpin = split(downloadpin,'_')
-    let index = index(downloadpin,"delay")
+    if matchstr(downloadpin,"delay") != ""
+        let downloadpin = split(downloadpin,'_')
+        let index = index(downloadpin,"delay")
+    else
+        let downloadpin = split(downloadpin,'_')
+        let index = index(downloadpin,"fbk")
+    endif
     let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
     let saveresult = saveresult . '/' . downloadpin
     let daildate = daildate ."结束" .  system("date '+%Y%m%d-%H.%M.%S'")
@@ -7444,7 +7565,7 @@ function! AutoAnalyzer(...)
         let allresultlist  = extend(emptylist,allresultlist)
     endif
     echo daildate
-    if matchstr(system("pwd"),"delay_core") ==# ""
+    if matchstr(system("pwd"),"delay_core") ==# "" &&  matchstr(system("pwd"),"_fbk_") ==# ""
         call writefile(allresultlist,"./analy.txt")
         silent execute "normal! :e ./analy.txt  \<cr>"
     else
@@ -7511,15 +7632,23 @@ function! Findbluetoothlogs(...)
     let a2dpdumplist = []
     let vmlist = []
     let tempflag = 0
+    let tempnr = 1
+    let idx1 = 0
     "}}}}
     let hcifileresult = add(hcifileresult,"hci fw log")
     let hcifileresult = add(hcifileresult,"<<<<<<<<<<<<<<<<")
     let homedir = system("pwd")
+    while idx1 < len(split(homedir,'/'))
+        if matchstr(split(homedir,'/')[idx1],"_delay_core") != ""
+            let tempnr = idx1
+        endif
+        let idx1 += 1
+    endwhile
     if matchstr(homedir,"debuglogger") != ""
     elseif matchstr(homedir,"_delay_core") != ""
         let downloadpin = split(matchstr(homedir,'[0-9]\{6\}_delay_core'),"_delay_core")[0]
         let index = index(split(homedir,'/'),"mobilelog")
-        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*delay_common_pvt*' | grep \"" . downloadpin . "\""
+        let findcmd = "find /" . join(split(homedir,'/')[0:tempnr -1],'/')  . " -iname '*delay_common_pvt*' | grep \"" . downloadpin . "\""
         let hcipath = split(system(findcmd),'\n')
         if len(hcipath) ==# 1
             let findcmd = "find " .  hcipath[0] . " -iname "
@@ -7553,7 +7682,7 @@ function! Findbluetoothlogs(...)
                 let hcifileresult = add(hcifileresult,"fw 日志可能没有抓到")
             endif
         endif
-        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*delay_third_pvt*' | grep \"" . downloadpin . "\""
+        let findcmd = "find /" . join(split(homedir,'/')[0:tempnr -1],'/')  . " -iname '*delay_third_pvt*' | grep \"" . downloadpin . "\""
         let hcipath = split(system(findcmd),'\n')
         if len(hcipath) ==# 1
             let findcmd = "find " .  hcipath[0] . " -iname "
@@ -7570,7 +7699,7 @@ function! Findbluetoothlogs(...)
                 endif
             endif
         endif
-        let findcmd = "find /" . join(split(homedir,'/')[0:1],'/')  . " -iname '*modem_audio_pvt*' | grep \"" . downloadpin . "\""
+        let findcmd = "find /" . join(split(homedir,'/')[0:tempnr -1],'/')  . " -iname '*modem_audio_pvt*' | grep \"" . downloadpin . "\""
         let hcipath = split(system(findcmd),'\n')
         if len(hcipath) != 0
             let findcmd = "find " .  hcipath[0] . " -iname "
@@ -7813,7 +7942,7 @@ endfunction
 "{{{{{2 function!  EntryStandardProcess(...) 录入标准流程
 function! EntryStandardProcess(...)
     "{{{{{3 变量定义
-    let path = Homedir("autoanaly/process")
+    let path = Homedir("autoanaly/process",1)
     let processlist = []
     let filterchar = g:filterchar
     let idx1 = 0
@@ -7858,7 +7987,8 @@ endfunction
 "{{{{{2 function!  UnzipFiles(...) extract 解压文件
 function! UnzipFiles(...)
     "{{{{{3 变量定义
-    let downloadlogfile = Homedir("autoanaly/zipDetails")
+    let downloadlogfile = Homedir("autoanaly/zipDetails",1)
+    let curpath = Homedir("autoanaly/result",2)
     let filetype = ".zip"
     let filename = []
     let targetfilepath = ""
@@ -7873,6 +8003,9 @@ function! UnzipFiles(...)
     let pathsstring = ""
     let deletefile = []
     "}}}}
+    if  Homedir("autoanaly/result",2) ==# split(system("pwd"),"\n")[0]
+        return 
+    endif
     if a:0 ==# 1
         let findmode = "-maxdepth 1"
         let isdelete = "yes"
@@ -8052,7 +8185,11 @@ function! ChangeDirectoryName(...)
     let paths = []
     let keyword = ["delay_*_core",
                 \"delay_*_common",
-                \"fbk_*_core",
+                \"*fbk_*_core",
+                \"*fbk_*_common",
+                \"*fbk_*_common_pvt",
+                \"*fbk_*_modem_audio_pvt",
+                \"*fbk_*_third_pvt",
                 \"delay_*_third_pvt",
                 \"delay_*_common_pvt",
                 \"delay_*_modem_audio_pvt",
@@ -8061,7 +8198,7 @@ function! ChangeDirectoryName(...)
     let resultchar = ""
     let currentTime = ""
     let folderTime = ""
-    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode"))
+    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode",1))
     let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
     let tempchar = ''
     "}}}}
@@ -8086,19 +8223,21 @@ function! ChangeDirectoryName(...)
         if "" != matchstr(item,"(")
             let  item = "'" . item . "'"
         endif
-        if matchstr(item,"delay_") ==# ""
+        if matchstr(item,"delay_") ==# "" && matchstr(item,"_fbk_") ==# "" 
             for item1 in keyword
-                let findcmd = "find " . item . " -iname '" . item1 . "' -type d"
+                let findcmd = "find " . item . " -name '" . item1 . "' -type d"
                 let resultchar = systemlist(findcmd)
                 if len(resultchar) != 0
-                    if matchstr(item1,'fbk_') ==# 'fbk_'
-                        echo  "mv " . item . " " . item . "_delay_" . substitute(item1, '_\*', '', 'g')
-                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                    let tempchar = substitute(item1, '_\*', '', 'g')
+                    let tempchar = substitute(tempchar, '\*', '', 'g')
+                    if matchstr(item1,"fbk_") ==# 'fbk_'
+                        echo  "mv " . item . " " . item . "_delay_" . tempchar 
+                        call system("mv " . item . " " . item . "_" . tempchar )
                     else
-                        "echo  "mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g')
-                        call system("mv " . item . " " . item . "_" . substitute(item1, '_\*', '', 'g'))
+                        "echo  "mv " . item . " " . item . "_" . tempchar 
+                        call system("mv " . item . " " . item . "_" . tempchar)
                     endif
-                    if item1 ==# "delay_*_core" || item1 ==# "fbk_*_core"
+                    if item1 ==# "delay_*_core" || item1 ==# "*fbk_*_core"
                         let tempchar = split(item,'_')
                         if count(Extractioncodelist,tempchar[-1]) ==# 0
                             let Extractioncodefile = insert(Extractioncodefile,"new,". tempchar[-1])
@@ -8112,20 +8251,20 @@ function! ChangeDirectoryName(...)
             endif
         endif
     endfor
-    call writefile(Extractioncodefile,Homedir("autoanaly/Extractioncode"))
+    call writefile(Extractioncodefile,Homedir("autoanaly/Extractioncode",1))
 endfunction
 "}}}}}
 
 "{{{{{2   ManageExtractionCode(...)管理提取码文件Extractioncode
 function! ManageExtractionCode(...)
     "{{{{{3 变量定义
-    "nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode")<cr>
+    "nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
     let Alreadyanalyzed = ""
     let templist = ""
-    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode"))
+    let Extractioncodefile = readfile(Homedir("autoanaly/Extractioncode",1))
     let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
     "}}}}
-    let Alreadyanalyzed = system("ls " . Homedir("autoanaly/result"))
+    let Alreadyanalyzed = system("ls " . Homedir("autoanaly/result",2))
     echo Extractioncodelist
     for item in Extractioncodelist
         if matchstr(Alreadyanalyzed,item) ==# ""
@@ -8203,6 +8342,7 @@ function! WidChanged(...)
     let windowinfo[0].width = 50
     let windowinfo[0].height = 6
     "echo windowinfo
+    "这个1是winnr ，resize设置高度 vert resize 设置宽度 不可以指定窗口id 设置,可以用win_gotoid跳到对应 窗口设置
     call  execute(["1resize 32","vert 1resize 135"])
     "call  execute("vert resize 135")
     "call  execute('vert 1resize 135')
