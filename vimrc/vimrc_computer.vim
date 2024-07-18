@@ -5982,7 +5982,7 @@ function! FormatCode(...)
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n/ /g"
            let idx1 = idx1 -2
-       elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") != 0)
+       elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") != 0) && (count(tempchar,"stub") != 0)
            "删掉binder stub的代码
            call cursor(idx1,0)
            let start = idx1
