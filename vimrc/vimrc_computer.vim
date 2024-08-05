@@ -117,6 +117,7 @@ endif
 "iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname '*mobilelog*'
+iabbrev dbug call Dbug(,3)
 iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
@@ -1297,11 +1298,15 @@ function! TestTest(...)
 endfunction
 "}}}}}
 "}}}}
-"{{{{{2   printf(...) 打印log的函数
-function! Printf(...)
+"{{{{{2   Dbug(...) 打印log的函数
+function! Dbug(...)
     "{{{{{3 变量定义
-
+    let val = a:1
+    let flag = a:2
     "}}}}
+    if flag > 2
+        echo val
+    endif
 endfunction
 "}}}}}
 "{{{{{2   AddLineNumber(...) 每行添加行号
@@ -1913,28 +1918,21 @@ function! LogicalJudgment(...)
     let src2 = ""
     let tail1 = ""
     let tail2 = ""
+    let idx1 = 0
+    let result = -1
+    "找出最新集合
     if type ==# 'I'
         if type(parentset) ==# 3
-            for item in parentset
-                let index = index(parentset, item)
-                if index < len(parentset) - 1
-                    let nextitem = parentset[index + 1]
-                    let src1 = str2nr(split(item,'-')[0])
-                    let tail1 = str2nr(split(nextitem,'-')[0])
-                    if subset >= src1 && subset < tail1
-                        return index(parentset, item)
-                    endif
-                else
-                    let src1 = str2nr(split(item,'-')[0])
-                    let tail1 = str2nr(split(item,'-')[1])
-                    if subset >= src1 && subset <= tail1
-                        return index(parentset, item)
-                    else
-                        return -1
-                    endif
+            let idx1 = 0
+            while idx1 < len(parentset)
+                let src1 = str2nr(split(parentset[idx1],'-')[0])
+                let tail1 = str2nr(split(parentset[idx1],'-')[1])
+                if src1 <= subset && subset <= tail1
+                    let result = idx1
                 endif
-                
-            endfor
+                let idx1 += 1
+            endwhile
+            return result
         elseif type(parentset) ==# 1
         endif
     elseif type ==# 'D'
@@ -5856,6 +5854,7 @@ function! ExtractKeyCodes(...)
     let &foldlevel=lastfoldlevel
     if a:0 ==# 0
         let path = expand("%:p")
+        echo codelist
         let path =  substitute(path , g:homedir . '/' , '', 'g')
         let codelist = insert(codelist,path.':'. realityline  .':')
         "silent execute "normal! :e " . filename "\<cr>"
@@ -5930,9 +5929,15 @@ function! FormatCode(...)
         let tempchar = getline(idx1)
         let left = count(tempchar,'(')
         let right = count(tempchar,')')
+        call cursor(idx1,0)
+        redraw
+        "echo idx1
+        "echo tempchar 
+        "call input("11")
+        if idx1 == 798
+        endif
         if  (matchstr(tempchar,") {") ==# ") {"  ||  (count(tempchar,')') != 0 && count(tempchar,'{') != 0)) || (matchstr(tempchar,");") ==# ");"  ||  (count(tempchar,')') != 0 && count(tempchar,';') != 0))
             "锁定行中带){的行 和);的行
-            call cursor(idx1,0)
             let end = idx1
             silent execute "normal! $F)%"
             let start = line('.')
@@ -5958,10 +5963,19 @@ function! FormatCode(...)
                 silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
                 silent execute "normal! \<esc>"
                 let idx1 = start -1
+            else
+                if (count(tempchar,'  .') != 0) || (count(tempchar,"  :") != 0)
+                    "锁定 . 或者  ：的行
+                    if matchstr(getline((idx1)),"//") != ""
+                        silent execute ":" (idx1) . "s/\\/\\/.*$//g"
+                    endif
+                    silent execute ":" . (idx1) . "s/^\\s\\+//g"
+                    silent execute ":" . (idx1 -1) . ":s/\\n//g"
+                    let idx1 = idx1 -2
+                endif
             endif
         elseif (count(tempchar,'{') != 0) && (count(tempchar,')') ==# 0)  && split(tempchar)[0] ==# '{'
            "锁定关键词和{不在同一行,花括号直接占一行
-
            if matchstr(getline((idx1 - 1)),"//") != ""
                silent execute ":" (idx1 - 1) . "s/\\/\\/.*$//g"
            endif
@@ -5982,7 +5996,15 @@ function! FormatCode(...)
            silent execute ":" . (idx1) . "s/^\\s\\+//g"
            silent execute ":" . (idx1 - 1) . ":s/\\n/ /g"
            let idx1 = idx1 -2
-       elseif (count(tempchar,'implements') != 0) && (count(tempchar," class ") != 0) && (count(tempchar,"stub") != 0)
+       elseif (count(tempchar,'  .') != 0) || (count(tempchar,"  :") != 0)
+           "锁定 . 或者  ：的行
+           if matchstr(getline((idx1)),"//") != ""
+               silent execute ":" (idx1) . "s/\\/\\/.*$//g"
+           endif
+           silent execute ":" . (idx1) . "s/^\\s\\+//g"
+           silent execute ":" . (idx1 -1) . ":s/\\n//g"
+           let idx1 = idx1 -2
+       elseif (count(tempchar,'implements') != 0) && (count(tempchar,"class") != 0) && (count(tempchar,"Stub") != 0)
            "删掉binder stub的代码
            call cursor(idx1,0)
            let start = idx1
@@ -6060,6 +6082,9 @@ function! FormatCode(...)
     let idx1 = 1
     while idx1 <= filelen
         let tempchar = getline(idx1)
+        call cursor(idx1,0)
+        redraw
+        "call input("11")
         if  matchstr(tempchar,'//') != ""  && count(tempchar,';') ==# 0
             call cursor(idx1,0)
             silent execute ":" idx1 . "s/\\/\\/.*$//g"
@@ -6075,7 +6100,7 @@ function! FormatCode(...)
             call cursor(idx1,0)
             silent execute "normal! dd"
             let idx1 -= 1
-        elseif matchstr(tempchar,'log\..') != ""  && count(tempchar,';') != 0
+        elseif (matchstr(tempchar,'log\..') != ""  && count(tempchar,';') != 0) || (matchstr(tempchar,' log(') != ""  && count(tempchar,';') != 0)
             call cursor(idx1,0)
             silent execute "normal! dd"
             let idx1 -= 1
@@ -6219,15 +6244,9 @@ function! OrganizeJavaCodeLogic(...)
     let files = split(system("find -iname '*.java'"),"\n")
     while idx1 < len(files)
         let filename = split(files[idx1],'/')[-1]
-        "execute "normal! :e " . filename . " \<cr>"
-        "execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
-        "setlocal foldmethod=syntax
         let classdict[filename] = ParseCodeFiles(files[idx1],1)
-        "execute "normal! :wq!\<cr>"
         let idx1 += 1
     endwhile
-   " execute "normal! :e ./A2dpService.java \<cr>"
-   " let classdict["A2dpService.java"] = ParseCodeFiles("./A2dpService.java",1)
     call append(line('.'),string(classdict))
 endfunction
 "}}}}}
@@ -6267,6 +6286,7 @@ function! SimplifyCurrentFileFunctions(...)
     let tempdictkeyname = ""
     let tempdictvaluename = ""
     let codelist111 = []
+    let dictfiles = {}
     "}}}}
     if a:0 ==# 0
         let winnrnum = tabpagewinnr(tabpagenr(),'$')
@@ -6286,47 +6306,24 @@ function! SimplifyCurrentFileFunctions(...)
     let winid = win_getid()
     let line = line('.')
     let col = col('.')
-    let codedict = ParseCodeFiles(filename,1)
-    let codelist = codedict["codelist"]
-    "获取函数首行和尾行
-    let functionlength = GetOneOfTheColumns(codelist,"█",0)
-    "提取关键节点,函数名列表，函数首行列表，class列表，class 成员列表
-    let listlength = len(codelist)
-    for i in range(0,listlength - 1)
-        let curlitem = codelist[i]
-        if matchstr(curlitem,"class") != ""
-            let tempchar = split(curlitem,'█')[-1]
-            let tempchar = split(tempchar)
-            let indexnum = index(tempchar,"class")
-            let functionname = add(functionname,tempchar[indexnum + 1])
-            let classname = add(classname,tempchar[indexnum + 1])
-            let tempchar = split(curlitem,'█')[0]
-            let tempchar = str2nr(split(tempchar,'-')[0])
-            let functionnameline = add(functionnameline,tempchar)
-            let classlist = add(classlist,curlitem)
-            if i < listlength -1
-                let nextitem = codelist[i + 1]
-                let tempchar = LogicalJudgment(split(curlitem,'█')[0],split(nextitem,'█')[0],'D')
-                let classmember = add(classmember,tempchar)
-            endif
-        else
-            let tempchar = split(curlitem,'█')[-1]
-            let tempchar = split(tempchar,'(')[0]
-            let tempchar = split(tempchar)
-            let functionname = add(functionname,tempchar[-1])
-            let tempchar = split(curlitem,'█')[0]
-            let tempchar = str2nr(split(tempchar,'-')[0])
-            let functionnameline = add(functionnameline,tempchar)
-        endif
-    endfor
-    let classlength = GetOneOfTheColumns(classlist,"█",0)
+    let tempkey = split(filename,'/')[-1]
+    let dictfiles[tempkey] = InventoryFiles(filename,1)
+    call Dbug("函数行数",3)
+    let  functionlength = dictfiles[tempkey]["twicelist"][2]
     echo functionlength
+    call Dbug("类行数",3)
+    let classlength = dictfiles[tempkey]["twicelist"][6]
     echo classlength 
-    echo classlist
-    echo classmember
+    call Dbug("类名字",3)
+    let classname = dictfiles[tempkey]["twicelist"][5]
     echo classname
+    call Dbug("函数名字",3)
+    let functionname = dictfiles[tempkey]["twicelist"][0]
     echo functionname
-    echo functionnameline
+    call  Dbug("函数名字行数",3)
+    let  functionnameline = dictfiles[tempkey]["twicelist"][3]
+    call Dbug(functionnameline,3) 
+    call Dbug("所有成员",3) 
     let idx1 = 1
     "逐个搜索当前文件的函数
     while idx1 < len(functionname)
@@ -6360,6 +6357,8 @@ function! SimplifyCurrentFileFunctions(...)
         endif
         let idx1 += 1
     endwhile
+    call Dbug("未替换的字典",3) 
+    "字典按照字典名 = 函数所在行数 + 类名 + 函数名   key 行数：valus =  函数所在行数 + 类名 + 函数名
     echo resultdict
     let resultdictkeyslist = keys(resultdict)
     let g:charinterval = '-'
@@ -6367,11 +6366,16 @@ function! SimplifyCurrentFileFunctions(...)
     let g:listmembertype = "nr"
     let g:comparedirect = "s-b"
     let resultdictkeyslist = sort(resultdictkeyslist,"MyCompare")
+    call Dbug("字典的key",3) 
+    call Dbug(resultdictkeyslist,3) 
     echo resultdictkeyslist 
 
     let codelist111 = []
     let resultdict = LoopThroughDictionaries(resultdict,deepcopy(resultdict),"respace",0)
+    call Dbug("替换后的字典",3) 
+    call Dbug(resultdict,3) 
     call  LoopThroughDictionaries(resultdict,codelist111,"print",0)
+    call Dbug("打印后的字典",3) 
     echo resultdict
     echo codelist111 
     call input("11")
@@ -6443,6 +6447,7 @@ function! LoopThroughDictionaries(...)
     let loopkeylist  = sort(loopkeylist,"MyCompare")
     let tempkey = ""
     if Loopfunc ==# "respace"
+        "递归替换
         while idx1 < len(loopkeylist)
             let tempmember = deepcopy(Loopdict[loopkeylist[idx1]])
             let tempmemberkey = deepcopy(loopkeylist[idx1])
@@ -6525,6 +6530,117 @@ function! TagListFiles(...)
             let g:Tagwindidlistkey = add(g:Tagwindidlistkey,tagwinidkey)
         endif
     endif
+endfunction
+"}}}}} 
+
+"{{{{{2 function!  InventoryFiles(...) 清查当前文件
+"二级表
+" 函数名 类型,分布,首行,参数,classname classrang,末行
+
+"类管理函数
+"{子类:[],子函数:[]}
+"
+"
+function! InventoryFiles(...)
+    "{{{{{3 变量定义
+    let twicelist = []
+    let typelist = []
+    let ranglist = []
+    let filename = a:1
+    let filetype = a:2
+    let firstlinelist = []
+    let lastlinelist = []
+    let parameterlist = []
+    let classdict = {}
+    let functionnamelist = []
+    let idx1 = 0
+    let lastclass = ""
+    let classname = []
+    let classrang = []
+    "}}}}
+    let codedict = ParseCodeFiles(filename,1)
+    let codelist = codedict["codelist"]
+    "获取函数首行和尾行
+    let ranglist  = GetOneOfTheColumns(codelist,"█",0)
+    "提取关键节点,函数名列表，函数首行列表，class列表，class 成员列表
+    let listlength = len(codelist)
+    for i in range(0,listlength - 1)
+        let curlitem = codelist[i]
+        if matchstr(curlitem,"class") != ""
+            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(tempchar)
+            let indexnum = index(tempchar,"class")
+            let functionnamelist  = add(functionnamelist,tempchar[indexnum + 1])
+            let classname = add(classname,tempchar[indexnum + 1])
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[0])
+            let firstlinelist  = add(firstlinelist,tempchar)
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[1])
+            let lastlinelist  = add(lastlinelist,tempchar)
+            let typelist = add(typelist,"class")
+            let parameterlist = add(parameterlist,0)
+            let classrang = add(classrang,ranglist[i])
+        else
+            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(tempchar,'(')[0]
+            let tempchar = split(tempchar)
+            let functionnamelist  = add(functionnamelist ,tempchar[-1])
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[0])
+            let firstlinelist  = add(firstlinelist,tempchar)
+            let tempchar = split(curlitem,'█')[0]
+            let tempchar = str2nr(split(tempchar,'-')[1])
+            let lastlinelist  = add(lastlinelist,tempchar)
+            let typelist = add(typelist,"func")
+            let parameterlist = add(parameterlist,count(curlitem,",") + 1)
+        endif
+    endfor
+    let twicelist = add(twicelist,functionnamelist)
+    let twicelist = add(twicelist,typelist)
+    let twicelist = add(twicelist,ranglist)
+    let twicelist = add(twicelist,firstlinelist)
+    let twicelist = add(twicelist,parameterlist)
+    let twicelist = add(twicelist,classname)
+    let twicelist = add(twicelist,classrang)
+    let twicelist = add(twicelist,lastlinelist)
+    echo twicelist
+    let idx1 = 0
+    let parentclass = ""
+    let childclass = ""
+    let childfunc = ""
+    let index = 0
+    let tempkey = ""
+    while idx1 < len(typelist)
+        let tempkey = ""
+        if typelist[idx1] ==# "class"
+            let tempkey = functionnamelist[idx1]
+            if has_key(classdict,tempkey) ==# 0
+                let classdict[tempkey] = {}
+            endif
+            "let index = LogicalJudgment(classrang,firstlinelist[idx1],'I')
+            "if classname[index] != functionnamelist[idx1]
+            "endif
+        elseif typelist[idx1] ==# "func"
+            let index = LogicalJudgment(classrang,firstlinelist[idx1],'I')
+            let tempkey = classname[index]
+            if has_key(classdict,tempkey) ==# 0
+                let classdict[tempkey] = {}
+            endif
+            if has_key(classdict[tempkey],"childfunc") ==# 0
+                let classdict[tempkey]["childfunc"] = []
+            endif
+            let classdict[tempkey]["childfunc"] = add(classdict[tempkey]["childfunc"],firstlinelist[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+
+    if has_key(classdict,"twicelist") ==# 0
+        let classdict["twicelist"] = []
+    endif
+    let classdict["twicelist"] = twicelist 
+    echo classdict
+    return classdict
 endfunction
 "}}}}} 
 "}}}}}
