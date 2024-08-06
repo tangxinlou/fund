@@ -455,13 +455,14 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest",
             \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
             \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|tangxinlou debug",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels",
             \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason",
-            \"24battery" : "sendBatteryLevelChangedBroadcast|tws wear state",
+            \"24batteryearversion" : "sendBatteryLevelChangedBroadcast|tws wear state|vivoTWS-CheckUpdateTask.*SimpleEarInfo{right_version",
             \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
@@ -724,6 +725,7 @@ function! MakeCompressedPackage()
     let iscopyconf = ""
     let iscopyiotconf = ""
     let iscopyapk = ""
+    let iscopy15apk = ""
     let iscopyso = ""
     let templist = []
     let zipname = ""
@@ -746,6 +748,7 @@ function! MakeCompressedPackage()
         let iscopyiotconf = "no"
         let iscopyapk = "no"
         let iscopyso = "no"
+        let iscopyqcomso = "no"
         let firmwarelist = map(split(system("find -iname '*.bin'")),'split(v:val, "/")[-1]')
         for item in firmwarelist
             let command = "cp -rf " . item .   " ./cp/cp/system"
@@ -760,7 +763,9 @@ function! MakeCompressedPackage()
         let iscopyconf = input("是否打包conf 文件")
         let iscopyiotconf = input("是否打包iot conf 文件")
         let iscopyapk = input("是否打包apk 文件")
+        let iscopy15apk = input("是否打包15.0apk")
         let iscopyso = input("是否打包so 文件")
+        let iscopyqcomso = input("是否打包qcom so 文件")
     endif
     let curpath = system(command)
 
@@ -827,6 +832,44 @@ function! MakeCompressedPackage()
     else
         let batfile[16] = ""
         let batfile[17] = ""
+    endif
+    if iscopy15apk ==# "yes"
+        let command = "cp -rf com.android.btservices.apex  ./cp/cp/system "
+        call system(command)
+        let templist = join(split(batfile[18])[1:])
+        let batfile[18] = templist
+        let templist = join(split(batfile[19])[1:])
+        let batfile[19] = templist
+    else
+        let batfile[18] = ""
+        let batfile[19] = ""
+    endif
+
+    if iscopyqcomso ==# "yes"
+        let command = "cp -rf Bluetooth.apk libbluetooth_qti_jni.so libbluetooth_qti.so ./cp/cp/system/lib64 "
+        call system(command)
+
+        let templist = join(split(batfile[20])[1:])
+        let batfile[20] = templist
+        let templist = join(split(batfile[21])[1:])
+        let batfile[21] = templist
+
+        let templist = join(split(batfile[22])[1:])
+        let batfile[22] = templist
+        let templist = join(split(batfile[23])[1:])
+        let batfile[23] = templist
+        
+        let templist = join(split(batfile[24])[1:])
+        let batfile[24] = templist
+        let templist = join(split(batfile[25])[1:])
+        let batfile[25] = templist
+    else
+        let batfile[20] = ""
+        let batfile[21] = ""
+        let batfile[22] = ""
+        let batfile[23] = ""
+        let batfile[24] = ""
+        let batfile[25] = ""
     endif
     silent call writefile(batfile,"./cp/copy.bat")
     call append(line("."),batfile)
@@ -1990,7 +2033,7 @@ function! VmakeChange()
     execute "normal! 03f\"ci\"\<esc>\"up"
     execute "normal! 03f\"lvllllly05f\"lvlllllp015f\"ci\"\<esc>:r!pwd\<cr>0v$hdk015f\"p0jddk"
     " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
-    execute "normal! 011f\"ci\" ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
+    execute "normal! 011f\"ci\"  ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
     execute "normal! 03f\"lvfAhh\"uy"
     echo "tangxinlou"
     if  "ard_12.0" ==#  curversion[len(curversion) - 3]
@@ -3331,12 +3374,12 @@ function! ModifyCorrespondingCommit(...)
 endfunction
 "}}}}}
 "{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + add 调用
+let g:addnoteflag = 0
 nnoremap <leader>add :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
-    let bugchar = "B211201-1894"
-    let startnotes = "//vivo tangxinlou modify for ." . bugchar . "begin"
-    let endnotes = "//vivo tangxinlou modify for ." . bugchar . "end"
+    let bugchar = "B240715-82659"
+
     let filelen = 0
     let idx1 = 0
     let notesflag = 0
@@ -3344,17 +3387,63 @@ function! AddNotes(...)
     let noteslinechar = ""
     let notesline = 0
     let spacechar = ""
+    let lastline = -1
+    let lastnumber = 0
+    let laststring = ""
+    let startnotes = ""
     "}}}}
+    if &filetype != "git" && &filetype != "diff" 
+        if g:addnoteflag ==# 0 
+            let startnotes = "//vivo tangxinlou modify for " . bugchar . " begin"
+            let g:addnoteflag  = 1
+        else
+            let startnotes = "//vivo tangxinlou modify for " . bugchar . " end"
+            let g:addnoteflag  = 0
+        endif
+        call append(line('.'), startnotes)
+    else
+    let idx1 = 1
+    let filelen = line('$')
+    let bugchar = input("输入bug号")
+    let startnotes = "//vivo tangxinlou modify for " . bugchar . " begin"
+    let endnotes = "//vivo tangxinlou modify for " . bugchar . " end"
+    while idx1 <= filelen
+        call cursor(idx1,1)
+        if matchstr(getline(idx1),"\^+") != ""  && matchstr(getline(idx1),"+++") != "+++"
+            execute "normal :s/\\s\\+$//e\<CR>"
+        endif
+        let filelen = line('$')
+        let idx1 += 1
+    endwhile
+
+    let idx1 = 1
+    let filelen = line('$')
+    while idx1 <= filelen
+        call cursor(idx1,1)
+        if matchstr(getline(idx1),"@@ -") != "" || idx1 == filelen
+            if lastline != -1
+                let noteslinechar = split(laststring)
+                let notesline =  join([split(noteslinechar[2],",")[0], str2nr( split(noteslinechar[2],",")[1]) - lastnumber],",")
+                let noteslinechar[2] = notesline
+                call setline(lastline,join(noteslinechar))
+            endif
+            let lastline = idx1
+            let lastnumber = 0
+            let laststring = getline(idx1)
+        endif
+        if  matchstr(getline(idx1),"+") != "" && len(getline(idx1)) ==# 1
+            let lastnumber += 1
+            execute "normal dd"
+            let idx1 -= 1
+        endif
+        let filelen = line('$')
+        let idx1 += 1
+    endwhile
+
+    let idx1 = 0
     let filelen = line('$')
     while idx1 < filelen
         let spacechar = ""
-        if matchstr(getline(idx1 + 1),"@@ -") != ""
-            let noteslinechar = split(getline(idx1 + 1))
-            let notesline =  join([split(noteslinechar[2],",")[0], 2 + split(noteslinechar[2],",")[1]],",")
-            let noteslinechar[2] = notesline
-            call setline(idx1 + 1,join(noteslinechar))
-            echo join(noteslinechar)
-        endif
         if matchstr(getline(idx1 + 1),"^+") != ""  && matchstr(getline(idx1 + 1),"+++") != "+++"
             let notesflag = 1
         else
@@ -3362,21 +3451,101 @@ function! AddNotes(...)
         endif
         if notesflag ==# 1  && noteslastflag ==# 0
             let spacechar = matchstr(getline(idx1 + 1),'+\s\+')
-            if spacechar ==# ""
-                let spacechar = "+    "
+            if spacechar ==# "" 
+                if len(getline(idx1 +1)) ==# 1
+                    let spacechar = "+    "
+                else
+                    let spacechar = "+"
+                endif
             endif
             call append(idx1,spacechar . startnotes)
         elseif notesflag ==# 0 && noteslastflag ==# 1
-            let spacechar = matchstr(getline(idx1 - 1),'+\s\+')
-            if spacechar ==# ""
-                let spacechar = "+    "
+            let spacechar = matchstr(getline(idx1),'+\s\+')
+            if spacechar ==# "" 
+                if len(getline(idx1)) ==# 1
+                    let spacechar = "+    "
+                else
+                    let spacechar = "+"
+                endif
             endif
             call append(idx1,spacechar . endnotes)
         endif
+        
         let noteslastflag = notesflag
         let filelen = line('$')
         let idx1 += 1
     endwhile
+    let filelen = line('$')
+    let idx1 = 1
+    let lastline = -1
+    let lastnumber = 0
+    let laststring = ""
+    while idx1 <= filelen
+        if matchstr(getline(idx1),"@@ -") != "" || idx1 == filelen
+             if lastline != -1
+                 echo  laststring 
+                 echo lastline 
+                 let noteslinechar = split(laststring)
+                 let notesline =  join([split(noteslinechar[2],",")[0], (lastnumber * 2)+ split(noteslinechar[2],",")[1]],",")
+                 let noteslinechar[2] = notesline
+                 echo lastnumber * 2
+                 call setline(lastline,join(noteslinechar))
+                 echo join(noteslinechar)
+             endif
+             let lastline = idx1
+             let lastnumber = 0
+             let laststring = getline(idx1)
+         endif
+         if  matchstr(getline(idx1),startnotes) != ""
+             let lastnumber += 1
+         endif
+        let idx1 += 1
+    endwhile
+
+    let filelen = line('$')
+    let idx1 = 1
+    let lastline = -1
+    let lastlastline = -1
+    let diffhead = -1
+    let lastnumber = -1
+    echo "tangxinldjf"
+    while idx1 <=  filelen 
+        
+        if matchstr(getline(idx1),"diff --git") != ""
+            let diffhead = idx1
+        endif
+        if matchstr(getline(idx1),"@@ -") != "" || idx1 == filelen 
+            if lastnumber ==# 0  && lastline != -1
+                "echo lastline
+                "echo lastlastline 
+                "echo idx1
+                if diffhead < lastline
+                    silent execute ":" . (lastline) . "," . (idx1 -1) . "d"
+                    echo "tangxinlou1"
+                else
+                    silent execute ":" . (lastline) . "," . (diffhead -1) . "d"
+                    echo "tangxinlou2"
+                endif
+                let filelen = line('$')
+                let lastnumber = -1
+                let lastline = -1
+                let lastlastline = -1
+                let idx1 = 0
+            else
+                let lastnumber = 0
+                let lastlastline = lastline
+                let lastline = idx1
+            endif
+        endif
+        if (matchstr(getline(idx1),"^+") != ""  && matchstr(getline(idx1),"+++") != "+++")
+            let lastnumber = 1
+        endif       
+        if (matchstr(getline(idx1),"^-") != ""  && matchstr(getline(idx1),"---") != "---") 
+            let lastnumber = 1
+        endif
+        let idx1 +=  1
+    endwhile
+endif
 endfunction
 "}}}}}
 "{{{{{2 function! CleanUpTheCodeFormat(...)     规整文件格式 先复制后调用                 普通模式下 逗号 + clf 调用
@@ -5854,14 +6023,13 @@ function! ExtractKeyCodes(...)
     let &foldlevel=lastfoldlevel
     if a:0 ==# 0
         let path = expand("%:p")
-        echo codelist
         let path =  substitute(path , g:homedir . '/' , '', 'g')
         let codelist = insert(codelist,path.':'. realityline  .':')
         "silent execute "normal! :e " . filename "\<cr>"
         silent call cursor(realityline,col)
         let @d = string(codelist)
+        call AddNumber2(codelist)
     elseif a:0 ==# 1
-        echo codelist 
     endif
     
 endfunction
@@ -6796,7 +6964,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -7199,7 +7367,7 @@ function! s:TreeContens(type)
     endif
     let tempfile = ""
     let tempfile = @@
-    let tempfile = system("find -iname  " . tempfile)
+    let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
     silent execute "normal! :tabnew\<cr>"
     silent execute "normal! :e " . tempfile . "\<cr>"
     let @@ = saved_unnamed_register
@@ -8113,13 +8281,14 @@ function! UnzipFiles(...)
     let findmode = ""
     let extractcmd = "unzip "
     let isdelete = ""
+    let isloop = ""
     let tempfilename = ""
     let changetime = ""
     let curtime = ""
     let pathsstring = ""
     let deletefile = []
     "}}}}
-    if  Homedir("autoanaly/result",2) ==# split(system("pwd"),"\n")[0]
+    if  (Homedir("autoanaly/result",2) ==# split(system("pwd"),"\n")[0] ) || ("/d/Download" != split(system("pwd"),"\n")[0])
         return 
     endif
     if a:0 ==# 1
@@ -8134,6 +8303,10 @@ function! UnzipFiles(...)
 
         if input("是否删除") ==# "yes"
             let isdelete = "yes"
+        endif
+
+        if input("是否直接分析") ==# "yes"
+            let isloop = "yes"
         endif
     endif
     echo system('date')
@@ -8201,7 +8374,11 @@ function! UnzipFiles(...)
     call ChangeDirectoryName()
     echo system('date')
     if a:0 ==# 0
-        call input('111')
+        if isloop ==# "yes"
+            call LoopAnalysis(isloop)
+        else
+            call input('111')
+        endif
     else
         redraw
     endif
@@ -8264,9 +8441,17 @@ function! LoopAnalysis(...)
     let directory = ""
     let idx1 = 0
     let tempchar = ""
+    let isloop = ""
+    if a:0 ==# 1
+        let isloop = a:1
+    endif
     "}}}}
-    echo ManageExtractionCode()
-    let tempchar = input("输入提取码")
+    if isloop ==# "yes"
+        let tempchar = ManageExtractionCode()
+    else
+        echo ManageExtractionCode()
+        let tempchar = input("输入提取码")
+    endif
     if tempchar != ''
         let findcmd = findcmd . " | grep -E \"" . tempchar . "\""
     endif
