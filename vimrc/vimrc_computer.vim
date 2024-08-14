@@ -2031,7 +2031,7 @@ function! VmakeChange()
     let  @u = a:MyGroup6[len(a:MyGroup6) - 1]
     "execute "normal! $a 2>&1 | tee builglog1.txt\<esc>"
     execute "normal! 03f\"ci\"\<esc>\"up"
-    execute "normal! 03f\"lvllllly05f\"lvlllllp015f\"ci\"\<esc>:r!pwd\<cr>0v$hdk015f\"p0jddk"
+    execute "normal! 03f\"lvllllly05f\"lvlllllp017f\"ci\"\<esc>:r!pwd\<cr>0v$hdk017f\"p0jddk"
     " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
     execute "normal! 011f\"ci\"  ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
     execute "normal! 03f\"lvfAhh\"uy"
@@ -2053,7 +2053,7 @@ function! VmakeChange()
         execute "normal! 013f\"ci\"no\<esc>"
     endif
     execute "normal! 03f\"yi\""
-    execute "normal! 017f\"yi\""
+    execute "normal! 015f\"yi\""
     let a:pathh = split(@@)
     execute "normal! :r!date +\\%F-\\%T\<cr>"
     if len(a:pathh) > 1
@@ -6180,8 +6180,8 @@ function! FormatCode(...)
            let end = line('.')
            silent execute ":" . (start) . "," . end . "d"
            let idx1 = start -1
-       elseif ((count(tempchar,' =') != 0) && (count(tempchar,'==') ==# 0) && (count(tempchar,';') ==# 0) &&  (count(tempchar,'@') ==# 0)) ||((count(tempchar,'append') != 0) && (count(tempchar,';') ==# 0))
-           "锁定= 和;不在同一行的行
+       elseif ((count(tempchar,' =') != 0) && (count(tempchar,'==') ==# 0) && (count(tempchar,';') ==# 0)) ||((count(tempchar,'append') != 0) && (count(tempchar,';') ==# 0))
+           "锁定= 和;不在同一行的行 ,append 和;不在一行的行
            let start  = idx1
            let idj1 = idx1
            while idj1 != -1
@@ -6264,10 +6264,6 @@ function! FormatCode(...)
         elseif matchstr(tempchar,'//') != ""  && count(tempchar,';') != 0
             silent execute ":" idx1 . "s/\\/\\/.*$//g"
             let idx1 = idx1 -1
-        elseif matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0 && count(tempchar,'}') ==# 0
-            call cursor(idx1,0)
-            silent execute "normal! dd"
-            let idx1 -= 1
         elseif (matchstr(tempchar,'log\..') != ""  && count(tempchar,';') != 0) || (matchstr(tempchar,' log(') != ""  && count(tempchar,';') != 0)
             call cursor(idx1,0)
             silent execute "normal! dd"
@@ -6300,6 +6296,21 @@ function! FormatCode(...)
             call cursor(idx1,0)
             silent execute "normal! dd"
             let idx1 = idx1 -1
+        endif
+        let filelen = line('$')
+        let idx1 += 1
+    endwhile
+    let filelen = line('$')
+    let idx1 = 1
+    while idx1 <= filelen
+        let tempchar = getline(idx1)
+        call cursor(idx1,0)
+        redraw
+        call input("11")
+        if matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0 && count(tempchar,'}') ==# 0  && count(tempchar,';') ==# 0
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+            let idx1 -= 1
         endif
         let filelen = line('$')
         let idx1 += 1
