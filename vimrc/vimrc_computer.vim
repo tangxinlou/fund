@@ -163,6 +163,7 @@ augroup END
 augroup filetype_csv
     autocmd BufNewFile,BufRead *.csv      setf csv
     autocmd BufEnter * :call SetFileType()
+    "autocmd WinEnter * :call DynamicallyOpenTheMouse()
     autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
 augroup END
 augroup filetype_python
@@ -455,6 +456,7 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
             \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest",
             \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
             \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|tangxinlou debug",
@@ -483,7 +485,7 @@ let g:filterchar = {
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio',
             \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
             \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
-            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is',
+            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(',
             \"00temp" : "temptemptem"}
@@ -538,7 +540,16 @@ function! s:GrepOperator(type)
     else
         return
     endif
-    silent execute "grep! -EsinR " . shellescape(@@) . " ."
+    let filepath = " ."
+    let grepcmd = ""
+    if g:homedir ==# "/z"
+        let filepath = " find  -iname '*main_log*' -o -iname '*adsp_*' | xargs "
+        let grepcmd = filepath . " grep -EsinR "  . shellescape(@@)
+        echo grepcmd 
+        silent :cexpr system(grepcmd)
+    else
+        silent execute "grep! -EsinR " . shellescape(@@) . filepath
+    endif
     let winwidthnum  = float2nr(winheight('%')  * 0.2)
     copen
     set modifiable
@@ -1392,8 +1403,11 @@ function! SetFileType(...)
     "{{{{{3 变量定义
 
     "}}}}
+    let filename = expand('%:t')
     if &filetype ==# ""
-        setfiletype  special
+        if matchstr(filename,"main_log_") != "main_log_"
+            setfiletype  special
+        endif
     endif
 endfunction
 "}}}}}
@@ -1746,6 +1760,17 @@ function! SmartFileSwitching(...)
     let flag = a:1
     let templine = 0
     let tempstring = ""
+    let istimerwindows = "false"
+    let currentwindowsid = win_getid()
+    let currenttabid = tabpagenr()
+    if len(g:greplog2list) != 0
+        let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+        let curenttabidlist = GetOneOfTheColumns(g:greplog2list,"|",2)
+        let index = index(currenttimerwindowsidlist,currentwindowsid)
+        if count(currenttimerwindowsidlist,currentwindowsid) ==# 1 && count(curenttabidlist,currenttabid) ==# 1
+            let istimerwindows = "true"
+        endif
+    endif
     "}}}}
     if flag ==# 1
         let curlinestring  = getline('.')
@@ -1781,13 +1806,11 @@ function! SmartFileSwitching(...)
                 let register = join(register,"█")
             endif
             let @g = register
-        elseif curwinid ==# g:windowgreplogid
-            let path = g:lastgreplogfile
+        elseif istimerwindows ==# "true"
+            let path = g:greplog2list[index][5]
             let line = split(curlinestring,':')[0]
             let filename = split(path,'/')[-1]
             let register = getline(1)
-            "echo split(@l,'█')
-            echo register
             if count(split(@l,'█'),register) ==# 0
                 let register = register . '█'  . @l
                 if len(split(register,"█")) > 100
@@ -1995,6 +2018,60 @@ function! LogicalJudgment(...)
     endif
 endfunction
 "}}}}}
+"{{{{{2 Parsetabinfo(...) 解析tabinfo
+function! Parsetabinfo(...)
+    "{{{{{3 变量定义
+    let tabinfo = gettabinfo()
+    let tabnr = []
+    let windowsid = []
+    let idx1 = 0
+    let tabinfodict = {}
+    let flag = a:1
+    let windlist = []
+    "}}}}
+    if flag ==# "tabwindict"
+        let idx1 = 0
+        while idx1 < len(tabinfo)
+            let tabnr = tabinfo[idx1]['tabnr'] 
+            let windowsid = tabinfo[idx1]['windows']
+            if has_key(tabinfodict,tabnr) ==# 0
+                let tabinfodict[tabnr] = {}
+            endif
+            let tabinfodict[tabnr] = windowsid
+            let idx1 += 1
+        endwhile
+        return tabinfodict
+    elseif flag ==# "windlist"
+        let idx1 = 0
+        while idx1 < len(tabinfo)
+            let windowsid = tabinfo[idx1]['windows']
+            let windlist = extend(windlist,windowsid) 
+            let idx1 += 1
+        endwhile
+        return windlist 
+    endif
+endfunction
+"}}}}} 
+"{{{{{2 DynamicallyOpenTheMouse(...) 动态选择打开鼠标 目前决定打开timer
+"的窗口打开鼠标
+function! DynamicallyOpenTheMouse(...)
+    let currentwindowsid = win_getid()
+    let currenttabid = tabpagenr()
+    let currenttimerwindowsidlist  = []
+    let curenttabidlist = []
+    if len(g:greplog2list) != 0
+        let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+        let curenttabidlist = GetOneOfTheColumns(g:greplog2list,"|",2)
+        if count(currenttimerwindowsidlist,currentwindowsid) != 0
+        "    set clipboard=unnamed
+        "    set mouse=a
+        else
+        "    set clipboard=exclude:clipboard
+        "    set mouse=
+        endif
+    endif
+endfunction
+"}}}}} 
 "}}}}
 "{{{{vmake 命令
 
@@ -2033,7 +2110,7 @@ function! VmakeChange()
     execute "normal! 03f\"ci\"\<esc>\"up"
     execute "normal! 03f\"lvllllly05f\"lvlllllp017f\"ci\"\<esc>:r!pwd\<cr>0v$hdk017f\"p0jddk"
     " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
-    execute "normal! 011f\"ci\"  ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
+    execute "normal! 011f\"ci\" system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_qti_jni.so system/lib64/libbluetooth_qti.so ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
     execute "normal! 03f\"lvfAhh\"uy"
     echo "tangxinlou"
     if  "ard_12.0" ==#  curversion[len(curversion) - 3]
@@ -3378,7 +3455,7 @@ let g:addnoteflag = 0
 nnoremap <leader>add :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
-    let bugchar = "B240715-82659"
+    let bugchar = "B240719-83183"
 
     let filelen = 0
     let idx1 = 0
@@ -5010,8 +5087,8 @@ endfunction
 
 
 "}}}}
-
 "{{{{{ function! AnalyzeCode()                   分析code                      普通模式<F11>调用
+"<p> </p >  包起来不改变空格
 nnoremap <F11>  :call AnalyzeCode()<cr>
 function! AnalyzeCode()
     let targetcode = []
@@ -5963,7 +6040,34 @@ function! ExtractKeyCodes(...)
     let filelist = readfile(filename)
     let foldlevel = foldlevel(curline)
     echo foldlevel
-    let codelist = add(codelist,getline(curline))
+    let foldstring = getline(curline)
+    if (count(foldstring,'(') != count(foldstring,')'))
+        let srcnum  = line('.')
+        silent execute "normal! 0f(%"
+        let tailnum = line('.')
+        if srcnum < tailnum 
+            let tempchar = filelist[srcnum - 1:tailnum - 1] 
+            let idj1 = 0 
+            while idj1 < len(tempchar)
+                if matchstr(tempchar[idj1],"//") != ""
+                    if len(split(tempchar[idj1],"//")) > 1
+                        let tempchar[idj1] = split(tempchar[idj1],"//")[0]
+                    else
+                        let tempchar[idj1] = ""
+                    endif
+                endif
+                if idj1 > 0 && idj1 < len(tempchar) -1
+                    let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+                endif
+                if idj1 ==# len(tempchar) -1
+                    let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+                endif
+                let idj1 += 1
+            endwhile
+            let foldstring = join(tempchar)
+        endif
+    endif
+    let codelist = add(codelist,foldstring)
     let idx1 = foldlevel
     while idx1 > 0
         let &foldlevel=idx1 -1
@@ -6306,7 +6410,6 @@ function! FormatCode(...)
         let tempchar = getline(idx1)
         call cursor(idx1,0)
         redraw
-        call input("11")
         if matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0 && count(tempchar,'}') ==# 0  && count(tempchar,';') ==# 0
             call cursor(idx1,0)
             silent execute "normal! dd"
@@ -7077,13 +7180,7 @@ endfunction
 "}}}}}
 
 "{{{{{  GreplogChars()  grep log 回调
-if len(timer_info()) ==# 0
-    let g:windowgreplogid = 0
-    let g:firstgreplogflag = 0
-    let g:lastgreplogfilter = ""
-    let g:lastgreploglen = 0
-    let g:lastgreplogfile = ""
-endif
+
 function! GreplogChars(timer)
     let searchs = ""
     let idx1 = 0
@@ -7095,14 +7192,25 @@ function! GreplogChars(timer)
     let line = 0
     let col = 0
     let grepchar = "grep -Esin  "
-    if g:firstgreplogflag ==# 0
-        let g:windowgreplogid = win_getid()
-        let g:firstgreplogflag = 1
-    endif
-    if  g:windowgreplogid != win_getid()
+    let currentwindowsid = win_getid()
+    let currenttabid = tabpagenr()
+    let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+    let curenttabidlist = GetOneOfTheColumns(g:greplog2list,"|",2)
+    if count(currenttimerwindowsidlist,currentwindowsid) ==# 0
         return
     endif
-    if g:lastgreplogfilter ==# searchs
+    if count(curenttabidlist,currenttabid) ==# 0
+        return
+    endif
+    let index = index(currenttimerwindowsidlist,currentwindowsid)
+    if index ==# -1
+        return
+    endif
+
+    if line('.') > 18
+        let g:greplog2list[index][7] = split(getline('.'),":")[0]
+    endif
+    if g:greplog2list[index][6] ==# searchs
         return
     endif
     if len(searchs) < 4
@@ -7111,23 +7219,24 @@ function! GreplogChars(timer)
     if matchstr(searchs,'.$') ==# '|'
         return
     endif
-    if len(split(searchs,'|')[-1]) < 4
+    if len(split(searchs,'|')[-1]) < 3
         return
     endif
-    let g:lastgreplogfilter = searchs
+    let g:greplog2list[index][4] = "true"
+    let g:greplog2list[index][6] = searchs
     if @/ != searchs
         let @/ = searchs
     endif
     let searchs =  substitute(searchs , '(', '\\(', 'g')
 
-    let command  = grepchar . " \"" .  searchs  . "\" " . g:lastgreplogfile
-    echo command
+    let command  = grepchar . " \"" .  searchs  . "\" " . g:greplog2list[index][5]
+    silent echo command
     let searchs = substitute(searchs , '\\(', '(', 'g')
     let searchs = substitute(searchs , '|', '\\|', 'g')
     if @/ != searchs
         let @/ = substitute(searchs , '\\(', '(', 'g')
     endif
-    let searchstarge =  system(command)
+    silent let searchstarge =  system(command)
     let searchstarge =  split(system(command),'\n')
     let searchstarge = insert(searchstarge,@l)
     sleep 200m
@@ -7141,13 +7250,17 @@ function! GreplogChars(timer)
         redraw
     endif
     call setline(2,searchstarge)
-    let g:lastgreploglen = len(searchstarge)
     let @@ = ""
     redraw
 endfunction
 "}}}}}
 
 "{{{{{  SearcherlogChars()  搜索log 普通模式逗号 f 调用
+if len(timer_info()) ==# 0
+    "winid serarchwinid tapid timerid firstgrep grepfile grepchar"记录上次停留的log
+    let g:greplog1list = ['','','','','','','','']
+    let g:greplog2list = []
+endif
 nnoremap <leader>f :call SearcherlogChars()<cr>
 function! SearcherlogChars()
     "[{'id': 1, 'repeat': -1, 'remaining': 185, 'time': 500, 'paused': 0, 'callback': function('MyHandler')}]
@@ -7159,66 +7272,79 @@ function! SearcherlogChars()
     let winwidthnum  = 0
     let timerflag = 0
     let timerid = 0
-    let g:lastgreplogfile = expand("%:p")
-
-    if g:windowgreplogid != win_getid() && g:windowgreplogid != 0
-        let @i = getline('.')
-        if win_gotoid(g:windowgreplogid) ==# 1
-            if @@ != ""
-                call setline(1,@@)
-                call cursor(1,0)
+    let currentwinid = win_getid()
+    let currenttabnr = tabpagenr()
+    let timerwindowsid = -1
+    let currenttimerwindowsidlist = []
+    let currentwinidlist = []
+    let searchwindowid = -1
+    let tabinfodict = Parsetabinfo("tabwindict")
+    let windlist = Parsetabinfo("windlist")
+    let grepfile = expand("%:p")
+    let index = -1
+    if len(g:greplog2list) !=  0 
+        "去除列表中多余数据
+        let idx1 = 0
+        let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+        while idx1 < len(currenttimerwindowsidlist)
+            let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+            if count(windlist,currenttimerwindowsidlist[idx1]) ==# 0
+                let index = index(currenttimerwindowsidlist,currenttimerwindowsidlist[idx1])
+                call timer_stop(g:greplog2list[index][3])
+                call remove(g:greplog2list,index)
+                if len(g:greplog2list) != 0
+                    let idx1 = 0
+                else
+                    let idx1 += 1
+                endif
+            else
+                let idx1 += 1
             endif
-            return
-        endif
+        endwhile 
+    endif
+
+
+    if len(tabinfodict[currenttabnr]) ==# 1
+        let g:greplog2list = add(g:greplog2list,copy(g:greplog1list))
+        let winwidthnum  = float2nr(winheight('%')  * 0.4)
+        silent execute  "normal! :cle\<cr>"
+        execute "normal! :new\<cr>"
+        "execute "normal! :vne\<cr>"
+        execute "normal! \<c-w>J"
+        execute "normal! :res " . winwidthnum . "\<cr>"
+        "execute "normal! :vertical res " . winwidthnum . "\<cr>"
+
+        let timerwindowsid = win_getid()
+        let timer = timer_start(200, 'GreplogChars', {'repeat': -1})
+        let g:greplog2list[-1][0] = currentwinid
+        let g:greplog2list[-1][1] = timerwindowsid 
+        let g:greplog2list[-1][2] = currenttabnr  
+        let g:greplog2list[-1][3] = timer   
+        let g:greplog2list[-1][4] = "false"   
+        let g:greplog2list[-1][5] = grepfile    
+        redraw
     else
-        if len(tabpagebuflist()) ==# 1 && g:windowgreplogid ==# 0
-            "let winwidthnum  = float2nr(winwidth('%')  * 0.3)
-            let winwidthnum  = float2nr(winheight('%')  * 0.4)
-            echo winwidthnum
-            silent execute  "normal! :cle\<cr>"
-            execute "normal! :new\<cr>"
-            "execute "normal! :vne\<cr>"
-            execute "normal! \<c-w>J"
-            execute "normal! :res " . winwidthnum . "\<cr>"
-            "execute "normal! :vertical res " . winwidthnum . "\<cr>"
-            redraw
-        else
-            if line('.') ==# 2
-                execute "normal! yw"
+        let currentwinidlist = GetOneOfTheColumns(g:greplog2list,"|",0)
+        let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
+        let index = index(currentwinidlist,currentwinid)
+        if count(currenttimerwindowsidlist,currentwinid) ==# 0
+            if win_gotoid(g:greplog2list[index][1]) ==# 1
                 if @@ != ""
                     call setline(1,@@)
                     call cursor(1,0)
                 endif
+            endif
+        else
+            if line('.') ==# 1
+                call search(g:greplog2list[index][7])
                 return
             endif
-        endif
-    endif
-    "是否有当前搜索器
-    if  len(timeinfo) > 0
-        let idx1 = 0
-        while idx1 <  len(timeinfo)
-            let tempname =  split(string(timeinfo[idx1]["callback"]),"'")[1]
-            if  count(funtionname,tempname)
-                if tempname ==# "GreplogChars"
-                    let timerflag  = 1
-                    let timerid = idx1
-                endif
+            if index != -1
+                call timer_stop(g:greplog2list[index][3])
+                silent execute "normal! :q!\<cr>"
+                call remove(g:greplog2list,index)
             endif
-            let idx1 += 1
-        endwhile
-    endif
-
-    "有搜索器就把当前搜索器停掉,没有就新建
-    if  timerflag ==#  1
-        echo "有这个定时器回调函数,清除"
-        call timer_stop(timeinfo[timerid]["id"])
-        silent execute "normal! :q!\<cr>"
-        let g:firstgreplogflag = 0
-        let g:windowgreplogid = 0
-    else
-        let timer = timer_start(200, 'GreplogChars', {'repeat': -1})
-        echo "开启定时器" timer
-        redraw
+        endif
     endif
 endfunction
 "}}}}}
@@ -7653,7 +7779,7 @@ function! DifferentiateLogFiles(...)
         let filespathdict["main"] = sort(split(findresult,"\n"))
     endif
 
-    let findcmd = "find -iname " . "'*adsp_0_log*'"
+    let findcmd = "find -iname " . "'*adsp_*'"
     let findresult = system(findcmd)
     if  findresult != ""
         let filespathdict["adsp"] = sort(split(findresult,"\n"))
