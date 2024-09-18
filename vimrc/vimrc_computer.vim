@@ -45,7 +45,7 @@ set softtabstop=4
 set shiftwidth=4
 set expandtab
 set fileencodings=utf-8,gb2312,gbk,gb18030,big5,cp936,gbk,ucs-bom,latin-1
-set enc=utf-8
+set encoding=utf-8
 set hlsearch
 set incsearch
 set number
@@ -347,6 +347,7 @@ nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
 nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords",1)<cr>
 nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
+nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
@@ -371,6 +372,7 @@ nnoremap <leader>xx <esc>:let @t=@*<cr>0v$hyG:r!date +\\%F-\\%T<cr>q:0ir!<esc>p<
 "文件路径切换{{{{
 "更改到当前文件所在的目录
 nnoremap <leader>lcd :lcd %:p:h
+nnoremap <leader>start :silent call system("start " . expand("%:p:h"))<cr>
 "打开选中的的文件,并新开一个tap
 "omap i:  f:lvf:h
 "nnoremap <leader>y :normal! yt:<cr>
@@ -459,7 +461,7 @@ let g:filterchar = {
             \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
             \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest",
             \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
-            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|tangxinlou debug",
+            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels",
@@ -473,18 +475,18 @@ let g:filterchar = {
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
-            \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index",
+            \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
             \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
-            \"11gattconnect" : "BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail",
-            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail",
+            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap: appName|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail",
+            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio',
-            \"05a2dp_simple_connect" : 'A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT',
-            \"04hfp_simple_connect" : 'HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
+            \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect',
+            \"04hfp_simple_connect" : 'connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
             \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(',
@@ -542,11 +544,12 @@ function! s:GrepOperator(type)
     endif
     let filepath = " ."
     let grepcmd = ""
+    let path = join(split(system("pwd")))
     if g:homedir ==# "/z"
-        let filepath = " find  -iname '*main_log*' -o -iname '*adsp_*' | xargs "
+        let filepath = " find " . path . "  -iname '*main_log*' -o -iname '*adsp_*' | xargs "
         let grepcmd = filepath . " grep -EsinR "  . shellescape(@@)
         echo grepcmd 
-        silent :cexpr system(grepcmd)
+        silent cgetexpr   system(grepcmd)
     else
         silent execute "grep! -EsinR " . shellescape(@@) . filepath
     endif
@@ -615,7 +618,7 @@ function! QuckfixToggle()
         "查看当前行是什么高亮组
         "echo "Current highlight group: " . synIDattr(synID(line("."), col("."), 1), "name")
         "verbose highlight javaMethod
-        "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+        "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')  当前光标下是什么高亮组
 
         silent vnoremap <c-c>
         silent nnoremap <c-v>
@@ -2070,6 +2073,134 @@ function! DynamicallyOpenTheMouse(...)
         "    set mouse=
         endif
     endif
+endfunction
+"}}}}} 
+"{{{{{2 CheckStringIsObtainOfList(...)检查string 里面是否有list中的字符
+function! CheckStringIsObtainOfList(...)
+    let String = a:1
+    let Stringlist = a:2
+    let uncheckflag = 0
+    for char in Stringlist
+        if "" != matchstr(String,char)
+            let uncheckflag = 1
+        endif
+    endfor
+    return uncheckflag
+endfunction
+"}}}}}
+"{{{ 2 FunctionList() 列出当前文件所有的函数名
+nnoremap <leader>fuc :call  FunctionList()<cr>
+function! FunctionList(...)
+     "{{{{{3 变量定义
+    let filename = ""
+    let uncheck = ["if(",
+                \"if (",
+                \"try{",
+                \"try {",
+                \"for(",
+                \"for (",
+                \"synchronized (",
+                \"synchronized(",
+                \"switch (",
+                \"else{",
+                \"else {",
+                \"case ",
+                \"default:",
+                \"do {",
+                \"do {",
+                \"switch(",
+                \"while (",
+                \"while(",
+                \"static {",
+                \"static{"]
+    let targetline = -1
+    "}}}}
+    if a:0 ==# 0
+        "处理当前文件
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        "处理传过来的文件
+        let filename = a:1
+        let mode = a:2
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
+    endif
+    let idx1 = 0
+    while idx1 <= line('$')
+        let currentString  = getline(idx1)
+        if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
+            call cursor(idx1,0)
+            silent execute "normal! $F)%"
+            if CheckStringIsObtainOfList(getline('.'),uncheck)
+            else
+                if line('.') ==# idx1
+                    let targetline = idx1
+                    echo getline('.')
+                else
+                endif
+            endif
+            if a:0 ==# 0
+"                call input("11")
+            endif
+        endif
+        "redraw
+        let idx1 += 1
+    endwhile
+    if a:0 ==# 0
+    else
+        execute "normal! :wq!\<cr>"
+    endif
+endfunction
+"}}}
+"{{{{{2  SelectEntireCode(...) 选中整行代码
+function! SelectEntireCode(...)
+    "{{{{{3 变量定义
+
+    "}}}}
+    while idx1 < len(searchstarge)
+        let temchar = split(searchstarge[idx1],":")[2]
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
+        if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
+            if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
+                if len(split(temchar,"\x00")) != 1
+                    if matchstr(temchar,"log") != ""
+                        let Log = add(Log,tempchar)
+                    elseif matchstr(temchar,";") != ""
+                        if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
+                            let definition  = add(definition,tempchar)
+                        else
+                            let transfer1 = add(transfer1,tempchar)
+                        endif
+                    elseif JudgeString(judgechar,temchar)
+                        let judge = add(judge,tempchar)
+                    elseif matchstr(temchar,"//") != ""
+                        let Comment = add(Comment,tempchar)
+                    else
+                        if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                            let Comment = add(Comment,tempchar)
+                        else
+                            let definition = add(definition,tempchar)
+                        endif
+                    endif
+                else
+                    let transfer = add(transfer,tempchar)
+                endif
+            else
+                let TEST = add(TEST,tempchar)
+            endif
+        else
+            let XML = add(XML,tempchar)
+        endif
+        let idx1 += 1
+    endwhile
+
 endfunction
 "}}}}} 
 "}}}}
@@ -6423,47 +6554,99 @@ function! FormatCode(...)
 endfunction
 "}}}}}
 
-"{{{{{2  AddDebugLog(...) 添加debug日志
+ "{{{{{2  AddDebugLog(...) 添加debug日志
 nnoremap <F5> :call AddDebugLog()<cr>
 "package jni stack 添加debug日志
 function! AddDebugLog(...)
     "{{{{{3 变量定义
     let packagechar = "Log.e"
     let jnichar = "ALOGE"
-    let stackchar = "LOG_ERROR"
+    let stackchar = "__android_log_print(6,\""
     let debugchar = "tangxinlou debug "
+    "let functionname = " new Object(){}.getClass().getEnclosingMethod().getName()"
+    let functionname = a:2
     let line = 0
+    let TAGchar = "\"txl\""
+    let abnormallist = [" super(",
+                \" this("]
+    let funcflag = "__FUNCTION__"
+    let casestr = ""
+
     "}}}}
-    let line = line('.')
-    if g:debugid ==# 0
-        echo "上一次最后保存的debugid" . string(@s)
-        let g:debugid = input("设置初始debug值")
+    if a:0 == 0
+        let line = line('.')
+        if g:debugid ==# 0
+            echo "上一次最后保存的debugid" . string(@s)
+            let g:debugid = input("设置初始debug值")
+        endif
+    else
+        let line = a:1 
     endif
     echo "g:debugid" . g:debugid
-    if matchstr(@%,".cpp") ==# ".cpp"
+
+    let filename = expand("%:t") . ":" . (line + 1) 
+    set noignorecase
+    if search(" TAG = ") != 0
+        let TAGchar = "TAG"
+    endif
+    if matchstr(expand('%:t'),".cpp") ==# ".cpp"
         let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
         call append(line('.'),jnichar)
-    elseif  matchstr(@%,".cc") ==# ".cc"
-        echo
-        if search("#include\.*log\.h") ==# 0
-            call search("#include")
-            call append(line('.'),"#include \"os/log.h\"")
+    elseif  matchstr(expand('%:t'),".cc") ==# ".cc"
+        if matchstr(a:2,"case") ==# "case"
+            let casestr = a:2
         endif
-        let stackchar = stackchar . "(\"" . debugchar . g:debugid ."\");"
-        call append(line,stackchar)
+        if search("#include <android\/log.h>") ==# 0
+            silent execute "normal! gg"
+            if search("#include") ==# 0
+            else 
+                let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
+                call append(line,stackchar)
+                call cursor(line + 1,0)
+                silent execute "normal! =="
+
+                silent execute "normal! gg"
+                call  search("#include")
+                call append(line('.'),"#include <android\/log.h>")
+                if line('.') < line
+                    let line += 1
+                endif
+            endif
+        else
+            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
+            call append(line,stackchar)
+            call cursor(line + 1,0)
+            silent execute "normal! =="
+        endif
         call cursor(line,0)
-    elseif  matchstr(@%,".java") ==# ".java"
-        if search("import \.*.Log;") ==# 0
-            call search("import ")
-            call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+    elseif  matchstr(expand('%:t'),".java") ==# ".java"
+        let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
+        if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
+            call cursor(line + 1,0)
+            silent execute "normal! 0f(%"
+            call append(line('.'),packagechar)
+            call cursor(line('.') + 1,0)
+            let line = line('.')
+        else
+            call append(line,packagechar)
+            call cursor(line + 1,0)
         endif
-        let packagechar  = packagechar   . "(TAG,\"" . debugchar . g:debugid ."\");"
-        call append(line,packagechar)
+        silent execute "normal! =="
+        if search("import \.*.Log;") ==# 0
+            silent execute "normal! gg"
+            call search("^package ")
+            call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+            if line('.') < line
+                let line += 1
+            endif
+        endif
         call cursor(line,0)
     endif
 
+    set ignorecase
     let @s = g:debugid
     let g:debugid += 1
+    return line
 endfunction
 "}}}}}
 
@@ -7078,7 +7261,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -7623,6 +7806,9 @@ function! VisualiZationcsv(...)
     "}}}}
     if &filetype ==# "csv"
         let templist = [""]       "手动修改默认添加的字符串
+    endif
+    if &filetype ==# "vim"
+        return
     endif
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     if mode ==# 1
@@ -8841,7 +9027,212 @@ function! ShowPopupMenu()
     echo  popup_menu(choices, {'\t': 'Select an option:', 'title': 'Options'})
 endfunction
 "}}}
+"{{{{ 通过log确定代码流程
+"{{{{{2 function!  FouncAddLog(...) 为每个文件的函数添加一行打印
+function! FouncAddLog(...)
+    "{{{{{3 变量定义
+    let files = []
+    let filename = ""
+    let classdict = {}
+    let idx1 = 0
+    let mode = 0
+    "}}}}
+    let mode = input("1是加log2是删log")
+    let filetype = input("1是java2是cc3是cpp")
+    if filetype ==# 1
+        let files = split(system("find -iname '*.java'"),"\n")
+    elseif filetype ==# 2
+        let files = split(system("find -iname '*.cc'"),"\n")
+    elseif filetype ==# 3
+        let files = split(system("find -iname '*.cpp'"),"\n")
+    endif
+    let g:debugid = 0
+    while idx1 < len(files)
+        let filename = split(files[idx1],'/')[-1]
+        if mode ==# 1
+            let classdict[filename] = FileAddLog(files[idx1],1)
+        elseif mode ==# 2
+            let classdict[filename] = FouncDeleLog(files[idx1],1)
+        endif
+        let idx1 += 1
+    endwhile
+    call append(line('.'),string(classdict))
+endfunction
+"}}}}}
 
+"{{{{{2 function!  FileAddLog(...) 当前文件每个转折都打印一行log
+function! FileAddLog(...)
+     "{{{{{3 变量定义
+    let filename = ""
+    let idx1 = 0
+    let targetline = 0
+    let currentString  = ""
+    let abnormallist = ["new ",
+                \" switch ",
+                \"{}",
+                \"(){",
+                \"//",
+                \"; }",
+                \";}",
+                \"\\",
+                \"\\[\\]",
+                \"constexpr ",
+                \"\\[this\\]",
+                \" switch("]
+    let uncheck = ["if(",
+                \"if (",
+                \"try{",
+                \"try {",
+                \"for(",
+                \"for (",
+                \"synchronized (",
+                \"synchronized(",
+                \"switch (",
+                \"else{",
+                \"else {",
+                \"case ",
+                \"default:",
+                \"do {",
+                \"do {",
+                \"switch(",
+                \"while (",
+                \"while(",
+                \"} catch",
+                \"}catch",
+                \"static {",
+                \"static{"]
+    let functionname = ""
+
+    "}}}}
+    if a:0 ==# 0
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        let filename = a:1
+        let mode = a:2
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
+    endif
+    let idx1 = 0
+    while idx1 <= line('$')
+        let currentString  = getline(idx1)
+        if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
+            call cursor(idx1,0)
+            silent execute "normal! $F)%"
+            if CheckStringIsObtainOfList(getline('.'),abnormallist)
+            else
+                if !CheckStringIsObtainOfList(getline('.'),uncheck)
+                    if line('.') ==# idx1
+                        let targetline = idx1
+                        let functionname = split(split(getline('.'),'(')[0])[-1]
+                        let idx1 =  AddDebugLog(targetline,functionname)
+                    else
+                    endif
+                endif
+            endif
+            if a:0 ==# 0 
+                call input("11")
+            endif
+        endif
+        if matchstr(currentString,"  case .*:") != ""
+            call cursor(idx1,0)
+            if line('.') ==# idx1
+                let targetline = idx1
+                let functionname = matchstr(currentString,"case .*:")
+                let idx1 =  AddDebugLog(targetline,functionname)
+            else
+            endif
+            if a:0 ==# 0 
+                call input("11")
+            endif
+        endif
+        redraw
+        let idx1 += 1
+    endwhile
+    if a:0 ==# 0
+    else
+        execute "normal! :wq!\<cr>"
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2 function!  FouncDeleLog(...) 删除打印
+function! FouncDeleLog()
+    "{{{{{3 变量定义
+    let filename = ""
+    let idx1 = 0
+    let targetline = 0
+    let currentString  = ""
+    "}}}}
+    if a:0 ==# 0
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        let filename = a:1
+        let mode = a:2
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
+    endif
+    let idx1 = 0
+    while idx1 <= line('$')
+        let currentString  = getline(idx1)
+        if matchstr(currentString,"tangxinlou debug") ==# "tangxinlou debug"
+            call cursor(idx1,0)
+            silent execute "normal! dd"
+        else
+            let idx1 += 1
+        endif
+        redraw
+    endwhile
+    if a:0 ==# 0
+    else
+        execute "normal! :wq!\<cr>"
+    endif
+endfunction
+"}}}}} 
+
+"}}}}  
+"{{{例子
+
+function! FouncDeleLog()
+     "{{{{{3 变量定义
+    let filename = ""
+    "}}}}
+    if a:0 ==# 0
+        "处理当前文件
+        let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        echo winnrnum
+        if winnrnum  >  1
+            execute "normal! \<c-w>h"
+            execute "normal! :q!\<cr>"
+        endif
+        let filename = expand("%:p")
+    else
+        "处理传过来的文件
+        let filename = a:1
+        let mode = a:2
+        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        setlocal foldmethod=syntax
+        redraw
+    endif
+    if a:0 ==# 0
+    else
+        execute "normal! :wq!\<cr>"
+    endif
+endfunction
+"}}}
 
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
