@@ -117,7 +117,8 @@ endif
 "iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname '*mobilelog*'
-iabbrev dbug call Dbug(,3)
+"iabbrev echo call Dbug(,3)
+iabbrev <expr> echo  "if 3 > g:debugflag \| call Dbug(,3) \| endif" . "\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>"
 iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
@@ -323,6 +324,8 @@ nnoremap <leader>rm :echom "hello"
 nnoremap <leader>y :call AddLineNumber()<cr>
 "echo winheight('%') winwidth('%')
 nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd " . tempchardretory<cr>
+"临时快捷键
+nnoremap <F12>  :call SelectEntireCode()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
