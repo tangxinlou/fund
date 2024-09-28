@@ -118,7 +118,7 @@ endif
 "iabbrev r r!
 iabbrev find find -iname '*mobilelog*'
 "iabbrev echo call Dbug(,3)
-iabbrev <expr> echo  "if 3 > g:debugflag \| call Dbug(,3) \| endif" . "\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>"
+iabbrev <expr> echo  "if 3 > g:debugflag \| call Dbug(,3,0) \| endif" . "\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>"
 iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
@@ -138,8 +138,8 @@ iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
 "}}}
 "auto command自动命令{{{
-"创建空文件和自动注释
-"设置折叠
+""创建空文件和自动注释
+""设置折叠
 augroup filetype_vim
     autocmd FileType vim  setlocal foldmethod=marker
 augroup END
@@ -324,8 +324,11 @@ nnoremap <leader>rm :echom "hello"
 nnoremap <leader>y :call AddLineNumber()<cr>
 "echo winheight('%') winwidth('%')
 nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd " . tempchardretory<cr>
+nnoremap <leader>log  :call append(line('.'),g:debuglist)
 "临时快捷键
-nnoremap <F12>  :call SelectEntireCode()<cr>
+"nnoremap <F12>  : noautocmd call SelectEntireCode()<cr>
+nnoremap <F12>  : call SelectEntireCode()<cr>
+"nnoremap <F12>  :noautocmd call Exeample()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -505,6 +508,10 @@ else
         let g:homedir = "/z"
     else
         let g:homedir = "/d"
+        "git信息异常变动，gitbash
+        "call system("git config --global core.autocrlf false")
+        "call system("git config --global core.filemode false")
+        "call system("git config --global core.safecrlf true")
     endif
 endif
 function! Homedir(...)
@@ -1368,13 +1375,26 @@ function! Dbug(...)
     "{{{{{3 变量定义
     let val = a:1
     let flag = a:2
+    let append = 0
     let tempchar = ""
+    if a:0 ==# 3
+        let append = a:3
+    endif
     "}}}}
     if flag > g:debugflag
         if type(val) ==# 1
             let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())."-". val
-            echo tempchar
-            let g:debuglist = add(g:debuglist,tempchar)
+            if append ==#  0
+                echo tempchar
+                let g:debuglist = add(g:debuglist,tempchar)
+            elseif append ==# 1
+                call append(line('.'),tempchar)
+                call cursor(line('.') + 1,0)
+                let g:debuglist = add(g:debuglist,tempchar)
+            elseif append ==# 2
+                let g:debuglist = add(g:debuglist,tempchar)
+            endif
+           
         else
             echo val
         endif
@@ -1676,28 +1696,32 @@ function! SimplifySearchResults(...)
         let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
         if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
             if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
-                if len(split(temchar,"\x00")) != 1
-                    if matchstr(temchar,"log") != ""
-                        let Log = add(Log,tempchar)
-                    elseif matchstr(temchar,";") != ""
-                        if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
-                            let definition  = add(definition,tempchar)
-                        else
-                            let transfer1 = add(transfer1,tempchar)
-                        endif
-                    elseif JudgeString(judgechar,temchar)
-                        let judge = add(judge,tempchar)
-                    elseif matchstr(temchar,"//") != ""
-                        let Comment = add(Comment,tempchar)
-                    else
-                        if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                if matchstr(tempchar,"注释") != "注释"
+                    if len(split(temchar,"\x00")) != 1
+                        if matchstr(temchar,"log") != ""
+                            let Log = add(Log,tempchar)
+                        elseif matchstr(temchar,";") != ""
+                            if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
+                                let definition  = add(definition,tempchar)
+                            else
+                                let transfer1 = add(transfer1,tempchar)
+                            endif
+                        elseif JudgeString(judgechar,temchar)
+                            let judge = add(judge,tempchar)
+                        elseif matchstr(temchar,"//") != ""
                             let Comment = add(Comment,tempchar)
                         else
-                            let definition = add(definition,tempchar)
+                            if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
+                                let Comment = add(Comment,tempchar)
+                            else
+                                let definition = add(definition,tempchar)
+                            endif
                         endif
+                    else
+                        let transfer = add(transfer,tempchar)
                     endif
                 else
-                    let transfer = add(transfer,tempchar)
+                    let Comment = add(Comment,tempchar)
                 endif
             else
                 let TEST = add(TEST,tempchar)
@@ -2197,15 +2221,30 @@ function! SelectEntireCode(...)
     let begintime = 0
     let endtime = 0
     let templist = []
-    "set noautoindent
     "set nonumber
+    set noautoindent
     set noswapfile
     set nobackup
     set nowritebackup
     set undolevels=-1
     set undofile
     set synmaxcol=150
-    syntax off
+    "syntax off
+    set noswapfile
+    set nobackup
+    set nowritebackup
+    set undolevels=1000
+    set undofile
+    set synmaxcol=150
+    set lazyredraw
+    set nohlsearch
+    set buftype=nowrite
+    set bufhidden=unload
+    set lazyredraw
+    set noundofile
+    set hidden
+    set norelativenumber
+    set nocursorline
     "}}}}
     if a:0 ==# 0
         let g:debugflag = 6
@@ -2213,17 +2252,17 @@ function! SelectEntireCode(...)
         let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
         let searchstarge =  system(command)
         let searchstarge = split(searchstarge,"\n")
-        execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
+        if 10 > g:debugflag | call Dbug( "begin",10,1) | endif
     else
-        let g:debugflag = 1
+        let g:debugflag = 20
         let searchstarge = a:1
         let searchstarge = split(searchstarge,"\n")
         if len(searchstarge) ==# 0
             return ""
         endif
     endif
-    autocmd FileType special setlocal foldmethod=expr
-    autocmd FileType special   setlocal foldexpr=GetPotionFold1(v:lnum)
+    "autocmd FileType special setlocal foldmethod=expr
+    "autocmd FileType special   setlocal foldexpr=GetPotionFold1(v:lnum)
     while idx1 < len(searchstarge)
         let templist = split(searchstarge[idx1],":")
         let currentstrlist[0] = templist[0]
@@ -2236,20 +2275,27 @@ function! SelectEntireCode(...)
         let line = currentstrlist[1]
         if idx1 ==# 0
             "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+            if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
             silent tabnew
+            if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
             silent execute "edit " . filename
+            if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
             "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
-            silent tabnew
+            if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
+            "silent tabnew
             silent execute "edit " . filename
+            if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         endif
         silent setlocal foldmethod=syntax
-        let begintime = float2nr(CurrentTimeWithMilliseconds())
+        "let begintime = float2nr(CurrentTimeWithMilliseconds())
 
         if 3 > g:debugflag | call Dbug( currentstrlist[2],3) | endif
         if 3 > g:debugflag | call Dbug( filename,3) | endif
         if 3 > g:debugflag | call Dbug( line,3) | endif
+        "if 10 > g:debugflag | call Dbug( "merge",10,2) | endif
         let numberlist = MergeLinesOfCode(line)
+        "if 10 > g:debugflag | call Dbug( "merged",10,2) | endif
         "let numberlist = [line,line]
         if 3 > g:debugflag | call Dbug( numberlist,3) | endif
         if len(numberlist) != 0
@@ -2261,30 +2307,31 @@ function! SelectEntireCode(...)
             let currentstrlist[2] = currentstrlist[2] . "注释"
             let searchstarge[idx1] = join(currentstrlist,":")
         endif
-        let endtime = float2nr(CurrentTimeWithMilliseconds())
-        if endtime - begintime > 14000
-            if 3 > g:debugflag | call Dbug(filename ,3) | endif
-            if 3 > g:debugflag | call Dbug( line,3) | endif
-            if 3 > g:debugflag | call Dbug(currentstrlist[2] ,3) | endif
-            if 3 > g:debugflag | call Dbug(begintime ,3) | endif
-            if 3 > g:debugflag | call Dbug(endtime ,3) | endif
-            if 3 > g:debugflag | call Dbug(endtime - begintime ,3) | endif
-        endif
+        "let endtime = float2nr(CurrentTimeWithMilliseconds())
+        "if endtime - begintime > 14000
+        "    if 3 > g:debugflag | call Dbug(filename ,3) | endif
+        "    if 3 > g:debugflag | call Dbug( line,3) | endif
+        "    if 3 > g:debugflag | call Dbug(currentstrlist[2] ,3) | endif
+        "    if 3 > g:debugflag | call Dbug(begintime ,3) | endif
+        "    if 3 > g:debugflag | call Dbug(endtime ,3) | endif
+        "    if 3 > g:debugflag | call Dbug(endtime - begintime ,3) | endif
+        "endif
         if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
-            "silent execute "normal! :q!\<cr>"
-            :q!
+            "silent execute "normal! :wq!\<cr>"
+            ":q!
         elseif idx1 ==# (len(searchstarge) - 1)
-            "silent execute "normal! :q!\<cr>"
+            "silent execute "normal! :wq!\<cr>"
             :q!
         endif
+        if 10 > g:debugflag | call Dbug("end" ,10,2) | endif
         let idx1 += 1
     endwhile
     "set autoindent
     "set number
-    syntax on
+    "syntax on
     let g:debugflag = 2
     if a:0 ==# 0
-        execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
+        if 3 > g:debugflag | call Dbug( "end",3,1) | endif
         call append(line('.'),searchstarge)
     else
         return join(searchstarge,"\n")
@@ -2337,7 +2384,7 @@ function! MergeLinesOfCode(...)
         else
             if 3 > g:debugflag | call Dbug( "tangxinlou6",3) | endif
             silent call cursor(line,0)
-            let BracketLine = search("{")
+            silent let BracketLine = search("{")
             silent call cursor(line,0)
             silent let SemicolonLine = search(";")
             if BracketLine > line  || SemicolonLine > line
@@ -7486,7 +7533,7 @@ function! GrepChars(timer)
         let @/ = substitute(searchs , '\\(', '(', 'g')
     endif
     let searchstarge =  system(command)
-    if len(searchs) > 6
+    if len(split(searchstarge,"\n")) < 200  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
         let searchstarge = SelectEntireCode(copy(searchstarge))
     endif
     let searchstarge = SimplifySearchResults(copy(searchstarge))
@@ -9431,24 +9478,55 @@ endfunction
 "}}}}
 "{{{例子
 
-function! FouncDeleLog()
+function! Exeample()
      "{{{{{3 变量定义
     let filename = ""
+    set noautoindent
+    set noswapfile
+    set nobackup
+    set nowritebackup
+    set undolevels=1000
+    set undofile
+    set synmaxcol=150
+    set lazyredraw
+    set nohlsearch
+    set buftype=nowrite
+    set bufhidden=unload
+    syntax off
+    set lazyredraw
+    set noundofile
+    set hidden
+    set norelativenumber
+    set nocursorline
     "}}}}
     if a:0 ==# 0
         "处理当前文件
-        let winnrnum = tabpagewinnr(tabpagenr(),'$')
-        echo winnrnum
-        if winnrnum  >  1
-            execute "normal! \<c-w>h"
-            execute "normal! :q!\<cr>"
-        endif
-        let filename = expand("%:p")
+        "let winnrnum = tabpagewinnr(tabpagenr(),'$')
+        "echo winnrnum
+        "if winnrnum  >  1
+        "    execute "normal! \<c-w>h"
+        "    execute "normal! :q!\<cr>"
+        "endif
+        "let filename = expand("%:p")
+        "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
+        if 3 > g:debugflag | call Dbug( "begin",3,0) | endif
+        silent tabnew
+        if 3 > g:debugflag | call Dbug( "middle",3,0) | endif
+        silent execute "edit  " . "AdapterService.java"
+        :q!
+        if 3 > g:debugflag | call Dbug( "end",3,0) | endif
+       "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
+       "silent tabnew
+       "silent edit  AdapterService.java
+       ":q!
+       "if 3 > g:debugflag | call Dbug( "end",3,1) | endif
+        "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
     else
         "处理传过来的文件
         let filename = a:1
         let mode = a:2
-        execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+        "execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
+
         setlocal foldmethod=syntax
         redraw
     endif
