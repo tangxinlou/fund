@@ -69,7 +69,7 @@ set foldlevel=100
 "set foldignore=
 "set foldmethod=marker
 "set mouse=nv
-syntax on
+set syntax=off
 set showmode
 set nowrap
 set ve=all
@@ -327,8 +327,9 @@ nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd
 nnoremap <leader>log  :call append(line('.'),g:debuglist)
 "临时快捷键
 "nnoremap <F12>  : noautocmd call SelectEntireCode()<cr>
-nnoremap <F12>  : call SelectEntireCode()<cr>
-"nnoremap <F12>  :noautocmd call Exeample()<cr>
+nnoremap <F3>  : call SelectEntireCode()<cr>
+nnoremap <F12>  : call SwitchBuff("storage/DatabaseManager.java")<cr>
+"nnoremap <F12>  : call Exeample()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -2245,6 +2246,7 @@ function! SelectEntireCode(...)
     set hidden
     set norelativenumber
     set nocursorline
+    let filelist = []
     "}}}}
     if a:0 ==# 0
         let g:debugflag = 6
@@ -2261,8 +2263,22 @@ function! SelectEntireCode(...)
             return ""
         endif
     endif
-    "autocmd FileType special setlocal foldmethod=expr
-    "autocmd FileType special   setlocal foldexpr=GetPotionFold1(v:lnum)
+    let idx1 = 0
+    while idx1 < len(searchstarge)
+            let filename = split(searchstarge[idx1],":")[0]
+        if idx1 ==# 0
+            let filelist = add(filelist,filename)
+        elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
+            let filelist = add(filelist,filename)
+        endif
+        let idx1 += 1
+    endwhile
+    "if 20 > g:debugflag | call Dbug(join(filelist) ,20,0) | endif
+    if 3 > g:debugflag | call Dbug("allbegin" ,3,0) | endif
+    silent tabnew
+    silent execute( "args " . join(filelist))
+    if 3 > g:debugflag | call Dbug( "allend",3,0) | endif
+    let idx1  = 0
     while idx1 < len(searchstarge)
         let templist = split(searchstarge[idx1],":")
         let currentstrlist[0] = templist[0]
@@ -2276,15 +2292,17 @@ function! SelectEntireCode(...)
         if idx1 ==# 0
             "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
             if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
-            silent tabnew
+            "silent tabnew
             if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
-            silent execute "edit " . filename
+            "silent execute( "args " . filename)
+            call SwitchBuff(filename)
             if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
             "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
             if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
             "silent tabnew
-            silent execute "edit " . filename
+            "silent execute( "args " . filename)
+            call SwitchBuff(filename)
             if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         endif
         silent setlocal foldmethod=syntax
@@ -2481,6 +2499,25 @@ function! FindAnotherBracketPosition()
   return cursor
 endfunction
 "}}}}}
+"{{{{{2 SwitchBuff(...) 切换buffer
+function! SwitchBuff(...)
+    let filepath = a:1
+    let bufferslist = []
+    let templist = split(execute("buffers"),"\n")
+    let idx1 = 0
+    let index = -1
+    while idx1 < len(templist)
+        let bufferslist = add(bufferslist,split(templist[idx1],'\"')[1])
+        let idx1 += 1
+    endwhile
+    if count(bufferslist,filepath) != 0
+        let index = index(bufferslist,filepath)
+        silen execute("b " . (index + 1))
+        return 1
+    endif
+    return 0
+endfunction
+"}}}}}            
 "}}}}
 "{{{{vmake 命令
 
@@ -7220,7 +7257,7 @@ endfunction
 "}}}}}
 
 "{{{{{2  function! TagListFiles(...) 列出当前变量在当前文件分布
-nnoremap <F3> :call TagListFiles()<cr>
+"nnoremap <F3> :call TagListFiles()<cr>
 let g:Tagwindidlistvalue = []
 let g:Tagwindidlistkey = []
 function! TagListFiles(...)
@@ -9492,7 +9529,7 @@ function! Exeample()
     set nohlsearch
     set buftype=nowrite
     set bufhidden=unload
-    syntax off
+    "syntax off
     set lazyredraw
     set noundofile
     set hidden
@@ -9512,8 +9549,11 @@ function! Exeample()
         if 3 > g:debugflag | call Dbug( "begin",3,0) | endif
         silent tabnew
         if 3 > g:debugflag | call Dbug( "middle",3,0) | endif
-        silent execute "edit  " . "AdapterService.java"
-        :q!
+        "silent execute "edit  " . "AdapterService.java"
+        silent execute "args  " . "AdapterState.java BluetoothSocketManagerBinder.java"
+        ":q!
+        if 3 > g:debugflag | call Dbug( "end1",3,0) | endif
+        b 2
         if 3 > g:debugflag | call Dbug( "end",3,0) | endif
        "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
        "silent tabnew
