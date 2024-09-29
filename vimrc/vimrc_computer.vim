@@ -417,6 +417,26 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_device_mediatek_common",
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
+let g:nonfunctionlist = ["if(",
+            \"if (",
+            \"try{",
+            \"try {",
+            \"for(",
+            \"for (",
+            \"synchronized (",
+            \"synchronized(",
+            \"switch (",
+            \"else{",
+            \"else {",
+            \"case ",
+            \"default:",
+            \"do {",
+            \"do {",
+            \"switch(",
+            \"while (",
+            \"while(",
+            \"static {",
+            \"static{"]
 let g:debugid = 0
 "sdpdefs.h uuid
 "hci_error_code.h  error code
@@ -2137,26 +2157,6 @@ nnoremap <leader>fuc :call  FunctionList()<cr>
 function! FunctionList(...)
      "{{{{{3 变量定义
     let filename = ""
-    let uncheck = ["if(",
-                \"if (",
-                \"try{",
-                \"try {",
-                \"for(",
-                \"for (",
-                \"synchronized (",
-                \"synchronized(",
-                \"switch (",
-                \"else{",
-                \"else {",
-                \"case ",
-                \"default:",
-                \"do {",
-                \"do {",
-                \"switch(",
-                \"while (",
-                \"while(",
-                \"static {",
-                \"static{"]
     let targetline = -1
     "}}}}
     if a:0 ==# 0
@@ -2182,7 +2182,7 @@ function! FunctionList(...)
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
             call cursor(idx1,0)
             silent execute "normal! $F)%"
-            if CheckStringIsObtainOfList(getline('.'),uncheck)
+            if CheckStringIsObtainOfList(getline('.'),g:nonfunctionlist)
             else
                 if line('.') ==# idx1
                     let targetline = idx1
@@ -2718,7 +2718,7 @@ function! AddNumber3(...)
         let isnumber2 = a:1
         let idx1 = 0
         while idx1 < len(isnumber2)
-            let isnumber = join([idx1,isnumber2[idx1]," "])
+            let isnumber = idx1 . " " . isnumber2[idx1]
             let isnumber2[idx1]  = isnumber
             echo isnumber2[idx1]
             let idx1 += 1
@@ -7394,6 +7394,28 @@ function! InventoryFiles(...)
     return classdict
 endfunction
 "}}}}}
+
+"{{{{{2   ParseCodeString(...) 解析标准代码字串
+function! ParseCodeString(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    if filename ==# ""
+        let grepcmd = "grep -Esinr --include=*{.c,.cc,.cpp,.java,.h} "
+    else
+        let grepcmd = "grep -Esin --include=*{.c,.cc,.cpp,.java,.h} "
+    endif
+    let result = ""
+    "}}}}
+    if greptype ==# "fuc"
+        let grepchar = '" ' . grepchar . '\(" '
+        let grepcmd = grepcmd . grepchar . filename
+        let result = split(system(grepcmd),"\n")
+    endif
+    return result
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{ 定时器
 
