@@ -69,7 +69,7 @@ set foldlevel=100
 "set foldignore=
 "set foldmethod=marker
 "set mouse=nv
-set syntax=off
+syntax on
 set showmode
 set nowrap
 set ve=all
@@ -184,6 +184,7 @@ augroup testgroup
     autocmd FileType java   syntax match javaFunction '\<\h\w*\>\ze\s*('
     autocmd FileType java    hi link javaFunction Function
     autocmd FileType java    hi link javaLineComment Special
+    autocmd FileType java    hi link javaComment Special
     autocmd FileType c   syntax match javaFunction '\<\h\w*\>\ze\s*('
     autocmd FileType c    hi link javaFunction Function
 augroup END
@@ -327,8 +328,7 @@ nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd
 nnoremap <leader>log  :call append(line('.'),g:debuglist)
 "临时快捷键
 "nnoremap <F12>  : noautocmd call SelectEntireCode()<cr>
-nnoremap <F3>  : call SelectEntireCode()<cr>
-nnoremap <F12>  : call SwitchBuff("storage/DatabaseManager.java")<cr>
+nnoremap <F12>  : call SelectEntireCode()<cr>
 "nnoremap <F12>  : call Exeample()<cr>
 "}}}
 "画图{{{{
@@ -462,10 +462,10 @@ let g:smallestunitdict = {
             \"04hfp_simple_connect": [['HeadsetStateMachine: Connecting: currentDevice=.*, msg=connection state changed: .*: Disconnected -> Connecting', 0.0, ''], ['HeadsetStateMachine: Connected: currentDevice=.*, msg=connection state changed: .*: Connecting -> Connected', 505.0, '']],
             \"03bond" : [['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_NONE => BOND_BONDING', 0.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_BONDING => BOND_BONDED', 4695.0, '']],
             \"02auto_connect": [['BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on', 28631.0, ''], ['BluetoothPhonePolicy: autoConnect:HFP Device', 28634.0, ''], ['autoConnectHeadset: Connecting HFP with', 28634.0, ''], ['BluetoothPhonePolicy: autoConnect:A2DP Device', 28635.0, ''], ['BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP', 28635.0, '']],
-            \"33leaudio volume" : "AS.BtHelper: setLeAudioVolume|LeAudioService: SetVolume|VolumeControlService: setGroupVolume|VolumeControlService: setAvrcpVolume",
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"33leaudio volume" : "AS.BtHelper: setLeAudioVolume|LeAudioService: SetVolume|VolumeControlService: setGroupVolume|VolumeControlService: setAvrcpVolume",
             \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
             \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest",
             \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
@@ -625,6 +625,7 @@ function! QuckfixToggle()
         "highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         "highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
         "call append(line('.'),split(execute("highlight"),"\n"))
+        "let g:debuglist = split(execute("syntax"),"\n")
         "highlight MyGroup1 term=reverse ctermbg=black ctermfg=White guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
         "查看当前行是什么高亮组
@@ -1395,7 +1396,6 @@ function! Dbug(...)
             elseif append ==# 2
                 let g:debuglist = add(g:debuglist,tempchar)
             endif
-           
         else
             echo val
         endif
@@ -1662,7 +1662,7 @@ endfunction
 function! SimplifySearchResults(...)
 "140行1s都不到
     "{{{{{3 变量定义
-    let searchs = "setActiveDevice"
+    let searchs = "setA"
     let command = ""
     let transfer = []         "长度小于1被识别成调用
     let transfer1 = []        "语句里面有分号识别调用
@@ -1693,11 +1693,12 @@ function! SimplifySearchResults(...)
         endif
     endif
     while idx1 < len(searchstarge)
-        let temchar = split(searchstarge[idx1],":")[2]
+        let temchar = join(split(searchstarge[idx1],":")[2:])
+        if 10 > g:debugflag | call Dbug( "tangxinlou",10,2) | endif
         let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
         if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
             if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
-                if matchstr(tempchar,"注释") != "注释"
+                if matchstr(temchar,"注释") ==# ""
                     if len(split(temchar,"\x00")) != 1
                         if matchstr(temchar,"log") != ""
                             let Log = add(Log,tempchar)
@@ -2222,30 +2223,7 @@ function! SelectEntireCode(...)
     let begintime = 0
     let endtime = 0
     let templist = []
-    "set nonumber
-    set noautoindent
-    set noswapfile
-    set nobackup
-    set nowritebackup
-    set undolevels=-1
-    set undofile
-    set synmaxcol=150
-    "syntax off
-    set noswapfile
-    set nobackup
-    set nowritebackup
-    set undolevels=1000
-    set undofile
-    set synmaxcol=150
-    set lazyredraw
-    set nohlsearch
-    set buftype=nowrite
-    set bufhidden=unload
-    set lazyredraw
-    set noundofile
-    set hidden
-    set norelativenumber
-    set nocursorline
+    syntax off
     let filelist = []
     "}}}}
     if a:0 ==# 0
@@ -2273,11 +2251,10 @@ function! SelectEntireCode(...)
         endif
         let idx1 += 1
     endwhile
-    "if 20 > g:debugflag | call Dbug(join(filelist) ,20,0) | endif
-    if 3 > g:debugflag | call Dbug("allbegin" ,3,0) | endif
+    if 10 > g:debugflag | call Dbug("allbegin" ,10,0) | endif
     silent tabnew
     silent execute( "args " . join(filelist))
-    if 3 > g:debugflag | call Dbug( "allend",3,0) | endif
+    if 10 > g:debugflag | call Dbug( "allend",10,0) | endif
     let idx1  = 0
     while idx1 < len(searchstarge)
         let templist = split(searchstarge[idx1],":")
@@ -2290,31 +2267,20 @@ function! SelectEntireCode(...)
         let filename = currentstrlist[0]
         let line = currentstrlist[1]
         if idx1 ==# 0
-            "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
             if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
-            "silent tabnew
             if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
-            "silent execute( "args " . filename)
             call SwitchBuff(filename)
             if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
-            "silent execute "normal! :tabnew \<cr>:e " . filename . " \<cr>"
             if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
-            "silent tabnew
-            "silent execute( "args " . filename)
             call SwitchBuff(filename)
             if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
         endif
         silent setlocal foldmethod=syntax
-        "let begintime = float2nr(CurrentTimeWithMilliseconds())
-
         if 3 > g:debugflag | call Dbug( currentstrlist[2],3) | endif
         if 3 > g:debugflag | call Dbug( filename,3) | endif
         if 3 > g:debugflag | call Dbug( line,3) | endif
-        "if 10 > g:debugflag | call Dbug( "merge",10,2) | endif
         let numberlist = MergeLinesOfCode(line)
-        "if 10 > g:debugflag | call Dbug( "merged",10,2) | endif
-        "let numberlist = [line,line]
         if 3 > g:debugflag | call Dbug( numberlist,3) | endif
         if len(numberlist) != 0
             let srcnum = numberlist[0]
@@ -2325,15 +2291,6 @@ function! SelectEntireCode(...)
             let currentstrlist[2] = currentstrlist[2] . "注释"
             let searchstarge[idx1] = join(currentstrlist,":")
         endif
-        "let endtime = float2nr(CurrentTimeWithMilliseconds())
-        "if endtime - begintime > 14000
-        "    if 3 > g:debugflag | call Dbug(filename ,3) | endif
-        "    if 3 > g:debugflag | call Dbug( line,3) | endif
-        "    if 3 > g:debugflag | call Dbug(currentstrlist[2] ,3) | endif
-        "    if 3 > g:debugflag | call Dbug(begintime ,3) | endif
-        "    if 3 > g:debugflag | call Dbug(endtime ,3) | endif
-        "    if 3 > g:debugflag | call Dbug(endtime - begintime ,3) | endif
-        "endif
         if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
             "silent execute "normal! :wq!\<cr>"
             ":q!
@@ -2344,12 +2301,10 @@ function! SelectEntireCode(...)
         if 10 > g:debugflag | call Dbug("end" ,10,2) | endif
         let idx1 += 1
     endwhile
-    "set autoindent
-    "set number
-    "syntax on
     let g:debugflag = 2
     if a:0 ==# 0
         if 3 > g:debugflag | call Dbug( "end",3,1) | endif
+        silent execute("syntax on")
         call append(line('.'),searchstarge)
     else
         return join(searchstarge,"\n")
@@ -2443,7 +2398,7 @@ function! MergeLinesOfCode(...)
                 if 3 > g:debugflag | call Dbug( "tangxinlou3",3) | endif
                 silent call cursor(end,0)
                 "silent execute "normal! $F)%"  缩短到2s
-                let cursor = FindAnotherBracketPosition()
+                let cursor = FindAnotherBracketPosition(')')
                 let start = cursor[0]
                 return [start,end]
             else
@@ -2463,17 +2418,48 @@ endfunction
 "{{{{{2 IsComment(...)此行是否是注释行
 "call IsComment(line('.'))
 function! IsComment(...)
+    let issyntax = 0
     let line = a:1
     let groupname = ""
     let iscomment = 0
-    silent call cursor(line,0)
-    "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
-    call FastMoveToFirstNonBlank()
-    silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
-    if 3 > g:debugflag | call Dbug( groupname,3) | endif
-    if matchstr(groupname,"Comment") ==# "Comment"  ||  matchstr(groupname,"Annotation") ==# "Annotation"
-        let iscomment = 1
+    let secondNonWhitespace = ""
+    let startcursor = []
+    let endcursor = []
+    let nextbeginitem = ""
+    let nextenditem = ""
+    if 10 > g:debugflag | call Dbug("commentbegin" ,10,2) | endif
+    if matchstr(execute("syntax"),"Comment") != ""
+        if 3 > g:debugflag | call Dbug( "syntax = 0",3,0) | endif
+        let issyntax = 1
     endif
+    if issyntax ==# 1
+        if 3 > g:debugflag | call Dbug( "comment 2",3,0) | endif
+        silent call cursor(line,0)
+        "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
+        call FastMoveToFirstNonBlank()
+        silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
+        if 3 > g:debugflag | call Dbug( groupname,3) | endif
+        if matchstr(groupname,"Comment") ==# "Comment"  ||  matchstr(groupname,"Annotation") ==# "Annotation"
+            let iscomment = 1
+        endif
+    else
+        if 10 > g:debugflag | call Dbug( "comment 1",10,2) | endif
+        silent call cursor(line,0)
+        if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
+        let secondNonWhitespace = matchstr(getline('.'), '\S\{2}')
+        if secondNonWhitespace ==# "//" || secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
+            let iscomment = 1
+        else
+            if 10 > g:debugflag | call Dbug( "findbegin",10,2) | endif
+            silent let endcursor = searchpos('\*\/','w')
+            silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
+            if 10 > g:debugflag | call Dbug( "findend",10,2) | endif
+            if startcursor[0] < line &&  line < endcursor[0]
+                let iscomment = 1
+            endif
+        endif
+    endif
+    if 10 > g:debugflag | call Dbug("commentend" ,10,2) | endif
     return iscomment
 endfunction
 "}}}}}
@@ -2492,11 +2478,26 @@ endfunction
 "}}}}}
 "{{{{{2 FindAnotherBracketPosition(...)找到匹配的括号另一半位置
 "silent execute "normal! $F)%"
-function! FindAnotherBracketPosition()
-  silent let col =  strridx(getline('.'),')')
-  silent call cursor(line('.'), col + 1)
-  silent let cursor = searchpairpos('(', '', ')', 'b')
-  return cursor
+function! FindAnotherBracketPosition(...)
+    let char = a:1
+    if char ==# ')'
+        "silent let col =  strridx(getline('.'),')')
+        "silent call cursor(line('.'), col + 1)
+        silent let cursor = searchpairpos('(', '', ')', 'b')
+    elseif char ==# '('
+        "silent let col =  strridx(getline('.'),'(')
+        "silent call cursor(line('.'), col + 1)
+        silent let cursor = searchpairpos('(', '', ')', 'w')
+    elseif char ==# '}'
+        "silent let col =  strridx(getline('.'),'}')
+        "silent call cursor(line('.'), col + 1)
+        silent let cursor = searchpairpos('{', '', '}', 'b')
+    elseif char ==# '{'
+        "silent let col =  strridx(getline('.'),'{')
+        "silent call cursor(line('.'), col + 1)
+        silent let cursor = searchpairpos('{', '', '}', 'w')
+    endif
+    return cursor
 endfunction
 "}}}}}
 "{{{{{2 SwitchBuff(...) 切换buffer
@@ -2517,7 +2518,7 @@ function! SwitchBuff(...)
     endif
     return 0
 endfunction
-"}}}}}            
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -6469,62 +6470,49 @@ endfunction
 nnoremap <leader>a :call ExtractKeyCodes()<cr>
 function! ExtractKeyCodes(...)
     "{{{{{3 变量定义
-    let curline = 0
-    let filename = ""
-    let filelist = []
-    let foldlevel = 0
     let codelist = []
     let idx1 = 0
     let start = 0
-    let laststart = 0
-    let lastfoldlevel = 0
     let tempchar = ""
     let realityline = 0
-    let col = 0
     let path = ""
     let foldstring = ""
     let srcnum = 0
     let tailnum = 0
-    let idj1 = 0
     let idk1 = 0
+    let numberlist = []
     "}}}}
-    let lastfoldlevel = &foldlevel
     setlocal foldmethod=syntax
-    let filename = expand("%:p")
-    "call FormatCode(filename)
     if a:0 ==# 0
         let realityline = line('.')
+        let g:debugflag = 10
     elseif a:0 ==# 1
         call cursor(a:1,0)
         let realityline = a:1
     endif
     let col = col('.')
-    let curline = realityline
-    let laststart = realityline
-    let filelist = readfile(filename)
-    let foldlevel = foldlevel(curline)
-    echo foldlevel
-    let foldstring = getline(curline)
+    let foldstring = getline(realityline)
     if (count(foldstring,'(') != count(foldstring,')'))
-        let srcnum  = line('.')
-        silent execute "normal! 0f(%"
-        let tailnum = line('.')
+        let numberlist = MergeLinesOfCode(realityline)
+        let srcnum  = numberlist[0]
+        let tailnum = numberlist[1]
         if srcnum < tailnum
             let foldstring =  GatherIntoRow(srcnum,tailnum)
         endif
     endif
     let codelist = add(codelist,foldstring)
-    let idx1 = foldlevel
+    let idx1 = 1
     while idx1 > 0
-        let &foldlevel=idx1 -1
-        let start = foldclosed(curline)
+        let start = searchpairpos('{', '','}', 'b')[0]
+        if start ==# 0
+            let idx1 = 0
+        endif
         let foldstring = getline(start)
         "目标行格式不对
         if ((count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {")
-            call cursor(start,0)
-            let tailnum = start
-            silent execute "normal! $F)%"
-            let srcnum = line('.')
+            let numberlist = MergeLinesOfCode(start)
+            let srcnum  = numberlist[0]
+            let tailnum = numberlist[1]
             if srcnum < tailnum
                 let foldstring =  GatherIntoRow(srcnum,tailnum)
             endif
@@ -6533,12 +6521,9 @@ function! ExtractKeyCodes(...)
         if matchstr(foldstring," switch")  != ""
             "前一个不是case
             if matchstr(codelist[0]," case .*:")  ==# ""
-                let start = foldclosed(curline)
-                let end = foldclosedend(curline)
-                echo start
-                echo end
-                let tempchar = filelist[start  - 1:end  - 1]
-                let idk1 = laststart - start
+                let end = searchpairpos('{', '','}', 'w')[0]
+                let tempchar = getline(start,end)
+                let idk1 = realityline - start
                 while idk1 > 0
                     if matchstr(tempchar[idk1]," case .*:") != ""
                         let codelist = insert(codelist,tempchar[idk1])
@@ -6548,16 +6533,15 @@ function! ExtractKeyCodes(...)
                 endwhile
             endif
         endif
-        let codelist = insert(codelist,foldstring)
-        let laststart = foldclosed(curline)
-        let idx1 -= 1
+        if start != 0
+            let codelist = insert(codelist,foldstring)
+            call cursor(start,0)
+        endif
     endwhile
-    let &foldlevel=lastfoldlevel
     if a:0 ==# 0
         let path = expand("%:p")
         let path =  substitute(path , g:homedir . '/' , '', 'g')
         let codelist = insert(codelist,path.':'. realityline  .':')
-        "silent execute "normal! :e " . filename "\<cr>"
         silent call cursor(realityline,col)
         let @d = string(codelist)
         call AddNumber3(codelist)
@@ -7570,7 +7554,7 @@ function! GrepChars(timer)
         let @/ = substitute(searchs , '\\(', '(', 'g')
     endif
     let searchstarge =  system(command)
-    if len(split(searchstarge,"\n")) < 200  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
+    if len(split(searchstarge,"\n")) < 600  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
         let searchstarge = SelectEntireCode(copy(searchstarge))
     endif
     let searchstarge = SimplifySearchResults(copy(searchstarge))
