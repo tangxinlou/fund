@@ -620,7 +620,7 @@ function! s:Copy2file(type)
         echo "复制公共文件到本地"
         while idx1 < len(templist)
             call append(line('.'), templist[idx1])
-            call cursor(line('.') + 1,0)
+            call cursor(line('.') + 1,1)
             let idx1 += 1
         endwhile
     else
@@ -1411,7 +1411,7 @@ function! Dbug(...)
                 let g:debuglist = add(g:debuglist,tempchar)
             elseif append ==# 1
                 call append(line('.'),tempchar)
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
                 let g:debuglist = add(g:debuglist,tempchar)
             elseif append ==# 2
                 let g:debuglist = add(g:debuglist,tempchar)
@@ -1714,7 +1714,6 @@ function! SimplifySearchResults(...)
     endif
     while idx1 < len(searchstarge)
         let temchar = join(split(searchstarge[idx1],":")[2:])
-        if 10 > g:debugflag | call Dbug( "tangxinlou",10,2) | endif
         let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
         if matchstr(split(searchstarge[idx1],":")[0],".xml") ==# ""
             if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
@@ -1910,15 +1909,15 @@ function! SmartFileSwitching(...)
         if bufinfoflag ==# 0
             silent execute "normal! \<c-w>k"
             silent execute "normal! :e "  . path . "\<cr>"
-            call cursor(line,0)
+            call cursor(line,1)
         else
             if targetwinid ==# 0
                 silent execute "normal! \<c-w>k"
                 silent execute "normal! :b" . bufinfoflag . "\<cr>"
-                call cursor(line,0)
+                call cursor(line,1)
             else
                 silent call win_gotoid(targetwinid)
-                call cursor(line,0)
+                call cursor(line,1)
             endif
         endif
     elseif flag ==# 2
@@ -1927,7 +1926,7 @@ function! SmartFileSwitching(...)
         let line = @b
         if &filetype != "markdown"
             execute "normal! :tabnew " . path  . "\<cr>"
-            silent call cursor(line,0)
+            silent call cursor(line,1)
         else
             if matchstr(path,"/opt6/tangxinlouosc") ==# ""
                 let path = g:homedir . '/' . path
@@ -1938,7 +1937,7 @@ function! SmartFileSwitching(...)
             if templine != 0
                 let line = templine
             endif
-            silent call cursor(line,0)
+            silent call cursor(line,1)
         endif
     endif
     setlocal foldmethod=syntax
@@ -2180,7 +2179,7 @@ function! FunctionList(...)
     while idx1 <= line('$')
         let currentString  = getline(idx1)
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! $F)%"
             if CheckStringIsObtainOfList(getline('.'),g:nonfunctionlist)
             else
@@ -2208,7 +2207,7 @@ endfunction
 function! SelectEntireCode(...)
     "{{{{{3 变量定义
    " let searchs = "setActivedevice"
-    let searchs = "setA"
+    let searchs = "seta"
     let command = ""
     let searchstarge = ""
     let tempchar = ""
@@ -2229,7 +2228,7 @@ function! SelectEntireCode(...)
     if a:0 ==# 0
         let g:debugflag = 6
         let searchstarge = []
-        let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+        let command = "grep -EsinR --include=*{.c,.cc,.java,.h,.xml} " . "'" . searchs . "'"
         let searchstarge =  system(command)
         let searchstarge = split(searchstarge,"\n")
         if 10 > g:debugflag | call Dbug( "begin",10,1) | endif
@@ -2244,9 +2243,9 @@ function! SelectEntireCode(...)
     let idx1 = 0
     while idx1 < len(searchstarge)
             let filename = split(searchstarge[idx1],":")[0]
-        if idx1 ==# 0
+        if idx1 ==# 0 && matchstr(filename,".xml") ==# ""
             let filelist = add(filelist,filename)
-        elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
+        elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename  && matchstr(filename,".xml") ==# ""
             let filelist = add(filelist,filename)
         endif
         let idx1 += 1
@@ -2266,30 +2265,33 @@ function! SelectEntireCode(...)
         endif
         let filename = currentstrlist[0]
         let line = currentstrlist[1]
-        if idx1 ==# 0
-            if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
-            if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
-            call SwitchBuff(filename)
-            if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
-        elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
-            if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
-            call SwitchBuff(filename)
-            if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
-        endif
-        silent setlocal foldmethod=syntax
-        if 3 > g:debugflag | call Dbug( currentstrlist[2],3) | endif
-        if 3 > g:debugflag | call Dbug( filename,3) | endif
-        if 3 > g:debugflag | call Dbug( line,3) | endif
-        let numberlist = MergeLinesOfCode(line)
-        if 3 > g:debugflag | call Dbug( numberlist,3) | endif
-        if len(numberlist) != 0
-            let srcnum = numberlist[0]
-            let tailnum = numberlist[1]
-            let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
-            let searchstarge[idx1] = join(currentstrlist,":")
+        if matchstr(filename,".xml") ==# ""
+            if idx1 ==# 0
+                if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
+                if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
+                call SwitchBuff(filename)
+                if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
+            elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
+                if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
+                call SwitchBuff(filename)
+                if 10 > g:debugflag | call Dbug( "opened" . filename,10,2) | endif
+            endif
+            silent setlocal foldmethod=syntax
+            if 3 > g:debugflag | call Dbug( currentstrlist[2],3) | endif
+            if 3 > g:debugflag | call Dbug( filename,3) | endif
+            if 3 > g:debugflag | call Dbug( line,3) | endif
+            let numberlist = MergeLinesOfCode(line)
+            if 3 > g:debugflag | call Dbug( numberlist,3) | endif
+            if len(numberlist) != 0
+                let srcnum = numberlist[0]
+                let tailnum = numberlist[1]
+                let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
+                let searchstarge[idx1] = join(currentstrlist,":")
+            else
+                let currentstrlist[2] = currentstrlist[2] . "注释"
+                let searchstarge[idx1] = join(currentstrlist,":")
+            endif
         else
-            let currentstrlist[2] = currentstrlist[2] . "注释"
-            let searchstarge[idx1] = join(currentstrlist,":")
         endif
         if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
             "silent execute "normal! :wq!\<cr>"
@@ -2299,6 +2301,7 @@ function! SelectEntireCode(...)
             :q!
         endif
         if 10 > g:debugflag | call Dbug("end" ,10,2) | endif
+    
         let idx1 += 1
     endwhile
     let g:debugflag = 2
@@ -2356,9 +2359,9 @@ function! MergeLinesOfCode(...)
             let end = line
         else
             if 3 > g:debugflag | call Dbug( "tangxinlou6",3) | endif
-            silent call cursor(line,0)
+            silent call cursor(line,1)
             silent let BracketLine = search("{")
-            silent call cursor(line,0)
+            silent call cursor(line,1)
             silent let SemicolonLine = search(";")
             if BracketLine > line  || SemicolonLine > line
                 if 3 > g:debugflag | call Dbug( "tangxinlou9",3) | endif
@@ -2396,9 +2399,12 @@ function! MergeLinesOfCode(...)
             if 3 > g:debugflag | call Dbug( currentstring,3) | endif
             if (count(currentstring,'(') != count(currentstring,')'))
                 if 3 > g:debugflag | call Dbug( "tangxinlou3",3) | endif
-                silent call cursor(end,0)
+                if 3 > g:debugflag | call Dbug( end,3,0) | endif
+                silent call cursor(end,1)
                 "silent execute "normal! $F)%"  缩短到2s
                 let cursor = FindAnotherBracketPosition(')')
+                "let cursor =searchpairpos('(', '', ')', 'b')
+                if 3 > g:debugflag | call Dbug( cursor,3,0) | endif
                 let start = cursor[0]
                 return [start,end]
             else
@@ -2434,7 +2440,7 @@ function! IsComment(...)
     endif
     if issyntax ==# 1
         if 3 > g:debugflag | call Dbug( "comment 2",3,0) | endif
-        silent call cursor(line,0)
+        silent call cursor(line,1)
         "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
         call FastMoveToFirstNonBlank()
         silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
@@ -2444,7 +2450,7 @@ function! IsComment(...)
         endif
     else
         if 10 > g:debugflag | call Dbug( "comment 1",10,2) | endif
-        silent call cursor(line,0)
+        silent call cursor(line,1)
         if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
         let secondNonWhitespace = matchstr(getline('.'), '\S\{2}')
         if secondNonWhitespace ==# "//" || secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
@@ -2480,23 +2486,60 @@ endfunction
 "silent execute "normal! $F)%"
 function! FindAnotherBracketPosition(...)
     let char = a:1
+    let line = line('.')
+    let col = col('.')
+    let reallycursor = [line,col]
+    let cursor = []
+    let tempcursor = []
+    let idx1 = 1
+    let curline = -1
+    if 3 > g:debugflag | call Dbug( "findAnbegin",3,0) | endif
     if char ==# ')'
-        "silent let col =  strridx(getline('.'),')')
-        "silent call cursor(line('.'), col + 1)
         silent let cursor = searchpairpos('(', '', ')', 'b')
+        return cursor
     elseif char ==# '('
-        "silent let col =  strridx(getline('.'),'(')
-        "silent call cursor(line('.'), col + 1)
-        silent let cursor = searchpairpos('(', '', ')', 'w')
+        silent let cursor  = searchpairpos('(', '', ')', 'w')
+        return cursor
     elseif char ==# '}'
-        "silent let col =  strridx(getline('.'),'}')
-        "silent call cursor(line('.'), col + 1)
-        silent let cursor = searchpairpos('{', '', '}', 'b')
+        silent let cursor  = searchpairpos('{', '', '}', 'b')
+        if 3 > g:debugflag | call Dbug( "findanend",3,0) | endif
+        call cursor(reallycursor[0],reallycursor[1])
+        return cursor
     elseif char ==# '{'
-        "silent let col =  strridx(getline('.'),'{')
-        "silent call cursor(line('.'), col + 1)
-        silent let cursor = searchpairpos('{', '', '}', 'w')
+        silent let cursor  = searchpairpos('{', '', '}', 'w')
+        if 3 > g:debugflag | call Dbug( "end",3,0) | endif
+        call cursor(reallycursor[0],reallycursor[1])
+        return cursor
     endif
+    if char ==# '}'  || char ==# '{'
+        while idx1 > 0 
+            let curline = line('.')
+            if char ==# '}'
+                silent let cursor = searchpos('{','b')
+                if cursor[0] > curline
+                    let cursor = [0,0]
+                    return cursor
+                endif
+                silent let tempcursor = searchpairpos('{', '', '}', 'w')
+                if cursor[0] < line && line < tempcursor[0]
+                    let idx1 = 0
+                endif
+                call cursor(cursor[0],cursor[1])
+            elseif char ==# '{'
+                silent let cursor = searchpos('}','w')
+                if cursor[0] < curline
+                    let curosr = [0,0]
+                    return cursor
+                endif
+                silent let tempcursor = searchpairpos('{', '', '}', 'b')
+                if cursor[0] > line && line > tempcursor[0]
+                    let idx1 = 0
+                endif
+                call cursor(cursor[0],cursor[1])
+            endif
+        endwhile
+    endif
+    if 3 > g:debugflag | call Dbug( "end",3,0) | endif
     return cursor
 endfunction
 "}}}}}
@@ -2519,6 +2562,42 @@ function! SwitchBuff(...)
     return 0
 endfunction
 "}}}}}
+"{{{{{2 ClearBracket(...)清除多余的花括号
+
+function! ClearBracket()
+    let idx1 = 1
+    let line = line('.')
+    let col = col('.')
+    silent call cursor(1,1)
+    silent call searchpos('{','w')
+    if 3 > g:debugflag | call Dbug( "cle1",3,0) | endif
+    silent let cursor = searchpairpos('{','','}','w')
+    if 3 > g:debugflag | call Dbug( "cle2",3,0) | endif
+    if cursor[0] ==# 0 && cursor[1] ==# 0
+        while idx1 > 0
+    if 3 > g:debugflag | call Dbug( "cle3",3,0) | endif
+            silent call cursor(line('$'),col('$'))
+            silent call searchpos('}','b')
+    if 3 > g:debugflag | call Dbug( "cle4",3,0) | endif
+            silent let cursor = searchpairpos('{','','}','b')
+    if 3 > g:debugflag | call Dbug( "cle5",3,0) | endif
+            if 3 > g:debugflag | call Dbug( cursor,3,0) | endif
+            silent call setline(cursor[0],"")
+            silent call cursor(1,1)
+            silent call searchpos('{','w')
+    if 3 > g:debugflag | call Dbug( "cle6",3,0) | endif
+            silent let cursor = searchpairpos('{','','}','w')
+    if 3 > g:debugflag | call Dbug( "cle7",3,0) | endif
+            if cursor[0] != 0 && cursor[1] != 0
+                let idx1 = 0
+            endif
+    if 3 > g:debugflag | call Dbug( "cle8",3,0) | endif
+        endwhile
+    else
+    endif
+    silent call cursor(line,col)
+endfunction
+"}}}}} 
 "}}}}
 "{{{{vmake 命令
 
@@ -2594,14 +2673,14 @@ function! VmakeChange()
             let i += 1
         endwhile
         silent call append(line('.'), join(a:MyGroup3," "))
-        call cursor(line('.') + 1,0)
+        call cursor(line('.') + 1,1)
     else
         echom "tangxinlou len <1"
         silent let a:MyGroup =  system("git status . \| grep  \"On branch\"")
         let  a:MyGroup = join(split(a:MyGroup))
         if "On branch" ==# matchstr(a:MyGroup, "On branch")
             silent call append(line('.'), a:MyGroup)
-            call cursor(line('.') + 1,0)
+            call cursor(line('.') + 1,1)
         endif
     endif
 endfunction
@@ -2661,7 +2740,7 @@ function! AddNumber(...)
         "    let idx1 += 1
         "endwhile
         call append(line('.'),isnumber2)
-        "call cursor(line('.') + len(isnumber2),0)
+        "call cursor(line('.') + len(isnumber2),1)
         redraw
     endif
     return
@@ -2801,7 +2880,7 @@ function! GitStatus()
     call setline(line('.'),Gitstatus)
     let Preadd = split(Gitstatus,"\x00 ")
     "call append(line('.'),Preadd)
-    "call cursor(line('.') + len(Preadd),0)
+    "call cursor(line('.') + len(Preadd),1)
     while idx1 < len(Preadd)
         if "modified:" ==# matchstr(Preadd[idx1],"modified:")
             let idx1 += 2
@@ -2818,7 +2897,7 @@ function! GitStatus()
         endif
     endwhile
     "call append(line('.'),Preadd)
-    "call cursor(line('.') + len(Preadd),0)
+    "call cursor(line('.') + len(Preadd),1)
     return Preadd
 endfunction
 "}}}}}
@@ -2906,7 +2985,7 @@ function! GitBranch()
     "call setline(line('.'),GitBranch)
     let Prebranch = split(GitBranch,"\x00 ")
     "call append(line('.'),Prebranch)
-    "call cursor(line('.') + len(Prebranch),0)
+    "call cursor(line('.') + len(Prebranch),1)
     while idx1 < len(Prebranch)
         if ("HEAD" ==# matchstr(Prebranch[idx1],"HEAD"))
             "Prebranch->remove(idx1)
@@ -2942,7 +3021,7 @@ function! GitCheckout(...)
     endif
     let Precheckout =  GitBranch()
     call append(line('.'),Precheckout)
-    call cursor(line('.') + len(Precheckout),0)
+    call cursor(line('.') + len(Precheckout),1)
     if a:0 > 1
         return
     elseif a:0 ==# 0
@@ -2953,7 +3032,7 @@ function! GitCheckout(...)
             if  IsBranch() !=#  Precheckout[GitCheckout]
                 silent let ischeckout1  = system("git checkout " . Precheckout[GitCheckout])
                 call append(line('.'),ischeckout1)
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
             endif
             return
         else
@@ -2962,7 +3041,7 @@ function! GitCheckout(...)
                     if GitCheckout ==# i
                         silent let ischeckout1  = system("git checkout " . GitCheckout)
                         call append(line('.'),ischeckout1)
-                        call cursor(line('.') + 1,0)
+                        call cursor(line('.') + 1,1)
                         return
                     endif
                 endif
@@ -2975,7 +3054,7 @@ function! GitCheckout(...)
             if  IsBranch() !=# a:1
                 silent let ischeckout1  = system("git checkout " . a:1)
                 call append(line('.'),ischeckout1)
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
                 return
             endif
         endif
@@ -3125,7 +3204,7 @@ function! IsUpdate()
         return
     endif
     call AddNumber(curpath1)
-    call cursor(line('.') + len(curpath1) + 1,0)
+    call cursor(line('.') + len(curpath1) + 1,1)
     let curxmlfile = IsVersion()
     while 1
         echo "当前xml是" . curxmlfile[len(curxmlfile) - 3]
@@ -3353,7 +3432,7 @@ function! GitBlame()
     let isblame1 = split(isblame1,"\n")
     call append(line('.'),isblame1)
     execute "normal! dd"
-    call cursor(line,0)
+    call cursor(line,1)
 endfunction
 "}}}}
 "{{{{{2 function! CompareVersion()               比较两个版本
@@ -3598,7 +3677,7 @@ function! GetMainLine()
     let isblame1 = split(isblame1,"\n")
     call append(line('.'),isblame1)
     execute "normal! dd"
-    call cursor(line,0)
+    call cursor(line,1)
 endfunction
 "}}}}
 "{{{{{2 function! DynamicDiff()                  DynamicDiff 动态选择内容比较  可视模式下逗号 + d 调用
@@ -6011,7 +6090,7 @@ function! TraverseNodes(...)
                 let structdictall[structname] = ListToDict(filespath,matchchar,structname,headnode)
                 if ischildcall ==# 0
                     execute "normal! :r!date +\\%F-\\%T\<cr>"
-                    call cursor(line('.') + 1,0)
+                    call cursor(line('.') + 1,1)
                     let structdictall[structname].00structuremembername = structname
                     let structdictall["blacklist"] = blacklist
                 elseif  ischildcall ==# 1
@@ -6068,12 +6147,12 @@ function! TraverseNodes(...)
             "call append(line("."),structdict["structuremembername"] )
             if ischildcall ==# 0
                 execute "normal! :r!date +\\%F-\\%T\<cr>"
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
                 call append(line("."),string(structdict))
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
                 let dictlist = PrintDict(structdict)
                 call append(line("."),dictlist)
-                call cursor(line('.') + 1,0)
+                call cursor(line('.') + 1,1)
                 " call append(line("."),"tangxinloufakdfklad")
                 " call cursor(line('.') + 1,0)
                 " call append(line("."),structdictall["blacklist"])
@@ -6485,14 +6564,16 @@ function! ExtractKeyCodes(...)
     setlocal foldmethod=syntax
     if a:0 ==# 0
         let realityline = line('.')
-        let g:debugflag = 10
+        let g:debugflag = 2
     elseif a:0 ==# 1
-        call cursor(a:1,0)
+        call cursor(a:1,1)
         let realityline = a:1
     endif
+    if 22 > g:debugflag | call Dbug( "begin",22,0) | endif
     let col = col('.')
     let foldstring = getline(realityline)
     if (count(foldstring,'(') != count(foldstring,')'))
+        if 3 > g:debugflag | call Dbug( "11",3,0) | endif
         let numberlist = MergeLinesOfCode(realityline)
         let srcnum  = numberlist[0]
         let tailnum = numberlist[1]
@@ -6500,17 +6581,25 @@ function! ExtractKeyCodes(...)
             let foldstring =  GatherIntoRow(srcnum,tailnum)
         endif
     endif
+    if 22 > g:debugflag | call Dbug( "clebegin",22,0) | endif
+    call ClearBracket()
+    if 22 > g:debugflag | call Dbug( "cleend",22,0) | endif
+    if 20 > g:debugflag | call Dbug( "begin1",20,0) | endif
     let codelist = add(codelist,foldstring)
     let idx1 = 1
     while idx1 > 0
-        let start = searchpairpos('{', '','}', 'b')[0]
-        if start ==# 0
+        if 11 > g:debugflag | call Dbug( "findbegin",11,0) | endif
+        let start = FindAnotherBracketPosition('}')
+        if 11 > g:debugflag | call Dbug( "findend",11,0) | endif
+        if start[0] ==# 0
             let idx1 = 0
         endif
-        let foldstring = getline(start)
+        let foldstring = getline(start[0])
+        if 11 > g:debugflag | call Dbug( foldstring,11,0) | endif
         "目标行格式不对
+        if 11 > g:debugflag | call Dbug( "ifbegin",11,0) | endif
         if ((count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {")
-            let numberlist = MergeLinesOfCode(start)
+            let numberlist = MergeLinesOfCode(start[0])
             let srcnum  = numberlist[0]
             let tailnum = numberlist[1]
             if srcnum < tailnum
@@ -6520,10 +6609,11 @@ function! ExtractKeyCodes(...)
         "当前是switch
         if matchstr(foldstring," switch")  != ""
             "前一个不是case
+            if 11 > g:debugflag | call Dbug( "switbegin",11,0) | endif
             if matchstr(codelist[0]," case .*:")  ==# ""
-                let end = searchpairpos('{', '','}', 'w')[0]
-                let tempchar = getline(start,end)
-                let idk1 = realityline - start
+                let end = FindAnotherBracketPosition('{')
+                let tempchar = getline(start[0],end[0])
+                let idk1 = realityline - start[0]
                 while idk1 > 0
                     if matchstr(tempchar[idk1]," case .*:") != ""
                         let codelist = insert(codelist,tempchar[idk1])
@@ -6532,12 +6622,15 @@ function! ExtractKeyCodes(...)
                     let idk1 -= 1
                 endwhile
             endif
+            if 11 > g:debugflag | call Dbug( "switchend",11,0) | endif
         endif
-        if start != 0
+        if start[0] != 0
             let codelist = insert(codelist,foldstring)
-            call cursor(start,0)
+            call cursor(start[0],start[1])
         endif
+        if 11 > g:debugflag | call Dbug( "ifend",11,0) | endif
     endwhile
+    if 22 > g:debugflag | call Dbug( "end",22,0) | endif
     if a:0 ==# 0
         let path = expand("%:p")
         let path =  substitute(path , g:homedir . '/' , '', 'g')
@@ -6613,7 +6706,7 @@ function! FormatCode(...)
         let tempchar = getline(idx1)
         let left = count(tempchar,'(')
         let right = count(tempchar,')')
-        call cursor(idx1,0)
+        call cursor(idx1,1)
         redraw
         "echo idx1
         "echo tempchar
@@ -6642,7 +6735,7 @@ function! FormatCode(...)
                 "endif
                 "把文件开头到第一个字符的空口清理
                 silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
-                call cursor(start,0)
+                call cursor(start,1)
                 "把换行符去掉
                 silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
                 silent execute "normal! \<esc>"
@@ -6690,7 +6783,7 @@ function! FormatCode(...)
            let idx1 = idx1 -2
        elseif (count(tempchar,'implements') != 0) && (count(tempchar,"class") != 0) && (count(tempchar,"Stub") != 0)
            "删掉binder stub的代码
-           call cursor(idx1,0)
+           call cursor(idx1,1)
            let start = idx1
            silent execute "normal! 0f{%"
            let end = line('.')
@@ -6721,7 +6814,7 @@ function! FormatCode(...)
            "endif
            "把文件开头到第一个字符的空口清理
            silent execute ":" . (start + 1) . "," . end . "s/^\\s\\+//g"
-           call cursor(start,0)
+           call cursor(start,1)
            "把换行符去掉
            silent execute ":" . start . "," . (end - 1) . ":s/\\n//g"
            silent execute "normal! \<esc>"
@@ -6729,7 +6822,7 @@ function! FormatCode(...)
        else
            "行中有不成对的小括号这种行会造成折叠不准确，直接删除
             if left != right
-                call cursor(idx1,0)
+                call cursor(idx1,1)
                 let start = idx1
                 silent call execute("normal! 0f(")
                 let col = col('.')
@@ -6737,14 +6830,14 @@ function! FormatCode(...)
                 let col1 = col('.')
                 let end = line('.')
                 if start ==# end && count(tempchar,'(') != 0 && col ==# col1
-                    call cursor(idx1,0)
+                    call cursor(idx1,1)
                     silent execute "normal! dd"
                     let idx1 = idx1 -1
                 endif
             endif
             "//{ 和//}的注释行直接删除
             if matchstr(tempchar,'\/\/.*{') != "" || matchstr(tempchar,'\/\/.*}') != ""
-                call cursor(idx1,0)
+                call cursor(idx1,1)
                 silent execute ":" idx1 . "s/\\/\\/.*\*\\///g"
                 if len(split(getline(idx1))) ==# 0
                     silent execute "normal! dd"
@@ -6753,7 +6846,7 @@ function! FormatCode(...)
             endif
             " <--------------- 这种行直接删除
             if matchstr(tempchar,"<---------------") != ""
-                call cursor(idx1,0)
+                call cursor(idx1,1)
                 silent execute "normal! dd"
                 let idx1 = idx1 -1
             endif
@@ -6766,13 +6859,13 @@ function! FormatCode(...)
     let idx1 = 1
     while idx1 <= filelen
         let tempchar = getline(idx1)
-        call cursor(idx1,0)
+        call cursor(idx1,1)
         redraw
         "call input("11")
         if  matchstr(tempchar,'//') != ""  && count(tempchar,';') ==# 0
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute ":" idx1 . "s/\\/\\/.*$//g"
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             if len(split(getline(idx1))) ==# 0
                 silent execute "normal! dd"
             endif
@@ -6781,7 +6874,7 @@ function! FormatCode(...)
             silent execute ":" idx1 . "s/\\/\\/.*$//g"
             let idx1 = idx1 -1
         elseif (matchstr(tempchar,'log\..') != ""  && count(tempchar,';') != 0) || (matchstr(tempchar,' log(') != ""  && count(tempchar,';') != 0)
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! dd"
             let idx1 -= 1
         elseif matchstr(tempchar,'\/\*') != "" && matchstr(tempchar,'\*\/') ==# ""
@@ -6801,15 +6894,15 @@ function! FormatCode(...)
                 let idx1 = start -1
             endif
         elseif matchstr(tempchar,'\/\*') != "" && matchstr(tempchar,'\*\/') != ""
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute ":" idx1 . "s/\\/\\*.*$//g"
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             if len(split(getline(idx1))) ==# 0
                 silent execute "normal! dd"
             endif
             let idx1 = idx1 -1
         elseif len(tempchar) ==# 0
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! dd"
             let idx1 = idx1 -1
         endif
@@ -6820,10 +6913,10 @@ function! FormatCode(...)
     let idx1 = 1
     while idx1 <= filelen
         let tempchar = getline(idx1)
-        call cursor(idx1,0)
+        call cursor(idx1,1)
         redraw
         if matchstr(tempchar,'@') != ""  && count(tempchar,'{') ==# 0 && count(tempchar,'}') ==# 0  && count(tempchar,';') ==# 0
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! dd"
             let idx1 -= 1
         endif
@@ -6888,7 +6981,7 @@ function! AddDebugLog(...)
             else
                 let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
                 call append(line,stackchar)
-                call cursor(line + 1,0)
+                call cursor(line + 1,1)
                 silent execute "normal! =="
 
                 silent execute "normal! gg"
@@ -6901,21 +6994,21 @@ function! AddDebugLog(...)
         else
             let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
             call append(line,stackchar)
-            call cursor(line + 1,0)
+            call cursor(line + 1,1)
             silent execute "normal! =="
         endif
-        call cursor(line,0)
+        call cursor(line,1)
     elseif  matchstr(expand('%:t'),".java") ==# ".java"
         let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
         if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
-            call cursor(line + 1,0)
+            call cursor(line + 1,1)
             silent execute "normal! 0f(%"
             call append(line('.'),packagechar)
-            call cursor(line('.') + 1,0)
+            call cursor(line('.') + 1,1)
             let line = line('.')
         else
             call append(line,packagechar)
-            call cursor(line + 1,0)
+            call cursor(line + 1,1)
         endif
         silent execute "normal! =="
         if search("import \.*.Log;") ==# 0
@@ -6926,7 +7019,7 @@ function! AddDebugLog(...)
                 let line += 1
             endif
         endif
-        call cursor(line,0)
+        call cursor(line,1)
     endif
 
     set ignorecase
@@ -7616,7 +7709,7 @@ function! SearcherChars()
         if win_gotoid(g:windowgrepid) ==# 1
             if @@ != ""
                 call setline(1,@@)
-                call cursor(1,0)
+                call cursor(1,1)
             endif
             return
         endif
@@ -7637,7 +7730,7 @@ function! SearcherChars()
                 execute "normal! yw"
                 if @@ != ""
                     call setline(1,@@)
-                    call cursor(1,0)
+                    call cursor(1,1)
                 endif
                 return
             endif
@@ -7825,7 +7918,7 @@ function! SearcherlogChars()
             if win_gotoid(g:greplog2list[index][1]) ==# 1
                 if @@ != ""
                     call setline(1,@@)
-                    call cursor(1,0)
+                    call cursor(1,1)
                 endif
             endif
         else
@@ -9438,7 +9531,7 @@ function! FileAddLog(...)
     while idx1 <= line('$')
         let currentString  = getline(idx1)
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! $F)%"
             if CheckStringIsObtainOfList(getline('.'),abnormallist)
             else
@@ -9456,7 +9549,7 @@ function! FileAddLog(...)
             endif
         endif
         if matchstr(currentString,"  case .*:") != ""
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             if line('.') ==# idx1
                 let targetline = idx1
                 let functionname = matchstr(currentString,"case .*:")
@@ -9504,7 +9597,7 @@ function! FouncDeleLog()
     while idx1 <= line('$')
         let currentString  = getline(idx1)
         if matchstr(currentString,"tangxinlou debug") ==# "tangxinlou debug"
-            call cursor(idx1,0)
+            call cursor(idx1,1)
             silent execute "normal! dd"
         else
             let idx1 += 1
