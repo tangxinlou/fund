@@ -6673,9 +6673,13 @@ function! ExtractKeyCodes(...)
         let col = match(getline('.'), '\S')
         if col > 4
             let start = FindAnotherBracketPosition('}')
-        elseif col ==# 4
+        elseif col <= 4
             let idx1 = 0
-            let start = FindAnotherBracketPosition('}',1)
+            if matchstr(expand("%:t"),'\.java') != ""
+                let start = FindAnotherBracketPosition('}',1)
+            else
+                let start = FindAnotherBracketPosition('}')
+            endif
         endif
         if 11 > g:debugflag | call Dbug( "findend",11,0) | endif
         let foldstring = getline(start[0])
