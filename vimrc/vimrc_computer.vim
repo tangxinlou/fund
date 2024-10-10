@@ -421,6 +421,7 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 let g:nonfunctionlist = ["if(",
             \"} catch",
+            \"namespace",
             \"if (",
             \"try{",
             \"try {",
