@@ -50,7 +50,8 @@ set hlsearch
 set incsearch
 set number
 set modifiable
-set ignorecase
+"set ignorecase
+set noignorecase
 set ruler
 set magic
 set fileformats=unix
@@ -129,6 +130,8 @@ iabbrev gitreflog git reflog
 iabbrev gitbranch git branch -a --contains
 "iabbrev gitlog git log --graph --oneline  --decorate
 "repo sync --local-only
+iabbrev gitadd git add --intent-to-add .
+iabbrev gitdiff git diff --binary > my_patch.patch
 iabbrev gitlog  git log --graph --oneline  --decorate  --pretty=format:"\%cr \%cn \%H \%s"
 iabbrev gitcherrypick  git cherry-pick
 iabbrev gitlogbranch git log --graph --decorate --oneline --all
@@ -136,6 +139,7 @@ iabbrev gitfile git log  --pretty=oneline
 iabbrev gitchange git  log --oneline  --decorate --pretty=format:"\%cr \%cn \%H \%s" --all  --grep
 iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
+"git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
 "auto command自动命令{{{
 ""创建空文件和自动注释
@@ -1014,10 +1018,11 @@ function! IsContain(...)
     let idx1 = 0
     let string = a:1
     let list = a:2
+    let string = escape(string, '[]')
     "}}}}
     while idx1 < len(list)
         let char = matchstr(list[idx1],string)
-        if matchstr(list[idx1],string) != ""
+        if char != ""
             return list[idx1]
         endif
         let idx1 += 1
@@ -2240,7 +2245,7 @@ function! SelectEntireCode(...)
         endif
         let filename = currentstrlist[0]
         let line = currentstrlist[1]
-        if matchstr(filename,".xml") ==# ""
+        if matchstr(filename,'\.xml') ==# "" && matchstr(filename,'\.h') ==# ""
             if idx1 ==# 0
                 if 10 > g:debugflag | call Dbug( "open" . filename,10,2) | endif
                 if 10 > g:debugflag | call Dbug( "opening" . filename,10,2) | endif
@@ -2334,6 +2339,8 @@ function! MergeLinesOfCode(...)
     if iscomment ==# 0
         let currentstring = getline(line)
         if matchstr(currentstring,"  implements ") != ""
+            return [line -1 , line]
+        elseif matchstr(currentstring,'^\s*{') != ""
             return [line -1 , line]
         elseif matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";"
             let end = line
@@ -2453,19 +2460,25 @@ function! IsComment(...)
         silent call cursor(line,1)
         if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
         let secondNonWhitespace = matchstr(getline('.'), '\S\{2}')
-        if secondNonWhitespace ==# "//" || secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
+        if secondNonWhitespace ==# "//"
             let iscomment = 1
+        elseif  secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
+            "split(getline('.'),"*/")
+            if len(split(join(split(getline(line))),"*/")) > 0
+                let iscomment = 1
+            endif
         else
             if 10 > g:debugflag | call Dbug( "findbegin",10,2) | endif
             silent let endcursor = searchpos('\*\/','w')
             silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
             if 10 > g:debugflag | call Dbug( "findend",10,2) | endif
-            if startcursor[0] < line &&  line < endcursor[0]
+            if startcursor[0] <= line &&  line <= endcursor[0]
                 let iscomment = 1
             endif
         endif
     endif
     if 10 > g:debugflag | call Dbug("commentend" ,10,2) | endif
+    call cursor(line,1)
     return iscomment
 endfunction
 "}}}}}
@@ -2520,6 +2533,10 @@ function! FindAnotherBracketPosition(...)
             silent let cursor =  searchpos('}','w')
         endif
         silent let cursor  = searchpairpos('{', '', '}', 'b')
+        if IsComment(cursor[0]) ==# 1
+            "echo searchpairpos(') {', '', '}', 'b')
+           let cursor = FindAnotherBracketPosition('}')
+        endif
         if 3 > g:debugflag | call Dbug( "findanend",3,0) | endif
         return cursor
     elseif char ==# '{'
@@ -2528,6 +2545,7 @@ function! FindAnotherBracketPosition(...)
         if (count(tempchar,'{') != 0 && count(tempchar,'}') != 0)  && (StringPosition(tempchar,'{')[0] < StringPosition(tempchar,'}')[0])
             silent let cursor =  searchpos('{','b')
         endif
+        "silent let cursor  = searchpairpos('@{', '', '@}', 'w')
         silent let cursor  = searchpairpos('{', '', '}', 'w')
         if 3 > g:debugflag | call Dbug( "end",3,0) | endif
         return cursor
@@ -2638,7 +2656,7 @@ function! ResultClassification(...)
     let TEST = []             "test
     let XML = []              "xml
     let HHH = []              "头文件
-    let judgechar = ["if ","for "]
+    let judgechar = ["if ","for "," case "]
     let searchstarge = a:1
     let temchar = ""
     let tempchar = ""
@@ -2729,6 +2747,72 @@ function! StandardCharacters(...)
     return foldstring
 endfunction
 "}}}}}
+"{{{{{2 SetOperationsBetweenLists(...) 列表间集合运算
+function! SetOperationsBetweenLists(...)
+    let Alist = a:1
+    let Blist = a:2
+    let flag = a:3
+    let AB = []  "A 中B 没有的元素
+    let BA = []  "B中A没有的元素
+    let result = []
+    let idx1 = 0
+    "差集 A-B B-A
+    if flag ==# "差集"
+        let idx1 = 0
+        while idx1 < len(Alist)
+            if count(Blist,Alist[idx1]) ==# 0
+                let AB = add(AB,idx1)
+            endif
+            let idx1 += 1
+        endwhile
+        let idx1 = 0
+        while idx1 < len(Blist)
+            if count(Alist,Blist[idx1]) ==# 0
+                let BA = add(BA,idx1)
+            endif
+            let idx1 += 1
+        endwhile
+        let result = add(result,AB)
+        let result = add(result,BA)
+        return result
+    endif
+endfunction
+"}}}}}
+"{{{{{2 SelectionFromTheList(...)列表中摘选
+function! SelectionFromTheList(...)
+    let childlist = a:1
+    let totallist = a:2
+    let resultlist = []
+    let iscontain =  ""
+    let idx1 = 0
+    let index = 0
+    let lastindex = -1
+    while idx1 < len(childlist)
+        let iscontain =  IsContain(childlist[idx1],totallist)
+        let index = index(totallist,iscontain)
+        if index > lastindex
+            let resultlist = add(resultlist,iscontain)
+        else
+            let resultlist = insert(resultlist,iscontain)
+        endif
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
+"{{{{{2 SelectionFromTheListByIndex(...)列表中摘选通过index
+function! SelectionFromTheListByIndex(...)
+    let indexlist = a:1
+    let totallist = a:2
+    let idx1 = 0
+    let resultlist = []
+    while idx1 < len(indexlist)
+        let resultlist = add(resultlist,totallist[indexlist[idx1]])
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -2767,7 +2851,7 @@ function! VmakeChange()
     execute "normal! 03f\"ci\"\<esc>\"up"
     execute "normal! 03f\"lvllllly05f\"lvlllllp017f\"ci\"\<esc>:r!pwd\<cr>0v$hdk017f\"p0jddk"
     " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
-    execute "normal! 011f\"ci\" system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_qti_jni.so system/lib64/libbluetooth_qti.so ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
+    execute "normal! 011f\"ci\" system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_qti_jni.so system/lib64/libbluetooth_qti.so ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../qssi/system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
     execute "normal! 03f\"lvfAhh\"uy"
     echo "tangxinlou"
     if  "ard_12.0" ==#  curversion[len(curversion) - 3]
@@ -3266,14 +3350,36 @@ endfunction
 "{{{{{2 function! CycleCherry()                    循环cherry pick  逗号cher调用
 nnoremap <leader>cher :call CycleCherry()<cr>
 function! CycleCherry()
-    let cherrylist = ParsingCherry()
+    let flag = input("合tag1，合修改2")
+    let cherrylist = ""
     let idx1 = 0
     let templist = []
-    while idx1 < len(cherrylist)
-        let templist = split(cherrylist[idx1],"█")
-        call CherryPick(templist[0],templist[1],templist[2])
-        let idx1 += 1
-    endwhile
+    if flag ==# 1
+        let cherrylist = ParsingCherry()
+        let idx1 = 0
+        let templist = []
+        while idx1 < len(cherrylist)
+            let templist = split(cherrylist[idx1],"█")
+            call CherryPick(templist[0],templist[1],templist[2])
+            let idx1 += 1
+        endwhile
+    else
+        let templist = reverse(getline(1,'$'))
+        echom string(templist)
+        let idx1 = 0
+        while idx1 < len(templist)
+            call RepeatedlyCherry(templist[idx1])
+            let idx1 += 1
+        endwhile
+    endif
+endfunction
+"}}}}
+"{{{{{2 RepeatedlyCherry()                    cherry pick 多笔
+function! RepeatedlyCherry(...)
+    let commitid = a:1
+    let resultchar = ""
+    let resultchar = system("git cherry-pick " . commitid)
+    call GitAdd()
 endfunction
 "}}}}
 "{{{{{2  ParsingCherry()                    解析cherry pick信息
@@ -3398,24 +3504,29 @@ function! IsUpdate()
         echo "路径错误"
         return
     endif
-    call AddNumber(curpath1)
-    call cursor(line('.') + len(curpath1) + 1,1)
-    let curxmlfile = IsVersion()
-    while 1
-        echo "当前xml是" . curxmlfile[len(curxmlfile) - 3]
-        if "yes" ==# input("是否重新选择")
-            let curxmlfile = IsVersion()
+    if a:0 ==# 0
+        call AddNumber(curpath1)
+        call cursor(line('.') + len(curpath1) + 1,1)
+        let curxmlfile = IsVersion()
+        while 1
+            echo "当前xml是" . curxmlfile[len(curxmlfile) - 3]
+            if "yes" ==# input("是否重新选择")
+                let curxmlfile = IsVersion()
 
-        else
-            if "yes" ==# input("是否打开")
-                break
+            else
+                if "yes" ==# input("是否打开")
+                    break
+                endif
             endif
-        endif
-    endwhile
-    execute "normal! Go\<esc>"
-    call append(line('.'),curxmlfile)
-    redraw
-    let isupdate1 = input("请输入需要重置的路径编号，或者全部更新选a")
+        endwhile
+        execute "normal! Go\<esc>"
+        call append(line('.'),curxmlfile)
+        redraw
+        let isupdate1 = input("请输入需要重置的路径编号，或者全部更新选a")
+    else
+        let curxmlfile = a:1
+        let isupdate1 = 'a'
+    endif
     if isupdate1 ==# 'a'
         while idx1 < len(curpath)
             let curpath2 = split(curpath[idx1],"/")
@@ -3725,7 +3836,8 @@ function! CompareVersion()
                         else
                             echo "tangxinlou2"
                             let versiondiff = add(versiondiff ,"<<<<<<<<<代码仓开始<<<<<<<<")
-                            let versionstring = CompareversionBranch(isupdate3,curxmlfile,curxmlfile1,idx2 * 2)
+                            "let versionstring = CompareversionBranch(isupdate3,curxmlfile,curxmlfile1,idx2 * 2)
+                            let versionstring =  CompareTwoBranchChanges(curpath[idx1],curxmlfile,curxmlfile1,idx2 * 2,"tangxinlouosc")
                             let versionstring = add(versionstring,join(['"','}','}','}','}',">>>>>>>>>>>代码仓修改结尾>>>>>>>>"],"\x00"))
                             let versiondiff = extend(versiondiff ,versionstring)
                         endif
@@ -4395,6 +4507,89 @@ function! CleanUpTheCodeFormat(...)
     call append(line('.'),codelist)
 endfunction
 "}}}}}
+"{{{{{2 function! SelectAndModifyByName(...) 根据名字刷选修改
+function!  SelectAndModifyByName(...)
+    let idx1 = 0
+    let templist = []
+    let tempchar = ""
+    if a:0 ==# 1
+        let keychar = a:1
+    else
+        let keychar = input("查找谁的提交")
+        "let keychar = "tangxinlouosc"
+    endif
+    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%cd█\%an█\%H█\%s"
+    let resultlist = split(system(command),"\n")
+    while idx1 < len(resultlist)
+        let tempchar = split(resultlist[idx1],"█")
+        if matchstr(tempchar[3],"Merge ") ==# ""
+            if keychar ==# "" || matchstr(tempchar[1],keychar) != ""
+                let templist = add(templist,resultlist[idx1])
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    if a:0 ==# 0
+        call append(line('.'),templist)
+    end
+    return templist
+endfunction
+"}}}}
+"{{{{{2  SwitchBranches() 切分支到最新
+function! SwitchBranches(...)
+    let branch = a:1
+    let commit = a:2
+    call system("git fetch")
+    call system("git checkout " . branch)
+    call system("git pull --rebase")
+    call system("git reset --hard " . commit)
+endfunction
+"}}}}
+"{{{{{2  CompareTwoBranchChanges() 比较两分支修改
+function! CompareTwoBranchChanges(...)
+    let path = a:1
+    let curxmlfile = a:2
+    let curxmlfile1 = a:3
+    let index = a:4
+    let keychar = a:5
+    let version1 = []
+    let version2 = []
+    let branch = ""
+    let commit = ""
+    let Collection = []
+    let AB = []
+    let BA = []
+    let resultlist = []
+
+    call execute(":lcd " . path)
+    let branch = curxmlfile[index + 1]
+    let commit =  curxmlfile[index]
+    call  SwitchBranches(branch,commit)
+    let version1 = SelectAndModifyByName(keychar)
+    call execute(":lcd  .." )
+    call execute(":lcd " . path)
+    let branch = curxmlfile1[index + 1]
+    let commit =  curxmlfile1[index]
+    call  SwitchBranches(branch,commit)
+    let version2 = SelectAndModifyByName(keychar)
+    call execute(":lcd  .." )
+    let Collection = SetOperationsBetweenLists(GetOneOfTheColumns(version1,"█",3),GetOneOfTheColumns(version2,"█",3),"差集")
+    if Collection[0] != []
+        let AB = SelectionFromTheListByIndex(Collection[0],version1)
+        let resultlist = add(resultlist,path ."仓")
+        let resultlist = add(resultlist,curxmlfile[-1] ."版本 比")
+        let resultlist = add(resultlist,curxmlfile1[-1] ."版本多")
+        let resultlist  = extend(resultlist,AB)
+    elseif Collection[1] != []
+        let BA = SelectionFromTheListByIndex(Collection[1],version2)
+        let resultlist = add(resultlist,path ."仓")
+        let resultlist = add(resultlist,curxmlfile1[-1] ."版本 比")
+        let resultlist = add(resultlist,curxmlfile[-1] ."版本多")
+        let resultlist  = extend(resultlist,BA)
+    endif
+    return resultlist
+endfunction
+"}}}}
 "}}}
 "{{{{ fund
 "amountdatabase  指数 {时间}
@@ -6758,6 +6953,7 @@ function! ExtractKeyCodes(...)
     let col = ""
     let result = ""
     let tempstring = ""
+    let lastline = -1
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -6774,7 +6970,7 @@ function! ExtractKeyCodes(...)
     let foldstring = getline(realityline)
     "echom realityline
     "echom string(expand("%:t"))
-    if (count(foldstring,'(') != count(foldstring,')'))
+    if (count(foldstring,'(') != count(foldstring,')')) || matchstr(foldstring,';') ==# "" || matchstr(foldstring,'{') ==# ""
         if 3 > g:debugflag | call Dbug( "11",3,0) | endif
         let numberlist = MergeLinesOfCode(realityline)
         let srcnum  = numberlist[0]
@@ -6785,6 +6981,7 @@ function! ExtractKeyCodes(...)
     endif
     let codelist = add(codelist,foldstring)
     let idx1 = 1
+    let lastline = realityline
     while idx1 > 0
         if 11 > g:debugflag | call Dbug( "findbegin",11,0) | endif
         "let col = match(getline('.'), '\S')
@@ -6811,7 +7008,7 @@ function! ExtractKeyCodes(...)
             endif
         endif
         if 11 > g:debugflag | call Dbug( "findend",11,0) | endif
-        let foldstring = getline(start[0])
+        let foldstring = StandardCharacters(start[0])
         if 11 > g:debugflag | call Dbug( foldstring,11,0) | endif
         "目标行格式不对
         if 11 > g:debugflag | call Dbug( "ifbegin",11,0) | endif
@@ -6830,10 +7027,12 @@ function! ExtractKeyCodes(...)
             if matchstr(codelist[0]," case .*:")  ==# ""
                 let end = FindAnotherBracketPosition('{')
                 let tempchar = getline(start[0],end[0])
-                let idk1 = realityline - start[0]
+                let idk1 = lastline - start[0]
                 while idk1 > 0
-                    if matchstr(tempchar[idk1]," case .*:") != ""
-                        let codelist = insert(codelist,tempchar[idk1])
+                    let tempstring = ""
+                    let tempstring = matchstr(tempchar[idk1],"^.*case .*:")
+                    if tempstring != ""
+                        let codelist = insert(codelist,tempstring)
                         break
                     endif
                     let idk1 -= 1
@@ -6843,6 +7042,7 @@ function! ExtractKeyCodes(...)
         endif
         let codelist = insert(codelist,foldstring)
         call cursor(start[0],start[1])
+        let lastline = start[0]
         if 11 > g:debugflag | call Dbug( "ifend",11,0) | endif
     endwhile
     let tempstring =  ""
@@ -7498,14 +7698,14 @@ function! EncapsulateDifferentGrep(...)
     let greptype = a:2
     let grepchar = a:3
     if filename ==# ""
-        let grepcmd = "grep -Esnri --include=*{.c,.cc,.cpp,.java,.h} "
+        let grepcmd = "grep -Esnr --include=*{.c,.cc,.cpp,.java,.h} "
     else
-        let grepcmd = "grep -Esni --include=*{.c,.cc,.cpp,.java,.h} "
+        let grepcmd = "grep -Esn --include=*{.c,.cc,.cpp,.java,.h} "
     endif
     let result = ""
     "}}}}
     if greptype ==# "fuc"
-        let grepchar = '" ' . grepchar . '\(" '
+        let grepchar = '"' . grepchar . '\(" '
         let grepcmd = grepcmd . grepchar . filename
         let result = system(grepcmd)
     endif
@@ -7739,6 +7939,7 @@ function! WhichFunctionIsIn(...)
     "{{{{{3 变量定义
     let codestring = copy(a:1)
     let templist = []
+    let tempchar = ""
     "}}}}
     "函数
     "判断
@@ -7749,7 +7950,12 @@ function! WhichFunctionIsIn(...)
         return templist[indexnum + 1]
     elseif  matchstr(codestring,";") != ""
     elseif  matchstr(codestring,"case ") != ""
-        return join(split(codestring))
+        let tempchar = matchstr(codestring," case .*:")
+        if tempchar  != ""
+            return join(split(tempchar))
+        else
+            return join(split(codestring))
+        endif
     elseif !(CheckStringIsObtainOfList(codestring,g:nonfunctionlist))
         let codestring = split(codestring,'(')[0]
         let templist = split(codestring)
@@ -9605,7 +9811,7 @@ function! ChangeDirectoryName(...)
     echo system('date')
     let currentTime = system('date +%s')
     "删除7天前的目录
-    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +20 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
+    let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +14 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
     echo system('date')
     for item in paths
@@ -9812,6 +10018,7 @@ function! FouncAddLog(...)
     let classdict = {}
     let idx1 = 0
     let mode = 0
+    let g:debugflag = 20
     "}}}}
     let mode = input("1是加log2是删log")
     let filetype = input("1是java2是cc3是cpp")
@@ -9878,6 +10085,8 @@ function! FileAddLog(...)
                 \"static {",
                 \"static{"]
     let functionname = ""
+    let tempchar = ""
+    let g:debugflag = 20
 
     "}}}}
     if a:0 ==# 0
@@ -9900,13 +10109,14 @@ function! FileAddLog(...)
         let currentString  = getline(idx1)
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
             call cursor(idx1,1)
-            silent execute "normal! $F)%"
-            if CheckStringIsObtainOfList(getline('.'),abnormallist)
+            let tempchar = StandardCharacters(line('.'))
+            if CheckStringIsObtainOfList(tempchar,abnormallist)
             else
-                if !CheckStringIsObtainOfList(getline('.'),uncheck)
+                if !CheckStringIsObtainOfList(tempchar,uncheck)
                     if line('.') ==# idx1
                         let targetline = idx1
-                        let functionname = split(split(getline('.'),'(')[0])[-1]
+                        "let functionname = split(split(getline('.'),'(')[0])[-1]
+                        let functionname = ExtractKeyCodes(targetline )
                         let idx1 =  AddDebugLog(targetline,functionname)
                     else
                     endif
@@ -9920,7 +10130,8 @@ function! FileAddLog(...)
             call cursor(idx1,1)
             if line('.') ==# idx1
                 let targetline = idx1
-                let functionname = matchstr(currentString,"case .*:")
+                "let functionname = matchstr(currentString,"case .*:")
+                let functionname = ExtractKeyCodes(targetline )
                 let idx1 =  AddDebugLog(targetline,functionname)
             else
             endif
