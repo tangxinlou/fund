@@ -1810,10 +1810,11 @@ function! SmartFileSwitching(...)
     let istimerwindows = "false"
     let currentwindowsid = win_getid()
     let currenttabid = tabpagenr()
+    let index =  -1
+    let numberlist = []
     if len(g:greplog2list) != 0
         let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
         let curenttabidlist = GetOneOfTheColumns(g:greplog2list,"|",2)
-        let index = index(currenttimerwindowsidlist,currentwindowsid)
         if count(currenttimerwindowsidlist,currentwindowsid) ==# 1 && count(curenttabidlist,currenttabid) ==# 1
             let istimerwindows = "true"
         endif
@@ -1839,20 +1840,20 @@ function! SmartFileSwitching(...)
             let line = split(curlinestring,':')[1]
             let filename = split(path,'/')[-1]
             let register = getline(1)
-            "echo split(@g,'█')
+            let numberlist = getline(3,line('$'))
             let tempstring = split(copy(@g),"█")
             if count(tempstring,register) ==# 0
-                let register = register . '█'  . @g
+                let register = join(ListStack(tempstring,register,100),"█")
+                let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             else
-                call  remove(tempstring,index(tempstring,register))
+                let index =  index(tempstring,register)
+                call  remove(tempstring,index)
                 let register = register . '█'  . join(tempstring,"█")
-            endif
-            if len(split(register,"█")) > 100
-                let register = split(register,"█")
-                let register = register[0:99]
-                let register = join(register,"█")
+                call  remove(g:grepnumberlist,index)
+                let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             endif
             let @g = register
+            call setline(2,register)
         elseif istimerwindows ==# "true"
             let path = g:greplog2list[index][5]
             let line = split(curlinestring,':')[0]
@@ -2721,8 +2722,9 @@ function! StringPosition(...)
     let char = a:2
     let idx1 = 0
     let indexlist = []
+    let strings = str2list(strings)
     while idx1 < len(strings)
-        if strings[idx1] ==# char
+        if strings[idx1] ==# char2nr(char)
             let indexlist = add(indexlist,idx1 + 1)
         endif
         let idx1 += 1
@@ -2800,19 +2802,32 @@ function! SelectionFromTheList(...)
     return resultlist
 endfunction
 "}}}}}
-"{{{{{2 SelectionFromTheListByIndex(...)列表中摘选通过index
-function! SelectionFromTheListByIndex(...)
-    let indexlist = a:1
-    let totallist = a:2
-    let idx1 = 0
-    let resultlist = []
-    while idx1 < len(indexlist)
-        let resultlist = add(resultlist,totallist[indexlist[idx1]])
-        let idx1 += 1
-    endwhile
-    return resultlist
+"{{{{{2 ListStack(...)list 栈先进先出
+function! ListStack(...)
+    let stacklist = a:1
+    let targetchar = a:2
+    let len = a:3
+    let stacklist = insert(stacklist,targetchar)
+    if len(stacklist) > 100
+        let stacklist  = stacklist[0:len]
+    endif
+    return stacklist
 endfunction
 "}}}}}
+"{{{{{2 ListIndex(...)提供一个数值index
+function! ListIndex(...)
+    let list = a:1
+    let nr = a:2
+    let index = -1
+    let idx1 = 0 
+    while idx1 < len(list)
+        if nr < list[idx1]
+            return idx1
+        endif
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}} 
 "}}}}
 "{{{{vmake 命令
 
@@ -8143,6 +8158,10 @@ function! Searcher()
     let timerid = 0
     if g:windowfindid != win_getid() && g:windowfindid != 0
         if win_gotoid(g:windowfindid) ==# 1
+            if @@ != ""
+                call setline(1,@@)
+                call cursor(1,1)
+            endif
             return
         endif
     else
@@ -8193,6 +8212,7 @@ if len(timer_info()) ==# 0
     let g:lastgrepfilter = ""
     let g:lastgreplen = 0
     let g:lastgrepfile = ""
+    let g:grepnumberlist = []
 endif
 function! GrepChars(timer)
     let searchs = ""
@@ -8276,7 +8296,11 @@ function! SearcherChars()
     let winwidthnum  = 0
     let timerflag = 0
     let timerid = 0
-
+    let targetlist = []
+    let register = ""
+    let line = -1
+    let col = -1
+    let index = -1
     if g:windowgrepid != win_getid() && g:windowgrepid != 0
         let @i = getline('.')
         let g:lastgrepfile = expand("%:p")
@@ -8300,14 +8324,16 @@ function! SearcherChars()
             "execute "normal! :vertical res " . winwidthnum . "\<cr>"
             redraw
         else
-            if line('.') ==# 2
-                execute "normal! yw"
-                if @@ != ""
-                    call setline(1,@@)
-                    call cursor(1,1)
-                endif
-                return
-            endif
+           if line('.') ==# 2
+               let line = line('.')
+               let col = col('.')
+               let register = split(getline(2),"█")
+               let indexlist = StringPosition(getline(2),'█')
+               let index = ListIndex(indexlist,col)
+               let targetlist = g:grepnumberlist[index]
+               call setline(3,targetlist)
+               return
+           endif
         endif
     endif
     "是否有当前搜索器
