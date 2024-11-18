@@ -507,13 +507,13 @@ let g:filterchar = {
             \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT",
             \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason",
             \"24twsbatteryearversion" : "sendBatteryLevelChangedBroadcast|tws wear state|vivoTWS-CheckUpdateTask.*SimpleEarInfo{right_version",
-            \"23avrcpstatus" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged",
+            \"23avrcpstatus stop play puase 012" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged|getCurrentPlayStatus|isDropKey: key_drop",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference",
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
-            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property",
+            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
@@ -532,6 +532,7 @@ let g:filterchar = {
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(',
             \"00temp" : "temptemptem"}
 
+let g:alldebugflag = "true"
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
@@ -713,33 +714,43 @@ function! s:MarkdownPreview()
     endif
 endfunction
 "}}}}}
-"{{{{{2 function! s:Shellfunc(type)              批量删除文件                  可视模式下 逗号 + sh 调用
-"nnoremap <leader>sh :set operatorfunc=<SID>Shellfunc<cr>g@
-vnoremap <leader>sh :<c-u>call <SID>Shellfunc(visualmode())<cr>
-function! s:Shellfunc(type)
-    let saved_register = @@
-    if a:type ==# 'v'
-        normal! `<v`>y
-    elseif a:type ==# 'char'
-        normal! `[v`]y
-    else
-        return
-    endif
-    let a:Order = split(@@)
-    let a:instruction = a:Order[0]
-    let a:parameter = a:Order[1]
-    let a:len = a:Order[2]
-    let c = a:Order[2]
-    let a:instruc = join([a:Order[0],a:Order[1]]," ")
-    echom a:instruction a:parameter a:len  a:Order[3]
-    while c <= a:Order[3]
-        call cursor(c,1)
-        silent execute "normal! ^v$hy"
-        silent echo  a:instruc . " " . @@
-        silent call system(a:instruc . " " . @@)
-        let c += 1
-    endwhile
-    let @@ = saved_register
+"{{{{{2 function! s:Shellfunc(type)              批量shell 命令                  可视模式下 逗号 + sh 调用
+nnoremap <leader>sh :call Shellfunc()<cr>
+function! Shellfunc(...)
+     let srcline = -1
+     let tailline = -1
+     let filelist = []
+     let path = ""
+     let idx1 = 0
+     let mode = ""
+     let mode = input("1是删除2是复制")
+     let command = ""
+     let tempchar = ""
+     if mode ==# "1"
+         let srcline = str2nr(input("输入首行"))
+         let tailline = str2nr(input("输入末行"))
+         let filelist = getline(srcline,tailline)
+         while idx1 < len(filelist)
+             let tempchar = join(split(filelist[idx1]))
+             let command = "rm -rf "  . tempchar
+             echom command
+             silent call system(command)
+             let idx1 += 1
+         endwhile
+     elseif mode ==# "2"
+         let srcline = str2nr(input("输入首行"))
+         let tailline = str2nr(input("输入末行"))
+         let path = input("输入目标路径")
+         let filelist = getline(srcline,tailline)
+         while idx1 < len(filelist)
+             let tempchar = join(split(filelist[idx1]))
+             let command = "cp -rf "  . tempchar   . " " . path . '/'  . tempchar
+             echom command
+             silent call system(command)
+             let idx1 += 1
+         endwhile
+     endif
+     echom "Successfully"
 endfunction
 "}}}}}
 "{{{{{2 function! s:HighLightSearch(type)        高亮搜索                      可视模式下逗号 + 下划线 调用
@@ -2340,6 +2351,8 @@ function! MergeLinesOfCode(...)
     if iscomment ==# 0
         let currentstring = getline(line)
         if matchstr(currentstring,"  implements ") != ""
+        elseif matchstr(currentstring,"  throws ") != ""
+            return [line -1 , line]
             return [line -1 , line]
         elseif matchstr(currentstring,'^\s*{') != ""
             return [line -1 , line]
@@ -2434,6 +2447,7 @@ endfunction
 function! IsComment(...)
     let issyntax = 0
     let line = a:1
+    let lastgroupname = ""
     let groupname = ""
     let iscomment = 0
     let secondNonWhitespace = ""
@@ -2446,17 +2460,19 @@ function! IsComment(...)
         if 3 > g:debugflag | call Dbug( "syntax = 0",3,0) | endif
         let issyntax = 1
     endif
-    if issyntax ==# 1
-        if 3 > g:debugflag | call Dbug( "comment 2",3,0) | endif
-        silent call cursor(line,1)
-        "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
-        call FastMoveToFirstNonBlank()
-        silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
-        if 3 > g:debugflag | call Dbug( groupname,3) | endif
-        if matchstr(groupname,"Comment") ==# "Comment"  ||  matchstr(groupname,"Annotation") ==# "Annotation"
-            let iscomment = 1
-        endif
-    else
+    "此法无效，弃用
+    "if issyntax ==# 1
+    "    if 3 > g:debugflag | call Dbug( "comment 2",3,0) | endif
+    "    silent call cursor(line,1)
+    "    "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
+    "    call FastMoveToFirstNonBlank()
+    "    silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
+    "    let lastgroupname = synIDattr(synID(line("."), col("$") -1, 1), "name")
+    "    if 3 > g:debugflag | call Dbug( groupname,3) | endif
+    "    if matchstr(groupname,"Comment") ==# "Comment" && matchstr(lastgroupname,"Comment") ==# "Comment"
+    "        let iscomment = 1
+    "    endif
+    "else
         if 10 > g:debugflag | call Dbug( "comment 1",10,2) | endif
         silent call cursor(line,1)
         if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
@@ -2477,7 +2493,7 @@ function! IsComment(...)
                 let iscomment = 1
             endif
         endif
-    endif
+    "endif
     if 10 > g:debugflag | call Dbug("commentend" ,10,2) | endif
     call cursor(line,1)
     return iscomment
@@ -2509,13 +2525,19 @@ function! FindAnotherBracketPosition(...)
     let curline = -1
     let index = -1
     let tempchar = getline('.')
+    let curline = -1
     if 3 > g:debugflag | call Dbug( "findAnbegin",3,0) | endif
     if a:0 ==# 2
         silent call cursor(1,1)
         silent let cursor =  searchpos('{','w')
         let index = match(getline('.'), '\S')
-            if 3 > g:debugflag | call Dbug( "findanend",3,0) | endif
-            return cursor
+        let curline = copy(cursor[0])
+        if 3 > g:debugflag | call Dbug( "findanend",3,0) | endif
+        while IsComment(cursor[0]) ==# 1
+            call cursor(cursor[0] + 1,1)
+            let cursor =  searchpos('{','w')
+        endwhile
+        return cursor
     endif
     if char ==# ')'
         silent let col =  strridx(tempchar,')')
@@ -2530,8 +2552,9 @@ function! FindAnotherBracketPosition(...)
     elseif char ==# '}'
         silent let col =  strridx(tempchar,'}')
         silent call cursor(line('.'), col + 1)
+        "for (Uri uri : new Uri[]{Mms.CONTENT_URI, Sms.CONTENT_URI}) {  修复这种情况
         if (count(tempchar,'{') != 0 && count(tempchar,'}') != 0) && (StringPosition(tempchar,'{')[0] < StringPosition(tempchar,'}')[0])
-            silent let cursor =  searchpos('}','w')
+            silent let cursor =  searchpos('{','b')
         endif
         silent let cursor  = searchpairpos('{', '', '}', 'b')
         if IsComment(cursor[0]) ==# 1
@@ -2552,6 +2575,7 @@ function! FindAnotherBracketPosition(...)
         return cursor
     endif
 
+    let idx1 = 1
     if char ==# '}'  || char ==# '{'
         while idx1 > 0
             let curline = line('.')
@@ -2802,6 +2826,19 @@ function! SelectionFromTheList(...)
     return resultlist
 endfunction
 "}}}}}
+"{{{{{2 SelectionFromTheListByIndex(...)列表中摘选通过index
+function! SelectionFromTheListByIndex(...)
+    let indexlist = a:1
+    let totallist = a:2
+    let idx1 = 0
+    let resultlist = []
+    while idx1 < len(indexlist)
+        let resultlist = add(resultlist,totallist[indexlist[idx1]])
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
 "{{{{{2 ListStack(...)list 栈先进先出
 function! ListStack(...)
     let stacklist = a:1
@@ -2819,7 +2856,7 @@ function! ListIndex(...)
     let list = a:1
     let nr = a:2
     let index = -1
-    let idx1 = 0 
+    let idx1 = 0
     while idx1 < len(list)
         if nr < list[idx1]
             return idx1
@@ -2827,7 +2864,7 @@ function! ListIndex(...)
         let idx1 += 1
     endwhile
 endfunction
-"}}}}} 
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -4262,6 +4299,8 @@ endfunction
 "{{{{{3 注释
 "}}}}
 function! ModifyCorrespondingCommit(...)
+    let templist1 = []
+    let tempchar = ""
     "{{{{{3 变量定义
     let ModifyChar = "同步lea相关修改"
     let commitlist = []
@@ -4313,7 +4352,21 @@ function! ModifyCorrespondingCommit(...)
     echo len(branchlist)
     echo len(uniq(sort(branchlist)))
     "echo  uniq(sort(branchlist))
-    call append(line("."),branchlist)
+    let idx1 = 0
+    while idx1 < len(branchlist)
+        if matchstr(branchlist[idx1],"tag") != ""
+            let tempchar = split(branchlist[idx1])
+            if matchstr(branchlist[idx1],'/') != ""
+                "let tempchar = join([tempchar[0],split(tempchar[1],'/')[-1]])
+                let templist1 = add(templist1,split(tempchar[1],'/')[-1])
+            else
+                let templist1 = add(templist1,tempchar[1])
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    call append(line("."),uniq(sort(templist1)))
+    "call append(line("."),templist1)
 endfunction
 "}}}}}
 "{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + add 调用
@@ -6969,6 +7022,7 @@ function! ExtractKeyCodes(...)
     let result = ""
     let tempstring = ""
     let lastline = -1
+    let g:alldebugflag = "true"
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -6988,10 +7042,14 @@ function! ExtractKeyCodes(...)
     if (count(foldstring,'(') != count(foldstring,')')) || matchstr(foldstring,';') ==# "" || matchstr(foldstring,'{') ==# ""
         if 3 > g:debugflag | call Dbug( "11",3,0) | endif
         let numberlist = MergeLinesOfCode(realityline)
-        let srcnum  = numberlist[0]
-        let tailnum = numberlist[1]
-        if srcnum < tailnum
-            let foldstring =  GatherIntoRow(srcnum,tailnum)
+        if numberlist ==# []
+            let foldstring = ""
+        else
+            let srcnum  = numberlist[0]
+            let tailnum = numberlist[1]
+            if srcnum < tailnum
+                let foldstring =  GatherIntoRow(srcnum,tailnum)
+            endif
         endif
     endif
     let codelist = add(codelist,foldstring)
@@ -7440,7 +7498,7 @@ function! AddDebugLog(...)
             silent execute "normal! gg"
             if search("#include") ==# 0
             else
-                let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
+                let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
                 call append(line,stackchar)
                 call cursor(line + 1,1)
                 silent execute "normal! =="
@@ -7453,7 +7511,7 @@ function! AddDebugLog(...)
                 endif
             endif
         else
-            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ."\"," . funcflag .  ");"
+            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
             call append(line,stackchar)
             call cursor(line + 1,1)
             silent execute "normal! =="
@@ -7712,17 +7770,23 @@ function! EncapsulateDifferentGrep(...)
     let filename = a:1
     let greptype = a:2
     let grepchar = a:3
+    let revertchar = '@' . grepchar
+    let revertgrepcmd = "grep -v "
+    let revertgrepcmd = "grep -v "  .  revertchar
     if filename ==# ""
-        let grepcmd = "grep -Esnr --include=*{.c,.cc,.cpp,.java,.h} "
+        let grepcmd = "grep -Esnrw --binary-files=without-match  --include=*{.c,.cc,.cpp,.java,.h} "
     else
-        let grepcmd = "grep -Esn --include=*{.c,.cc,.cpp,.java,.h} "
+        let grepcmd = "grep -Esnw --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
     endif
     let result = ""
     "}}}}
     if greptype ==# "fuc"
-        let grepchar = '"' . grepchar . '\(" '
+        "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
+        let grepchar = '"' . grepchar  .'" '
         let grepcmd = grepcmd . grepchar . filename
-        let result = system(grepcmd)
+        echom grepcmd
+        echom revertgrepcmd
+        let result = system(grepcmd . " | " . revertgrepcmd)
     endif
     return result
 endfunction
@@ -7963,7 +8027,12 @@ function! WhichFunctionIsIn(...)
         let templist = split(codestring)
         let indexnum = index(templist,"class")
         return templist[indexnum + 1]
+    elseif matchstr(codestring," interface ") != ""
+        let templist = split(codestring)
+        let indexnum = index(templist,"interface")
+        return templist[indexnum + 1]
     elseif  matchstr(codestring,";") != ""
+    elseif  join(split(codestring)) ==# "{"
     elseif  matchstr(codestring,"case ") != ""
         let tempchar = matchstr(codestring," case .*:")
         if tempchar  != ""
@@ -7972,6 +8041,7 @@ function! WhichFunctionIsIn(...)
             return join(split(codestring))
         endif
     elseif !(CheckStringIsObtainOfList(codestring,g:nonfunctionlist))
+        "echom  codestring
         let codestring = split(codestring,'(')[0]
         let templist = split(codestring)
         return templist[-1]
@@ -8032,6 +8102,7 @@ function! CallStack(...)
     let stackstring = ""
     let allstackstring = a:6
     let path = expand("%")
+    let debugflag = "true"
     "}}}}
     if mode ==# 0
         "当前行是怎么调用下来的
@@ -8053,6 +8124,11 @@ function! CallStack(...)
         let searchstarge  = EncapsulateDifferentGrep("","fuc",tempchar)
         let searchstarge = SelectEntireCode(copy(searchstarge))
         let resultlist = ResultClassification(searchstarge)
+        if debugflag ==# "true"
+            echom tempchar
+            echom string(laststackstring)
+            echom string(resultlist)
+        endif
         "if len(resultlist[0]) != 0 && flag < 6
         if len(resultlist[0]) != 0
             "有调用
@@ -8061,8 +8137,13 @@ function! CallStack(...)
             while idx1 < len(resultlist[0])
                 "当前行是怎么被调用下来的
                 let templist = split(resultlist[0][idx1],":")
+                if debugflag ==# "true"
+                    echom resultlist[0][idx1]
+                endif
                 call SwitchBuff(templist[0])
                 let stackstring = ExtractKeyCodes(templist[1])
+                if debugflag ==# "true"
+                endif
                 if stackstring ==# laststackstring
                     let result = add(result,repeat(" ",(flag + 1) * 4) . stackstring)
                 else
@@ -10122,6 +10203,7 @@ function! FileAddLog(...)
             execute "normal! \<c-w>h"
             execute "normal! :q!\<cr>"
         endif
+        if IsComment(idx1) ==# 0
         let filename = expand("%:p")
     else
         let filename = a:1
@@ -10152,7 +10234,7 @@ function! FileAddLog(...)
                 call input("11")
             endif
         endif
-        if matchstr(currentString,"  case .*:") != ""
+        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString," return ") ==# ""
             call cursor(idx1,1)
             if line('.') ==# idx1
                 let targetline = idx1
@@ -10165,6 +10247,7 @@ function! FileAddLog(...)
                 call input("11")
             endif
         endif
+    endif
         redraw
         let idx1 += 1
     endwhile
