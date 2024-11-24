@@ -132,7 +132,7 @@ iabbrev gitbranch git branch -a --contains
 "repo sync --local-only
 iabbrev gitadd git add --intent-to-add .
 iabbrev gitdiff git diff --binary > my_patch.patch
-iabbrev gitlog  git log --graph --oneline  --decorate  --pretty=format:"\%cr \%cn \%H \%s"
+iabbrev gitlog  git log --graph --oneline  --decorate  --date=format:\%Y-\%m-\%d --pretty=format:"\%cd \%cn \%H \%s"
 iabbrev gitcherrypick  git cherry-pick
 iabbrev gitlogbranch git log --graph --decorate --oneline --all
 iabbrev gitfile git log  --pretty=oneline
@@ -424,6 +424,7 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_device_mediatek_common",
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
+"判断带{有下面的就不是函数
 let g:nonfunctionlist = ["if(",
             \"} catch",
             \"() -> {",
@@ -496,12 +497,13 @@ let g:smallestunitdict = {
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
 let g:filterchar = {
+            \"35headsetcod" : "romote_cod|add leaudio cod",
             \"34hearingaid" : "connectEnabledProfiles.*Hearing Aid Profile|HearingAidStateMachine.*process message|connectHearingAidNative|HearingAidStateMachine.*->|BluetoothHearingAid: setVolume",
             \"33leaudio volume" : "AS.BtHelper: setLeAudioVolume|LeAudioService: SetVolume|VolumeControlService: setGroupVolume|VolumeControlService: setAvrcpVolume",
             \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
             \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest|vivoTWS-GattManager: onCharacteristicWrite",
-            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:",
-            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state",
+            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:|exited due to signal",
+            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|updateShareStatus|sendIntentIfCompleted|Can't open file for OUTBOUND|putSendFileInf",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
             \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT",
@@ -518,14 +520,14 @@ let g:filterchar = {
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
-            \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams",
-            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered",
+            \"12gattscan" : "BtGatt.GattService: startScan pkg|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package",
+            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect ",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present',
-            \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|l2c_link_timeout All channels closed',
+            \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|l2c_link_timeout All channels closed|forcing LE transport for Bonding',
             \"04hfp_simple_connect" : 'connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
             \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
@@ -1831,10 +1833,10 @@ function! SmartFileSwitching(...)
         endif
     endif
     "}}}}
+    let curwinid = win_getid()
+    let bufinfo = getbufinfo()
     if flag ==# 1
         let curlinestring  = getline('.')
-        let curwinid = win_getid()
-        let bufinfo = getbufinfo()
         "call setline(1,string(getbufinfo()))
         "call setline(2,string(split(execute(":ls"),'\n')))
         if curwinid ==# g:windowfindid
@@ -1914,6 +1916,23 @@ function! SmartFileSwitching(...)
             endif
         endif
     elseif flag ==# 2
+        if curwinid ==# g:windowgrepid
+            let register = getline(1)
+            let numberlist = getline(3,line('$'))
+            let tempstring = split(copy(@g),"█")
+            if count(tempstring,register) ==# 0
+                let register = join(ListStack(tempstring,register,100),"█")
+                let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
+            else
+                let index =  index(tempstring,register)
+                call  remove(tempstring,index)
+                let register = register . '█'  . join(tempstring,"█")
+                call  remove(g:grepnumberlist,index)
+                let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
+            endif
+            let @g = register
+            call setline(2,register)
+        endif
         silent execute  "normal! 0\"ayt:0f:lvf:h\"by0"
         let path = @a
         let line = @b
@@ -2133,6 +2152,7 @@ endfunction
 "}}}}}
 "{{{{{2 CheckStringIsObtainOfList(...)检查string 里面是否有list中的字符
 function! CheckStringIsObtainOfList(...)
+    "JudgeString  功能类似
     let String = a:1
     let Stringlist = a:2
     let uncheckflag = 0
@@ -2315,9 +2335,9 @@ function! GatherIntoRow(...)
     let idj1 = 0
     let foldstring = ""
     while idj1 < len(tempchar)
-        silent if matchstr(tempchar[idj1],"//") != ""
-        silent     if len(split(tempchar[idj1],"//")) > 1
-        silent         let tempchar[idj1] = split(tempchar[idj1],"//")[0]
+        if matchstr(tempchar[idj1],"//") != ""
+            if len(split(tempchar[idj1],"//")) > 1
+                let tempchar[idj1] = split(tempchar[idj1],"//")[0]
             else
                 let tempchar[idj1] = ""
             endif
@@ -2330,7 +2350,7 @@ function! GatherIntoRow(...)
         endif
         let idj1 += 1
     endwhile
-    let foldstring = join(tempchar)
+    let foldstring = join(tempchar,"\x00")
     return foldstring
 endfunction
 "}}}}}
@@ -2351,16 +2371,19 @@ function! MergeLinesOfCode(...)
     if iscomment ==# 0
         let currentstring = getline(line)
         if matchstr(currentstring,"  implements ") != ""
+            return [line -1 , line]
         elseif matchstr(currentstring,"  throws ") != ""
             return [line -1 , line]
-            return [line -1 , line]
+        elseif matchstr(currentstring,"default:") != ""
+            return [line, line]
+        elseif join(split(currentstring)) ==# "}"
+            return [line, line]
         elseif matchstr(currentstring,'^\s*{') != ""
             return [line -1 , line]
         elseif matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";"
             let end = line
         elseif  matchstr(currentstring," case ") != ""  ||  matchstr(currentstring,"#define ") != ""
             return [line,line]
-
         else
             if 3 > g:debugflag | call Dbug( "tangxinlou6",3) | endif
             silent call cursor(line,1)
@@ -2395,7 +2418,7 @@ function! MergeLinesOfCode(...)
         endif
         let currentstring = getline(end)
         if 3 > g:debugflag | call Dbug(currentstring  ,3) | endif
-        if len(split(currentstring)) ==# 1 && split(currentstring)[0] ==# "{"
+        if len(split(currentstring)) ==# 1 && split(currentstring)[0] ==# "{" && line ==# end
             if 3 > g:debugflag | call Dbug( "tangxinlou1",3) | endif
             return [line,line]
         else
@@ -2422,6 +2445,8 @@ function! MergeLinesOfCode(...)
                         endif
                         let idx1 -= 1
                     endwhile
+                elseif start != line && line < start
+                    let start = line
                 endif
                 return [start,end]
             else
@@ -2447,32 +2472,22 @@ endfunction
 function! IsComment(...)
     let issyntax = 0
     let line = a:1
-    let lastgroupname = ""
     let groupname = ""
+    let lastgroupname = ""
     let iscomment = 0
     let secondNonWhitespace = ""
     let startcursor = []
     let endcursor = []
     let nextbeginitem = ""
     let nextenditem = ""
+    let length = -1
+    let templist = []
+    let idx1 = 0
+
+    if  join(split(getline(line))) ==# ""
+        let iscomment = 1
+    else
     if 10 > g:debugflag | call Dbug("commentbegin" ,10,2) | endif
-    if matchstr(execute("syntax"),"Comment") != ""
-        if 3 > g:debugflag | call Dbug( "syntax = 0",3,0) | endif
-        let issyntax = 1
-    endif
-    "此法无效，弃用
-    "if issyntax ==# 1
-    "    if 3 > g:debugflag | call Dbug( "comment 2",3,0) | endif
-    "    silent call cursor(line,1)
-    "    "silent execute "normal! 0^" "用这个命令耗时太长，去掉这条命令，函数运行时间从30s降到4s
-    "    call FastMoveToFirstNonBlank()
-    "    silent let groupname = synIDattr(synID(line("."), col("."), 1), "name")
-    "    let lastgroupname = synIDattr(synID(line("."), col("$") -1, 1), "name")
-    "    if 3 > g:debugflag | call Dbug( groupname,3) | endif
-    "    if matchstr(groupname,"Comment") ==# "Comment" && matchstr(lastgroupname,"Comment") ==# "Comment"
-    "        let iscomment = 1
-    "    endif
-    "else
         if 10 > g:debugflag | call Dbug( "comment 1",10,2) | endif
         silent call cursor(line,1)
         if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
@@ -2481,9 +2496,25 @@ function! IsComment(...)
             let iscomment = 1
         elseif  secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
             "split(getline('.'),"*/")
-            if len(split(join(split(getline(line))),"*/")) > 0
+            if matchstr(getline(line),"*/") != ""
+                let length = len(split(join(split(getline(line))),"*/"))
+                if length ==# 0
+                    let iscomment = 1
+                elseif length ==# 1
+                    let iscomment = 1
+                endif
+            else
                 let iscomment = 1
             endif
+        elseif matchstr(getline(line),"@") != ""
+            let templist = split(getline(line))
+            let iscomment = 1
+            while idx1 < len(templist)
+                if matchstr(templist[idx1],"@") ==# ""
+                    let iscomment = 0
+                endif
+                let idx1 += 1
+            endwhile
         else
             if 10 > g:debugflag | call Dbug( "findbegin",10,2) | endif
             silent let endcursor = searchpos('\*\/','w')
@@ -2493,7 +2524,7 @@ function! IsComment(...)
                 let iscomment = 1
             endif
         endif
-    "endif
+    endif
     if 10 > g:debugflag | call Dbug("commentend" ,10,2) | endif
     call cursor(line,1)
     return iscomment
@@ -2682,6 +2713,7 @@ function! ResultClassification(...)
     let XML = []              "xml
     let HHH = []              "头文件
     let judgechar = ["if ","for "," case "]
+    let judgeLog = ["log","Log"]
     let searchstarge = a:1
     let temchar = ""
     let tempchar = ""
@@ -2694,8 +2726,10 @@ function! ResultClassification(...)
             if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
                 if matchstr(temchar,"注释") ==# ""
                     if matchstr(split(searchstarge[idx1],":")[0],'\.h') ==# ""
-                        if matchstr(temchar,"log") != ""
+                        if JudgeString(judgeLog,temchar)
                             let Log = add(Log,tempchar)
+                        elseif matchstr(temchar," //") != ""
+                            let Comment = add(Comment,tempchar)
                         elseif matchstr(temchar,";") != ""
                             if split(split(searchstarge[idx1],":")[0],'\.')[1] ==# "h"
                                 let definition  = add(definition,tempchar)
@@ -2704,14 +2738,8 @@ function! ResultClassification(...)
                             endif
                         elseif JudgeString(judgechar,temchar)
                             let judge = add(judge,tempchar)
-                        elseif matchstr(temchar,"//") != ""
-                            let Comment = add(Comment,tempchar)
                         else
-                            if matchstr(temchar,";") ==# "" && matchstr(temchar,' \*') != ""
-                                let Comment = add(Comment,tempchar)
-                            else
-                                let definition = add(definition,tempchar)
-                            endif
+                            let definition = add(definition,tempchar)
                         endif
                     else
                         let HHH = add(HHH,tempchar)
@@ -2746,9 +2774,12 @@ function! StringPosition(...)
     let char = a:2
     let idx1 = 0
     let indexlist = []
-    let strings = str2list(strings)
+    "let strings = str2list(strings)
+    "每个字母
+    let strings = split(strings,'\zs')
     while idx1 < len(strings)
-        if strings[idx1] ==# char2nr(char)
+        "if strings[idx1] ==# char2nr(char)
+        if strings[idx1] ==# char
             let indexlist = add(indexlist,idx1 + 1)
         endif
         let idx1 += 1
@@ -2857,12 +2888,34 @@ function! ListIndex(...)
     let nr = a:2
     let index = -1
     let idx1 = 0
+    if nr > 0
+        let index += 1
+    endif
     while idx1 < len(list)
-        if nr < list[idx1]
-            return idx1
+        if  nr > list[idx1]
+            let index += 1
         endif
         let idx1 += 1
     endwhile
+    return index
+endfunction
+"}}}}}
+"{{{{{2 IsFileType(...) filetype 文件类型
+function! IsFileType(...)
+    let filename = a:1
+    let filetype = ""
+    if matchstr(filename,'\.java') != ""
+        let filetype = "java"
+    elseif matchstr(filename,'\.cc') != ""
+        let filetype = "cc"
+    elseif matchstr(filename,'\.cpp') != ""
+        let filetype = "cpp"
+    elseif matchstr(filename,'\.ch') != ""
+        let filetype = "head"
+    elseif matchstr(filename,'\.vimrc') != ""
+        let filetype = "vimrc"
+    endif
+    return filetype
 endfunction
 "}}}}}
 "}}}}
@@ -4299,8 +4352,6 @@ endfunction
 "{{{{{3 注释
 "}}}}
 function! ModifyCorrespondingCommit(...)
-    let templist1 = []
-    let tempchar = ""
     "{{{{{3 变量定义
     let ModifyChar = "同步lea相关修改"
     let commitlist = []
@@ -4315,6 +4366,8 @@ function! ModifyCorrespondingCommit(...)
     let idj1 = 0
     let date = 0
     let commit = ""
+    let templist1 = []
+    let tempchar = ""
     "}}}}
     let ModifyChar = input("请输入修改")
     if input("是否取反") ==# "yes"
@@ -4586,7 +4639,8 @@ function!  SelectAndModifyByName(...)
         let keychar = input("查找谁的提交")
         "let keychar = "tangxinlouosc"
     endif
-    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%cd█\%an█\%H█\%s"
+    "let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%cd█\%an█\%H█\%s"
+    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s"
     let resultlist = split(system(command),"\n")
     while idx1 < len(resultlist)
         let tempchar = split(resultlist[idx1],"█")
@@ -7089,7 +7143,7 @@ function! ExtractKeyCodes(...)
             let numberlist = MergeLinesOfCode(start[0])
             let srcnum  = numberlist[0]
             let tailnum = numberlist[1]
-            if srcnum < tailnum
+            if srcnum <= tailnum
                 let foldstring =  GatherIntoRow(srcnum,tailnum)
             endif
         endif
@@ -7859,7 +7913,6 @@ endfunction
 "}}}}}
 
 "{{{{{2  function! TagListFiles(...) 列出当前变量在当前文件分布
-"nnoremap <F3> :call TagListFiles()<cr>
 let g:Tagwindidlistvalue = []
 let g:Tagwindidlistkey = []
 function! TagListFiles(...)
@@ -8054,14 +8107,14 @@ endfunction
 function! WhichFunctionToCall(...)
     "{{{{{3 变量定义
     let line = a:1
-    let codestring =  GatherIntoRow(srcnum,tailnum)
+    let codestring =  ""
     "}}}}
     "按照标准代码获取整行
     set noignorecase
     let numberlist = MergeLinesOfCode(realityline)
     let srcnum  = numberlist[0]
     let tailnum = numberlist[1]
-    if srcnum < tailnum
+    if srcnum <= tailnum
         let codestring  =  GatherIntoRow(srcnum,tailnum)
     endif
     if matchstr(codestring,';') != ""
@@ -8177,6 +8230,192 @@ function! CallStack(...)
     return ""
 endfunction
 "}}}}}
+
+"{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
+function! IdentificationCodeComponents(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let filetype = a:2
+    let matchstr = ""
+    if a:0 ==# 3
+        let matchstr = a:3
+    endif
+    let flag = ""
+    let package = 0                    "包名
+    let import = 1                     "导包
+    let class = 2                      "类
+    let def = 3                        "定义值
+    let specify = 4                    "赋值指定值
+    let specifydef = 5                 "定义并指定初值
+                                       "判断
+    let judge = ["if (",
+                \"if(",
+                \"for(",
+                \"for (",
+                \]
+    "let cycle = 7                      "循环
+    let cycle   = [" for (",
+                \" for(",
+                \" while(",
+                \" while (",
+                \]
+
+                                        "switch
+    let switch  = [" switch (",
+                \" switch(",
+                \]
+    let case = 9                       "case
+    let default = 10                   "default
+    let return = 11                    "返回值
+    let call = 12
+    let func = 13
+    let statement = 14
+    "}}}}
+     "判断当前行是否继续调用函数
+      "有分号行
+        "单纯赋值没有调用
+        "回调
+        "调用函数
+         "调用本文件函数
+         "调用其他文件函数
+           "找到这个函数的类
+      "无分号行
+        "调用几个函数
+        if matchstr(codestring," case ") != ""
+            let flag = flag . "case"
+            return flag
+        elseif matchstr(codestring," default:") != ""
+            let flag = flag . "default"
+            return flag
+        elseif matchstr(codestring,";") != ""
+            "{{{{3 有分号
+            if CheckStringIsObtainOfList(codestring,judge)
+                let flag = flag . "judge;"
+                return flag
+            endif
+            if matchstr(codestring,"package ") != ""
+                let flag = flag . "package"
+                return flag
+            endif
+            if matchstr(codestring,"import ") != ""
+                let flag = flag . "import"
+                return flag
+            endif
+
+
+            if matchstr(codestring," return ") != ""
+                let flag = flag . "return"
+                if  matchstr(codestring,"(") != ""
+                    let flag = flag . "call"
+                endif
+                return flag
+            endif
+            if matchstr(codestring," default:") != ""
+                let flag = flag . "default"
+                return flag
+            endif
+
+            if matchstr(codestring," =") != ""
+                let flag = flag . "specify"
+                if len(split(split(codestring," = ")[0])) > 1
+                    let flag = flag . "def"
+                endif
+                if  matchstr(codestring,"(") != ""  && matchstr(codestring,'"(') ==# ""
+                    let flag = flag . "call"
+                endif
+                return flag
+            endif
+
+
+
+            if  matchstr(codestring,"(") != ""
+                if len(split(split(codestring,"(")[0])) ==# 1
+                    let flag = flag . "call"
+                else
+                    let flag = flag . "statement"
+                endif
+                return flag
+            endif
+
+            if len(split(codestring)) > 1
+                let flag = flag . "def"
+                return flag
+            endif
+            "}}}}
+        elseif  matchstr(codestring,"{") != ""
+            "{{{{3  有括号
+            if CheckStringIsObtainOfList(codestring,switch)
+                let flag = flag . "switch"
+                return flag
+            endif
+            if CheckStringIsObtainOfList(codestring,judge)
+                let flag = flag . "judge"
+                return flag
+            endif
+            if CheckStringIsObtainOfList(codestring,cycle)
+                let flag = flag . "cycle"
+                return flag
+            endif
+            if matchstr(codestring," class ") != ""
+                let flag = flag . "class"
+                return flag
+            endif
+
+            if !CheckStringIsObtainOfList(codestring,g:nonfunctionlist)
+                let flag = flag . "func"
+                return flag
+            endif
+
+            "}}}}
+        endif
+    return "unkonwn"
+endfunction
+"}}}}}
+
+"{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
+nnoremap <F3> :call IdentifyTheCurrentFile()<cr>
+function! IdentifyTheCurrentFile(...)
+    "{{{{{3 变量定义
+    let codelist = []
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let line = 1
+    let numberlist = []
+    let srcnum  = -1
+    let tailnum = -1
+    let codestring  = ""
+    let  realityline = -1
+    let g:debugflag = 20
+    let flag = ""
+    "}}}}
+    set noignorecase
+    while line <= line('$')
+        let  realityline = line
+        " echo  MergeLinesOfCode(line('.'))
+        let numberlist = MergeLinesOfCode(realityline)
+        if numberlist != []
+            let srcnum  = numberlist[0]
+            let tailnum = numberlist[1]
+            if srcnum <= tailnum
+                let codestring  =  GatherIntoRow(srcnum,tailnum)
+                let line = tailnum + 1
+                let flag = IdentificationCodeComponents(codestring,filetype)
+                "if matchstr(flag,"call") != ""
+                    let codestring  = realityline . codestring
+                    let codestring  = flag  . "    " . codestring
+                    let codelist = add(codelist,codestring)
+                "endif
+            else
+                let line += 1
+            endif
+        else
+            let line += 1
+        endif
+    endwhile
+    let g:debuglist = codelist
+endfunction
+"}}}}}
+
 
 "}}}}}
 "{{{{ 定时器
@@ -8760,22 +8999,32 @@ endfunction
 "主要功能：每个文件夹下导入README 文件，文件中记录当前文件夹下所有文件的功能
 "子目录的README 文件包含到上一级中
 "{{{{{2 function! s:TreeContens(type)            图形目录打开对应目录文件      可视模式下 逗号 + r 调用
-vnoremap <leader>r :<c-u>call <SID>TreeContens(visualmode())<cr>
-function! s:TreeContens(type)
-    let saved_unnamed_register = @@
-    if a:type ==# 'v'
-        normal! `<v`>y
-    elseif a:type ==# 'char'
-        normal! `[v`]y
-    else
-        return
-    endif
+"vnoremap <leader>r :<c-u>call <SID>TreeContens(visualmode())<cr>
+nnoremap <leader>r :call TreeContens()<cr>
+function! TreeContens(...)
+    "let saved_unnamed_register = @@
     let tempfile = ""
     let tempfile = @@
-    let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
-    silent execute "normal! :tabnew\<cr>"
-    silent execute "normal! :e " . tempfile . "\<cr>"
-    let @@ = saved_unnamed_register
+    let classfunc = ""
+    let searchstarge  = ""
+    let searchstarge = ""
+    let resultlist = ""
+    let tempchar = ""
+    if matchstr(tempfile,"█") ==# ""
+        let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
+        silent execute "normal! :tabnew\<cr>"
+        silent execute "normal! :e " . tempfile . "\<cr>"
+    else
+        let classfunc = copy(tempfile)
+        let tempchar = split(classfunc,"█")
+        if matchstr(classfunc,' case ') != ""
+        else
+            let searchstarge  = EncapsulateDifferentGrep("","fuc",tempchar)
+            let searchstarge = SelectEntireCode(copy(searchstarge))
+            let resultlist = ResultClassification(searchstarge)
+        endif
+    endif
+    "let @@ = saved_unnamed_register
 endfunction
 "}}}}}
 "{{{{{2 function! s:UpdateTreeContens(...)      更新图形目录                  普通模式下 逗号 + u 调用
@@ -10203,7 +10452,6 @@ function! FileAddLog(...)
             execute "normal! \<c-w>h"
             execute "normal! :q!\<cr>"
         endif
-        if IsComment(idx1) ==# 0
         let filename = expand("%:p")
     else
         let filename = a:1
@@ -10215,6 +10463,7 @@ function! FileAddLog(...)
     let idx1 = 0
     while idx1 <= line('$')
         let currentString  = getline(idx1)
+        if IsComment(idx1) ==# 0
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
             call cursor(idx1,1)
             let tempchar = StandardCharacters(line('.'))
