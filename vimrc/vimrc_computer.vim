@@ -9010,18 +9010,38 @@ function! TreeContens(...)
     let searchstarge = ""
     let resultlist = ""
     let tempchar = ""
+    let templist = []
+    let idx1 = 0
+    let g:debugflag = 20
     if matchstr(tempfile,"█") ==# ""
         let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
         silent execute "normal! :tabnew\<cr>"
         silent execute "normal! :e " . tempfile . "\<cr>"
     else
+        silent execute "normal! :tabnew\<cr>"
         let classfunc = copy(tempfile)
-        let tempchar = split(classfunc,"█")
+        let tempchar = split(classfunc,"█")[-1]
         if matchstr(classfunc,' case ') != ""
         else
             let searchstarge  = EncapsulateDifferentGrep("","fuc",tempchar)
             let searchstarge = SelectEntireCode(copy(searchstarge))
             let resultlist = ResultClassification(searchstarge)
+            echom string(resultlist[1])
+            let resultlist[1] = ListTo1D(resultlist[1] ,"█")
+            if len(resultlist[1]) != 0
+                while idx1 < len(resultlist[1])
+                    let templist = split(resultlist[1][idx1],":")
+                    call SwitchBuff(templist[0])
+                    let stackstring = ExtractKeyCodes(templist[1])
+                    if stackstring ==# classfunc
+                        silent call cursor(templist[1],1)
+                        return
+                    endif
+                    let idx1 += 1
+                endwhile
+            else
+                echom "没有找到函数"
+            endif
         endif
     endif
     "let @@ = saved_unnamed_register
