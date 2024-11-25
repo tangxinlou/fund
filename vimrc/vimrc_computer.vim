@@ -2355,6 +2355,7 @@ function! GatherIntoRow(...)
 endfunction
 "}}}}}
 "{{{{{2 MergeLinesOfCode(...)判断那几行能合并成符合代码格式的一行
+"echo MergeLinesOfCode(line('.'))
 function! MergeLinesOfCode(...)
     let line = a:1
     let iscomment = -1
@@ -2376,18 +2377,26 @@ function! MergeLinesOfCode(...)
             return [line -1 , line]
         elseif matchstr(currentstring,"default:") != ""
             return [line, line]
+        elseif matchstr(currentstring,"#include ") != ""
+            return [line, line]
+        elseif matchstr(currentstring,"#define ") != ""
+            return [line, line]
+        elseif matchstr(currentstring,"#if ") != ""
+            return [line, line]
+        elseif matchstr(currentstring,"#endif") != ""
+            return [line, line]
         elseif join(split(currentstring)) ==# "}"
             return [line, line]
         elseif matchstr(currentstring,'^\s*{') != ""
             return [line -1 , line]
-        elseif matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";"
+        elseif (matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";") &&  matchstr(currentstring,"{}") != "{}"
             let end = line
         elseif  matchstr(currentstring," case ") != ""  ||  matchstr(currentstring,"#define ") != ""
             return [line,line]
         else
             if 3 > g:debugflag | call Dbug( "tangxinlou6",3) | endif
             silent call cursor(line,1)
-            silent let BracketLine = search("{")
+            silent let BracketLine = JumpToNext('{','w')[0]
             silent call cursor(line,1)
             silent let SemicolonLine = search(";")
             if BracketLine > line  || SemicolonLine > line
@@ -2487,41 +2496,42 @@ function! IsComment(...)
     if  join(split(getline(line))) ==# ""
         let iscomment = 1
     else
-    if 10 > g:debugflag | call Dbug("commentbegin" ,10,2) | endif
+        if 10 > g:debugflag | call Dbug("commentbegin" ,10,2) | endif
         if 10 > g:debugflag | call Dbug( "comment 1",10,2) | endif
         silent call cursor(line,1)
         if 10 > g:debugflag | call Dbug( getline(line),10,2) | endif
         let secondNonWhitespace = matchstr(getline('.'), '\S\{2}')
-        if secondNonWhitespace ==# "//"
+
+        if 10 > g:debugflag | call Dbug( "findbegin",10,2) | endif
+        silent let endcursor = searchpos('\*\/','w')
+        silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
+        if 10 > g:debugflag | call Dbug( "findend",10,2) | endif
+        if startcursor[0] <= line &&  line <= endcursor[0]
             let iscomment = 1
-        elseif  secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
-            "split(getline('.'),"*/")
-            if matchstr(getline(line),"*/") != ""
-                let length = len(split(join(split(getline(line))),"*/"))
-                if length ==# 0
-                    let iscomment = 1
-                elseif length ==# 1
-                    let iscomment = 1
-                endif
-            else
-                let iscomment = 1
-            endif
-        elseif matchstr(getline(line),"@") != ""
-            let templist = split(getline(line))
-            let iscomment = 1
-            while idx1 < len(templist)
-                if matchstr(templist[idx1],"@") ==# ""
-                    let iscomment = 0
-                endif
-                let idx1 += 1
-            endwhile
         else
-            if 10 > g:debugflag | call Dbug( "findbegin",10,2) | endif
-            silent let endcursor = searchpos('\*\/','w')
-            silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
-            if 10 > g:debugflag | call Dbug( "findend",10,2) | endif
-            if startcursor[0] <= line &&  line <= endcursor[0]
+            if secondNonWhitespace ==# "//"
                 let iscomment = 1
+            elseif  secondNonWhitespace ==# "*/" || secondNonWhitespace ==# "/*"
+                "split(getline('.'),"*/")
+                if matchstr(getline(line),"*/") != ""
+                    let length = len(split(join(split(getline(line))),"*/"))
+                    if length ==# 0
+                        let iscomment = 1
+                    elseif length ==# 1
+                        let iscomment = 1
+                    endif
+                else
+                    let iscomment = 1
+                endif
+            elseif matchstr(getline(line),"@") != ""
+                let templist = split(getline(line))
+                let iscomment = 1
+                while idx1 < len(templist)
+                    if matchstr(templist[idx1],"@") ==# ""
+                        let iscomment = 0
+                    endif
+                    let idx1 += 1
+                endwhile
             endif
         endif
     endif
@@ -2916,6 +2926,38 @@ function! IsFileType(...)
         let filetype = "vimrc"
     endif
     return filetype
+endfunction
+"}}}}}
+"{{{{{2 JumpToNext(...)跳转到下一个的{ 规避{}
+"call JumpToNext('{','w')
+function! JumpToNext(...)
+    let char = a:1
+    let drect = a:2
+    let cursor = []
+    let flag = 0
+    let tempchar = ""
+    while flag ==# 0 
+        let cursor =  searchpos(char,drect)
+        let tempchar = getline(cursor[0])
+        if char ==# "{"
+            if cursor[1] ==# len(tempchar)
+                let flag = 1
+            else
+                if tempchar[cursor[1] -1] ==# '{' && tempchar[cursor[1]] != '}'
+                    let flag = 1
+                endif
+            endif
+        elseif char ==# "}"
+            if tempchar[cursor[1] -1] ==# '}' && tempchar[cursor[1] - 2] != '{'
+                let flag = 1
+            endif
+        endif
+        if IsComment(cursor[0]) ==# 1 
+            let flag = 0
+        endif
+        call cursor(cursor[0],cursor[1])
+    endwhile
+    return cursor
 endfunction
 "}}}}}
 "}}}}
