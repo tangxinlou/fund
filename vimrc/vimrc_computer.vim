@@ -363,7 +363,7 @@ nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode
 nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
 nnoremap <leader>tr :tabnew<cr>:execute "e " . Homedir("txl/transplant.txt",1)<cr>
 "加载vimrc文件
-nnoremap <leader>sv :source $MYVIMRC<cr>
+nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
 ""}}}
 "搜索命令{{{{
@@ -2936,7 +2936,7 @@ function! JumpToNext(...)
     let cursor = []
     let flag = 0
     let tempchar = ""
-    while flag ==# 0 
+    while flag ==# 0
         let cursor =  searchpos(char,drect)
         let tempchar = getline(cursor[0])
         if char ==# "{"
@@ -2952,7 +2952,7 @@ function! JumpToNext(...)
                 let flag = 1
             endif
         endif
-        if IsComment(cursor[0]) ==# 1 
+        if IsComment(cursor[0]) ==# 1
             let flag = 0
         endif
         call cursor(cursor[0],cursor[1])
@@ -4675,14 +4675,18 @@ function!  SelectAndModifyByName(...)
     let idx1 = 0
     let templist = []
     let tempchar = ""
+    let path = ""
+    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s "
     if a:0 ==# 1
         let keychar = a:1
     else
         let keychar = input("查找谁的提交")
         "let keychar = "tangxinlouosc"
+        let path = input("查看修改涉及的目录")
+        let path = "-- " . path
+        let command = command  . path
     endif
-    "let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%cd█\%an█\%H█\%s"
-    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s"
+    "let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s -- libs/"
     let resultlist = split(system(command),"\n")
     while idx1 < len(resultlist)
         let tempchar = split(resultlist[idx1],"█")
@@ -8312,6 +8316,7 @@ function! IdentificationCodeComponents(...)
     let call = 12
     let func = 13
     let statement = 14
+    let break = 15
     "}}}}
      "判断当前行是否继续调用函数
       "有分号行
@@ -8325,6 +8330,9 @@ function! IdentificationCodeComponents(...)
         "调用几个函数
         if matchstr(codestring," case ") != ""
             let flag = flag . "case"
+            return flag
+        elseif matchstr(codestring," break") != ""
+            let flag = flag . "break"
             return flag
         elseif matchstr(codestring," default:") != ""
             let flag = flag . "default"
