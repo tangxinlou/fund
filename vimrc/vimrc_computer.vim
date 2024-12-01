@@ -336,6 +336,7 @@ nnoremap <leader>log  :call append(line('.'),g:debuglist)
 nnoremap <F12>  : call CallStack(0,[],line('.'),0,"",[])<cr>
 "nnoremap <F12>  : call WhichFunctionToCall(line('.'))<cr>
 "nnoremap <F12>  : call Exeample()<cr>
+nnoremap  <leader>temp : call  FunctionCallParsing("               enforceCdmAssociation(service.mCompanionDeviceManager, service,source.getPackageName(), Binder.getCallingUid(), device);", "getCallingUid")<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -426,6 +427,8 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 "判断带{有下面的就不是函数
 let g:nonfunctionlist = ["if(",
+            \" interface ",
+            \"class ",
             \"} catch",
             \"() -> {",
             \"namespace",
@@ -1031,6 +1034,7 @@ function! IsContain(...)
     let idx1 = 0
     let string = a:1
     let list = a:2
+    "转义
     let string = escape(string, '[]')
     "}}}}
     while idx1 < len(list)
@@ -7105,6 +7109,7 @@ endfunction
 
 "{{{{{2   ExtractKeyCodes(...) 提取关键代码
 nnoremap <leader>a :call ExtractKeyCodes()<cr>
+"nnoremap <leader>a :echo ExtractKeyCodes(line('.'),1)<cr>
 function! ExtractKeyCodes(...)
     "{{{{{3 变量定义
     let codelist = []
@@ -7123,6 +7128,7 @@ function! ExtractKeyCodes(...)
     let tempstring = ""
     let lastline = -1
     let g:alldebugflag = "true"
+    let functionline = "-1"
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -7131,7 +7137,7 @@ function! ExtractKeyCodes(...)
         "call ClearBracket()
         if 22 > g:debugflag | call Dbug( "cleend",22,0) | endif
         if 20 > g:debugflag | call Dbug( "begin1",20,0) | endif
-    elseif a:0 ==# 1
+    elseif a:0 != 0
         call cursor(a:1,1)
         let realityline = a:1
     endif
@@ -7182,6 +7188,9 @@ function! ExtractKeyCodes(...)
         endif
         if 11 > g:debugflag | call Dbug( "findend",11,0) | endif
         let foldstring = StandardCharacters(start[0])
+        if !(CheckStringIsObtainOfList(foldstring,g:nonfunctionlist))
+            let functionline = start[0]
+        endif
         if 11 > g:debugflag | call Dbug( foldstring,11,0) | endif
         "目标行格式不对
         if 11 > g:debugflag | call Dbug( "ifbegin",11,0) | endif
@@ -7235,7 +7244,7 @@ function! ExtractKeyCodes(...)
         let path = expand("%:p")
         let path =  substitute(path , g:homedir . '/' , '', 'g')
         let codelist = insert(codelist,path.':'. realityline  .':')
-        silent call cursor(realityline,col)
+        call cursor(realityline,col)
         let @d = string(codelist)
         call AddNumber3(codelist)
         if matchstr(expand("%:t"),'\.cc') != ""
@@ -7243,6 +7252,7 @@ function! ExtractKeyCodes(...)
         endif
         echo tempstring
     elseif a:0 ==# 1
+        call cursor(realityline,col)
         let idx1 = 0
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
@@ -7259,6 +7269,9 @@ function! ExtractKeyCodes(...)
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         return tempstring
+    elseif a:0 ==# 2
+        call cursor(realityline,col)
+        return functionline
     endif
 endfunction
 "}}}}}
@@ -8422,8 +8435,36 @@ function! IdentificationCodeComponents(...)
 endfunction
 "}}}}}
 
+"{{{{{2   StringComponents(...)判断字符串是什么成分和IdentificationCodeComponents混用
+"echo  StringComponents("service","def",getline('.'))
+function! StringComponents(...)
+    "{{{{{3 变量定义
+    let keystr = a:1
+    let flag = a:2
+    let codestring = a:3
+    let tempchar = ""
+    let result = 0
+    "}}}}
+    if flag ==# "def"
+        if matchstr(codestring,"=") != ""
+            let tempchar = split(codestring,";")[0]
+            let tempchar = split(tempchar,"=")[0]
+            let tempchar = split(tempchar)[-1]
+        else
+            let tempchar = split(codestring,";")[0]
+            let tempchar = split(tempchar)[-1]
+        endif
+        if tempchar ==#  keystr 
+            let result = 1
+        endif
+    endif
+   return result
+endfunction
+"}}}}}  
+
 "{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
 nnoremap <F3> :call IdentifyTheCurrentFile()<cr>
+"call IdentifyTheCurrentFile(1396,1401,"","service")
 function! IdentifyTheCurrentFile(...)
     "{{{{{3 变量定义
     let codelist = []
@@ -8437,9 +8478,20 @@ function! IdentifyTheCurrentFile(...)
     let  realityline = -1
     let g:debugflag = 20
     let flag = ""
+    let srcline = line
+    let tailline = line('$')
+    let type = ""
+    let matchstr = ""
+    if a:0 != 0
+        let srcline = a:1
+        let tailline = a:2
+        let type = a:3
+        let matchstr = a:4
+        let line = srcline 
+    endif
     "}}}}
     set noignorecase
-    while line <= line('$')
+    while line <= tailline
         let  realityline = line
         " echo  MergeLinesOfCode(line('.'))
         let numberlist = MergeLinesOfCode(realityline)
@@ -8449,12 +8501,14 @@ function! IdentifyTheCurrentFile(...)
             if srcnum <= tailnum
                 let codestring  =  GatherIntoRow(srcnum,tailnum)
                 let line = tailnum + 1
-                let flag = IdentificationCodeComponents(codestring,filetype)
-                "if matchstr(flag,"call") != ""
-                    let codestring  = realityline . codestring
-                    let codestring  = flag  . "    " . codestring
-                    let codelist = add(codelist,codestring)
-                "endif
+                if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
+                    let flag = IdentificationCodeComponents(codestring,filetype)
+                    if type ==# "" || matchstr(flag,type) != ""
+                        let codestring  = realityline . codestring
+                        let codestring  = flag  . "    " . codestring
+                        let codelist = add(codelist,codestring)
+                    endif
+                endif
             else
                 let line += 1
             endif
@@ -8463,9 +8517,99 @@ function! IdentifyTheCurrentFile(...)
         endif
     endwhile
     let g:debuglist = codelist
+    return codelist
 endfunction
 "}}}}}
 
+"{{{{{2   FunctionCallParsing(...) 函数调用解析
+"call  FunctionCallParsing("               enforceCdmAssociation(service.mCompanionDeviceManager, service,source.getPackageName(), Binder.getCallingUid(), device);", "getCallingUid")
+function! FunctionCallParsing(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let funcstring = a:2
+    "}}}}
+    "for if 里面的子调用，调用里面嵌套调用，子线程调用
+
+endfunction
+"}}}}} 
+
+"{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义
+"echo FuncToDefine(ExtractKeyCodes(line('.'),1),line('.'),"service")
+"echom FuncToDefine(1396,1401,"service")
+function! FuncToDefine(...)
+    "{{{{{3 变量定义
+    let funcline = a:1
+    let curline = a:2
+    let funcstring = a:3
+    let localvariable = ""
+    let flag = ""
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let codestring = ""
+    let cursor = []
+    let tempchar = ""
+    "}}}}
+    "第二种全局变量
+    "第三种包名
+    "echo searchpos('\<' . "service" . '\>','w')
+    "let flag = IdentificationCodeComponents(codestring,filetype)
+    call cursor(1,1)
+    let cursor = searchpos('\<' . funcstring . '\>','w')
+    if cursor != []
+        let codestring = getline(cursor[0])
+        let flag = IdentificationCodeComponents(codestring,filetype)
+        if flag ==# "import"
+            let tempchar = split(codestring,";")[0]
+            let tempchar = split(tempchar,'\.')[-1]
+        elseif matchstr(flag,"def") != ""
+            if  StringComponents(funcstring ,"def",codestring)
+                if matchstr(codestring,"=") != ""
+                    let tempchar = split(codestring,";")[0]
+                    let tempchar = split(tempchar,"=")[0]
+                    let tempchar = split(tempchar)[-2]
+                else
+                    let tempchar = split(codestring,";")[0]
+                    let tempchar = split(tempchar)[-2]
+                endif
+            endif
+        endif
+        call cursor(curline,1)
+        if tempchar != ""
+            return tempchar
+        endif
+    endif
+    "第一种当前函数里面局部变量
+    "let localvariable = IdentifyTheCurrentFile(1396,1401,'func\|def',"service")
+    let localvariable = IdentifyTheCurrentFile(funcline,curline,'def',funcstring)
+    if localvariable != []
+        let codestring = join(split(localvariable[0])[2:])
+        if  StringComponents(funcstring ,"def",codestring)
+            if matchstr(codestring,"=") != ""
+                let tempchar = split(codestring,";")[0]
+                let tempchar = split(tempchar,"=")[0]
+                let tempchar = split(tempchar)[-2]
+            else
+                let tempchar = split(codestring,";")[0]
+                let tempchar = split(tempchar)[-2]
+            endif
+            if tempchar != ""
+                return tempchar
+            endif
+        endif
+    endif
+    "第二种函数参数
+    let localvariable = IdentifyTheCurrentFile(funcline,curline,'func',funcstring)
+    if localvariable != []
+        let codestring = join(split(localvariable[0])[2:])
+        let tempchar = split(codestring,'(')[1]
+        let tempchar = split(tempchar,')')[0]
+        let tempchar = split(tempchar,',')
+        let iscontain =  IsContain(funcstring[idx1],tempchar)
+        let tempchar = split(iscontain)[0]
+        return tempchar
+    endif
+endfunction
+"}}}}}                                                                                                                         
 
 "}}}}}
 "{{{{ 定时器
