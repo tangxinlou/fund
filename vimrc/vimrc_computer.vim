@@ -169,7 +169,7 @@ augroup filetype_csv
     autocmd BufNewFile,BufRead *.csv      setf csv
     autocmd BufEnter * :call SetFileType()
     "autocmd WinEnter * :call DynamicallyOpenTheMouse()
-    autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
+    "autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
 augroup END
 augroup filetype_python
     autocmd BufNewFile *.py      :call Openfile()
@@ -532,7 +532,7 @@ let g:filterchar = {
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present',
             \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|l2c_link_timeout All channels closed|forcing LE transport for Bonding',
             \"04hfp_simple_connect" : 'connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
-            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate',
+            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(',
             \"00temp" : "temptemptem"}
@@ -8454,13 +8454,13 @@ function! StringComponents(...)
             let tempchar = split(codestring,";")[0]
             let tempchar = split(tempchar)[-1]
         endif
-        if tempchar ==#  keystr 
+        if tempchar ==#  keystr
             let result = 1
         endif
     endif
    return result
 endfunction
-"}}}}}  
+"}}}}}
 
 "{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
 nnoremap <F3> :call IdentifyTheCurrentFile()<cr>
@@ -8487,7 +8487,7 @@ function! IdentifyTheCurrentFile(...)
         let tailline = a:2
         let type = a:3
         let matchstr = a:4
-        let line = srcline 
+        let line = srcline
     endif
     "}}}}
     set noignorecase
@@ -8531,11 +8531,11 @@ function! FunctionCallParsing(...)
     "for if 里面的子调用，调用里面嵌套调用，子线程调用
 
 endfunction
-"}}}}} 
+"}}}}}
 
 "{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义
 "echo FuncToDefine(ExtractKeyCodes(line('.'),1),line('.'),"service")
-"echom FuncToDefine(1396,1401,"service")
+"echom FuncToDefine(1785,1797,"receiver")
 function! FuncToDefine(...)
     "{{{{{3 变量定义
     let funcline = a:1
@@ -8549,8 +8549,39 @@ function! FuncToDefine(...)
     let cursor = []
     let tempchar = ""
     "}}}}
-    "第二种全局变量
-    "第三种包名
+    "第一种当前函数里面局部变量
+    "let localvariable = IdentifyTheCurrentFile(1396,1401,'func\|def',"service")
+    "echom  string(IdentifyTheCurrentFile(1785,1797,'def',"service"))
+    let localvariable = IdentifyTheCurrentFile(funcline,curline,'def',funcstring)
+    if localvariable != []
+        let codestring = join(split(localvariable[-1])[2:])
+        if  StringComponents(funcstring ,"def",codestring)
+            if matchstr(codestring,"=") != ""
+                let tempchar = split(codestring,";")[0]
+                let tempchar = split(tempchar,"=")[0]
+                let tempchar = split(tempchar)[-2]
+            else
+                let tempchar = split(codestring,";")[0]
+                let tempchar = split(tempchar)[-2]
+            endif
+            if tempchar != ""
+                return tempchar
+            endif
+        endif
+    endif
+    "第二种函数参数
+    let localvariable = IdentifyTheCurrentFile(funcline,curline,'func',funcstring)
+    if localvariable != []
+        let codestring = join(split(localvariable[0])[2:])
+        let tempchar = split(codestring,'(')[1]
+        let tempchar = split(tempchar,')')[0]
+        let tempchar = split(tempchar,',')
+        let iscontain =  IsContain(funcstring,tempchar)
+        let tempchar = split(iscontain)[0]
+        return tempchar
+    endif
+    "第三种全局变量
+    "第四种包名
     "echo searchpos('\<' . "service" . '\>','w')
     "let flag = IdentificationCodeComponents(codestring,filetype)
     call cursor(1,1)
@@ -8578,38 +8609,9 @@ function! FuncToDefine(...)
             return tempchar
         endif
     endif
-    "第一种当前函数里面局部变量
-    "let localvariable = IdentifyTheCurrentFile(1396,1401,'func\|def',"service")
-    let localvariable = IdentifyTheCurrentFile(funcline,curline,'def',funcstring)
-    if localvariable != []
-        let codestring = join(split(localvariable[0])[2:])
-        if  StringComponents(funcstring ,"def",codestring)
-            if matchstr(codestring,"=") != ""
-                let tempchar = split(codestring,";")[0]
-                let tempchar = split(tempchar,"=")[0]
-                let tempchar = split(tempchar)[-2]
-            else
-                let tempchar = split(codestring,";")[0]
-                let tempchar = split(tempchar)[-2]
-            endif
-            if tempchar != ""
-                return tempchar
-            endif
-        endif
-    endif
-    "第二种函数参数
-    let localvariable = IdentifyTheCurrentFile(funcline,curline,'func',funcstring)
-    if localvariable != []
-        let codestring = join(split(localvariable[0])[2:])
-        let tempchar = split(codestring,'(')[1]
-        let tempchar = split(tempchar,')')[0]
-        let tempchar = split(tempchar,',')
-        let iscontain =  IsContain(funcstring[idx1],tempchar)
-        let tempchar = split(iscontain)[0]
-        return tempchar
-    endif
+    return tempchar
 endfunction
-"}}}}}                                                                                                                         
+"}}}}}
 
 "}}}}}
 "{{{{ 定时器
@@ -9365,6 +9367,7 @@ function! VisualiZationcsv(...)
     "读取当前文件,找到数据最长的一行,对缺少空格的行补逗号
     if mode ==# 1
         if "UTF-8" != matchstr(system("file " . expand("%:p")),"UTF-8")
+            "call system("iconv -f cp936 -t utf-8 102.csv -o 102.csv")
             call system("iconv -f cp936 -t utf-8 " . expand("%:p") . " -o " . expand("%:p"))
         endif
     endif
@@ -9398,6 +9401,34 @@ function! VisualiZationcsv(...)
     else
         call system("iconv -f utf-8 -t cp936 " . expand("%:p") . " -o " . expand("%:p"))
     endif
+endfunction
+"}}}}}
+
+"{{{{{2   JoinTwoTables(...) 拼接两个表格
+function! JoinTwoTables(...)
+    "{{{{{3 变量定义
+    let tableA = []
+    let tableB = []
+    let fileA = "87.csv"
+    let fileB = "90.csv"
+    let colnum = ""
+    let listcol = []
+    let idx1 = 0
+    let iscontain  = ""
+    "}}}}
+
+    "let fileA = input("Afilename")
+    "let fileB = input("Bfilename")
+    let colnum = str2nr(input("按照多少列拼接"))
+    let tableA = readfile(fileA)
+    let tableB = readfile(fileB)
+    let listcol   = GetOneOfTheColumns(tableA,",",colnum)
+    while idx1 < len(listcol)
+        let iscontain =  IsContain(listcol[idx1],tableB)
+        let tableA[idx1] = tableA[idx1] . "," . iscontain
+        let idx1 += 1
+    endwhile
+    let g:debuglist = tableA
 endfunction
 "}}}}}
 
