@@ -1,4 +1,5 @@
 "设置标志位
+let g:vimrcid = 5
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -1128,6 +1129,8 @@ function! DictTest()
     echo stringdict
     echo char[1003]
     echo stringdict[1003]
+    call Dbug1("dd" ,10,0 ,'DictTest 0')
+    call Dbug1( "dd",10,0 ,'DictTest 1')
     let dict1  = eval(stringdict)
     echo eval(string(char3))
     echo "tangxinlou333"
@@ -1442,8 +1445,7 @@ function! Dbug(...)
     endif
     "}}}}
     if flag > g:debugflag
-        if type(val) ==# 1
-            let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())."-". val
+            let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())."-". string(val)
             if append ==#  0
                 echom tempchar
                 let g:debuglist = add(g:debuglist,tempchar)
@@ -1454,9 +1456,39 @@ function! Dbug(...)
             elseif append ==# 2
                 let g:debuglist = add(g:debuglist,tempchar)
             endif
-        else
-            echom string(val)
-        endif
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2   Dbug1(...) 打印log的函数
+let g:debugflag = 1
+let g:debuglist = []
+"默认值是2，所有的都会打印
+"比较重要的设置成3
+function! Dbug1(...)
+    "{{{{{3 变量定义
+    let val = a:1
+    let flag = a:2
+    let append = 0
+    let tempchar = ""
+    let funcname = ""
+    if a:0 !=  2
+        let append = a:3
+        let funcname = a:4
+    endif
+    "}}}}
+    if flag > g:debugflag
+            let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())." - ". funcname . " - " . string(val)
+            if append ==#  0
+                echom tempchar
+                let g:debuglist = add(g:debuglist,tempchar)
+            elseif append ==# 1
+                call append(line('.'),tempchar)
+                call cursor(line('.') + 1,1)
+                let g:debuglist = add(g:debuglist,tempchar)
+            elseif append ==# 2
+                let g:debuglist = add(g:debuglist,tempchar)
+            endif
     endif
 endfunction
 "}}}}}
@@ -2962,6 +2994,34 @@ function! JumpToNext(...)
         call cursor(cursor[0],cursor[1])
     endwhile
     return cursor
+endfunction
+"}}}}}
+"{{{{{2 ItString(...)判断是否是字符串而不是代码
+"call ItString("throw new IllegalStateException("start() called twice");,"start")
+"call ItString(getline(5),"start")
+function! ItString(...)
+    let flag = 0
+    let totalstr = a:1
+    let childstr = a:2
+    let char = '"'
+    let length = -1
+    let srcnum = -1
+    let tailnum = -1
+    let indexlist = StringPosition(totalstr,char)
+    let length = len(childstr)
+    let srcnum = match(totalstr,childstr)
+    if srcnum != -1
+        let tailnum = srcnum + length
+        let srcnum = srcnum + 1
+        if len(indexlist) ==# 2
+            if indexlist[0] < srcnum && indexlist[1] > tailnum
+                let flag = 1
+            endif
+        endif
+    else
+        return -1
+    endif
+    return flag
 endfunction
 "}}}}}
 "}}}}
@@ -7577,12 +7637,16 @@ function! AddDebugLog(...)
     let funcflag = "__FUNCTION__"
     let casestr = ""
     let tempchar = ""
+    let cursor = []
+    let vimrcdebug = ""
     "}}}}
     if a:0 == 0
         let line = line('.')
-        if g:debugid ==# 0
-            echo "上一次最后保存的debugid" . string(@s)
-            let g:debugid = input("设置初始debug值")
+        if matchstr(expand('%:t'),"vimrc") != "vimrc"
+            if g:debugid ==# 0
+                echo "上一次最后保存的debugid" . string(@s)
+                let g:debugid = input("设置初始debug值")
+            endif
         endif
     else
         let line = a:1
@@ -7652,6 +7716,23 @@ function! AddDebugLog(...)
             endif
         endif
         call cursor(line,1)
+    elseif matchstr(expand('%:t'),"vimrc") ==# "vimrc"
+        call cursor(line,1)
+        let cursor = searchpairpos('function!', '', 'endfunction', 'b')
+        let tempchar = getline(cursor[0])
+        echom tempchar
+        echom line
+        let tempchar = split(tempchar,'(')[0]
+        let tempchar = split(tempchar)[-1]
+        let tempchar = string(tempchar . " " . g:vimrcid)
+        let vimrcdebug = "call Dbug1( ,10,0 ,". tempchar .")"
+        call cursor(line,1)
+        call append(line('.'),vimrcdebug)
+        call cursor(line + 1,1)
+        silent execute "normal! =="
+        call search("(")
+        let g:vimrcid += 1
+        call setline(2,"let g:vimrcid = " . g:vimrcid)
     endif
 
     set ignorecase
@@ -7889,7 +7970,7 @@ function! EncapsulateDifferentGrep(...)
     if filename ==# ""
         let grepcmd = "grep -Esnrw --binary-files=without-match  --include=*{.c,.cc,.cpp,.java,.h} "
     else
-        let grepcmd = "grep -Esnw --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+        let grepcmd = "grep -Esnrw --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
     endif
     let result = ""
     "}}}}
@@ -7897,9 +7978,14 @@ function! EncapsulateDifferentGrep(...)
         "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
         let grepchar = '"' . grepchar  .'" '
         let grepcmd = grepcmd . grepchar . filename
-        echom grepcmd
-        echom revertgrepcmd
+        silen echom grepcmd
+        silent echom revertgrepcmd
         let result = system(grepcmd . " | " . revertgrepcmd)
+    elseif greptype ==# "class"
+        let grepchar = '"class ' . grepchar  .'" '
+        let grepcmd = grepcmd . grepchar . filename
+        silent echom grepcmd
+        let result = system(grepcmd)
     endif
     return result
 endfunction
@@ -8214,7 +8300,8 @@ function! CallStack(...)
     let stackstring = ""
     let allstackstring = a:6
     let path = expand("%")
-    let debugflag = "true"
+    let debugflag = "false"
+    let calledstring = ""
     "}}}}
     if mode ==# 0
         "当前行是怎么调用下来的
@@ -8253,20 +8340,26 @@ function! CallStack(...)
                     echom resultlist[0][idx1]
                 endif
                 call SwitchBuff(templist[0])
-                let stackstring = ExtractKeyCodes(templist[1])
-                if debugflag ==# "true"
-                endif
-                if stackstring ==# laststackstring
-                    let result = add(result,repeat(" ",(flag + 1) * 4) . stackstring)
-                else
-                    if count(allstackstring,stackstring) ==# 0
-                        let allstackstring = add(allstackstring,copy(stackstring))
-                       call CallStack(0,result,templist[1],copy(flag  + 1),stackstring,allstackstring)
-                    else
+                let calledstring = FindTheCalledParty(templist[1],tempchar)
+                if  calledstring  ==#  ""
+                    call Dbug1(resultlist[0][idx1],10,0 ,'CallStack 4 这个函数识别错误')
+                elseif matchstr(laststackstring,calledstring) ==# calledstring
+                    let stackstring = ExtractKeyCodes(templist[1])
+                    if debugflag ==# "true"
+                    endif
+                    if stackstring ==# laststackstring
                         let result = add(result,repeat(" ",(flag + 1) * 4) . stackstring)
+                    else
+                        if count(allstackstring,stackstring) ==# 0
+                            let allstackstring = add(allstackstring,copy(stackstring))
+                            call CallStack(0,result,templist[1],copy(flag  + 1),stackstring,allstackstring)
+                        else
+                            let result = add(result,repeat(" ",(flag + 1) * 4) . stackstring)
+                        endif
                     endif
                 endif
                 let idx1 += 1
+
             endwhile
         else
             "没有调用
@@ -8447,16 +8540,19 @@ function! StringComponents(...)
     "}}}}
     if flag ==# "def"
         if matchstr(codestring,"=") != ""
+            "赋值语句
             let tempchar = split(codestring,";")[0]
             let tempchar = split(tempchar,"=")[0]
             let tempchar = split(tempchar)[-1]
         else
+            "非赋值语句
             let tempchar = split(codestring,";")[0]
             let tempchar = split(tempchar)[-1]
         endif
         if tempchar ==#  keystr
             let result = 1
         endif
+    "elseif flag ==# "call"
     endif
    return result
 endfunction
@@ -8548,7 +8644,13 @@ function! FuncToDefine(...)
     let codestring = ""
     let cursor = []
     let tempchar = ""
+    let AbsolutePath = expand("%:p:h")
     "}}}}
+    "第三种同路径的包名
+    let searchstarge  = EncapsulateDifferentGrep(AbsolutePath ,"class",funcstring)
+    if matchstr(searchstarge,funcstring) ==# funcstring
+        return funcstring
+    endif
     "第一种当前函数里面局部变量
     "let localvariable = IdentifyTheCurrentFile(1396,1401,'func\|def',"service")
     "echom  string(IdentifyTheCurrentFile(1785,1797,'def',"service"))
@@ -8580,8 +8682,9 @@ function! FuncToDefine(...)
         let tempchar = split(iscontain)[0]
         return tempchar
     endif
-    "第三种全局变量
-    "第四种包名
+
+    "第四种全局变量
+    "第五种包名
     "echo searchpos('\<' . "service" . '\>','w')
     "let flag = IdentificationCodeComponents(codestring,filetype)
     call cursor(1,1)
@@ -8610,6 +8713,44 @@ function! FuncToDefine(...)
         endif
     endif
     return tempchar
+endfunction
+"}}}}}
+
+"{{{{{2   FindTheCalledParty(...) 查找是调用的哪个函数
+"call  FindTheCalledParty(1058,"getLooper")
+function! FindTheCalledParty(...)
+    "{{{{{3 变量定义
+    let line = a:1
+    let funcname = a:2
+    let classname = ""
+    let tempstring = ""
+    let iscontain =  ""
+    let codestring = ""
+    let fucline = -1
+    let result  = ""
+    "}}}}
+    let codestring = StandardCharacters(line)
+    if matchstr(codestring,'"') != "" && ItString(codestring,funcname) ==# 1
+    else
+        let tempstring = copy(codestring)
+        let tempstring = split(tempstring,',')
+        let iscontain =  IsContain(funcname,tempstring)
+        let tempstring = split(iscontain)
+        let iscontain =  IsContain(funcname,tempstring)
+        let tempstring = split(iscontain,funcname . '(')[0]
+
+        let tempstring = split(tempstring,'\.')
+        if len(tempstring) > 1
+            call Dbug1(codestring,10,0 ,'FindTheCalledParty 2 多重调用')
+        elseif tempstring ==# []
+            call Dbug1( codestring,10,0 ,'FindTheCalledParty 3 找不到class')
+        endif
+        let tempstring = tempstring[0]
+        let fucline = ExtractKeyCodes(line,1)
+        let classname = FuncToDefine(fucline ,line,tempstring)
+        let result  = classname . "█" . funcname
+    endif
+    return result
 endfunction
 "}}}}}
 
