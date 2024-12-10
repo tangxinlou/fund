@@ -2404,6 +2404,8 @@ function! MergeLinesOfCode(...)
     let start = -1
     let idx1 = 0
     let indexlist = []
+    let col = ""
+    let tempstring = ""
     if 3 > g:debugflag | call Dbug(getline(line) ,3) | endif
     if iscomment ==# 0
         let currentstring = getline(line)
@@ -2497,8 +2499,20 @@ function! MergeLinesOfCode(...)
             else
                 if 3 > g:debugflag | call Dbug( line,3) | endif
                 if 3 > g:debugflag | call Dbug( end,3) | endif
-                if line ==# end
-                    return [line,line]
+                let tempstring = getline(line)
+                let col = FirstNonBlank(tempstring)
+                if  tempstring[col] ==# "."
+                    let idx1 = line - 1
+                    while 1
+                        let tempstring = getline(idx1)
+                        let col = FirstNonBlank(tempstring)
+                        if tempstring[col] != "."
+                            let start = idx1
+                            break
+                        endif
+                        let idx1 -= 1
+                    endwhile
+                    return [start,end]
                 else
                     if count(currentstring,'}') != 0
                         return [line,line]
@@ -3022,6 +3036,22 @@ function! ItString(...)
         return -1
     endif
     return flag
+endfunction
+"}}}}}
+"{{{{{2 FirstNonBlank(...)获取字符串非空字符位置
+function! FirstNonBlank(...)
+    let string = a:1
+    let length = len(string)
+    let idx1 = 0
+    let col = -1
+    while idx1 < length
+        if string[idx1] != " "
+            break
+        endif
+        let idx1 += 1
+    endwhile
+    let col = idx1
+    return col
 endfunction
 "}}}}}
 "}}}}
