@@ -337,7 +337,7 @@ nnoremap <leader>log  :call append(line('.'),g:debuglist)
 nnoremap <F12>  : call CallStack(0,[],line('.'),0,"",[])<cr>
 "nnoremap <F12>  : call WhichFunctionToCall(line('.'))<cr>
 "nnoremap <F12>  : call Exeample()<cr>
-nnoremap  <leader>temp : call  FunctionCallParsing("               enforceCdmAssociation(service.mCompanionDeviceManager, service,source.getPackageName(), Binder.getCallingUid(), device);", "getCallingUid")<cr>
+nnoremap  <leader>temp : call  JoinTwoTables()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -428,6 +428,7 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 "判断带{有下面的就不是函数
 let g:nonfunctionlist = ["if(",
+            \"  new ",
             \" interface ",
             \"class ",
             \"} catch",
@@ -2828,7 +2829,7 @@ function! ResultClassification(...)
     return resultlist
 endfunction
 "}}}}}
-"{{{{{2 StringPosition(...)字符串位置
+"{{{{{2 StringPosition(...)字符在字符串位置
 function! StringPosition(...)
     let strings = a:1
     let char = a:2
@@ -2844,6 +2845,24 @@ function! StringPosition(...)
         endif
         let idx1 += 1
     endwhile
+    return indexlist
+endfunction
+"}}}}}
+"{{{{{2 ChildStringPosition(...)子字符串在字符串位置
+function! ChildStringPosition(...)
+    let strings = a:1
+    let childstring = a:2
+    let indexlist = []
+    let srcnum = -1
+    let tailnum = -1
+    let length = len(childstring)
+    let srcnum = match(strings,childstring)
+    if srcnum != -1
+        let tailnum = srcnum  + length -1
+        let indexlist = add(indexlist,srcnum)
+        let indexlist = add(indexlist,tailnum)
+        return indexlist
+    endif
     return indexlist
 endfunction
 "}}}}}
@@ -3052,6 +3071,82 @@ function! FirstNonBlank(...)
     endwhile
     let col = idx1
     return col
+endfunction
+"}}}}}
+"{{{{{2 FindCorrespondingBracketPosition(...)在字符串中获取对应括号的位置
+"echom FindCorrespondingBracketPosition(getline(line('.')),col('.') -1)
+function! FindCorrespondingBracketPosition(...)
+    let codestring = a:1
+    let position = a:2
+    let idx1 = 0
+    let openflag = 0
+    let closeflag = 0
+    let resultposition = -1
+    if codestring[position] ==# '('
+        let idx1 = position + 1
+        let openflag = 1
+        while idx1 < len(codestring)
+            if codestring[idx1] ==# ')'
+                let closeflag += 1
+            endif
+            if codestring[idx1] ==# '('
+                let openflag += 1
+            endif
+            if openflag ==# closeflag
+                break
+            endif
+            let idx1 += 1
+        endwhile
+        let resultposition = idx1
+    elseif codestring[position] ==# ')'
+        let idx1 = position -1
+        let closeflag = 1
+        while idx1 >= 0
+            if codestring[idx1] ==# ')'
+                let closeflag += 1
+            endif
+            if codestring[idx1] ==# '('
+                let openflag += 1
+            endif
+            if openflag ==# closeflag
+                break
+            endif
+            let idx1 -= 1
+        endwhile
+        let resultposition = idx1
+    endif
+    return resultposition
+endfunction
+"}}}}}
+"{{{{{2 ClearingStringsInCode(...)在代码中清除字符串
+"echom ClearingStringsInCode(getline(line('.')))
+function! ClearingStringsInCode(...)
+    let codestring = a:1
+    let resultstr = ""
+    let indexlist = []
+    let idx1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    if count(codestring,'"') != 0
+        let indexlist = StringPosition(codestring,'"')
+        while idx1 <= len(indexlist) / 2
+            if idx1 ==# 0
+                let srcnum = 0
+                let tailnum = indexlist[idx1 * 2] - 2
+            elseif idx1 ==# len(indexlist) / 2
+                let srcnum = indexlist[idx1 * 2 -1]
+                let tailnum = -1
+            else
+                let srcnum = indexlist[idx1 * 2 - 1]
+                let tailnum = indexlist[idx1 * 2] - 2
+            endif
+            let resultstr = resultstr . codestring[srcnum:tailnum]
+            let idx1 += 1
+        endwhile
+        return resultstr
+    else
+        return codestring
+    endif
 endfunction
 "}}}}}
 "}}}}
@@ -7219,6 +7314,9 @@ function! ExtractKeyCodes(...)
     let lastline = -1
     let g:alldebugflag = "true"
     let functionline = "-1"
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let stackflag = ""
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -7320,42 +7418,71 @@ function! ExtractKeyCodes(...)
     let tempstring =  ""
     if a:0 ==# 0
         let idx1 = 0
+        let stackflag = 1
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
-            if result != ""
-                if tempstring ==# ""
-                    let tempstring =  result
-                else
-                    let tempstring = tempstring . "█" . result
+            if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
+                if stackflag > 0
+                    if result != ""
+                        if tempstring ==# ""
+                            let tempstring =  result
+                        else
+                            let tempstring = tempstring . "█" . result
+                        endif
+                    endif
+                    let stackflag -= 1
+                endif
+            else
+                if result != ""
+                    if tempstring ==# ""
+                        let tempstring =  result
+                    else
+                        let tempstring = tempstring . "█" . result
+                    endif
                 endif
             endif
             let idx1 += 1
         endwhile
+
         let path = expand("%:p")
         let path =  substitute(path , g:homedir . '/' , '', 'g')
         let codelist = insert(codelist,path.':'. realityline  .':')
         call cursor(realityline,col)
         let @d = string(codelist)
         call AddNumber3(codelist)
-        if matchstr(expand("%:t"),'\.cc') != ""
+        if filetype ==# "cc"
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         echo tempstring
     elseif a:0 ==# 1
         call cursor(realityline,col)
         let idx1 = 0
+        let stackflag = 1
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
-            if result != ""
-                if tempstring ==# ""
-                    let tempstring =  result
-                else
-                    let tempstring = tempstring . "█" . result
+            if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
+                if stackflag > 0
+                    if result != ""
+                        if tempstring ==# ""
+                            let tempstring =  result
+                        else
+                            let tempstring = tempstring . "█" . result
+                        endif
+                    endif
+                    let stackflag -= 1
+                endif
+            else
+                if result != ""
+                    if tempstring ==# ""
+                        let tempstring =  result
+                    else
+                        let tempstring = tempstring . "█" . result
+                    endif
                 endif
             endif
             let idx1 += 1
         endwhile
-        if matchstr(expand("%:t"),'\.cc') != ""
+        if filetype ==# "cc"
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         return tempstring
@@ -8332,6 +8459,7 @@ function! CallStack(...)
     let path = expand("%")
     let debugflag = "false"
     let calledstring = ""
+    let index = -1
     "}}}}
     if mode ==# 0
         "当前行是怎么调用下来的
@@ -8343,7 +8471,9 @@ function! CallStack(...)
         let result = add(result,repeat(" ",flag * 4) . laststackstring)
         "所在的函数在哪些地方被调用
         if matchstr(laststackstring,"case ") != ""
-            let tempchar = split(laststackstring,"█")[-2]
+            let index = count(laststackstring,"case ")
+            let index = -1 - index
+            let tempchar = split(laststackstring,"█")[index]
         else
             let tempchar = split(laststackstring,"█")[-1]
         endif
@@ -8382,7 +8512,9 @@ function! CallStack(...)
                     else
                         if count(allstackstring,stackstring) ==# 0
                             let allstackstring = add(allstackstring,copy(stackstring))
-                            call CallStack(0,result,templist[1],copy(flag  + 1),stackstring,allstackstring)
+                            if  flag < 5
+                                call CallStack(0,result,templist[1],copy(flag  + 1),stackstring,allstackstring)
+                            endif
                         else
                             let result = add(result,repeat(" ",(flag + 1) * 4) . stackstring)
                         endif
@@ -8660,6 +8792,7 @@ endfunction
 "}}}}}
 
 "{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义
+"echom FuncToDefine(982,1011,"params")
 "echo FuncToDefine(ExtractKeyCodes(line('.'),1),line('.'),"service")
 "echom FuncToDefine(1785,1797,"receiver")
 function! FuncToDefine(...)
@@ -8688,7 +8821,10 @@ function! FuncToDefine(...)
     if localvariable != []
         let codestring = join(split(localvariable[-1])[2:])
         if  StringComponents(funcstring ,"def",codestring)
-            if matchstr(codestring,"=") != ""
+            if count(codestring,"<") != 0
+                let tempchar = split(codestring,"<")[0]
+                let tempchar = split(tempchar)[-1]
+            elseif matchstr(codestring,"=") != ""
                 let tempchar = split(codestring,";")[0]
                 let tempchar = split(tempchar,"=")[0]
                 let tempchar = split(tempchar)[-2]
@@ -8696,6 +8832,7 @@ function! FuncToDefine(...)
                 let tempchar = split(codestring,";")[0]
                 let tempchar = split(tempchar)[-2]
             endif
+
             if tempchar != ""
                 return tempchar
             endif
@@ -8719,15 +8856,22 @@ function! FuncToDefine(...)
     "let flag = IdentificationCodeComponents(codestring,filetype)
     call cursor(1,1)
     let cursor = searchpos('\<' . funcstring . '\>','w')
+    while IsComment(cursor[0]) ==# 1
+        call cursor(cursor[0] + 1,1)
+        let cursor = searchpos('\<' . funcstring . '\>','w')
+    endwhile
     if cursor != []
-        let codestring = getline(cursor[0])
+        let codestring  = StandardCharacters(cursor[0])
         let flag = IdentificationCodeComponents(codestring,filetype)
         if flag ==# "import"
             let tempchar = split(codestring,";")[0]
             let tempchar = split(tempchar,'\.')[-1]
         elseif matchstr(flag,"def") != ""
             if  StringComponents(funcstring ,"def",codestring)
-                if matchstr(codestring,"=") != ""
+                if count(codestring,"<") != 0
+                    let tempchar = split(codestring,"<")[0]
+                    let tempchar = split(tempchar)[-1]
+                elseif matchstr(codestring,"=") != ""
                     let tempchar = split(codestring,";")[0]
                     let tempchar = split(tempchar,"=")[0]
                     let tempchar = split(tempchar)[-2]
@@ -8747,7 +8891,7 @@ endfunction
 "}}}}}
 
 "{{{{{2   FindTheCalledParty(...) 查找是调用的哪个函数
-"call  FindTheCalledParty(1058,"getLooper")
+"echo  FindTheCalledParty(1776,"getConnectedDevices")
 function! FindTheCalledParty(...)
     "{{{{{3 变量定义
     let line = a:1
@@ -8758,29 +8902,159 @@ function! FindTheCalledParty(...)
     let codestring = ""
     let fucline = -1
     let result  = ""
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let position = []
+    let idx1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    let objectname = ""
     "}}}}
     let codestring = StandardCharacters(line)
     if matchstr(codestring,'"') != "" && ItString(codestring,funcname) ==# 1
     else
         let tempstring = copy(codestring)
-        let tempstring = split(tempstring,',')
-        let iscontain =  IsContain(funcname,tempstring)
-        let tempstring = split(iscontain)
-        let iscontain =  IsContain(funcname,tempstring)
-        let tempstring = split(iscontain,funcname . '(')[0]
-
-        let tempstring = split(tempstring,'\.')
-        if len(tempstring) > 1
-            call Dbug1(codestring,10,0 ,'FindTheCalledParty 2 多重调用')
-        elseif tempstring ==# []
-            call Dbug1( codestring,10,0 ,'FindTheCalledParty 3 找不到class')
+        let tempstring = ClearingStringsInCode(tempstring)
+        let position =   ChildStringPosition(tempstring ,funcname . '(')
+        if position != []
+            if tempstring[position[0] - 1] != "."
+                let classname = split(ExtractKeyCodes(line),"█")[0]
+                let result  = classname . "█" . funcname
+            else
+                let idx1 = position[0] - 2
+                let tailnum = position[0] - 2
+                while idx1 >= 0
+                    if tempstring[idx1] ==# " "
+                        let srcnum = idx1 + 1
+                        break
+                    elseif tempstring[idx1] ==# ")"
+                        let idx1 = FindCorrespondingBracketPosition(tempstring,idx1)
+                    elseif tempstring[idx1] ==# "("
+                        let srcnum = idx1 + 1
+                        break
+                    elseif tempstring[idx1] ==# "."
+                        let tailnum = idx1 -1
+                    endif
+                    let idx1 -= 1
+                endwhile
+                let objectname = tempstring[srcnum:tailnum]
+                let fucline = ExtractKeyCodes(line,1)
+                let classname = FuncToDefine(fucline ,line,objectname)
+                let result  = classname . "█" . funcname
+            endif
         endif
-        let tempstring = tempstring[0]
-        let fucline = ExtractKeyCodes(line,1)
-        let classname = FuncToDefine(fucline ,line,tempstring)
-        let result  = classname . "█" . funcname
     endif
     return result
+endfunction
+"}}}}}
+
+"{{{{{2 function!  IdentifyAllCalls(...) 识别当前文件所有行调用
+nnoremap <F3> :call IdentifyAllCalls()<cr>
+"call IdentifyTheCurrentFile(1396,1401,"","service")
+function! IdentifyTheCurrentFile(...)
+    "{{{{{3 变量定义
+    let codelist = []
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let line = 1
+    let numberlist = []
+    let srcnum  = -1
+    let tailnum = -1
+    let codestring  = ""
+    let  realityline = -1
+    let g:debugflag = 20
+    let flag = ""
+    let srcline = line
+    let tailline = line('$')
+    let type = ""
+    let matchstr = ""
+    if a:0 != 0
+        let srcline = a:1
+        let tailline = a:2
+        let type = a:3
+        let matchstr = a:4
+        let line = srcline
+    endif
+    "}}}}
+    set noignorecase
+    while line <= tailline
+        let  realityline = line
+        " echo  MergeLinesOfCode(line('.'))
+        let numberlist = MergeLinesOfCode(realityline)
+        if numberlist != []
+            let srcnum  = numberlist[0]
+            let tailnum = numberlist[1]
+            if srcnum <= tailnum
+                let codestring  =  GatherIntoRow(srcnum,tailnum)
+                let line = tailnum + 1
+                if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
+                    let flag = IdentificationCodeComponents(codestring,filetype)
+                    if type ==# "" || matchstr(flag,type) != ""
+                        let codestring  = realityline . codestring
+                        let codestring  = flag  . "    " . codestring
+                        let codelist = add(codelist,codestring)
+                    endif
+                endif
+            else
+                let line += 1
+            endif
+        else
+            let line += 1
+        endif
+    endwhile
+    let g:debuglist = codelist
+    return codelist
+endfunction
+"}}}}}
+
+"{{{{{2   IdentifyCalls(...) 识别当前行调用
+"echom IdentifyCalls(getline('.'))
+function! IdentifyCalls(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let tempstring = ""
+    let idx1 = 0
+    let idj1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    let funcname = ""
+    let result = []
+    "}}}}
+    let tempstring = copy(codestring)
+    let tempstring = ClearingStringsInCode(tempstring)
+    let indexlist = StringPosition(tempstring,"(")
+
+    while idx1 < len(indexlist)
+        let tailnum = indexlist[idx1] - 2
+        let idj1 = tailnum
+        while idj1 >= 0
+            if tempstring[idj1] ==# " "
+                let srcnum = idj1 + 1
+                break
+            elseif tempstring[idj1] ==# "("
+                let srcnum = idj1 + 1
+                break
+            elseif tempstring[idj1] ==# "!"
+                let srcnum = idj1 + 1
+                break
+            elseif tempstring[idj1] ==# "."
+                let srcnum = idj1 + 1
+                break
+            elseif tempstring[idj1] ==# ">"
+                let srcnum = idj1 + 1
+                break
+            endif
+            let idj1 -= 1
+        endwhile
+        let funcname = tempstring[srcnum:tailnum]
+        echom funcname
+        if funcname ==# "if" || funcname ==# ""
+        else
+            let result = add(result,funcname)
+        endif
+        let idx1 += 1
+    endwhile
+    return string(result)
 endfunction
 "}}}}}
 
@@ -8967,6 +9241,7 @@ function! GrepChars(timer)
     call setline(2,searchstarge)
     let g:lastgreplen = len(searchstarge)
     let @@ = ""
+    syntax on
     redraw
 endfunction
 "}}}}}
