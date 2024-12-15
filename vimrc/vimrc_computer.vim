@@ -1113,6 +1113,14 @@ function! DictTest()
                 \'3structtype':'xx'}
     let char[1003] = "txlws"
     let char.1004 = "1234"
+    try
+        " 这里故意抛出一个错误，以便捕获它
+        throw 'Some error occurred'
+    catch /Vim\%(\(\w+\)\):E\d\+:\).*/
+        " 捕获到的错误信息中包含了函数名，我们在这里提取它
+        let func_name = matchstr(v:exception, '\(\w+\)')
+        echo 'Current function is: ' . func_name
+    endtry
     echo sort(keys(nodeformat))
     let stringdict = string(char)
     echo list
@@ -2368,10 +2376,14 @@ endfunction
 function! GatherIntoRow(...)
     let srcnum = a:1
     let tailnum = a:2
-    silent let tempchar = getline(srcnum,tailnum)
+    let tempchar = getline(srcnum,tailnum)
     let idj1 = 0
     let foldstring = ""
     while idj1 < len(tempchar)
+        "去掉^M
+        if matchstr(tempchar[idj1],'') != ""
+            let tempchar[idj1] = split(tempchar[idj1],'')[0]
+        endif
         if matchstr(tempchar[idj1],"//") != ""
             if len(split(tempchar[idj1],"//")) > 1
                 let tempchar[idj1] = split(tempchar[idj1],"//")[0]
@@ -2424,6 +2436,9 @@ function! MergeLinesOfCode(...)
             return [line, line]
         elseif matchstr(currentstring,"#endif") != ""
             return [line, line]
+        elseif matchstr(currentstring,"-> {") != ""
+            let cursor = FindAnotherBracketPosition('{')
+            return [line, cursor[0]]
         elseif join(split(currentstring)) ==# "}"
             return [line, line]
         elseif matchstr(currentstring,'^\s*{') != ""
@@ -8475,6 +8490,7 @@ function! CallStack(...)
             let index = -1 - index
             let tempchar = split(laststackstring,"█")[index]
         else
+            echom laststackstring
             let tempchar = split(laststackstring,"█")[-1]
         endif
         if count(tempchar,"::") != 0
@@ -8500,6 +8516,9 @@ function! CallStack(...)
                     echom resultlist[0][idx1]
                 endif
                 call SwitchBuff(templist[0])
+                echom templist[0]
+                echom string(templist[1])
+                echom tempchar
                 let calledstring = FindTheCalledParty(templist[1],tempchar)
                 if  calledstring  ==#  ""
                     call Dbug1(resultlist[0][idx1],10,0 ,'CallStack 4 这个函数识别错误')
@@ -8939,8 +8958,17 @@ function! FindTheCalledParty(...)
                 endwhile
                 let objectname = tempstring[srcnum:tailnum]
                 let fucline = ExtractKeyCodes(line,1)
-                let classname = FuncToDefine(fucline ,line,objectname)
-                let result  = classname . "█" . funcname
+
+                "echom objectname 
+                "echom fucline
+                "echom line
+                if objectname ==# "super"
+                    let classname = ExtractKeyCodes(line)
+                    let result  = classname
+                else
+                    let classname = FuncToDefine(fucline ,line,objectname)
+                    let result  = classname . "█" . funcname
+                endif
             endif
         endif
     endif
@@ -8949,9 +8977,8 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  IdentifyAllCalls(...) 识别当前文件所有行调用
-nnoremap <F3> :call IdentifyAllCalls()<cr>
-"call IdentifyTheCurrentFile(1396,1401,"","service")
-function! IdentifyTheCurrentFile(...)
+"call IdentifyAllCalls(1396,1401,"","service")
+function! IdentifyAllCalls(...)
     "{{{{{3 变量定义
     let codelist = []
     let filename = expand("%:t")
@@ -8986,12 +9013,14 @@ function! IdentifyTheCurrentFile(...)
             let tailnum = numberlist[1]
             if srcnum <= tailnum
                 let codestring  =  GatherIntoRow(srcnum,tailnum)
+                echom codestring 
                 let line = tailnum + 1
                 if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
                     let flag = IdentificationCodeComponents(codestring,filetype)
                     if type ==# "" || matchstr(flag,type) != ""
                         let codestring  = realityline . codestring
                         let codestring  = flag  . "    " . codestring
+                        echom codestring  
                         let codelist = add(codelist,codestring)
                     endif
                 endif
