@@ -521,7 +521,7 @@ let g:filterchar = {
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference",
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
             \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property",
-            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
@@ -529,7 +529,7 @@ let g:filterchar = {
             \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect ",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
-            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=',
+            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=|call state is busy',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present',
             \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|l2c_link_timeout All channels closed|forcing LE transport for Bonding',
@@ -566,7 +566,8 @@ function! Homedir(...)
     let dirpath = g:homedir . "/" . dirpath
     if type ==# 1
         if "" ==# findfile(dirpath)
-            call system("touch " . dirpath)
+            "call system("touch " . dirpath)
+            call writefile([],dirpath)
             echo dirpath . "没有这个文件现在新建这个文件"
         else
             "echo dirpath
@@ -1113,14 +1114,6 @@ function! DictTest()
                 \'3structtype':'xx'}
     let char[1003] = "txlws"
     let char.1004 = "1234"
-    try
-        " 这里故意抛出一个错误，以便捕获它
-        throw 'Some error occurred'
-    catch /Vim\%(\(\w+\)\):E\d\+:\).*/
-        " 捕获到的错误信息中包含了函数名，我们在这里提取它
-        let func_name = matchstr(v:exception, '\(\w+\)')
-        echo 'Current function is: ' . func_name
-    endtry
     echo sort(keys(nodeformat))
     let stringdict = string(char)
     echo list
@@ -2443,17 +2436,17 @@ function! MergeLinesOfCode(...)
             return [line, line]
         elseif matchstr(currentstring,'^\s*{') != ""
             return [line -1 , line]
-        elseif (matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";") &&  matchstr(currentstring,"{}") != "{}"
-            let end = line
         elseif  matchstr(currentstring," case ") != ""  ||  matchstr(currentstring,"#define ") != ""
             return [line,line]
+        "elseif (matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";") &&  matchstr(currentstring,"{}") != "{}"
+        "    let end = line
         else
             if 3 > g:debugflag | call Dbug( "tangxinlou6",3) | endif
             silent call cursor(line,1)
             silent let BracketLine = JumpToNext('{','w')[0]
             silent call cursor(line,1)
-            silent let SemicolonLine = search(";")
-            if BracketLine > line  || SemicolonLine > line
+            silent let SemicolonLine = searchpos(";")[0]
+            if BracketLine >= line  || SemicolonLine >= line
                 if 3 > g:debugflag | call Dbug( "tangxinlou9",3) | endif
                 if 3 > g:debugflag | call Dbug( line,3) | endif
                 if  BracketLine > line &&  SemicolonLine > line
@@ -2469,6 +2462,11 @@ function! MergeLinesOfCode(...)
                     let end BracketLine
                 elseif BracketLine < line && SemicolonLine > line
                     if 3 > g:debugflag | call Dbug( "tangxinlou10",3) | endif
+                    let end = SemicolonLine
+                endif
+                if BracketLine ==# line
+                    let end = BracketLine
+                elseif SemicolonLine ==# line
                     let end = SemicolonLine
                 endif
             else
@@ -3014,26 +3012,22 @@ endfunction
 "}}}}}
 "{{{{{2 JumpToNext(...)跳转到下一个的{ 规避{}
 "call JumpToNext('{','w')
+"echo searchpos('{','w')
+"log::info("{}, fw_log_switch property is true", __func__);
 function! JumpToNext(...)
     let char = a:1
     let drect = a:2
     let cursor = []
     let flag = 0
-    let tempchar = ""
+    let obtaincursor = []
     while flag ==# 0
         let cursor =  searchpos(char,drect)
-        let tempchar = getline(cursor[0])
-        if char ==# "{"
-            if cursor[1] ==# len(tempchar)
-                let flag = 1
-            else
-                if tempchar[cursor[1] -1] ==# '{' && tempchar[cursor[1]] != '}'
-                    let flag = 1
-                endif
-            endif
-        elseif char ==# "}"
-            if tempchar[cursor[1] -1] ==# '}' && tempchar[cursor[1] - 2] != '{'
-                let flag = 1
+        let flag = 1
+        "只要这个{在() 中就忽略
+        let obtaincursor = searchpairpos('(', '', ')', 'w')
+        if  obtaincursor != [0,0]
+            if IsComment(obtaincursor[0]) ==# 0
+                let flag = 0
             endif
         endif
         if IsComment(cursor[0]) ==# 1
@@ -3157,6 +3151,43 @@ function! ClearingStringsInCode(...)
             endif
             let resultstr = resultstr . codestring[srcnum:tailnum]
             let idx1 += 1
+        endwhile
+        return resultstr
+    else
+        return codestring
+    endif
+endfunction
+"}}}}}
+"{{{{{2 ClearPairedBrackets(...)在代码中清除成对括号
+"echom ClearPairedBrackets(getline(line('.')))
+function! ClearPairedBrackets(...)
+    let codestring = a:1
+    let resultstr = copy(codestring)
+    let indexlist = []
+    let idx1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    let tempstr = ""
+    if count(resultstr,'(') != 0
+        while count(resultstr,'(') != 0
+            let srcnum = -1
+            let tailnum = -1
+            let tempstr = copy(resultstr)
+            let idx1 = 0
+            while idx1 < len(resultstr)
+                if resultstr[idx1] ==# "("
+                    let srcnum = idx1
+                    let idx1 = FindCorrespondingBracketPosition(resultstr,idx1)
+                    let tailnum =  idx1
+                    if srcnum ==# 0
+                        let resultstr = tempstr[tailnum + 1 : -1]
+                    else
+                        let resultstr = tempstr[0:srcnum -1] . tempstr[tailnum + 1 : -1]
+                    endif
+                    break
+                endif
+                let idx1 += 1
+            endwhile
         endwhile
         return resultstr
     else
@@ -4673,7 +4704,7 @@ let g:addnoteflag = 0
 nnoremap <leader>add :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
-    let bugchar = "B240719-83183"
+    let bugchar = "B241213-83933"
 
     let filelen = 0
     let idx1 = 0
@@ -8740,7 +8771,6 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
-nnoremap <F3> :call IdentifyTheCurrentFile()<cr>
 "call IdentifyTheCurrentFile(1396,1401,"","service")
 function! IdentifyTheCurrentFile(...)
     "{{{{{3 变量定义
@@ -8928,6 +8958,8 @@ function! FindTheCalledParty(...)
     let srcnum = -1
     let tailnum = -1
     let objectname = ""
+    let index = ""
+    let classname = ""
     "}}}}
     let codestring = StandardCharacters(line)
     if matchstr(codestring,'"') != "" && ItString(codestring,funcname) ==# 1
@@ -8936,40 +8968,8 @@ function! FindTheCalledParty(...)
         let tempstring = ClearingStringsInCode(tempstring)
         let position =   ChildStringPosition(tempstring ,funcname . '(')
         if position != []
-            if tempstring[position[0] - 1] != "."
-                let classname = split(ExtractKeyCodes(line),"█")[0]
-                let result  = classname . "█" . funcname
-            else
-                let idx1 = position[0] - 2
-                let tailnum = position[0] - 2
-                while idx1 >= 0
-                    if tempstring[idx1] ==# " "
-                        let srcnum = idx1 + 1
-                        break
-                    elseif tempstring[idx1] ==# ")"
-                        let idx1 = FindCorrespondingBracketPosition(tempstring,idx1)
-                    elseif tempstring[idx1] ==# "("
-                        let srcnum = idx1 + 1
-                        break
-                    elseif tempstring[idx1] ==# "."
-                        let tailnum = idx1 -1
-                    endif
-                    let idx1 -= 1
-                endwhile
-                let objectname = tempstring[srcnum:tailnum]
-                let fucline = ExtractKeyCodes(line,1)
-
-                "echom objectname 
-                "echom fucline
-                "echom line
-                if objectname ==# "super"
-                    let classname = ExtractKeyCodes(line)
-                    let result  = classname
-                else
-                    let classname = FuncToDefine(fucline ,line,objectname)
-                    let result  = classname . "█" . funcname
-                endif
-            endif
+            let classname = GetCallFuncName(position[0],tempstring,line)
+            let result  = classname . "█" . funcname
         endif
     endif
     return result
@@ -8977,7 +8977,8 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  IdentifyAllCalls(...) 识别当前文件所有行调用
-"call IdentifyAllCalls(1396,1401,"","service")
+nnoremap <F3> :call IdentifyAllCalls()<cr>
+"call IdentifyAllCalls(1879,1883,"")
 function! IdentifyAllCalls(...)
     "{{{{{3 变量定义
     let codelist = []
@@ -8995,11 +8996,11 @@ function! IdentifyAllCalls(...)
     let tailline = line('$')
     let type = ""
     let matchstr = ""
+    let result = []
     if a:0 != 0
         let srcline = a:1
         let tailline = a:2
-        let type = a:3
-        let matchstr = a:4
+        let matchstr = a:3
         let line = srcline
     endif
     "}}}}
@@ -9013,14 +9014,13 @@ function! IdentifyAllCalls(...)
             let tailnum = numberlist[1]
             if srcnum <= tailnum
                 let codestring  =  GatherIntoRow(srcnum,tailnum)
-                echom codestring 
                 let line = tailnum + 1
                 if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
-                    let flag = IdentificationCodeComponents(codestring,filetype)
-                    if type ==# "" || matchstr(flag,type) != ""
+                    let result = IdentifyCalls(codestring)
+                    "if result != []
+                    if len(result) > 1
                         let codestring  = realityline . codestring
-                        let codestring  = flag  . "    " . codestring
-                        echom codestring  
+                        let codestring  = string(result) . codestring
                         let codelist = add(codelist,codestring)
                     endif
                 endif
@@ -9048,11 +9048,13 @@ function! IdentifyCalls(...)
     let tailnum = -1
     let funcname = ""
     let result = []
+    let position  = -1
+    let separatorsnum = -1
+    let objectname = []
     "}}}}
     let tempstring = copy(codestring)
     let tempstring = ClearingStringsInCode(tempstring)
     let indexlist = StringPosition(tempstring,"(")
-
     while idx1 < len(indexlist)
         let tailnum = indexlist[idx1] - 2
         let idj1 = tailnum
@@ -9060,13 +9062,15 @@ function! IdentifyCalls(...)
             if tempstring[idj1] ==# " "
                 let srcnum = idj1 + 1
                 break
+            elseif tempstring[idj1] ==# ")"
+                let idj1 = FindCorrespondingBracketPosition(tempstring,idj1)
             elseif tempstring[idj1] ==# "("
                 let srcnum = idj1 + 1
                 break
-            elseif tempstring[idj1] ==# "!"
+            elseif tempstring[idj1] ==# ","
                 let srcnum = idj1 + 1
                 break
-            elseif tempstring[idj1] ==# "."
+            elseif tempstring[idj1] ==# "!"
                 let srcnum = idj1 + 1
                 break
             elseif tempstring[idj1] ==# ">"
@@ -9076,17 +9080,105 @@ function! IdentifyCalls(...)
             let idj1 -= 1
         endwhile
         let funcname = tempstring[srcnum:tailnum]
-        echom funcname
+        let funcname = ClearPairedBrackets(funcname)
         if funcname ==# "if" || funcname ==# ""
         else
+
             let result = add(result,funcname)
         endif
         let idx1 += 1
     endwhile
-    return string(result)
+    return result
 endfunction
 "}}}}}
 
+"{{{{{2   GetCallFuncName(...) 获取调用类名字
+function! GetCallFuncName(...)
+    "{{{{{3 变量定义
+    let position = a:1
+    let codestring = a:2
+    let line = a:3
+    let tempstring = copy(codestring)
+    let idx1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    let objectname = ""
+    let classname = ""
+    let funcline  = -1
+    let index = -1
+    let result = ""
+    "}}}}
+    if tempstring[position - 1] != "."
+        let classname = ExtractKeyCodes(line)
+        let index = count(classname,"case ")
+        let index = -1 - index - 1
+        let classname = join(split(classname,"█")[0:index],"█")
+        let result  = classname
+    else
+        let idx1 = position - 2
+        let tailnum = position - 2
+        while idx1 >= 0
+            if tempstring[idx1] ==# " "
+                let srcnum = idx1 + 1
+                break
+            elseif tempstring[idx1] ==# ")"
+                let idx1 = FindCorrespondingBracketPosition(tempstring,idx1)
+            elseif tempstring[idx1] ==# "("
+                let srcnum = idx1 + 1
+                break
+            elseif tempstring[idx1] ==# "."
+                let tailnum = idx1 -1
+            endif
+            let idx1 -= 1
+        endwhile
+        let objectname = tempstring[srcnum:tailnum]
+        let fucline = ExtractKeyCodes(line,1)
+
+        "echom objectname
+        "echom fucline
+        "echom line
+        let classname = FuncToDefine(fucline ,line,objectname)
+        if classname ==# ""
+            let classname = ExtractKeyCodes(line)
+            let index = count(classname,"case ")
+            let index = -1 - index - 1
+            let classname = join(split(classname,"█")[0:index],"█")
+            let result  = classname
+            echom "函数没有获取到"
+        else
+            let result  = classname
+        endif
+    endif
+    return result
+endfunction
+"}}}}}
+
+"{{{{{2   ClassReplacementObject(...) 类替换对象名
+function! ClassReplacementObject(...)
+    "{{{{{3 变量定义
+    let callstr = a:1
+    let separatorsnum = -1
+    let classname = ""
+    let index = -1
+    "}}}}
+
+    let separatorsnum = count(funcname,'.')
+    if separatorsnum ==# 0
+        let classname = ExtractKeyCodes(line)
+        let index = count(classname,"case ")
+        let index = -1 - index - 1
+        let classname = join(split(classname,"█")[0:index],"█")
+        let result  = classname . "█" . funcname
+    else
+        let objectname = split(funcname,'\.')
+        if(separatorsnum + 1) ==# len(objectname)
+        else
+            echom "报错了"
+        endif
+    endif
+
+endfunction
+"}}}}}
 "}}}}}
 "{{{{ 定时器
 
@@ -9697,7 +9789,6 @@ function! TreeContens(...)
             let searchstarge  = EncapsulateDifferentGrep("","fuc",tempchar)
             let searchstarge = SelectEntireCode(copy(searchstarge))
             let resultlist = ResultClassification(searchstarge)
-            echom string(resultlist[1])
             let resultlist[1] = ListTo1D(resultlist[1] ,"█")
             if len(resultlist[1]) != 0
                 while idx1 < len(resultlist[1])
@@ -10080,7 +10171,8 @@ function! AutoAnalyzer(...)
     let tempfilterchar = ""
     let downloadpin = ""
     let index = 0
-    let saveresult = Homedir("autoanaly/result",2)
+    let analypath =  Homedir("autoanaly/result",2)
+    let saveresult = "autoanaly/result"
     redraw
     if a:0 ==# 1
         let modeflag = a:1
@@ -10211,29 +10303,33 @@ function! AutoAnalyzer(...)
     let allresultlist  = extend(MultiDimensionalAnalysresult,allresultlist)
     let downloadpin = split(system("pwd"),'\n')[0]
     let allresultlist = insert(allresultlist,downloadpin)
+    let allresultlist = insert(allresultlist,analypath)
     if matchstr(downloadpin,"delay") != ""
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"delay")
+        let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
     else
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"fbk")
+        let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
     endif
-    let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
-    let saveresult = saveresult . '/' . downloadpin
-    let daildate = daildate ."结束" .  system("date '+%Y%m%d-%H.%M.%S'")
+    let daildate = daildate ."结束" .  join(split(system("date '+%Y%m%d-%H.%M.%S'"),"\n"))
     let allresultlist = insert(allresultlist,string(daildate))
-    if findfile(saveresult) != ""
-        let emptylist = readfile(saveresult)[0:9]
-        let allresultlist  = extend(emptylist,allresultlist)
-    else
-        let emptylist = repeat([" "],10)
-        let allresultlist  = extend(emptylist,allresultlist)
-    endif
     echo daildate
+
     if matchstr(system("pwd"),"delay_core") ==# "" &&  matchstr(system("pwd"),"_fbk_") ==# ""
         call writefile(allresultlist,"./analy.txt")
         silent execute "normal! :e ./analy.txt  \<cr>"
     else
+        let saveresult = saveresult . '/' . downloadpin
+        let saveresult = Homedir(saveresult,1)
+        if len(readfile(saveresult)) != 0
+            let emptylist = readfile(saveresult)[0:9]
+            let allresultlist  = extend(emptylist,allresultlist)
+        else
+            let emptylist = repeat([" "],10)
+            let allresultlist  = extend(emptylist,allresultlist)
+        endif
         call writefile(allresultlist,saveresult)
         silent execute "normal! :e  " . saveresult . "\<cr>"
     endif
@@ -10277,7 +10373,7 @@ function! BinaryFileSearch(...)
     if filename ==# ""
         return
     else
-        let result = system(cmd)
+        let result = join(split(system(cmd),"\n"))
         return result
     endif
 endfunction
