@@ -1049,6 +1049,29 @@ function! IsContain(...)
     endwhile
 endfunction
 "}}}}}
+"{{{{{2   IsContainList(...) string list返回多个列表项
+function! IsContainList(...)
+    "{{{{{3 变量定义
+    let string = ""
+    let char = ""
+    let list = []
+    let idx1 = 0
+    let string = a:1
+    let list = a:2
+    let result = []
+    "转义
+    let string = escape(string, '[]')
+    "}}}}
+    while idx1 < len(list)
+        let char = matchstr(list[idx1],string)
+        if char != ""
+            let result = add(result,list[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    return result
+endfunction
+"}}}}}
 "{{{{{2   SetCharNull(...) 补空格
 function! SetCharNull(...)
     let char = " "
@@ -2438,6 +2461,8 @@ function! MergeLinesOfCode(...)
             return [line -1 , line]
         elseif  matchstr(currentstring," case ") != ""  ||  matchstr(currentstring,"#define ") != ""
             return [line,line]
+        elseif matchstr(currentstring,") {}") != ""
+            return [line, line]
         "elseif (matchstr(currentstring,"{") ==# "{" || matchstr(currentstring,";") ==# ";") &&  matchstr(currentstring,"{}") != "{}"
         "    let end = line
         else
@@ -2445,7 +2470,7 @@ function! MergeLinesOfCode(...)
             silent call cursor(line,1)
             silent let BracketLine = JumpToNext('{','w')[0]
             silent call cursor(line,1)
-            silent let SemicolonLine = searchpos(";")[0]
+            silent let SemicolonLine = JumpToNext(';','w')[0]
             if BracketLine >= line  || SemicolonLine >= line
                 if 3 > g:debugflag | call Dbug( "tangxinlou9",3) | endif
                 if 3 > g:debugflag | call Dbug( line,3) | endif
@@ -2556,6 +2581,11 @@ function! IsComment(...)
     let length = -1
     let templist = []
     let idx1 = 0
+    let col = -1
+    let position = []
+    if a:0 != 1
+        let col = a:2
+    endif
 
     if  join(split(getline(line))) ==# ""
         let iscomment = 1
@@ -2599,6 +2629,13 @@ function! IsComment(...)
             endif
         endif
     endif
+    if a:0 != 1
+        let position =  ChildStringPosition(getline(line) ,"//")
+        if position != [] &&  position[1] < col
+            let iscomment = 1
+        endif
+    endif
+
     if 10 > g:debugflag | call Dbug("commentend" ,10,2) | endif
     call cursor(line,1)
     return iscomment
@@ -3011,7 +3048,7 @@ function! IsFileType(...)
 endfunction
 "}}}}}
 "{{{{{2 JumpToNext(...)跳转到下一个的{ 规避{}
-"call JumpToNext('{','w')
+"echo JumpToNext('{','w')
 "echo searchpos('{','w')
 "log::info("{}, fw_log_switch property is true", __func__);
 function! JumpToNext(...)
@@ -3020,17 +3057,24 @@ function! JumpToNext(...)
     let cursor = []
     let flag = 0
     let obtaincursor = []
+    let precursor = []
     while flag ==# 0
         let cursor =  searchpos(char,drect)
         let flag = 1
         "只要这个{在() 中就忽略
         let obtaincursor = searchpairpos('(', '', ')', 'w')
         if  obtaincursor != [0,0]
-            if IsComment(obtaincursor[0]) ==# 0
-                let flag = 0
-            endif
+            if IsComment(obtaincursor[0],obtaincursor[1]) ==# 0 && ItString(obtaincursor) ==# 0
+                let precursor = searchpairpos('(', '', ')', 'b')
+                if precursor ==# [0,0]
+                else
+                    if IsComment(precursor[0],precursor[1]) ==# 0 &&  ItString(precursor) ==# 0
+                        let flag = 0
+                    endif
+                endif
+           endif
         endif
-        if IsComment(cursor[0]) ==# 1
+        if IsComment(cursor[0],cursor[1]) ==# 1 && ItString(cursor) ==# 1
             let flag = 0
         endif
         call cursor(cursor[0],cursor[1])
@@ -3043,25 +3087,41 @@ endfunction
 "call ItString(getline(5),"start")
 function! ItString(...)
     let flag = 0
-    let totalstr = a:1
-    let childstr = a:2
+    let totalstr = ""
+    let childstr = ""
+    let cursor = []
+    if a:0 ==# 1
+        let cursor = a:1
+        let totalstr = getline(cursor[0])
+    else
+        let totalstr = a:1
+        let childstr = a:2
+    end
     let char = '"'
     let length = -1
     let srcnum = -1
     let tailnum = -1
     let indexlist = StringPosition(totalstr,char)
-    let length = len(childstr)
-    let srcnum = match(totalstr,childstr)
-    if srcnum != -1
-        let tailnum = srcnum + length
-        let srcnum = srcnum + 1
+    if a:0 ==# 1
         if len(indexlist) ==# 2
-            if indexlist[0] < srcnum && indexlist[1] > tailnum
+            if indexlist[0] < cursor[1] && indexlist[1] > cursor[1]
                 let flag = 1
             endif
         endif
     else
-        return -1
+        let length = len(childstr)
+        let srcnum = match(totalstr,childstr)
+        if srcnum != -1
+            let tailnum = srcnum + length
+            let srcnum = srcnum + 1
+            if len(indexlist) ==# 2
+                if indexlist[0] < srcnum && indexlist[1] > tailnum
+                    let flag = 1
+                endif
+            endif
+        else
+            return -1
+        endif
     endif
     return flag
 endfunction
@@ -9981,20 +10041,62 @@ function! JoinTwoTables(...)
     let listcol = []
     let idx1 = 0
     let iscontain  = ""
+    let idj1 = 0
+    let tempchar = ""
+    let templist = []
     "}}}}
 
-    "let fileA = input("Afilename")
-    "let fileB = input("Bfilename")
+    let fileA = input("母filename")
+    let fileB = input("子filename")
     let colnum = str2nr(input("按照多少列拼接"))
     let tableA = readfile(fileA)
     let tableB = readfile(fileB)
     let listcol   = GetOneOfTheColumns(tableA,",",colnum)
     while idx1 < len(listcol)
-        let iscontain =  IsContain(listcol[idx1],tableB)
-        let tableA[idx1] = tableA[idx1] . "," . iscontain
+        let iscontain =  IsContainList(listcol[idx1],tableB)
+        let idj1 = 0
+        let templist = split(tableA[idx1],',')
+        while idj1 < len(iscontain)
+            let tempchar = ProcessingBigData(iscontain[idj1])
+            if matchstr(templist[9],split(tempchar)[0]) ==# ""
+                let templist[9]  = templist[9] . " " . tempchar
+            endif
+            let idj1 += 1
+        endwhile
+        let tableA[idx1] = join(templist,',')
         let idx1 += 1
     endwhile
     let g:debuglist = tableA
+endfunction
+"}}}}}
+
+"{{{{{  ProcessingBigData(...)  处理大数据
+function! ProcessingBigData(...)
+    let data = a:1
+    let tempstr = ""
+    let devicelist = []
+    let data = split(data,',')
+    let tempstr = '(' . data[0] .' '.  data[1] . ' '  . data[4] . " " . data[5] .  data[6] . " "  . ')'
+    let devicelist = readfile("device.csv")
+    return tempstr
+endfunction
+"}}}}}
+
+"{{{{{  TableSwipe(...)  表格刷选
+function! TableSwipe(...)
+    let result = []
+    let totallist = a:1
+    let colnum = a:2
+    let keychar = a:3
+    let idx1 = 0
+    let collist = GetOneOfTheColumns(totallist,",",colnum)
+    while idx1 < len(collist)
+        if collist ==# keychar
+            let result = add(result,totallist[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    return result
 endfunction
 "}}}}}
 
