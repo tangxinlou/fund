@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 5
+let g:vimrcid = 7
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -1154,8 +1154,7 @@ function! DictTest()
     echo stringdict
     echo char[1003]
     echo stringdict[1003]
-    call Dbug1("dd" ,10,0 ,'DictTest 0')
-    call Dbug1( "dd",10,0 ,'DictTest 1')
+    call Dbug1(10,0,'DictTest 6',char, stringdict)
     let dict1  = eval(stringdict)
     echo eval(string(char3))
     echo "tangxinlou333"
@@ -1492,15 +1491,17 @@ let g:debuglist = []
 "比较重要的设置成3
 function! Dbug1(...)
     "{{{{{3 变量定义
-    let val = a:1
-    let flag = a:2
-    let append = 0
+    let flag = a:1
+    let append = a:2
+    let funcname = a:3
     let tempchar = ""
-    let funcname = ""
-    if a:0 !=  2
-        let append = a:3
-        let funcname = a:4
-    endif
+    let idx1 = 0
+    let val = ""
+    let idx1 = 4
+    while idx1 <= a:0
+        let val = val . " " . idx1 . " 个参数 " . string(eval('a:' . idx1))
+        let idx1 += 1
+    endwhile
     "}}}}
     if flag > g:debugflag
             let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())." - ". funcname . " - " . string(val)
@@ -1588,6 +1589,7 @@ function! ListTo2D(...)
     "}}}}
     while idx1 < len(listof1d)
         let listof1d[idx1] = split(listof1d[idx1],charinterval,2)
+        call Dbug1(10,0,'ListTo2D 5',)
         let idx1 += 1
     endwhile
     return  listof1d
@@ -3757,7 +3759,6 @@ function! IsBranch(...)
 endfunction
 "}}}}}
 "{{{{{2 function! CherryPick(...)    单笔cherry pick
-nnoremap <leader>cher :call CherryPick()<cr>
 function! CherryPick(...)
     let path = "."
     let branchstr = "tag_PD2283F_EX_14.0.PD2283F_EX_SC_14.0_14.1.4.1_system"
@@ -3813,6 +3814,7 @@ function! CycleCherry()
             call RepeatedlyCherry(templist[idx1])
             let idx1 += 1
         endwhile
+        echom "success"
     endif
 endfunction
 "}}}}
@@ -3822,6 +3824,7 @@ function! RepeatedlyCherry(...)
     let resultchar = ""
     let resultchar = system("git cherry-pick " . commitid)
     call GitAdd()
+    silent !git commit
 endfunction
 "}}}}
 "{{{{{2  ParsingCherry()                    解析cherry pick信息
@@ -7447,7 +7450,7 @@ function! ExtractKeyCodes(...)
         else
             let srcnum  = numberlist[0]
             let tailnum = numberlist[1]
-            if srcnum < tailnum
+            if srcnum <= tailnum
                 let foldstring =  GatherIntoRow(srcnum,tailnum)
             endif
         endif
@@ -7459,11 +7462,11 @@ function! ExtractKeyCodes(...)
         if 11 > g:debugflag | call Dbug( "findbegin",11,0) | endif
         "let col = match(getline('.'), '\S')
         let tempstring = ""
-        let tempstring = StandardCharacters(line('.'))
+        let tempstring = StandardCharacters(lastline)
         if tempstring != ""
             let col = match(tempstring, '\S')
         else
-            let col = match(getline('.'), '\S')
+            let col = match(getline(lastline), '\S')
             call remove(codelist,0)
         endif
         if col > 4
@@ -7988,12 +7991,12 @@ function! AddDebugLog(...)
         let tempchar = split(tempchar,'(')[0]
         let tempchar = split(tempchar)[-1]
         let tempchar = string(tempchar . " " . g:vimrcid)
-        let vimrcdebug = "call Dbug1( ,10,0 ,". tempchar .")"
+        let vimrcdebug = "call Dbug1(10,0,". tempchar .", )"
         call cursor(line,1)
         call append(line('.'),vimrcdebug)
         call cursor(line + 1,1)
         silent execute "normal! =="
-        call search("(")
+        call search(")")
         let g:vimrcid += 1
         call setline(2,"let g:vimrcid = " . g:vimrcid)
     endif
@@ -8612,7 +8615,7 @@ function! CallStack(...)
                 echom tempchar
                 let calledstring = FindTheCalledParty(templist[1],tempchar)
                 if  calledstring  ==#  ""
-                    call Dbug1(resultlist[0][idx1],10,0 ,'CallStack 4 这个函数识别错误')
+                    "call Dbug1(resultlist[0][idx1],10,0 ,'CallStack 4 这个函数识别错误')
                 elseif matchstr(laststackstring,calledstring) ==# calledstring
                     let stackstring = ExtractKeyCodes(templist[1])
                     if debugflag ==# "true"
@@ -11391,6 +11394,7 @@ function! FileAddLog(...)
                     if line('.') ==# idx1
                         let targetline = idx1
                         "let functionname = split(split(getline('.'),'(')[0])[-1]
+                        echom targetline
                         let functionname = ExtractKeyCodes(targetline )
                         let idx1 =  AddDebugLog(targetline,functionname)
                     else
@@ -11401,7 +11405,7 @@ function! FileAddLog(...)
                 call input("11")
             endif
         endif
-        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString," return ") ==# ""
+        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')
             call cursor(idx1,1)
             if line('.') ==# idx1
                 let targetline = idx1
