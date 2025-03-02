@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 112
+let g:vimrcid = 113
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -453,6 +453,7 @@ let g:nonfunctionlist = ["if(",
             \"while(",
             \"static {",
             \"struct ",
+            \"= new ",
             \"static{"]
 let g:debugid = 0
 "sdpdefs.h uuid
@@ -7579,6 +7580,9 @@ function! ExtractKeyCodes(...)
     let codelist = add(codelist,foldstring)
     let idx1 = 1
     let lastline = realityline
+    if !(CheckStringIsObtainOfList(foldstring,g:nonfunctionlist))
+        let functionline = realityline
+    endif
     while idx1 > 0
         call Dbug1(10,0,'ExtractKeyCodes 64', )
         "let col = match(getline('.'), '\S')
@@ -8028,6 +8032,9 @@ function! AddDebugLog(...)
     let tempchar = ""
     let cursor = []
     let vimrcdebug = ""
+    let functionline = -1
+    let codelist = []
+    let tempfucline = -1
     "}}}}
     if a:0 == 0
         let line = line('.')
@@ -8041,6 +8048,9 @@ function! AddDebugLog(...)
         let line = a:1
 
         let tempchar = a:2
+        if a:0 ==# 3
+            let functionline = a:3
+        endif
         if matchstr(tempchar,'"') != ""
             let tempchar = substitute(tempchar, '\"', '', 'g')
         endif
@@ -8058,6 +8068,7 @@ function! AddDebugLog(...)
     if matchstr(expand('%:t'),".cpp") ==# ".cpp"
         let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
         call append(line('.'),jnichar)
+        let lasttime = ""
     elseif  matchstr(expand('%:t'),".cc") ==# ".cc"
         if search("#include <android\/log.h>") ==# 0
             silent execute "normal! gg"
@@ -8083,25 +8094,67 @@ function! AddDebugLog(...)
         endif
         call cursor(line,1)
     elseif  matchstr(expand('%:t'),".java") ==# ".java"
-        let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
-        if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
-            call cursor(line + 1,1)
-            silent execute "normal! 0f(%"
-            call append(line('.'),packagechar)
-            call cursor(line('.') + 1,1)
-            let line = line('.')
-        else
-            call append(line,packagechar)
-            call cursor(line + 1,1)
-        endif
-        silent execute "normal! =="
-        if search("import \.*.Log;") ==# 0
-            silent execute "normal! gg"
-            call search("^package ")
-            call append(line('.'),"import com.android.bluetooth.vivo.Log;")
-            if line('.') < line
+        if a:0 ==# 3
+            let lasttime = "lastLogTime" . g:debugid
+            let currentTime = "currentTime" . g:debugid
+            let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
+            if matchstr(getline(functionline - 1),"@Override") != ""
+                let tempfucline = functionline - 2
+            else
+                let tempfucline = functionline - 1
+            endif
+            call append(tempfucline,"private static long " . lasttime . " = 0;")
+            let line += 1
+            call cursor(tempfucline + 1,1)
+            silent execute "normal! =="
+           
+            
+            if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
+                call cursor(line + 1,1)
+                silent execute "normal! 0f(%"
+                let line = line('.')
+            endif
+
+            let codelist = []
+            let codelist = add(codelist,"long ".  currentTime . " = System.currentTimeMillis();")
+            let codelist = add(codelist,"if (". currentTime . " - " . lasttime . " > 20) {")
+            let codelist = add(codelist,packagechar)
+            let codelist = add(codelist,lasttime . " = " . currentTime .";")
+            let codelist = add(codelist,"}")
+            call append(line,codelist)
+            let tempfucline = (line + 1).','.(line + 5)."normal! =="
+            call execute(tempfucline)
+            let line = line  + 5
+
+            if search("import \.*.Log;") ==# 0
+                silent execute "normal! gg"
+                call search("^package ")
+                call append(line('.'),"import com.android.bluetooth.vivo.Log;")
                 let line += 1
             endif
+            call cursor(line,1)
+        else
+            let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
+            if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
+                call cursor(line + 1,1)
+                silent execute "normal! 0f(%"
+                call append(line('.'),packagechar)
+                call cursor(line('.') + 1,1)
+                let line = line('.')
+            else
+                call append(line,packagechar)
+                call cursor(line + 1,1)
+            endif
+            silent execute "normal! =="
+            if search("import \.*.Log;") ==# 0
+                silent execute "normal! gg"
+                call search("^package ")
+                call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+                if line('.') < line
+                    let line += 1
+                endif
+            endif
+            call cursor(line,1)
         endif
         call cursor(line,1)
     elseif matchstr(expand('%:t'),"vimrc") ==# "vimrc"
