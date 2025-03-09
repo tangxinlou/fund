@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 113
+let g:vimrcid = 115
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -139,6 +139,7 @@ iabbrev gitfile git log  --pretty=oneline
 iabbrev gitchange git  log --oneline  --decorate --pretty=format:"\%cr \%cn \%H \%s" --all  --grep
 iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
+iabbrev findsw  find . -type f -name "*.sw*"
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
 "auto command自动命令{{{
@@ -432,7 +433,7 @@ let g:nonfunctionlist = ["if(",
             \"class ",
             \"} catch",
             \"() -> {",
-            \"namespace",
+            \"namespace ",
             \"if (",
             \"try{",
             \"try {",
@@ -454,6 +455,7 @@ let g:nonfunctionlist = ["if(",
             \"static {",
             \"struct ",
             \"= new ",
+            \"public enum",
             \"static{"]
 let g:debugid = 0
 "sdpdefs.h uuid
@@ -677,6 +679,7 @@ function! QuckfixToggle()
         "verbose highlight javaMethod
         "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')  当前光标下是什么高亮组
 
+        let g:debugflag = 1
         silent vnoremap <c-c>
         silent nnoremap <c-v>
     else
@@ -687,6 +690,7 @@ function! QuckfixToggle()
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
+        let g:debugflag = 20
         vnoremap <c-c> y
         nnoremap <c-v> <esc>p
     endif
@@ -2353,6 +2357,10 @@ function! SelectEntireCode(...)
                 call SwitchBuff(filename)
                 "call ClearBracket()
             endif
+            if matchstr(getline(line),"tangxinlou debug") != ""
+                "是加的debug 日志就忽略
+                break
+            endif
             silent setlocal foldmethod=syntax
             let numberlist = MergeLinesOfCode(line)
             call Dbug1(10,0,'SelectEntireCode 28', numberlist)
@@ -2749,7 +2757,7 @@ function! FindAnotherBracketPosition(...)
     call Dbug1(10,0,'FindAnotherBracketPosition 46', char)
     if a:0 ==# 2
         silent call cursor(1,1)
-        silent let cursor =  searchpos('{','w')
+        silent let cursor =  JumpToNext('{','w')
         let index = match(getline('.'), '\S')
         let curline = copy(cursor[0])
         call Dbug1(10,0,'FindAnotherBracketPosition 47', )
@@ -7551,6 +7559,10 @@ function! ExtractKeyCodes(...)
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
     let stackflag = ""
+    let resultlist = []
+    let switchline = -1
+    let switchlinetail = -1
+    let tempcursor = []
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -7631,15 +7643,24 @@ function! ExtractKeyCodes(...)
             "前一个不是case
             call Dbug1(10,0,'ExtractKeyCodes 67', )
             if matchstr(codelist[0]," case .*:")  ==# ""
+                let switchline = copy(start[0])
+                let switchlinetail = -1
                 let end = FindAnotherBracketPosition('{')
                 let tempchar = getline(start[0],end[0])
                 let idk1 = lastline - start[0]
                 while idk1 > 0
-                    let tempstring = ""
-                    let tempstring = matchstr(tempchar[idk1],"^.*case .*:")
-                    if tempstring != ""
-                        let codelist = insert(codelist,tempstring)
-                        break
+                    let tempstring = matchstr(tempchar[idk1],"tangxinlou debug")
+                    if tempstring ==# ""
+                        let tempstring = matchstr(tempchar[idk1],"^.*case .*:")
+                        if tempstring != ""
+                            let switchlinetail = switchline + idk1
+                            call cursor(switchlinetail,1)
+                            let tempcursor = FindAnotherBracketPosition('}')
+                            if tempcursor[0] ==# switchline 
+                                let codelist = insert(codelist,tempstring)
+                                break
+                            endif
+                        endif
                     endif
                     let idk1 -= 1
                 endwhile
@@ -7724,7 +7745,46 @@ function! ExtractKeyCodes(...)
         return tempstring
     elseif a:0 ==# 2
         call cursor(realityline,col)
-        return functionline
+        if a:2 ==# 1
+            return functionline
+        elseif a:2 ==# 2
+            return join(codelist)
+        elseif a:2 == 3 
+            call cursor(realityline,col)
+            let idx1 = 0
+            let stackflag = 1
+            while idx1 < len(codelist)
+                let result = WhichFunctionIsIn(codelist[idx1])
+                if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
+                    if stackflag > 0
+                        if result != ""
+                            if tempstring ==# ""
+                                let tempstring =  result
+                            else
+                                let tempstring = tempstring . "█" . result
+                            endif
+                        endif
+                        let stackflag -= 1
+                    endif
+                else
+                    if result != ""
+                        if tempstring ==# ""
+                            let tempstring =  result
+                        else
+                            let tempstring = tempstring . "█" . result
+                        endif
+                    endif
+                endif
+                let idx1 += 1
+            endwhile
+            if filetype ==# "cc"
+                let tempstring = expand("%:t") . "█" . tempstring
+            endif
+            let resultlist = add(resultlist,functionline)
+            let resultlist = add(resultlist,tempstring)
+            let resultlist = add(resultlist,join(codelist))
+            return resultlist
+        endif
     endif
 endfunction
 "}}}}}
@@ -8035,6 +8095,7 @@ function! AddDebugLog(...)
     let functionline = -1
     let codelist = []
     let tempfucline = -1
+    let idx1  = -1
     "}}}}
     if a:0 == 0
         let line = line('.')
@@ -8070,38 +8131,82 @@ function! AddDebugLog(...)
         call append(line('.'),jnichar)
         let lasttime = ""
     elseif  matchstr(expand('%:t'),".cc") ==# ".cc"
-        if search("#include <android\/log.h>") ==# 0
-            silent execute "normal! gg"
-            if search("#include") ==# 0
+        if a:0 ==# 3
+            let lasttime = "lastLogTime" . g:debugid
+            let currentTime = "currentTime" . g:debugid
+            let time_diff = "time_diff" . g:debugid
+            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
+            if search("#include <android\/log.h>") ==# 0
+                silent execute "normal! gg"
+                if search("#include") ==# 0
+                else
+                    silent execute "normal! gg"
+                    call  search("#include")
+                    call append(line('.'),"#include <android\/log.h>")
+                    let line += 1
+                endif
+            endif
+
+            if search("#include <chrono>") ==# 0
+                silent execute "normal! gg"
+                if search("#include") ==# 0
+                else
+                    silent execute "normal! gg"
+                    call  search("#include")
+                    call append(line('.'),"#include <chrono>")
+                    let line += 1
+                endif
+            endif
+
+            let codelist = []
+            let codelist = add(codelist,"static auto ".  lasttime  . " = std::chrono::steady_clock::now();")
+            let codelist = add(codelist,"auto ".  currentTime . " = std::chrono::steady_clock::now();")
+            let codelist = add(codelist,"auto " . time_diff . " = std::chrono::duration_cast<std::chrono::milliseconds>(". currentTime . " - " . lasttime . ").count();")
+            let codelist = add(codelist,"if (" . time_diff ." > 20) {")
+            let codelist = add(codelist,stackchar)
+            let codelist = add(codelist,lasttime . " = " . currentTime .";")
+            let codelist = add(codelist,"}")
+            call append(line,codelist)
+            let tempfucline = (line + 1).','.(line + 7)."normal! =="
+            call execute(tempfucline)
+            let line = line  + 7
+            call cursor(line,1)
+        else
+            if search("#include <android\/log.h>") ==# 0
+                silent execute "normal! gg"
+                if search("#include") ==# 0
+                else
+                    let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
+                    call append(line,stackchar)
+                    call cursor(line + 1,1)
+                    silent execute "normal! =="
+
+                    silent execute "normal! gg"
+                    call  search("#include")
+                    call append(line('.'),"#include <android\/log.h>")
+                    if line('.') < line
+                        let line += 1
+                    endif
+                endif
             else
                 let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
                 call append(line,stackchar)
                 call cursor(line + 1,1)
                 silent execute "normal! =="
-
-                silent execute "normal! gg"
-                call  search("#include")
-                call append(line('.'),"#include <android\/log.h>")
-                if line('.') < line
-                    let line += 1
-                endif
             endif
-        else
-            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
-            call append(line,stackchar)
-            call cursor(line + 1,1)
-            silent execute "normal! =="
+            call cursor(line,1)
         endif
-        call cursor(line,1)
     elseif  matchstr(expand('%:t'),".java") ==# ".java"
         if a:0 ==# 3
             let lasttime = "lastLogTime" . g:debugid
             let currentTime = "currentTime" . g:debugid
             let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
-            if matchstr(getline(functionline - 1),"@Override") != ""
-                let tempfucline = functionline - 2
-            else
-                let tempfucline = functionline - 1
+            let tempfucline = copy(functionline) -1
+            if matchstr(getline(tempfucline),"  @") != ""
+                let tempfucline -= 1
+                while matchstr(getline(tempfucline),"  @") != ""
+                    let tempfucline -= 1
+                endwhile
             endif
             call append(tempfucline,"private static long " . lasttime . " = 0;")
             let line += 1
@@ -8156,7 +8261,6 @@ function! AddDebugLog(...)
             endif
             call cursor(line,1)
         endif
-        call cursor(line,1)
     elseif matchstr(expand('%:t'),"vimrc") ==# "vimrc"
         call cursor(line,1)
         let cursor = searchpairpos('function!', '', 'endfunction', 'b')
@@ -8651,6 +8755,10 @@ function! WhichFunctionIsIn(...)
     if matchstr(codestring,"class ") != ""
         let templist = split(codestring)
         let indexnum = index(templist,"class")
+        return templist[indexnum + 1]
+    elseif matchstr(codestring,"public enum") != ""
+        let templist = split(codestring)
+        let indexnum = index(templist,"enum")
         return templist[indexnum + 1]
     elseif matchstr(codestring,"struct ") != ""
         let templist = split(codestring)
@@ -9264,7 +9372,7 @@ function! IdentifyAllCalls(...)
 endfunction
 "}}}}}
 
-"{{{{{2   IdentifyCalls(...) 识别当前行调用
+"{{{{{2   IdentifyCalls(...) 识别当前行所有调用
 "echo IdentifyCalls(getline('.'))
 function! IdentifyCalls(...)
     "{{{{{3 变量定义
@@ -11496,7 +11604,6 @@ function! FileAddLog(...)
                 \"; }",
                 \";}",
                 \"\\",
-                \"\\[\\]",
                 \"constexpr ",
                 \"\\[this\\]",
                 \" switch("]
@@ -11521,20 +11628,17 @@ function! FileAddLog(...)
                 \"} catch",
                 \"}catch",
                 \"static {",
-                \"static{"
-                \"static char* trim"]
-    "static char* trim  有太多打印
+                \"static{"]
     let functionname = ""
     let tempchar = ""
     let g:debugflag = 20
-    let filenamelist = ["iterator.cc",
-                \"list.cc",
-                \"byte_inserter.cc",
-                \"bit_inserter.cc",
-                \"vlog_android.cc",
-                \"aes.cc",
-                \"uuid.cc"]
-
+    let filenamelist = []
+    let tempflag = -1 
+    let classfuc = ""
+    let keycode = ""
+    let fucline = -1
+    let keylist = []
+    let nextstr = ""
     "}}}}
 
     if a:0 ==# 0
@@ -11562,37 +11666,59 @@ function! FileAddLog(...)
     let idx1 = 0
     while idx1 <= line('$')
         let currentString  = getline(idx1)
+        let nextstr = getline(idx1 + 1)
         if IsComment(idx1) ==# 0
         if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
             call cursor(idx1,1)
             let tempchar = StandardCharacters(line('.'))
+            "call Echom(10,0,'tangxinlou debug', tempchar)
             if CheckStringIsObtainOfList(tempchar,abnormallist)
             else
                 if !CheckStringIsObtainOfList(tempchar,uncheck)
                     if line('.') ==# idx1
                         let targetline = idx1
-                        "let functionname = split(split(getline('.'),'(')[0])[-1]
-                        let functionname = ExtractKeyCodes(targetline )
-                        let idx1 =  AddDebugLog(targetline,functionname)
+                        let keylist = ExtractKeyCodes(idx1,3)
+                        let fucline = keylist[0]
+                        let functionname = keylist[1]
+                        let keycode = keylist[2]
+                        let classfuc =  split(functionname,"█")
+                        let fucline =  MergeLinesOfCode(fucline)
+                        let tempflag = -1
+                        "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
+                        "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
+                        "call Echom(10,0,'tangxinlou debug', keycode )
+                        if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "") 
+                            let tempflag = 1 
+                        endif
+                        if tempflag ==# 1
+                            let fucline = fucline[0]
+                            let idx1 =  AddDebugLog(targetline,functionname,fucline)
+                        else
+                            call Dbug1(10,2,'FileAddLog 112',filename,idx1,tempchar)
+                            let idx1 =  AddDebugLog(targetline,functionname)
+                        endif
                     else
                     endif
                 endif
             endif
             if a:0 ==# 0
-                "call input("11")
+                call input("11")
             endif
         endif
-        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')
-            call cursor(idx1,1)
-            if line('.') ==# idx1
-                let targetline = idx1
-                "let functionname = matchstr(currentString,"case .*:")
-                let functionname = ExtractKeyCodes(targetline )
-                let idx1 =  AddDebugLog(targetline,functionname)
+        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')  ==# ""
+            if matchstr(nextstr,"  case .*:") != ""  ||  matchstr(nextstr,"  default:") != ""
             else
-            endif
-            if a:0 ==# 0
-                "call input("11")
+                call cursor(idx1,1)
+                if line('.') ==# idx1
+                    let targetline = idx1
+                    "let functionname = matchstr(currentString,"case .*:")
+                    let functionname = ExtractKeyCodes(targetline )
+                    let idx1 =  AddDebugLog(targetline,functionname)
+                else
+                endif
+                if a:0 ==# 0
+                    call input("11")
+                endif
             endif
         endif
     endif
@@ -11810,7 +11936,12 @@ function! MergeLinesOfCode(...)
         elseif join(split(currentstring)) ==# "}"
             return [line,line]
         elseif matchstr(currentstring,"   case ") != ""
-            return [line,line]
+            let start = line
+            let end = line
+            while IsComment(end + 1) ==# 1
+                let end += 1
+            endwhile
+            return [start,end]
         elseif matchstr(currentstring,"default:") != ""
             return [line,line]
         else
