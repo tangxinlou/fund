@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 115
+let g:vimrcid = 118
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -140,6 +140,7 @@ iabbrev gitchange git  log --oneline  --decorate --pretty=format:"\%cr \%cn \%H 
 iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
 iabbrev findsw  find . -type f -name "*.sw*"
+iabbrev gitshow  git show --name-status 
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
 "auto command自动命令{{{
@@ -331,6 +332,7 @@ nnoremap <leader>y :call AddLineNumber()<cr>
 "echo winheight('%') winwidth('%')
 nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd " . tempchardretory<cr>
 nnoremap <leader>log  :call append(line('.'),g:debuglist)
+nnoremap <leader>log1  :call append(line('.'),g:debuglist1)
 "临时快捷键
 "nnoremap <F12>  : noautocmd call SelectEntireCode()<cr>
 "nnoremap <F12>  : call SelectEntireCode()<cr>
@@ -427,36 +429,35 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
 "判断带{有下面的就不是函数
-let g:nonfunctionlist = ["if(",
+let g:nonfunctionlist = [" if(",
             \"  new ",
             \" interface ",
             \"class ",
             \"} catch",
             \"() -> {",
             \"namespace ",
-            \"if (",
-            \"try{",
-            \"try {",
-            \"try (",
-            \"for(",
-            \"for (",
-            \"synchronized (",
-            \"synchronized(",
-            \"switch (",
-            \"else{",
-            \"else {",
-            \"case ",
-            \"default:",
-            \"do {",
-            \"do {",
-            \"switch(",
-            \"while (",
-            \"while(",
-            \"static {",
-            \"struct ",
-            \"= new ",
-            \"public enum",
-            \"static{"]
+            \" if (",
+            \" try{",
+            \" try {",
+            \" try (",
+            \" for(",
+            \" for (",
+            \" synchronized (",
+            \" synchronized(",
+            \" switch (",
+            \" else{",
+            \" else {",
+            \" case ",
+            \" default:",
+            \" do {",
+            \" do {",
+            \" switch(",
+            \" while (",
+            \" while(",
+            \" static {",
+            \" = new ",
+            \" public enum",
+            \" static{"]
 let g:debugid = 0
 "sdpdefs.h uuid
 "hci_error_code.h  error code
@@ -663,8 +664,8 @@ nnoremap <F1> :call  QuckfixToggle()<cr>
 let g:quickfix_is_open = 0
 function! QuckfixToggle()
     if g:quickfix_is_open
-        set mouse=
-        set clipboard=exclude:clipboard
+        "set mouse=
+        "set clipboard=exclude:clipboard
         echo  "关闭鼠标"
         let g:quickfix_is_open = 0
         "colorscheme default
@@ -684,9 +685,9 @@ function! QuckfixToggle()
         silent nnoremap <c-v>
     else
         let g:quickfix_is_open = 1
-        set mouse=a
+        "set mouse=a
         "colorscheme morning
-        set clipboard=unnamed
+        "set clipboard=unnamed
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
         echo "打开鼠标"
@@ -1462,6 +1463,7 @@ endfunction
 "{{{{{2   Echom(...) 打印log的函数
 let g:debugflag = 1
 let g:debuglist = []
+let g:debuglist1 = [] "容错代码放这里方便debug
 "默认值是2，所有的都会打印
 "比较重要的设置成3
 function! Echom(...)
@@ -1481,20 +1483,18 @@ function! Echom(...)
     let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())." - ". funcname . " - " . string(val)
     if append ==#  0
         echom tempchar
-        let g:debuglist = add(g:debuglist,tempchar)
+        let g:debuglist1 = add(g:debuglist1,tempchar)
     elseif append ==# 1
         call append(line('.'),tempchar)
         call cursor(line('.') + 1,1)
-        let g:debuglist = add(g:debuglist,tempchar)
+        let g:debuglist1 = add(g:debuglist1,tempchar)
     elseif append ==# 2
-        let g:debuglist = add(g:debuglist,tempchar)
+        let g:debuglist1 = add(g:debuglist1,tempchar)
     endif
 endfunction
 "}}}}}
 
 "{{{{{2   Dbug1(...) 打印log的函数
-let g:debugflag = 1
-let g:debuglist = []
 "默认值是2，所有的都会打印
 "比较重要的设置成3
 function! Dbug1(...)
@@ -1515,13 +1515,13 @@ function! Dbug1(...)
             let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())." - ". funcname . " - " . string(val)
             if append ==#  0
                 echom tempchar
-                let g:debuglist = add(g:debuglist,tempchar)
+                let g:debuglist1 = add(g:debuglist1,tempchar)
             elseif append ==# 1
                 call append(line('.'),tempchar)
                 call cursor(line('.') + 1,1)
-                let g:debuglist = add(g:debuglist,tempchar)
+                let g:debuglist1 = add(g:debuglist1,tempchar)
             elseif append ==# 2
-                let g:debuglist = add(g:debuglist,tempchar)
+                let g:debuglist1 = add(g:debuglist1,tempchar)
             endif
     endif
 endfunction
@@ -2351,11 +2351,11 @@ function! SelectEntireCode(...)
             if idx1 ==# 0
                 call Dbug1(10,0,'SelectEntireCode 26', filename)
                 call SwitchBuff(filename)
-                "call ClearBracket()
+                call ClearBracket()
             elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
                 call Dbug1(10,0,'SelectEntireCode 27', filename)
                 call SwitchBuff(filename)
-                "call ClearBracket()
+                call ClearBracket()
             endif
             if matchstr(getline(line),"tangxinlou debug") != ""
                 "是加的debug 日志就忽略
@@ -2860,38 +2860,43 @@ function! SwitchBuff(...)
     return 0
 endfunction
 "}}}}}
-"{{{{{2 ClearBracket(...)清除多余的花括号
+"{{{{{2 ClearBracket(...)清除多余的花括号  主要处理@{ @}
 
 function! ClearBracket()
     let idx1 = 1
+    call Dbug1(10,0,'ClearBracket 115', )
+    silent call cursor(1,1)
     let line = line('.')
     let col = col('.')
-    silent call cursor(1,1)
-    silent call searchpos('{','w')
-    call Dbug1(10,0,'ClearBracket 54', )
-    silent let cursor = searchpairpos('{','','}','w')
-    call Dbug1(10,0,'ClearBracket 55', )
-    if cursor[0] ==# 0 && cursor[1] ==# 0
-        while idx1 > 0
-            call Dbug1(10,0,'ClearBracket 56', )
-            silent call cursor(line('$'),col('$'))
-            silent call searchpos('}','b')
-            call Dbug1(10,0,'ClearBracket 57', )
-            silent let cursor = searchpairpos('{','','}','b')
-            call Dbug1(10,0,'ClearBracket 58', cursor)
-            silent call setline(cursor[0],"")
-            silent call cursor(1,1)
-            silent call searchpos('{','w')
-            call Dbug1(10,0,'ClearBracket 59', )
-            silent let cursor = searchpairpos('{','','}','w')
-            if cursor[0] != 0 && cursor[1] != 0
-                let idx1 = 0
+    let searchs =  ""
+    let cursor = -1
+    let filename = expand("%:p")
+    let lastcursor = -1
+    while line <= line('$')
+        "let cursor = search('/\*.*}.*\*/\|/\*.*{.*\*/')
+        "let cursor = search('\*.*}\|\*.*{.*')
+        let cursor = search('@{\|@}')
+        if cursor ==# 0
+            call Dbug1(10,0,'ClearBracket 117', )
+            return 
+        else
+            if IsComment(cursor) ==# 1
+                let searchs =  getline(cursor)
+                "call Echom(10,0,'tangxinlou debug',searchs)
+                let searchs =  substitute(searchs , '{', '', 'g')
+                let searchs =  substitute(searchs , '}', '', 'g')
+                call setline(cursor,searchs)
+            else
+                call Echom(30,2,'tangxinlou debug ClearBracket', filename,getline(cursor),cursor)
             endif
-            call Dbug1(10,0,'ClearBracket 60', )
-        endwhile
-    else
-    endif
-    silent call cursor(line,col)
+        endif
+        if cursor ==# lastcursor
+            return
+        endif
+        let lastcursor = cursor 
+        let line = line('.')
+    endwhile
+    call Dbug1(10,0,'ClearBracket 116', )
 endfunction
 "}}}}}
 "{{{{{2 ResultClassification(...)结果分类
@@ -3392,6 +3397,24 @@ function! ClearingNotesInCode(...)
     return tempchar
 endfunction
 "}}}}}
+"{{{{{2 IsFunction(...)当前字符串是否是函数
+function! IsFunction(...)
+ let codestr = a:1
+ let flag = -1 
+
+ if(CheckStringIsObtainOfList(codestr,g:nonfunctionlist))
+     let flag = 0
+ else
+     if matchstr(codestr,"struct ") != ""  &&  count(codestr,'(') ==# 0 && count(codestr,')') ==# 0
+         let flag = 0
+     else
+         let flag = 1
+     endif
+ endif
+
+ return flag
+endfunction
+"}}}}} 
 "}}}}
 "{{{{vmake 命令
 
@@ -7567,7 +7590,7 @@ function! ExtractKeyCodes(...)
     setlocal foldmethod=syntax
     if a:0 ==# 0
         let realityline = line('.')
-        "call ClearBracket()
+        call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
     elseif a:0 != 0
         call cursor(a:1,1)
@@ -7592,7 +7615,7 @@ function! ExtractKeyCodes(...)
     let codelist = add(codelist,foldstring)
     let idx1 = 1
     let lastline = realityline
-    if !(CheckStringIsObtainOfList(foldstring,g:nonfunctionlist))
+    if IsFunction(foldstring)
         let functionline = realityline
     endif
     while idx1 > 0
@@ -7625,7 +7648,7 @@ function! ExtractKeyCodes(...)
         endif
         call Dbug1(10,0,'ExtractKeyCodes 65', )
         let foldstring = StandardCharacters(start[0])
-        if !(CheckStringIsObtainOfList(foldstring,g:nonfunctionlist))
+        if IsFunction(foldstring)
             let functionline = start[0]
         endif
         call Dbug1(10,0,'ExtractKeyCodes 66', foldstring)
@@ -8093,6 +8116,7 @@ function! AddDebugLog(...)
     let cursor = []
     let vimrcdebug = ""
     let functionline = -1
+    let fuclinetail = -1
     let codelist = []
     let tempfucline = -1
     let idx1  = -1
@@ -8109,8 +8133,9 @@ function! AddDebugLog(...)
         let line = a:1
 
         let tempchar = a:2
-        if a:0 ==# 3
+        if a:0 ==# 4
             let functionline = a:3
+            let fuclinetail = a:4
         endif
         if matchstr(tempchar,'"') != ""
             let tempchar = substitute(tempchar, '\"', '', 'g')
@@ -8131,52 +8156,68 @@ function! AddDebugLog(...)
         call append(line('.'),jnichar)
         let lasttime = ""
     elseif  matchstr(expand('%:t'),".cc") ==# ".cc"
-        if a:0 ==# 3
+        if a:0 ==# 4
+            let tempfucline = copy(fuclinetail)
             let lasttime = "lastLogTime" . g:debugid
             let currentTime = "currentTime" . g:debugid
             let time_diff = "time_diff" . g:debugid
-            let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
+            let stackchar = stackchar  . debugchar .  g:debugid  . "\",\"" . filename . " "  . casestr ." %s\"," . funcflag .  ");"
             if search("#include <android\/log.h>") ==# 0
                 silent execute "normal! gg"
                 if search("#include") ==# 0
+                    call append(line('.') - 1,"#include <android\/log.h>")
+                    let line += 1
+                    let tempfucline += 1
                 else
                     silent execute "normal! gg"
-                    call  search("#include")
-                    call append(line('.'),"#include <android\/log.h>")
+                    if  search("#include") != 0
+                        call append(line('.'),"#include <android\/log.h>")
+                    endif
                     let line += 1
+                    let tempfucline += 1
                 endif
             endif
 
             if search("#include <chrono>") ==# 0
                 silent execute "normal! gg"
                 if search("#include") ==# 0
+                    call append(line('.') - 1,"#include <chrono>")
+                    let line += 1
+                    let tempfucline += 1
                 else
                     silent execute "normal! gg"
                     call  search("#include")
                     call append(line('.'),"#include <chrono>")
                     let line += 1
+                    let tempfucline += 1
                 endif
             endif
+            call append(tempfucline,"static auto ".  lasttime  . " = std::chrono::steady_clock::now();")
+            call cursor(tempfucline + 1,1)
+            silent execute "normal! =="
+            let line += 1
 
             let codelist = []
-            let codelist = add(codelist,"static auto ".  lasttime  . " = std::chrono::steady_clock::now();")
+            "let codelist = add(codelist,"static auto ".  lasttime  . " = std::chrono::steady_clock::now();")
+            let codelist = add(codelist,"{")
             let codelist = add(codelist,"auto ".  currentTime . " = std::chrono::steady_clock::now();")
             let codelist = add(codelist,"auto " . time_diff . " = std::chrono::duration_cast<std::chrono::milliseconds>(". currentTime . " - " . lasttime . ").count();")
             let codelist = add(codelist,"if (" . time_diff ." > 20) {")
             let codelist = add(codelist,stackchar)
             let codelist = add(codelist,lasttime . " = " . currentTime .";")
             let codelist = add(codelist,"}")
+            let codelist = add(codelist,"}")
             call append(line,codelist)
-            let tempfucline = (line + 1).','.(line + 7)."normal! =="
+            let tempfucline = (line + 1).','.(line + 8)."normal! =="
             call execute(tempfucline)
-            let line = line  + 7
+            let line = line  + 8
             call cursor(line,1)
         else
             if search("#include <android\/log.h>") ==# 0
                 silent execute "normal! gg"
                 if search("#include") ==# 0
                 else
-                    let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
+                    let stackchar = stackchar  . debugchar .  g:debugid  . "\",\"" . filename . " "  . casestr ." %s\"," . funcflag .  ");"
                     call append(line,stackchar)
                     call cursor(line + 1,1)
                     silent execute "normal! =="
@@ -8189,7 +8230,7 @@ function! AddDebugLog(...)
                     endif
                 endif
             else
-                let stackchar = stackchar  . filename . " "  . casestr  . "\",\"" . debugchar .  g:debugid ." %s\"," . funcflag .  ");"
+                let stackchar = stackchar  . debugchar .  g:debugid  . "\",\"" . filename . " "  . casestr ." %s\"," . funcflag .  ");"
                 call append(line,stackchar)
                 call cursor(line + 1,1)
                 silent execute "normal! =="
@@ -8197,7 +8238,7 @@ function! AddDebugLog(...)
             call cursor(line,1)
         endif
     elseif  matchstr(expand('%:t'),".java") ==# ".java"
-        if a:0 ==# 3
+        if a:0 ==# 4
             let lasttime = "lastLogTime" . g:debugid
             let currentTime = "currentTime" . g:debugid
             let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
@@ -8760,7 +8801,7 @@ function! WhichFunctionIsIn(...)
         let templist = split(codestring)
         let indexnum = index(templist,"enum")
         return templist[indexnum + 1]
-    elseif matchstr(codestring,"struct ") != ""
+    elseif matchstr(codestring,"struct ") != ""  &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
         let templist = split(codestring)
         let indexnum = index(templist,"struct")
         return templist[indexnum + 1]
@@ -8777,7 +8818,7 @@ function! WhichFunctionIsIn(...)
         else
             return join(split(codestring))
         endif
-    elseif !(CheckStringIsObtainOfList(codestring,g:nonfunctionlist))
+    elseif IsFunction(codestring)
         let codestring = split(codestring,'(')[0]
         let templist = split(codestring)
         call Dbug1(10,0,'WhichFunctionIsIn 102', templist)
@@ -9066,7 +9107,7 @@ function! IdentificationCodeComponents(...)
                 return flag
             endif
 
-            if !CheckStringIsObtainOfList(codestring,g:nonfunctionlist)
+            if IsFunction(codestring)
                 let flag = flag . "func"
                 return flag
             endif
@@ -9671,7 +9712,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go,.pdl} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -11591,7 +11632,7 @@ endfunction
 
 "{{{{{2 function!  FileAddLog(...) 当前文件每个转折都打印一行log
 function! FileAddLog(...)
-     "{{{{{3 变量定义
+    "{{{{{3 变量定义
     let filename = ""
     let idx1 = 0
     let targetline = 0
@@ -11607,28 +11648,28 @@ function! FileAddLog(...)
                 \"constexpr ",
                 \"\\[this\\]",
                 \" switch("]
-    let uncheck = ["if(",
-                \"if (",
-                \"try{",
-                \"try {",
-                \"for(",
-                \"for (",
-                \"synchronized (",
-                \"synchronized(",
-                \"switch (",
-                \"else{",
-                \"else {",
-                \"case ",
-                \"default:",
-                \"do {",
-                \"do {",
-                \"switch(",
-                \"while (",
-                \"while(",
-                \"} catch",
-                \"}catch",
-                \"static {",
-                \"static{"]
+    let uncheck = [" if(",
+                \" if (",
+                \" try{",
+                \" try {",
+                \" for(",
+                \" for (",
+                \" synchronized (",
+                \" synchronized(",
+                \" switch (",
+                \" else{",
+                \" else {",
+                \" case ",
+                \" default:",
+                \" do {",
+                \" do {",
+                \" switch(",
+                \" while (",
+                \" while(",
+                \" } catch",
+                \" }catch",
+                \" static {",
+                \" static{"]
     let functionname = ""
     let tempchar = ""
     let g:debugflag = 20
@@ -11637,8 +11678,14 @@ function! FileAddLog(...)
     let classfuc = ""
     let keycode = ""
     let fucline = -1
+    let fuclinesrc = -1
+    let fuclinetail = -1
     let keylist = []
     let nextstr = ""
+    let nextcase = -1
+    let nextdefault = -1
+    let tempint = -1
+    let idj1 = -1
     "}}}}
 
     if a:0 ==# 0
@@ -11663,65 +11710,103 @@ function! FileAddLog(...)
         endif
         redraw
     endif
+    call ClearBracket()
     let idx1 = 0
     while idx1 <= line('$')
         let currentString  = getline(idx1)
-        let nextstr = getline(idx1 + 1)
         if IsComment(idx1) ==# 0
-        if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){" )
-            call cursor(idx1,1)
-            let tempchar = StandardCharacters(line('.'))
-            "call Echom(10,0,'tangxinlou debug', tempchar)
-            if CheckStringIsObtainOfList(tempchar,abnormallist)
-            else
-                if !CheckStringIsObtainOfList(tempchar,uncheck)
-                    if line('.') ==# idx1
-                        let targetline = idx1
-                        let keylist = ExtractKeyCodes(idx1,3)
-                        let fucline = keylist[0]
-                        let functionname = keylist[1]
-                        let keycode = keylist[2]
-                        let classfuc =  split(functionname,"█")
-                        let fucline =  MergeLinesOfCode(fucline)
-                        let tempflag = -1
-                        "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
-                        "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
-                        "call Echom(10,0,'tangxinlou debug', keycode )
-                        if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "") 
-                            let tempflag = 1 
-                        endif
-                        if tempflag ==# 1
-                            let fucline = fucline[0]
-                            let idx1 =  AddDebugLog(targetline,functionname,fucline)
+            if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){"  || matchstr(currentString,") override {") ==# ") override {"  || matchstr(currentString,") const {") ==# ") const {"   )
+                call cursor(idx1,1)
+                let tempchar = StandardCharacters(line('.'))
+                "call Echom(10,0,'tangxinlou debug', tempchar)
+                if CheckStringIsObtainOfList(tempchar,abnormallist)
+                else
+                    if !CheckStringIsObtainOfList(tempchar,uncheck)
+                        if line('.') ==# idx1
+                            "call Echom(10,0,'tangxinlou debug', idx1)
+                            let targetline = idx1
+                            let keylist = ExtractKeyCodes(idx1,3)
+                            let fucline = keylist[0]
+                            let fuclinetail = fucline  
+                            let functionname = keylist[1]
+                            let keycode = keylist[2]
+                            let classfuc =  split(functionname,"█")
+                            let fucline =  MergeLinesOfCode(fucline)
+                            let tempflag = -1
+                            if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "") 
+                                let tempflag = 1 
+                            endif
+                            if tempflag ==# 1
+                                let fuclinesrc = fucline[0]
+                                "call Echom(10,0,'tangxinlou debug',fucline )
+                                "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
+                                "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
+                                "call Echom(10,0,'tangxinlou debug', keycode )
+                                "call Echom(10,0,'tangxinlou debug', fuclinesrc)
+                                "call Echom(10,0,'tangxinlou debug', fuclinetail)
+                                "call Echom(10,0,'tangxinlou debug', idx1)
+                                let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
+                            else
+                                "call Echom(10,0,'tangxinlou debug', 12)
+                                call Dbug1(30,2,'FileAddLog 112',filename,idx1,tempchar)
+                                let idx1 =  AddDebugLog(targetline,functionname)
+                            endif
                         else
-                            call Dbug1(10,2,'FileAddLog 112',filename,idx1,tempchar)
-                            let idx1 =  AddDebugLog(targetline,functionname)
                         endif
-                    else
                     endif
                 endif
+                if a:0 ==# 0
+                    "call input("11")
+                endif
             endif
-            if a:0 ==# 0
-                call input("11")
-            endif
-        endif
-        if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')  ==# ""
-            if matchstr(nextstr,"  case .*:") != ""  ||  matchstr(nextstr,"  default:") != ""
-            else
-                call cursor(idx1,1)
-                if line('.') ==# idx1
-                    let targetline = idx1
-                    "let functionname = matchstr(currentString,"case .*:")
-                    let functionname = ExtractKeyCodes(targetline )
-                    let idx1 =  AddDebugLog(targetline,functionname)
+            if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')  ==# ""
+                silent call cursor(idx1 + 1,1)
+                let nextcase  = search("  case .*:",'w')
+                silent call cursor(idx1 + 1,1)
+                let nextdefault  = search("  default:",'w')
+                silent call cursor(idx1 + 1,1)
+
+                if nextcase  > idx1
+                    if nextdefault < nextcase  
+                        let tempint = nextdefault  
+                    else 
+                        let tempint = nextcase 
+                    endif
                 else
+                    let tempint = nextdefault  
+                endif
+
+                let idj1 = idx1  + 1
+                let tempflag = -1 
+                while idj1 < tempint
+                    if IsComment(idj1) ==# 0
+                        let tempflag = 1 
+                    endif
+                    let idj1 += 1
+                endwhile
+                if tempflag != 1 
+                    call Echom(30,2,'tangxinlou debug', nextcase,nextdefault,idx1,tempint,currentString,filename)
+                else
+                    call cursor(idx1,1)
+                    let targetline = idx1
+                    let keylist = ExtractKeyCodes(idx1,3)
+                    let fucline = keylist[0]
+                    let fuclinetail = fucline  
+                    let functionname = keylist[1]
+                    let keycode = keylist[2]
+                    let classfuc =  split(functionname,"█")
+                    let fucline =  MergeLinesOfCode(fucline)
+                    let tempflag = -1
+                    let targetline = idx1
+                    let functionname = ExtractKeyCodes(targetline )
+                    let fuclinesrc = fucline[0]
+                    let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
                 endif
                 if a:0 ==# 0
-                    call input("11")
+                    "call input("11")
                 endif
             endif
         endif
-    endif
         redraw
         let idx1 += 1
     endwhile
@@ -11831,7 +11916,7 @@ function! Exeample()
         execute "normal! :wq!\<cr>"
     endif
 endfunction
-"{{{{{2 function!  ProcessEachLine(...)
+"{{{{{2 function!  ProcessEachLine(...)  每行都打印成标准代码样式
 nnoremap <F3> :call ProcessEachLine()<cr>
 function! ProcessEachLine(...)
     "{{{{{3 变量定义
