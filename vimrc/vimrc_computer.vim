@@ -667,9 +667,9 @@ nnoremap <F1> :call  QuckfixToggle()<cr>
 let g:quickfix_is_open = 0
 function! QuckfixToggle()
     if g:quickfix_is_open
-        "set mouse=
-        "set clipboard=exclude:clipboard
-        echo  "关闭鼠标"
+        set mouse=
+        set clipboard=exclude:clipboard
+        echo  "关闭鼠标,关闭所有打印"
         let g:quickfix_is_open = 0
         "colorscheme default
         "highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
@@ -683,18 +683,18 @@ function! QuckfixToggle()
         "verbose highlight javaMethod
         "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')  当前光标下是什么高亮组
 
-        let g:debugflag = 1
+        let g:debugflag = 20
         silent vnoremap <c-c>
         silent nnoremap <c-v>
     else
         let g:quickfix_is_open = 1
-        "set mouse=a
+        set mouse=a
+        set clipboard=unnamed
         "colorscheme morning
-        "set clipboard=unnamed
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
-        echo "打开鼠标"
-        let g:debugflag = 20
+        echo "打开鼠标,打开所有打印"
+        let g:debugflag = 1
         vnoremap <c-c> y
         nnoremap <c-v> <esc>p
     endif
