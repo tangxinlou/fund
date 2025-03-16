@@ -568,12 +568,15 @@ function! Homedir(...)
     if a:0 ==# 2
         let type = a:2
     endif
+    let path = ""
     "}}}}
     let dirpath = g:homedir . "/" . dirpath
     if type ==# 1
         if "" ==# findfile(dirpath)
-            "call system("touch " . dirpath)
-            call writefile([],dirpath)
+            let path = "/" . join(split("/d/autoanaly/keywords","/")[0:-2],"/")
+            call system("mkdir " . path)
+            call system("touch " . dirpath)
+            "call writefile([],dirpath)
             echo dirpath . "没有这个文件现在新建这个文件"
         else
             "echo dirpath
