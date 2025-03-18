@@ -3418,6 +3418,104 @@ function! IsFunction(...)
  return flag
 endfunction
 "}}}}} 
+"{{{{{2  HandlingParentheses(...)  
+function! HandlingParentheses(...)
+    let elselist = []
+    let lastline = -1
+    let idx1 = -1
+    let ifline = -1
+    let endifline = -1
+    let ifstr = ""
+    let endifstr = ""
+    let tempchar = ""
+    let diffif = -1000
+    let diffendif = -1000
+    let ifup = -1000
+    let ifdown = -1000
+    call cursor(1,1)
+    let templine = search("#else")
+    if templine ==# 0 
+        return
+    else
+        "找到#else
+        while templine >lastline
+            let elselist = add(elselist,templine)
+            let templine = search("#else")
+            let lastline = templine
+        endwhile
+        "获取对应if 和endif
+        let idx1 = 0
+        while idx1 < len(elselist)
+             call cursor(idx1,1)
+             let ifline = search("#if")
+             call cursor(idx1,1)
+             let endifline = search("#endif")
+             let ifstr = join(getline(ifline + 1,idx1 -1))
+             let endifstr = join(getline(idx1 + 1),endifline -1)
+             let diffif = Closure(ifstr)
+             let diffendif = Closure(endifstr)
+             if diffif ==# diffendif
+                 if diffif ==# 0
+                     break
+                 elseif diffif > 0
+
+                 elseif diffif < 0
+                 endif
+             else
+                 break
+             endif
+             let idx1 += 1
+        endwhile
+
+    endif
+endfunction
+"}}}}} 
+"{{{{{2 Closure(...)计算括号开合度
+function! Closure(...)
+    "let string = a:1
+    "let string = ""
+    let idx1 = 0
+    let upnum = 0
+    let downnum = 0
+    let uplist = []
+    let downlist = []
+    let laststr = ""
+    while idx1 < len(string)
+        if string[idx1] ==# "{" 
+            if laststr ==# "{"
+                let downnum += 1
+                let downlist = add(downlist,idx1)
+            elseif laststr ==# "}"
+                let downnum += 1
+                let downlist = add(downlist,idx1)
+            elseif laststr ==# ""
+                let downnum += 1
+                let downlist = add(downlist,idx1)
+            endif
+        elseif string[idx1] ==# "}"
+            if laststr ==# "{"
+                let downnum -= 1
+                let downlist = downlist[0:-2]
+            elseif laststr ==# "}"
+                 if downnum > 0
+                     let downnum -= 1
+                     let downlist = downlist[0:-2]
+                 else
+                     let upnum += 1
+                     let uplist = add(uplist,idx1)
+                 endif
+            elseif laststr ==# ""
+                let upnum += 1
+                let uplist = add(uplist,idx1)
+            endif
+        endif
+        let laststr = string[idx1]
+        let idx1 += 1
+    endwhile
+    "return [upnum,downnum]
+    return [uplist,downlist]
+endfunction
+"}}}}}  
 "}}}}
 "{{{{vmake 命令
 
@@ -9221,7 +9319,7 @@ function! FunctionCallParsing(...)
 endfunction
 "}}}}}
 
-"{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义
+"{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义,找包名
 "echo FuncToDefine(982,1011,"params")
 "echo FuncToDefine(ExtractKeyCodes(line('.'),1),line('.'),"service")
 "echo FuncToDefine(1785,1797,"receiver")
