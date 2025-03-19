@@ -3438,29 +3438,38 @@ function! HandlingParentheses(...)
         return
     else
         "找到#else
+        call Echom(10,0,'tangxinlou debug', templine,lastline)
         while templine >lastline
             let elselist = add(elselist,templine)
             let templine = search("#else")
             let lastline = templine
         endwhile
+        call Echom(10,0,'tangxinlou debug', elselist)
         "获取对应if 和endif
         let idx1 = 0
         while idx1 < len(elselist)
-             call cursor(idx1,1)
-             let ifline = search("#if")
-             call cursor(idx1,1)
-             let endifline = search("#endif")
-             let ifstr = join(getline(ifline + 1,idx1 -1))
-             let endifstr = join(getline(idx1 + 1),endifline -1)
+            call cursor(elselist[idx1],1)
+             let ifline = search("#if",'b')
+             call cursor(elselist[idx1],1)
+             let endifline = search("#endif",'w')
+             call Echom(10,0,'tangxinlou debug', ifline)
+             call Echom(10,0,'tangxinlou debug', endifline)
+             let ifstr = join(getline(ifline + 1,elselist[idx1] -1),"\n")
+             let endifstr = join(getline(elselist[idx1] + 1,endifline -1),"\n")
+
+             call Echom(10,0,'tangxinlou debug', elselist[idx1])
+             call Echom(10,0,'tangxinlou debug', ifstr,endifstr)
+             call Echom(10,0,'tangxinlou debug', ifstr)
+             "let ifstr = split(ifstr,'\zs')
+             call Echom(10,0,'tangxinlou debug', ifstr)
+             "let ifstr[3] = " "
+             "let ifstr = join(ifstr,'')
+             call Echom(10,0,'tangxinlou debug', split(ifstr,"\n"))
              let diffif = Closure(ifstr)
              let diffendif = Closure(endifstr)
-             if diffif ==# diffendif
-                 if diffif ==# 0
-                     break
-                 elseif diffif > 0
-
-                 elseif diffif < 0
-                 endif
+             call Echom(10,0,'tangxinlou debug', diffif,diffendif)
+             if diffif[0] ==# diffendif[0]
+                 call Echom(10,0,'tangxinlou debug', diffif,diffendif)
              else
                  break
              endif
@@ -3472,27 +3481,34 @@ endfunction
 "}}}}} 
 "{{{{{2 Closure(...)计算括号开合度
 function! Closure(...)
-    "let string = a:1
+    let string = a:1
     "let string = ""
     let idx1 = 0
     let upnum = 0
     let downnum = 0
-    let uplist = []
-    let downlist = []
+    let uplist = [] "向上
+    let downlist = [] "向下
     let laststr = ""
+    let flag = -1
     while idx1 < len(string)
         if string[idx1] ==# "{" 
+            "let flag += 1
             if laststr ==# "{"
                 let downnum += 1
+                "let downlist = add(downlist,flag)
                 let downlist = add(downlist,idx1)
             elseif laststr ==# "}"
                 let downnum += 1
+                "let downlist = add(downlist,flag)
                 let downlist = add(downlist,idx1)
             elseif laststr ==# ""
                 let downnum += 1
+                "let downlist = add(downlist,flag)
                 let downlist = add(downlist,idx1)
             endif
+            let laststr = string[idx1]
         elseif string[idx1] ==# "}"
+            let flag += 1
             if laststr ==# "{"
                 let downnum -= 1
                 let downlist = downlist[0:-2]
@@ -3502,18 +3518,20 @@ function! Closure(...)
                      let downlist = downlist[0:-2]
                  else
                      let upnum += 1
+                     "let uplist = add(uplist,flag)
                      let uplist = add(uplist,idx1)
                  endif
             elseif laststr ==# ""
                 let upnum += 1
+                "let uplist = add(uplist,flag)
                 let uplist = add(uplist,idx1)
             endif
+            let laststr = string[idx1]
         endif
-        let laststr = string[idx1]
         let idx1 += 1
     endwhile
     "return [upnum,downnum]
-    return [uplist,downlist]
+    return [[upnum,downnum],[uplist,downlist]]
 endfunction
 "}}}}}  
 "}}}}
