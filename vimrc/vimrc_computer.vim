@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 118
+let g:vimrcid = 120
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -102,6 +102,8 @@ set clipboard=exclude:clipboard
 "let java_highlight_functions = "indent"
 "colorscheme torte
 colorscheme elflord
+"syntax match javaFunction '\<\h\w*\>\ze\s*(' 
+"hi link javaFunction Function               
 "}}}}}
 "vimdiff 颜色配置{{{
 if &diff
@@ -119,7 +121,8 @@ endif
 "iabbrev txl tangxinlou
 "iabbrev r r!
 iabbrev find find -iname '*mobilelog*'
-iabbrev <expr> echo "call Echom(10,0,'tangxinlou debug',)" . "\<Left>"
+"iabbrev <expr> echo "call Echom(10,0,'tangxinlou debug',)" . "\<Left>"
+iabbrev <expr> echo "call Echom(10,0,'tangxinlou debug'," . line('.') . ",)\<Left>"
 iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
@@ -1464,7 +1467,7 @@ endfunction
 "}}}}}
 "}}}}
 "{{{{{2   Echom(...) 打印log的函数
-let g:debugflag = 1
+let g:debugflag = 20
 let g:debuglist = []
 let g:debuglist1 = [] "容错代码放这里方便debug
 "默认值是2，所有的都会打印
@@ -2231,6 +2234,7 @@ function! CheckStringIsObtainOfList(...)
     let uncheckflag = 0
     for char in Stringlist
         if "" != matchstr(String,char)
+            "call Echom(10,0,'tangxinlou debug', char)
             let uncheckflag = 1
         endif
     endfor
@@ -2354,11 +2358,9 @@ function! SelectEntireCode(...)
             if idx1 ==# 0
                 call Dbug1(10,0,'SelectEntireCode 26', filename)
                 call SwitchBuff(filename)
-                call ClearBracket()
             elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
                 call Dbug1(10,0,'SelectEntireCode 27', filename)
                 call SwitchBuff(filename)
-                call ClearBracket()
             endif
             if matchstr(getline(line),"tangxinlou debug") != ""
                 "是加的debug 日志就忽略
@@ -2864,44 +2866,47 @@ function! SwitchBuff(...)
 endfunction
 "}}}}}
 "{{{{{2 ClearBracket(...)清除多余的花括号  主要处理@{ @}
-
 function! ClearBracket()
-    let idx1 = 1
-    call Dbug1(10,0,'ClearBracket 115', )
-    silent call cursor(1,1)
-    let line = line('.')
-    let col = col('.')
-    let searchs =  ""
-    let cursor = -1
-    let filename = expand("%:p")
-    let lastcursor = -1
-    while line <= line('$')
-        "let cursor = search('/\*.*}.*\*/\|/\*.*{.*\*/')
-        "let cursor = search('\*.*}\|\*.*{.*')
-        let cursor = search('@{\|@}')
-        if cursor ==# 0
-            call Dbug1(10,0,'ClearBracket 117', )
-            return 
-        else
-            if IsComment(cursor) ==# 1
-                let searchs =  getline(cursor)
-                "call Echom(10,0,'tangxinlou debug',searchs)
-                let searchs =  substitute(searchs , '{', '', 'g')
-                let searchs =  substitute(searchs , '}', '', 'g')
-                call setline(cursor,searchs)
-            else
-                call Echom(30,2,'tangxinlou debug ClearBracket', filename,getline(cursor),cursor)
-            endif
-        endif
-        if cursor ==# lastcursor
-            return
-        endif
-        let lastcursor = cursor 
-        let line = line('.')
-    endwhile
-    call Dbug1(10,0,'ClearBracket 116', )
+    "call Echom(10,0,'tangxinlou debug', "begin")
+    setlocal modifiable
+    syntax off
+ 
+    " 行注释：优先处理大括号
+    silent! execute '%s#\v//\zs%(\{[^}]*|\}[^{]*|[^/{}])*#\=tr(submatch(0), "{}", "  ")#ge'
+ 
+    " 块注释：跨行精准匹配
+    silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "{}", "  ")#ge'
+    call HandlingParentheses()
+    "call Echom(10,0,'tangxinlou debug', "end")
+    "call input("22")
 endfunction
 "}}}}}
+"{{{{{2 SaveBuffer(...)保存缓冲区
+let s:content_cache = {}
+function! SaveBuffer(...)
+    "call Echom(10,0,'tangxinlou debug', "begin")
+    let buf = bufnr('%')
+    let s:content_cache[buf] = {
+                \ 'lines': getline(1, '$'),
+                \ 'folds': getpos('.')
+                \ }
+    "call Echom(10,0,'tangxinlou debug', "end")
+endfunction
+"}}}}} 
+"{{{{{2 RestoreBuffer(...)恢复缓冲区
+function! RestoreBuffer(...)
+    "call Echom(10,0,'tangxinlou debug', "begin")
+    let buf = bufnr('%')
+    if has_key(s:content_cache, buf)
+        " 先清空缓冲区（避免残留行）
+        silent! %delete _
+        call setline(1, s:content_cache[buf].lines)
+        call setpos('.', s:content_cache[buf].folds)
+        unlet s:content_cache[buf]
+    endif
+    "call Echom(10,0,'tangxinlou debug', "end")
+endfunction
+"}}}}}  
 "{{{{{2 ResultClassification(...)结果分类
 
 function! ResultClassification(...)
@@ -3130,7 +3135,7 @@ function! IsFileType(...)
         let filetype = "cc"
     elseif matchstr(filename,'\.cpp') != ""
         let filetype = "cpp"
-    elseif matchstr(filename,'\.ch') != ""
+    elseif matchstr(filename,'\.h') != ""
         let filetype = "head"
     elseif matchstr(filename,'\.vimrc') != ""
         let filetype = "vimrc"
@@ -3407,6 +3412,11 @@ function! IsFunction(...)
 
  if(CheckStringIsObtainOfList(codestr,g:nonfunctionlist))
      let flag = 0
+     if matchstr(codestr,"class") != ""
+         if  matchstr(codestr,"class") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
+             let flag = 1
+         endif
+     endif
  else
      if matchstr(codestr,"struct ") != ""  &&  count(codestr,'(') ==# 0 && count(codestr,')') ==# 0
          let flag = 0
@@ -3418,7 +3428,7 @@ function! IsFunction(...)
  return flag
 endfunction
 "}}}}} 
-"{{{{{2  HandlingParentheses(...)  
+"{{{{{2  HandlingParentheses(...) 处理大括号 
 function! HandlingParentheses(...)
     let elselist = []
     let lastline = -1
@@ -3434,48 +3444,46 @@ function! HandlingParentheses(...)
     let ifdown = -1000
     call cursor(1,1)
     let templine = search("#else")
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    if filetype ==# "java"
+        return
+    endif
     if templine ==# 0 
         return
     else
         "找到#else
-        call Echom(10,0,'tangxinlou debug', templine,lastline)
         while templine >lastline
+            let lastline = templine
             let elselist = add(elselist,templine)
             let templine = search("#else")
-            let lastline = templine
         endwhile
-        call Echom(10,0,'tangxinlou debug', elselist)
         "获取对应if 和endif
+        call Echom(10,0,'tangxinlou debug', elselist)
         let idx1 = 0
         while idx1 < len(elselist)
             call cursor(elselist[idx1],1)
              let ifline = search("#if",'b')
              call cursor(elselist[idx1],1)
              let endifline = search("#endif",'w')
-             call Echom(10,0,'tangxinlou debug', ifline)
-             call Echom(10,0,'tangxinlou debug', endifline)
              let ifstr = join(getline(ifline + 1,elselist[idx1] -1),"\n")
              let endifstr = join(getline(elselist[idx1] + 1,endifline -1),"\n")
-
-             call Echom(10,0,'tangxinlou debug', elselist[idx1])
-             call Echom(10,0,'tangxinlou debug', ifstr,endifstr)
-             call Echom(10,0,'tangxinlou debug', ifstr)
-             "let ifstr = split(ifstr,'\zs')
-             call Echom(10,0,'tangxinlou debug', ifstr)
-             "let ifstr[3] = " "
-             "let ifstr = join(ifstr,'')
-             call Echom(10,0,'tangxinlou debug', split(ifstr,"\n"))
              let diffif = Closure(ifstr)
              let diffendif = Closure(endifstr)
-             call Echom(10,0,'tangxinlou debug', diffif,diffendif)
              if diffif[0] ==# diffendif[0]
-                 call Echom(10,0,'tangxinlou debug', diffif,diffendif)
+                 if diffif[0] != [0,0]
+                     call Dbug1(10,0,'HandlingParentheses 118', ifstr)
+                     let ifstr =  ChangeStrChar(ifstr,diffif[1][0]," ")
+                     let ifstr =  ChangeStrChar(ifstr,diffif[1][1]," ")
+                     let ifstr =  split(ifstr,"\n")
+                     call Dbug1(10,0,'HandlingParentheses 119', ifstr)
+                     call setline(ifline + 1,ifstr)
+                 endif
              else
-                 break
+                 call Echom(10,2,'tangxinlou debug', filename,ifline,ifstr)
              endif
              let idx1 += 1
         endwhile
-
     endif
 endfunction
 "}}}}} 
@@ -3532,6 +3540,45 @@ function! Closure(...)
     endwhile
     "return [upnum,downnum]
     return [[upnum,downnum],[uplist,downlist]]
+endfunction
+"}}}}}  
+"{{{{{2   ChangeStrChar(...) 修改字符串中的字符
+function! ChangeStrChar(...)
+    let string = a:1
+    let pos = a:2
+    let char = a:3
+    let idx1 = 0
+    let string = split(string ,'\zs')
+    "call Echom(10,0,'tangxinlou debug', string,pos)
+    if type(pos) ==# 0
+        let string[pos] = char
+    elseif type(pos) ==# 3
+        let idx1 = 0
+        while idx1 < len(pos)
+            if type(char) ==# 3
+                let string[pos[idx1]] = char[idx1]
+            elseif type(char) ==# 1
+                let string[pos[idx1]] = char
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+    let string = join(string,'')
+    return string
+endfunction
+"}}}}} 
+"{{{{{2   GetUpBrackets(...) 获取上级括号的位置
+function! GetUpBrackets(...)
+      let line = a:1
+      let upline = -1
+      let downline = -1
+      call cursor(line,1)
+      let upline = searchpairpos('{', '', '}', 'b')[0]
+      if upline ==# 0
+          return []
+      endif
+      let downline = searchpairpos('{', '', '}', 'w')[0]
+      return [upline,downline]
 endfunction
 "}}}}}  
 "}}}}
@@ -7709,6 +7756,8 @@ function! ExtractKeyCodes(...)
     setlocal foldmethod=syntax
     if a:0 ==# 0
         let realityline = line('.')
+        "call Echom(10,0,'tangxinlou debug', "begin")
+        call SaveBuffer()
         call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
     elseif a:0 != 0
@@ -7853,6 +7902,12 @@ function! ExtractKeyCodes(...)
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         echo tempstring
+        call RestoreBuffer()
+        "call Echom(10,0,'tangxinlou debug', "end")
+        syntax on
+        syntax match javaFunction '\<\h\w*\>\ze\s*(' 
+        hi link javaFunction Function               
+        
     elseif a:0 ==# 1
         call cursor(realityline,col)
         let idx1 = 0
@@ -8311,7 +8366,7 @@ function! AddDebugLog(...)
                     let tempfucline += 1
                 endif
             endif
-            call append(tempfucline,"static auto ".  lasttime  . " = std::chrono::steady_clock::now();")
+            call append(tempfucline,"static auto ".  lasttime  . " = std::chrono::steady_clock::now() - std::chrono::milliseconds(5100);")
             call cursor(tempfucline + 1,1)
             silent execute "normal! =="
             let line += 1
@@ -8912,9 +8967,9 @@ function! WhichFunctionIsIn(...)
     "函数
     "判断
     "调用
-    if matchstr(codestring,"class ") != ""
+    if matchstr(codestring,"class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
         let templist = split(codestring)
-        let indexnum = index(templist,"class")
+        let indexnum = index(templist,"class") 
         return templist[indexnum + 1]
     elseif matchstr(codestring,"public enum") != ""
         let templist = split(codestring)
@@ -9217,7 +9272,7 @@ function! IdentificationCodeComponents(...)
                 let flag = flag . "cycle"
                 return flag
             endif
-            if matchstr(codestring," class ") != ""
+            if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
                 let flag = flag . "class"
                 return flag
             endif
