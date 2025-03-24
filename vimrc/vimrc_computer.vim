@@ -2866,17 +2866,19 @@ function! SwitchBuff(...)
 endfunction
 "}}}}}
 "{{{{{2 ClearBracket(...)清除多余的花括号  主要处理@{ @}
-function! ClearBracket()
+function! ClearBracket(...)
     "call Echom(10,0,'tangxinlou debug', "begin")
     setlocal modifiable
     syntax off
- 
+    silent! execute '%s/\r//ge' 
     " 行注释：优先处理大括号
     silent! execute '%s#\v//\zs%(\{[^}]*|\}[^{]*|[^/{}])*#\=tr(submatch(0), "{}", "  ")#ge'
  
     " 块注释：跨行精准匹配
     silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "{}", "  ")#ge'
-    call HandlingParentheses()
+    if a:0 ==# 0
+        call HandlingParentheses()
+    endif
     "call Echom(10,0,'tangxinlou debug', "end")
     "call input("22")
 endfunction
@@ -3442,7 +3444,16 @@ function! HandlingParentheses(...)
     let diffendif = -1000
     let ifup = -1000
     let ifdown = -1000
-    call cursor(1,1)
+    let srcline = -1
+    let tailline = -1
+    if a:0 ==# 0
+        let srcline = 1
+        let tailline = line('$')
+    else
+        let srcline = a:1
+        let tailline = a:2
+    endif
+    call cursor(srcline,1)
     let templine = search("#else")
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
@@ -3457,6 +3468,10 @@ function! HandlingParentheses(...)
             let lastline = templine
             let elselist = add(elselist,templine)
             let templine = search("#else")
+            if srcline < templine &&  templine < tailline
+            else
+                return
+            endif
         endwhile
         "获取对应if 和endif
         call Echom(10,0,'tangxinlou debug', elselist)
@@ -3472,11 +3487,13 @@ function! HandlingParentheses(...)
              let diffendif = Closure(endifstr)
              if diffif[0] ==# diffendif[0]
                  if diffif[0] != [0,0]
+                     "call Echom(10,0,'tangxinlou debug',3490, ifstr)
                      call Dbug1(10,0,'HandlingParentheses 118', ifstr)
                      let ifstr =  ChangeStrChar(ifstr,diffif[1][0]," ")
                      let ifstr =  ChangeStrChar(ifstr,diffif[1][1]," ")
                      let ifstr =  split(ifstr,"\n")
                      call Dbug1(10,0,'HandlingParentheses 119', ifstr)
+                     "call Echom(10,0,'tangxinlou debug',3496, ifstr)
                      call setline(ifline + 1,ifstr)
                  endif
              else
@@ -7761,6 +7778,8 @@ function! ExtractKeyCodes(...)
         call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
     elseif a:0 != 0
+        call SaveBuffer()
+        call ClearBracket()
         call cursor(a:1,1)
         let realityline = a:1
         call Dbug1(10,0,'ExtractKeyCodes 62', realityline)
@@ -7768,8 +7787,8 @@ function! ExtractKeyCodes(...)
     let col = col('.')
     let foldstring = getline(realityline)
     if (count(foldstring,'(') != count(foldstring,')')) || matchstr(foldstring,';') ==# "" || matchstr(foldstring,'{') ==# ""
-        call Dbug1(10,0,'ExtractKeyCodes 63', )
         let numberlist = MergeLinesOfCode(realityline)
+        "call Echom(10,0,'tangxinlou debug',7791, numberlist,realityline,MergeLinesOfCode(realityline))
         if numberlist ==# []
             let foldstring = ""
         else
@@ -7779,6 +7798,7 @@ function! ExtractKeyCodes(...)
                 let foldstring =  GatherIntoRow(srcnum,tailnum)
             endif
         endif
+        call Dbug1(10,0,'ExtractKeyCodes 63', foldstring)
     endif
     let codelist = add(codelist,foldstring)
     let idx1 = 1
@@ -7833,7 +7853,7 @@ function! ExtractKeyCodes(...)
         if matchstr(foldstring," switch")  != ""
             "前一个不是case
             call Dbug1(10,0,'ExtractKeyCodes 67', )
-            if matchstr(codelist[0]," case .*:")  ==# ""
+            if matchstr(codelist[0],"case .*:")  ==# ""
                 let switchline = copy(start[0])
                 let switchlinetail = -1
                 let end = FindAnotherBracketPosition('{')
@@ -7902,8 +7922,8 @@ function! ExtractKeyCodes(...)
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         echo tempstring
-        call RestoreBuffer()
         "call Echom(10,0,'tangxinlou debug', "end")
+        call RestoreBuffer()
         syntax on
         syntax match javaFunction '\<\h\w*\>\ze\s*(' 
         hi link javaFunction Function               
@@ -7939,12 +7959,15 @@ function! ExtractKeyCodes(...)
         if filetype ==# "cc"
             let tempstring = expand("%:t") . "█" . tempstring
         endif
+        call RestoreBuffer()
         return tempstring
     elseif a:0 ==# 2
         call cursor(realityline,col)
         if a:2 ==# 1
+            call RestoreBuffer()
             return functionline
         elseif a:2 ==# 2
+            call RestoreBuffer()
             return join(codelist)
         elseif a:2 == 3 
             call cursor(realityline,col)
@@ -7980,6 +8003,7 @@ function! ExtractKeyCodes(...)
             let resultlist = add(resultlist,functionline)
             let resultlist = add(resultlist,tempstring)
             let resultlist = add(resultlist,join(codelist))
+            call RestoreBuffer()
             return resultlist
         endif
     endif
@@ -11821,6 +11845,8 @@ function! FileAddLog(...)
                 \"\\",
                 \"constexpr ",
                 \"\\[this\\]",
+                \"= [](",
+                \"=[](",
                 \" switch("]
     let uncheck = [" if(",
                 \" if (",
@@ -11858,6 +11884,7 @@ function! FileAddLog(...)
     let nextstr = ""
     let nextcase = -1
     let nextdefault = -1
+    let downBrackets = -1
     let tempint = -1
     let idj1 = -1
     "}}}}
@@ -11884,7 +11911,7 @@ function! FileAddLog(...)
         endif
         redraw
     endif
-    call ClearBracket()
+    "call ClearBracket(1)
     let idx1 = 0
     while idx1 <= line('$')
         let currentString  = getline(idx1)
@@ -11901,24 +11928,29 @@ function! FileAddLog(...)
                             let targetline = idx1
                             let keylist = ExtractKeyCodes(idx1,3)
                             let fucline = keylist[0]
+                            "call Echom(10,0,'tangxinlou debug',fucline )
                             let fuclinetail = fucline  
                             let functionname = keylist[1]
                             let keycode = keylist[2]
                             let classfuc =  split(functionname,"█")
                             let fucline =  MergeLinesOfCode(fucline)
+                            if fucline ==# []
+                                call Echom(10,2,'tangxinlou debug',11938,"选择函数出错", idx1,filename)
+                            endif
+                            "call Echom(10,0,'tangxinlou debug',fucline )
                             let tempflag = -1
                             if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "") 
                                 let tempflag = 1 
                             endif
+                            let fuclinesrc = fucline[0]
+                            "call Echom(10,0,'tangxinlou debug',functionname )
+                            "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
+                            "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
+                            "call Echom(10,0,'tangxinlou debug', keycode )
+                            "call Echom(10,0,'tangxinlou debug', fuclinesrc)
+                            "call Echom(10,0,'tangxinlou debug', fuclinetail)
+                            "call Echom(10,0,'tangxinlou debug', idx1)
                             if tempflag ==# 1
-                                let fuclinesrc = fucline[0]
-                                "call Echom(10,0,'tangxinlou debug',fucline )
-                                "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
-                                "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
-                                "call Echom(10,0,'tangxinlou debug', keycode )
-                                "call Echom(10,0,'tangxinlou debug', fuclinesrc)
-                                "call Echom(10,0,'tangxinlou debug', fuclinetail)
-                                "call Echom(10,0,'tangxinlou debug', idx1)
                                 let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
                             else
                                 "call Echom(10,0,'tangxinlou debug', 12)
@@ -11935,23 +11967,28 @@ function! FileAddLog(...)
             endif
             if matchstr(currentString,"  case .*:") != "" &&  matchstr(currentString,"return") ==# "" &&  matchstr(currentString,' \')  ==# ""
                 silent call cursor(idx1 + 1,1)
-                let nextcase  = search("  case .*:",'w')
+                let nextcase  = search("case .*:",'w')
                 silent call cursor(idx1 + 1,1)
-                let nextdefault  = search("  default:",'w')
+                let nextdefault  = search("default:",'w')
+                silent call cursor(idx1 + 1,1)
+                let downBrackets = GetUpBrackets(idx1)[1]
                 silent call cursor(idx1 + 1,1)
 
-                if nextcase  > idx1
-                    if nextdefault < nextcase  
-                        let tempint = nextdefault  
-                    else 
-                        let tempint = nextcase 
-                    endif
+                "call Echom(10,0,'tangxinlou debug',11965, idx1,downBrackets,nextcase,nextdefault)
+                if idx1 < nextdefault  && nextdefault < downBrackets
                 else
-                    let tempint = nextdefault  
+                    let nextdefault  = 100001
                 endif
-
+                if idx1 < nextcase && nextcase < downBrackets
+                else
+                    let nextcase  = 100000
+                endif
+                let tempint = sort([nextcase,nextdefault,downBrackets],'n')[0]
+                "call Echom(10,0,'tangxinlou debug',11979, tempint,sort([nextcase,nextdefault,downBrackets],'n'))
+                
                 let idj1 = idx1  + 1
                 let tempflag = -1 
+                "call Echom(10,0,'tangxinlou debug',11984, tempint,idj1)
                 while idj1 < tempint
                     if IsComment(idj1) ==# 0
                         let tempflag = 1 
@@ -12194,7 +12231,7 @@ function! MergeLinesOfCode(...)
             return [line,line]
         elseif join(split(currentstring)) ==# "}"
             return [line,line]
-        elseif matchstr(currentstring,"   case ") != ""
+        elseif matchstr(currentstring," case ") != ""
             let start = line
             let end = line
             while IsComment(end + 1) ==# 1
@@ -12206,23 +12243,26 @@ function! MergeLinesOfCode(...)
         else
             let sortlist = []
             silent call cursor(line,1)
-
-            let targetline = JumpToNext('{','w')[0]
-            if targetline >= line && targetline != 0
-                let sortlist = add(sortlist,targetline)
-            endif
-
-            silent call cursor(line,1)
-            let targetline = JumpToNext(';','w')[0]
-            if targetline >= line && targetline != 0
-                let sortlist = add(sortlist,targetline)
-            endif
-
-            if needflag  ==# 1
-                silent call cursor(line,1)
-                let targetline = JumpToNext('^#','w')[0]
+            if len(getline(line)) != 0 && getline(line)[0] ==# "{"
+                let sortlist = add(sortlist,line)
+            else
+                let targetline = JumpToNext('{','w')[0]
                 if targetline >= line && targetline != 0
-                    let sortlist = add(sortlist,targetline - 1)
+                    let sortlist = add(sortlist,targetline)
+                endif
+
+                silent call cursor(line,1)
+                let targetline = JumpToNext(';','w')[0]
+                if targetline >= line && targetline != 0
+                    let sortlist = add(sortlist,targetline)
+                endif
+
+                if needflag  ==# 1
+                    silent call cursor(line,1)
+                    let targetline = JumpToNext('^#','w')[0]
+                    if targetline >= line && targetline != 0
+                        let sortlist = add(sortlist,targetline - 1)
+                    endif
                 endif
             endif
 
