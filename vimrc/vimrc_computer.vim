@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 120
+let g:vimrcid = 122
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -102,8 +102,8 @@ set clipboard=exclude:clipboard
 "let java_highlight_functions = "indent"
 "colorscheme torte
 colorscheme elflord
-"syntax match javaFunction '\<\h\w*\>\ze\s*(' 
-"hi link javaFunction Function               
+"syntax match javaFunction '\<\h\w*\>\ze\s*('
+"hi link javaFunction Function
 "}}}}}
 "vimdiff 颜色配置{{{
 if &diff
@@ -143,7 +143,7 @@ iabbrev gitchange git  log --oneline  --decorate --pretty=format:"\%cr \%cn \%H 
 iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
 iabbrev findsw  find . -type f -name "*.sw*"
-iabbrev gitshow  git show --name-status 
+iabbrev gitshow  git show --name-status
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
 "auto command自动命令{{{
@@ -434,8 +434,10 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
 "判断带{有下面的就不是函数
 let g:nonfunctionlist = [" if(",
             \"  new ",
+            \"=new " ,
             \" interface ",
             \"class ",
+            \"enum ",
             \"} catch",
             \"() -> {",
             \"namespace ",
@@ -450,6 +452,8 @@ let g:nonfunctionlist = [" if(",
             \" switch (",
             \" else{",
             \" else {",
+            \"else {",
+            \"else if",
             \" case ",
             \" default:",
             \" do {",
@@ -1521,11 +1525,9 @@ function! Dbug1(...)
             let tempchar = strftime("%Y-%m-%d %H:%M:%S") . "." . float2nr(CurrentTimeWithMilliseconds())." - ". funcname . " - " . string(val)
             if append ==#  0
                 echom tempchar
-                let g:debuglist1 = add(g:debuglist1,tempchar)
             elseif append ==# 1
                 call append(line('.'),tempchar)
                 call cursor(line('.') + 1,1)
-                let g:debuglist1 = add(g:debuglist1,tempchar)
             elseif append ==# 2
                 let g:debuglist1 = add(g:debuglist1,tempchar)
             endif
@@ -2234,7 +2236,7 @@ function! CheckStringIsObtainOfList(...)
     let uncheckflag = 0
     for char in Stringlist
         if "" != matchstr(String,char)
-            "call Echom(10,0,'tangxinlou debug', char)
+            "call Echom(10,0,'tangxinlou debug',2239, char)
             let uncheckflag = 1
         endif
     endfor
@@ -2617,6 +2619,18 @@ function! IsComment(...)
         let col = a:2
     endif
 
+    silent call cursor(line,1)
+    silent let startcursor = searchpairpos('(', '', ')', 'b')
+    if startcursor != [0,0]
+        let tempstr = getline(startcursor[0])
+        let secondNonWhitespace = GetTwoNonBlank(tempstr)
+        if matchstr(secondNonWhitespace,"@") ==# "@"
+            silent let endcursor = searchpairpos('(', '', ')', 'w')
+            if line >= startcursor[0] && line <= endcursor[0]   
+                return 1
+            endif
+        endif
+    endif
     if  join(split(getline(line))) ==# ""
         let iscomment = 1
     else
@@ -2627,47 +2641,7 @@ function! IsComment(...)
 
         silent let endcursor = searchpos('\*\/','w')
         silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
-        call Dbug1(10,0,'IsComment 16', endcursor,startcursor,line ,secondNonWhitespace )
-        if startcursor[0] < line &&  line < endcursor[0]
-            let iscomment = 1
-        elseif  startcursor[0] ==# line &&  endcursor[0] != line
-            let srcnum = startcursor[1]
-            if srcnum ==# 1
-                let iscomment = 1
-            elseif srcnum > 1
-                let tempchar = join(split(tempstr[0:srcnum -2]))
-                call Dbug1(10,0,'IsComment 83', tempchar)
-                if tempchar ==# ""
-                    let iscomment = 1
-                endif
-            endif
-        elseif  startcursor[0] != line &&  endcursor[0] ==# line
-            let tailnum = endcursor[1] + 1
-            if len(tempstr) ==# tailnum
-                let iscomment = 1
-            elseif  len(tempstr) > tailnum
-                let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
-                if tempchar ==# ""
-                    let iscomment = 1
-                endif
-            endif
-        elseif  startcursor[0] ==#line &&  endcursor[0] ==# line
-            let iscomment = 1
-            let srcnum = startcursor[1]
-            let tailnum = endcursor[1] + 1
-            if srcnum > 1
-                let tempchar = join(split(tempstr[0:srcnum -2]))
-                if tempchar != ""
-                    let iscomment = 0
-                endif
-            endif
-            if  len(tempstr) > tailnum
-                let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
-                if tempchar != ""
-                    let iscomment = 0
-                endif
-            endif
-        else
+        if endcursor != [0,0] && startcursor ==# [0,0]
             if secondNonWhitespace ==# "//"
                 let iscomment = 1
             elseif matchstr(getline(line),"@") != ""
@@ -2687,6 +2661,73 @@ function! IsComment(...)
                     let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
                     if tempchar ==# ""
                         let iscomment = 1
+                    endif
+                endif
+            endif
+        else
+            call Dbug1(10,0,'IsComment 16', endcursor,startcursor,line ,secondNonWhitespace )
+            if startcursor[0] < line &&  line < endcursor[0]
+                let iscomment = 1
+            elseif  startcursor[0] ==# line &&  endcursor[0] != line
+                let srcnum = startcursor[1]
+                if srcnum ==# 1
+                    let iscomment = 1
+                elseif srcnum > 1
+                    let tempchar = join(split(tempstr[0:srcnum -2]))
+                    call Dbug1(10,0,'IsComment 83', tempchar)
+                    if tempchar ==# ""
+                        let iscomment = 1
+                    endif
+                endif
+            elseif  startcursor[0] != line &&  endcursor[0] ==# line
+                let tailnum = endcursor[1] + 1
+                if len(tempstr) ==# tailnum
+                    let iscomment = 1
+                elseif  len(tempstr) > tailnum
+                    let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
+                    if tempchar ==# ""
+                        let iscomment = 1
+                    endif
+                endif
+            elseif  startcursor[0] ==#line &&  endcursor[0] ==# line
+                let iscomment = 1
+                let srcnum = startcursor[1]
+                let tailnum = endcursor[1] + 1
+                if srcnum > 1
+                    let tempchar = join(split(tempstr[0:srcnum -2]))
+                    if tempchar != ""
+                        let iscomment = 0
+                    endif
+                endif
+                if  len(tempstr) > tailnum
+                    let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
+                    if tempchar != ""
+                        let iscomment = 0
+                    endif
+                endif
+            else
+                if secondNonWhitespace ==# "//"
+                    let iscomment = 1
+                elseif matchstr(getline(line),"@") != ""
+                    "call Echom(10,0,'tangxinlou debug',2699, 12)
+                    let templist = SplitCodeString(getline(line))
+                    let iscomment = 1
+                    "FindCorrespondingBracketPosition(resultstr,idx1)
+                    while idx1 < len(templist)
+                        if matchstr(templist[idx1],"@") ==# "" &&  templist[idx1] != " "
+                            let iscomment = 0
+                        endif
+                        let idx1 += 1
+                    endwhile
+                elseif  secondNonWhitespace ==# "*/"
+                    let tailnum = 2
+                    if len(tempstr) ==# tailnum
+                        let iscomment = 1
+                    elseif  len(tempstr) > tailnum
+                        let tempchar = join(split(tempstr[tailnum:len(tempstr)]))
+                        if tempchar ==# ""
+                            let iscomment = 1
+                        endif
                     endif
                 endif
             endif
@@ -2786,14 +2827,11 @@ function! FindAnotherBracketPosition(...)
         "silent let col =  strridx(tempchar,'}')
         silent call cursor(line('.'),  1)
         "for (Uri uri : new Uri[]{Mms.CONTENT_URI, Sms.CONTENT_URI}) {  修复这种情况
-        if (count(tempchar,'{') != 0 && count(tempchar,'}') != 0) && (StringPosition(tempchar,'{')[0] < StringPosition(tempchar,'}')[0])
-            silent let cursor =  searchpos('{','b')
-        endif
+        "if (count(tempchar,'{') != 0 && count(tempchar,'}') != 0) && (StringPosition(tempchar,'{')[0] < StringPosition(tempchar,'}')[0])
+        "    silent let cursor =  searchpos('{','b')
+        "endif
         silent let cursor  = searchpairpos('{', '', '}', 'b')
-        if cursor[0] != 0 && IsComment(cursor[0]) ==# 1
-           let cursor = FindAnotherBracketPosition('}')
-        endif
-        call Dbug1(10,0,'FindAnotherBracketPosition 48', )
+        call Dbug1(10,0,'FindAnotherBracketPosition 48', cursor,getline(cursor[0]))
         return cursor
     elseif char ==# '{'
         silent let col =  strridx(tempchar,'{')
@@ -2866,20 +2904,30 @@ function! SwitchBuff(...)
 endfunction
 "}}}}}
 "{{{{{2 ClearBracket(...)清除多余的花括号  主要处理@{ @}
+"//  }
+"///  }
+"/*
+" }
+"*/
+"/* }
+"*/
+"/* { */
 function! ClearBracket(...)
-    "call Echom(10,0,'tangxinlou debug', "begin")
+    "call Echom(10,0,'tangxinlou debug',2902, "begin")
     setlocal modifiable
     syntax off
-    silent! execute '%s/\r//ge' 
+    silent! execute '%s/\r//ge'
+
     " 行注释：优先处理大括号
-    silent! execute '%s#\v//\zs%(\{[^}]*|\}[^{]*|[^/{}])*#\=tr(submatch(0), "{}", "  ")#ge'
- 
+    silent! execute '%s#\v//\zs%([^{}]*[{}]+)*[^{}]*#\=tr(submatch(0), "{}", "  ")#ge'
+
     " 块注释：跨行精准匹配
     silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "{}", "  ")#ge'
+
     if a:0 ==# 0
         call HandlingParentheses()
     endif
-    "call Echom(10,0,'tangxinlou debug', "end")
+    "call Echom(10,0,'tangxinlou debug',2916, "end")
     "call input("22")
 endfunction
 "}}}}}
@@ -2894,7 +2942,7 @@ function! SaveBuffer(...)
                 \ }
     "call Echom(10,0,'tangxinlou debug', "end")
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2 RestoreBuffer(...)恢复缓冲区
 function! RestoreBuffer(...)
     "call Echom(10,0,'tangxinlou debug', "begin")
@@ -2908,7 +2956,7 @@ function! RestoreBuffer(...)
     endif
     "call Echom(10,0,'tangxinlou debug', "end")
 endfunction
-"}}}}}  
+"}}}}}
 "{{{{{2 ResultClassification(...)结果分类
 
 function! ResultClassification(...)
@@ -2984,7 +3032,7 @@ function! StringPosition(...)
     let idx1 = 0
     let indexlist = []
     "let strings = str2list(strings)
-    "每个字母
+    "每个字符而不是每个字节
     let strings = split(strings,'\zs')
     while idx1 < len(strings)
         "if strings[idx1] ==# char2nr(char)
@@ -3165,18 +3213,18 @@ function! JumpToNext(...)
         return [0,0]
     endif
 
-    call Dbug1(10,0,'JumpToNext 12', char,drect)
+    "call Dbug1(10,0,'JumpToNext 12', char,drect)
     while flag ==# 0
         let cursor =  searchpos(char,drect)
-        call Dbug1(10,0,'JumpToNext 13',cursor  )
+        "call Dbug1(10,0,'JumpToNext 13',cursor  )
         let flag = 1
         "只要这个{在() 中就忽略
         let obtaincursor = searchpairpos('(', '', ')', 'w')
-        call Dbug1(10,0,'JumpToNext 14',obtaincursor)
+        "call Dbug1(10,0,'JumpToNext 14',obtaincursor)
         if  obtaincursor != [0,0]
             if IsComment(obtaincursor[0],obtaincursor[1]) ==# 0 && ItString(obtaincursor) ==# 0
                 let precursor = searchpairpos('(', '', ')', 'b')
-                call Dbug1(10,0,'JumpToNext 15',precursor)
+                "call Dbug1(10,0,'JumpToNext 15',precursor)
                 if precursor ==# [0,0]
                 else
                     if IsComment(precursor[0],precursor[1]) ==# 0 &&  ItString(precursor) ==# 0
@@ -3277,11 +3325,14 @@ endfunction
 "echo FindCorrespondingBracketPosition(getline(line('.')),col('.') -1)
 function! FindCorrespondingBracketPosition(...)
     let codestring = a:1
-    let position = a:2
+    let position = copy(a:2)
     let idx1 = 0
     let openflag = 0
     let closeflag = 0
     let resultposition = -1
+    if type(codestring) ==# 1
+        let codestring = split(codestring,'\zs')
+    endif
     if codestring[position] ==# '('
         let idx1 = position + 1
         let openflag = 1
@@ -3297,7 +3348,11 @@ function! FindCorrespondingBracketPosition(...)
             endif
             let idx1 += 1
         endwhile
-        let resultposition = idx1
+        if openflag ==# closeflag
+            let resultposition = idx1
+        else
+            let resultposition = a:2
+        endif
     elseif codestring[position] ==# ')'
         let idx1 = position -1
         let closeflag = 1
@@ -3313,7 +3368,11 @@ function! FindCorrespondingBracketPosition(...)
             endif
             let idx1 -= 1
         endwhile
-        let resultposition = idx1
+        if openflag ==# closeflag
+            let resultposition = idx1
+        else
+            let resultposition = a:2
+        endif
     endif
     return resultposition
 endfunction
@@ -3410,12 +3469,17 @@ endfunction
 "{{{{{2 IsFunction(...)当前字符串是否是函数
 function! IsFunction(...)
  let codestr = a:1
- let flag = -1 
+ let flag = -1
 
  if(CheckStringIsObtainOfList(codestr,g:nonfunctionlist))
      let flag = 0
      if matchstr(codestr,"class") != ""
          if  matchstr(codestr,"class") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
+             let flag = 1
+         endif
+     endif
+     if matchstr(codestr,"enum ") != ""
+         if  matchstr(codestr,"enum ") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
              let flag = 1
          endif
      endif
@@ -3429,8 +3493,8 @@ function! IsFunction(...)
 
  return flag
 endfunction
-"}}}}} 
-"{{{{{2  HandlingParentheses(...) 处理大括号 
+"}}}}}
+"{{{{{2  HandlingParentheses(...) 处理大括号
 function! HandlingParentheses(...)
     let elselist = []
     let lastline = -1
@@ -3460,7 +3524,7 @@ function! HandlingParentheses(...)
     if filetype ==# "java"
         return
     endif
-    if templine ==# 0 
+    if templine ==# 0
         return
     else
         "找到#else
@@ -3503,7 +3567,7 @@ function! HandlingParentheses(...)
         endwhile
     endif
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2 Closure(...)计算括号开合度
 function! Closure(...)
     let string = a:1
@@ -3516,7 +3580,7 @@ function! Closure(...)
     let laststr = ""
     let flag = -1
     while idx1 < len(string)
-        if string[idx1] ==# "{" 
+        if string[idx1] ==# "{"
             "let flag += 1
             if laststr ==# "{"
                 let downnum += 1
@@ -3558,7 +3622,7 @@ function! Closure(...)
     "return [upnum,downnum]
     return [[upnum,downnum],[uplist,downlist]]
 endfunction
-"}}}}}  
+"}}}}}
 "{{{{{2   ChangeStrChar(...) 修改字符串中的字符
 function! ChangeStrChar(...)
     let string = a:1
@@ -3583,7 +3647,7 @@ function! ChangeStrChar(...)
     let string = join(string,'')
     return string
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2   GetUpBrackets(...) 获取上级括号的位置
 function! GetUpBrackets(...)
       let line = a:1
@@ -3597,7 +3661,54 @@ function! GetUpBrackets(...)
       let downline = searchpairpos('{', '', '}', 'w')[0]
       return [upline,downline]
 endfunction
-"}}}}}  
+"}}}}}
+"{{{{{2 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
+function! SplitCodeString(...)
+      let strings = a:1
+      let resultlist = []
+      let srcint = -2
+      let tailint = -1
+      let idx1 = 0
+      let strings = split(strings,'\zs')
+      let srcint = 0
+      let tailint = 0
+      "call Echom(10,0,'tangxinlou debug',3649, strings)
+      while idx1 < len(strings)
+          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
+          if strings[idx1] ==#  " "
+              if idx1 ==# 0
+              else
+                  if strings[idx1 -1] != " "
+                      let tailint = idx1 -1
+                      "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
+                      let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+                      "let resultlist = add(resultlist,strings[srcint:tailint])
+                  else
+                      let srcint = idx1
+                  endif
+              endif
+          elseif strings[idx1] ==# "("
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1)
+              "call Echom(10,0,'tangxinlou debug',3664, idx1)
+          else
+              if idx1 ==# 0
+                  let srcint = 0
+              else
+                  if strings[idx1 -1] ==# " "
+                      let srcint = idx1
+                  endif
+              endif
+          endif
+          if idx1 ==# len(strings) -1
+              let tailint = idx1
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              "let resultlist = add(resultlist,strings[srcint:tailint])
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -7774,8 +7885,8 @@ function! ExtractKeyCodes(...)
     if a:0 ==# 0
         let realityline = line('.')
         "call Echom(10,0,'tangxinlou debug', "begin")
-        call SaveBuffer()
-        call ClearBracket()
+        "call SaveBuffer()
+        "call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
     elseif a:0 != 0
         call SaveBuffer()
@@ -7807,10 +7918,10 @@ function! ExtractKeyCodes(...)
         let functionline = realityline
     endif
     while idx1 > 0
-        call Dbug1(10,0,'ExtractKeyCodes 64', )
         "let col = match(getline('.'), '\S')
         let tempstring = ""
         let tempstring = StandardCharacters(lastline)
+        call Dbug1(10,0,'ExtractKeyCodes 64', tempstring )
         if tempstring != ""
             let col = match(tempstring, '\S')
         else
@@ -7867,7 +7978,7 @@ function! ExtractKeyCodes(...)
                             let switchlinetail = switchline + idk1
                             call cursor(switchlinetail,1)
                             let tempcursor = FindAnotherBracketPosition('}')
-                            if tempcursor[0] ==# switchline 
+                            if tempcursor[0] ==# switchline
                                 let codelist = insert(codelist,tempstring)
                                 break
                             endif
@@ -7889,6 +8000,7 @@ function! ExtractKeyCodes(...)
         let stackflag = 1
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
+            "call Echom(10,0,'tangxinlou debug',7997, result)
             if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
                 if stackflag > 0
                     if result != ""
@@ -7921,13 +8033,16 @@ function! ExtractKeyCodes(...)
         if filetype ==# "cc"
             let tempstring = expand("%:t") . "█" . tempstring
         endif
+        if matchstr(tempstring,"{") != ""
+            call Echom(10,2,'tangxinlou debug',7966,filename,tempstring,realityline)
+        endif
         echo tempstring
         "call Echom(10,0,'tangxinlou debug', "end")
-        call RestoreBuffer()
+        "call RestoreBuffer()
         syntax on
-        syntax match javaFunction '\<\h\w*\>\ze\s*(' 
-        hi link javaFunction Function               
-        
+        syntax match javaFunction '\<\h\w*\>\ze\s*('
+        hi link javaFunction Function
+
     elseif a:0 ==# 1
         call cursor(realityline,col)
         let idx1 = 0
@@ -7960,6 +8075,9 @@ function! ExtractKeyCodes(...)
             let tempstring = expand("%:t") . "█" . tempstring
         endif
         call RestoreBuffer()
+        if matchstr(tempstring,"{") != ""
+            call Echom(10,2,'tangxinlou debug',7966,filename,tempstring,realityline)
+        endif
         return tempstring
     elseif a:0 ==# 2
         call cursor(realityline,col)
@@ -7969,7 +8087,7 @@ function! ExtractKeyCodes(...)
         elseif a:2 ==# 2
             call RestoreBuffer()
             return join(codelist)
-        elseif a:2 == 3 
+        elseif a:2 == 3
             call cursor(realityline,col)
             let idx1 = 0
             let stackflag = 1
@@ -8003,6 +8121,9 @@ function! ExtractKeyCodes(...)
             let resultlist = add(resultlist,functionline)
             let resultlist = add(resultlist,tempstring)
             let resultlist = add(resultlist,join(codelist))
+            if matchstr(tempstring,"{") != ""
+                call Echom(10,2,'tangxinlou debug',7966,filename,tempstring,realityline)
+            endif
             call RestoreBuffer()
             return resultlist
         endif
@@ -8451,8 +8572,8 @@ function! AddDebugLog(...)
             let line += 1
             call cursor(tempfucline + 1,1)
             silent execute "normal! =="
-           
-            
+
+
             if CheckStringIsObtainOfList(getline(line + 1),abnormallist)
                 call cursor(line + 1,1)
                 silent execute "normal! 0f(%"
@@ -8993,7 +9114,7 @@ function! WhichFunctionIsIn(...)
     "调用
     if matchstr(codestring,"class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
         let templist = split(codestring)
-        let indexnum = index(templist,"class") 
+        let indexnum = index(templist,"class")
         return templist[indexnum + 1]
     elseif matchstr(codestring,"public enum") != ""
         let templist = split(codestring)
@@ -9207,6 +9328,7 @@ function! IdentificationCodeComponents(...)
     let statement = 14
     let break = 15
     let struct = 16
+    let enum = 17
     "}}}}
      "判断当前行是否继续调用函数
       "有分号行
@@ -9298,6 +9420,10 @@ function! IdentificationCodeComponents(...)
             endif
             if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
                 let flag = flag . "class"
+                return flag
+            endif
+            if matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+                let flag = flag . "enum"
                 return flag
             endif
             if matchstr(codestring,"struct ") != ""
@@ -11847,6 +11973,8 @@ function! FileAddLog(...)
                 \"\\[this\\]",
                 \"= [](",
                 \"=[](",
+                \"[](",
+                \"[this](",
                 \" switch("]
     let uncheck = [" if(",
                 \" if (",
@@ -11874,7 +12002,7 @@ function! FileAddLog(...)
     let tempchar = ""
     let g:debugflag = 20
     let filenamelist = []
-    let tempflag = -1 
+    let tempflag = -1
     let classfuc = ""
     let keycode = ""
     let fucline = -1
@@ -11929,7 +12057,7 @@ function! FileAddLog(...)
                             let keylist = ExtractKeyCodes(idx1,3)
                             let fucline = keylist[0]
                             "call Echom(10,0,'tangxinlou debug',fucline )
-                            let fuclinetail = fucline  
+                            let fuclinetail = fucline
                             let functionname = keylist[1]
                             let keycode = keylist[2]
                             let classfuc =  split(functionname,"█")
@@ -11939,8 +12067,8 @@ function! FileAddLog(...)
                             endif
                             "call Echom(10,0,'tangxinlou debug',fucline )
                             let tempflag = -1
-                            if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "") 
-                                let tempflag = 1 
+                            if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "")
+                                let tempflag = 1
                             endif
                             let fuclinesrc = fucline[0]
                             "call Echom(10,0,'tangxinlou debug',functionname )
@@ -11985,24 +12113,24 @@ function! FileAddLog(...)
                 endif
                 let tempint = sort([nextcase,nextdefault,downBrackets],'n')[0]
                 "call Echom(10,0,'tangxinlou debug',11979, tempint,sort([nextcase,nextdefault,downBrackets],'n'))
-                
+
                 let idj1 = idx1  + 1
-                let tempflag = -1 
+                let tempflag = -1
                 "call Echom(10,0,'tangxinlou debug',11984, tempint,idj1)
                 while idj1 < tempint
                     if IsComment(idj1) ==# 0
-                        let tempflag = 1 
+                        let tempflag = 1
                     endif
                     let idj1 += 1
                 endwhile
-                if tempflag != 1 
+                if tempflag != 1
                     call Echom(30,2,'tangxinlou debug', nextcase,nextdefault,idx1,tempint,currentString,filename)
                 else
                     call cursor(idx1,1)
                     let targetline = idx1
                     let keylist = ExtractKeyCodes(idx1,3)
                     let fucline = keylist[0]
-                    let fuclinetail = fucline  
+                    let fuclinetail = fucline
                     let functionname = keylist[1]
                     let keycode = keylist[2]
                     let classfuc =  split(functionname,"█")
@@ -12271,6 +12399,7 @@ function! MergeLinesOfCode(...)
                 let end = sortlist[0]
             else
                 "; 和{ 一个都没找到
+                call Dbug1(10,0,'MergeLinesOfCode 121', sortlist)
                 return []
             endif
             let start = copy(end)
@@ -12317,7 +12446,11 @@ function! MergeLinesOfCode(...)
             call Dbug1(10,0,'MergeLinesOfCode 21', sortlist )
             let sortlist = sort(sortlist,'n')
             if len(sortlist) != 0
-                let start = copy(sortlist[-1]) + 1
+                if matchstr(getline(sortlist[-1]),"else if") ==# "else if" && count(getline(sortlist[-1]),")") !=  count(getline(sortlist[-1]),"(")
+                    let start = copy(sortlist[-1])
+                else
+                    let start = copy(sortlist[-1]) + 1
+                endif
             else
                 "start = line
                 let start = line
