@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 122
+let g:vimrcid = 133
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -46,6 +46,7 @@ set softtabstop=4
 set shiftwidth=4
 set expandtab
 set fileencodings=utf-8,gb2312,gbk,gb18030,big5,cp936,gbk,ucs-bom,latin-1
+"set fileencodings=ucs-bom,utf-8,gb18030,big5,cp936,latin1
 set encoding=utf-8
 set hlsearch
 set incsearch
@@ -506,14 +507,20 @@ let g:smallestunitdict = {
             \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING', [-2,1000.0], '']],
             \"07hfpVirtual_simple_start_call": [['HeadsetService: startScoUsingVirtualVoiceCall', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 260.0, ''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
             \"06hfp_simple_start_call": [['Telecom: Telecom: VivoCallsManager: setCallState CONNECTING -> DIALING', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 2917.0, ''],['HeadsetService: stopScoUsingVirtualVoiceCall',[-2,1000],''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
-            \"05a2dp_simple_connect": [['A2dpStateMachine: Connection state .*: DISCONNECTED->CONNECTING', 0.0, ''], ['A2dpStateMachine: Connection state .*: CONNECTING->CONNECTED', 672.0, '']],
-            \"04hfp_simple_connect": [['HeadsetStateMachine: Connecting: currentDevice=.*, msg=connection state changed: .*: Disconnected -> Connecting', 0.0, ''], ['HeadsetStateMachine: Connected: currentDevice=.*, msg=connection state changed: .*: Connecting -> Connected', 505.0, '']],
-            \"03bond" : [['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_NONE => BOND_BONDING', 0.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_BONDING => BOND_BONDED', 4695.0, '']],
+            \"05a2dp_simple_connect avdt_defs.h": [['A2dpStateMachine: Connection state .*: DISCONNECTED->CONNECTING', 0.0, ''], ['A2dpStateMachine: Connection state .*: CONNECTING->CONNECTED', 672.0, '']],
+            \"04hfp_simple_connect reson 19 peer disconnect": [['HeadsetStateMachine: Connecting: currentDevice=.*, msg=connection state changed: .*: Disconnected -> Connecting', 0.0, ''], ['HeadsetStateMachine: Connected: currentDevice=.*, msg=connection state changed: .*: Connecting -> Connected', 505.0, '']],
+            \"03bond hci_packets.pdl" : [['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_NONE => BOND_BONDING', 0.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_BONDING => BOND_BONDED', 4695.0, '']],
             \"02auto_connect": [['BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on', 28631.0, ''], ['BluetoothPhonePolicy: autoConnect:HFP Device', 28634.0, ''], ['autoConnectHeadset: Connecting HFP with', 28634.0, ''], ['BluetoothPhonePolicy: autoConnect:A2DP Device', 28635.0, ''], ['BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP', 28635.0, '']],
             \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
             \}
+
+            " rfcomm connect "RFCOMM_StartReq|RFCOMM_CreateConnectionWithSecurity|RFCOMM peer:|rfc_mx_sm_execute|rfc_mx_sm|L2CEVT_L2CAP_CONFIG_RSP|PORT_StartCnf|rfc_mx_conf_cnf|RFCOMM_BufDataInd|bta_ag_mgmt_cback_|rfc_process_mx_message|rfc_port_sm_
+            "\40l2cap connect l2cdefs.h" : "chnl_state|l2c_csm_execute|btm_sec_l2cap_access_req.*psm=|l2c_csm.cc.*st:|btm_sec_cb.cc.*AddService:.*psm:|l2c_link_timeout All channels closed|process_l2cap_cmd",
+            "\"39sdp bt_psm_types.h  tBTA_DM_STATE" : "bta_dm_search_cb.state|starting service discovery|Discovery started|starting SDP discovery|services_to_search|search UUID =|btif_dm_search_services_evt",
+            " hci 指令hcidefs.h avrcp command response avrcp_common.h
 let g:filterchar = {
-            \"37exception" : "bt_.*fail|bluetooth.*exception",
+            \"38broadcast" : "Skip deliver broadcast.*bluetooth",
+            \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice",
             \"36bigdata" : "Address=.*manufacturer=",
             \"35headsetcod" : "romote_cod|add leaudio cod",
             \"34hearingaid" : "connectEnabledProfiles.*Hearing Aid Profile|HearingAidStateMachine.*process message|connectHearingAidNative|HearingAidStateMachine.*->|BluetoothHearingAid: setVolume",
@@ -524,32 +531,32 @@ let g:filterchar = {
             \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|updateShareStatus|sendIntentIfCompleted|Can't open file for OUTBOUND|putSendFileInf|BluetoothOppHandoverReceiver: Action",
             \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
             \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
-            \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT",
-            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason",
+            \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT|SetDefaultLogLevel",
+            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason|btm_sco_connection_failed",
             \"24twsbatteryearversion" : "sendBatteryLevelChangedBroadcast|tws wear state|vivoTWS-CheckUpdateTask.*SimpleEarInfo{right_version",
-            \"23avrcpstatus stop play puase 012" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged|getCurrentPlayStatus|isDropKey: key_drop",
+            \"23avrcpstatus stop play puase 012" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged|getCurrentPlayStatus|isDropKey: key_drop|dispatchMediaKeyEvent|MediaSessionRecord: setPlaybackState",
             \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
-            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference",
-            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb",
-            \"17absolutevolume" : "DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property",
+            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
+            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to",
+            \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
-            \"14rfcomconnect" : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
+            \"14rfcomconnectUUID=111F hfp bt_uuid16.h btif_sock_sdp.h, " : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
-            \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package",
-            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close",
+            \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package|Skipping client: permission=false",
+            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close|BluetoothGatt: onClientConnectionState|BtGatt.GattService: registerClient|BluetoothGatt:|BtGatt.GattService: registerClient",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
             \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=|call state is busy',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
-            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present',
-            \"05a2dp_simple_connect" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|l2c_link_timeout All channels closed|forcing LE transport for Bonding',
-            \"04hfp_simple_connect" : 'connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetStateMachine.*CONNECT_TIMEOUT',
-            \"03bond" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device',
+            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present|processInitProfilePriorities',
+            \"05a2dp_simple_connect avdt_defs.h" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|forcing LE transport for Bonding|A2dpService: connect|bta_av_better_stream_state_machine|a2dp_api: a2dp_api.cc|connectA2dp|src_connect_sink',
+            \"04hfp_simple_connect reson 19 peer disconnect" : 'HeadsetStateMachine.*CONNECT_TIMEOUT|RFCOMM connection closed.*UUID=111F|connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetService: connect:|AG state machine even|State changed handle|btif_hf_upstreams_evt|btif_queue_connect_next',
+            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
-            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*State Change.*>|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
+            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
             \"00temp" : "temptemptem"}
 
 let g:alldebugflag = "true"
@@ -580,7 +587,7 @@ function! Homedir(...)
     let dirpath = g:homedir . "/" . dirpath
     if type ==# 1
         if "" ==# findfile(dirpath)
-            let path = "/" . join(split("/d/autoanaly/keywords","/")[0:-2],"/")
+            let path = "/" . join(split(dirpath,"/")[0:-2],"/")
             call system("mkdir " . path)
             call system("touch " . dirpath)
             "call writefile([],dirpath)
@@ -689,7 +696,10 @@ function! QuckfixToggle()
         "echo "Current highlight group: " . synIDattr(synID(line("."), col("."), 1), "name")
         "verbose highlight javaMethod
         "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')  当前光标下是什么高亮组
-
+        if &fileencoding != "utf-8"
+            echom &fileencoding
+            silent e! ++enc=utf-8
+        endif
         let g:debugflag = 20
         silent vnoremap <c-c>
         silent nnoremap <c-v>
@@ -861,6 +871,7 @@ function! MakeCompressedPackage()
         let iscopyiotconf = input("是否打包iot conf 文件")
         let iscopyapk = input("是否打包apk 文件")
         let iscopy15apk = input("是否打包15.0apk")
+        let iscopy16apk = input("是否打包16.0apk")
         let iscopyso = input("是否打包so 文件")
         let iscopyqcomso = input("是否打包qcom so 文件")
     endif
@@ -940,6 +951,18 @@ function! MakeCompressedPackage()
     else
         let batfile[18] = ""
         let batfile[19] = ""
+    endif
+
+    if iscopy16apk ==# "yes"
+        let command = "cp -rf com.android.bt.apex  ./cp/cp/system "
+        call system(command)
+        let templist = join(split(batfile[26])[1:])
+        let batfile[26] = templist
+        let templist = join(split(batfile[27])[1:])
+        let batfile[27] = templist
+    else
+        let batfile[26] = ""
+        let batfile[27] = ""
     endif
 
     if iscopyqcomso ==# "yes"
@@ -2076,6 +2099,9 @@ function! SortByExpression(...)
         let templist[index] = charlist[idx1]
         let idx1 += 1
     endwhile
+    if len(templist) > 40
+        let templist = templist[-40:-1]
+    endif
     return templist
 endfunction
 "}}}}}
@@ -2620,13 +2646,14 @@ function! IsComment(...)
     endif
 
     silent call cursor(line,1)
-    silent let startcursor = searchpairpos('(', '', ')', 'b')
+    silent let startcursor = searchpos("@.*(", 'b')
     if startcursor != [0,0]
         let tempstr = getline(startcursor[0])
         let secondNonWhitespace = GetTwoNonBlank(tempstr)
         if matchstr(secondNonWhitespace,"@") ==# "@"
+            silent let startcursor = searchpos("(", 'w')
             silent let endcursor = searchpairpos('(', '', ')', 'w')
-            if line >= startcursor[0] && line <= endcursor[0]   
+            if line >= startcursor[0] && line <= endcursor[0]
                 return 1
             endif
         endif
@@ -3747,7 +3774,7 @@ function! VmakeChange()
     execute "normal! 03f\"ci\"\<esc>\"up"
     execute "normal! 03f\"lvllllly05f\"lvlllllp017f\"ci\"\<esc>:r!pwd\<cr>0v$hdk017f\"p0jddk"
     " "execute "normal! 011f\"ci\"system ../../../../make_*_images.log ../../../../out/build*.log\<esc>"
-    execute "normal! 011f\"ci\" system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_qti_jni.so system/lib64/libbluetooth_qti.so ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex  system/apex/com.android.btservices.apex ../qssi/system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
+    execute "normal! 011f\"ci\" system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_qti_jni.so system/lib64/libbluetooth_qti.so ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.bt.apex ../../../../out_sys/target/product/mssi_64_64only_cn_armv82/system/apex/com.android.btservices.apex system/apex/com.android.bt.apex  system/apex/com.android.btservices.apex ../qssi/system/apex/com.android.bt.apex ../qssi/system/apex/com.android.btservices.apex ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/framework.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/app/Bluetooth/Bluetooth.apk ../../../../out_sys/target/product/mssi_64_cn_nonab_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/services.jar ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth_jni.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/lib64/libbluetooth.so ../../../../out_sys/target/product/mssi_64_cn_armv82/system/framework/framework.jar system/app/Bluetooth/Bluetooth.apk  system/lib64/libbluetooth_jni.so system/lib64/libbluetooth.so system/framework/framework.jar system/framework/services.jar../../../../make_*_images.log ../../../../out/build*.log"
     execute "normal! 03f\"lvfAhh\"uy"
     echo "tangxinlou"
     if  "ard_12.0" ==#  curversion[len(curversion) - 3]
@@ -6852,7 +6879,7 @@ function! ParseCode(...) "文件内容列表，解析的标志
     "寻找到的函数指针
     let isaddflag = 0
     if len(codeflag) ==# 1  " flag 只有1个
-        echo "tangxinlou1"
+        call Echom(10,0,'tangxinlou debug',6879, "tangxinlou1")
         if codeflag[0] ==# "# "
             let matchstr = "^# "
         elseif codeflag[0] ==# "## "
@@ -6863,24 +6890,24 @@ function! ParseCode(...) "文件内容列表，解析的标志
         let cmpcount = GetMatchNumber(sourcecode,codeflag[0])
         let coutchapter = count(sourcecode,"```c")
         let targetcode =  repeat(targetcode,cmpcount)
-        echo  cmpcount coutchapter  len(targetcode)  "tangxinlou1"
+        call Echom(10,0,'tangxinlou debug',6890, cmpcount,coutchapter,len(targetcode))
         while idx1 < len(sourcecode)
             if idx1 ==# len(sourcecode) - 1
                 if src != 0
                     let targetcode[idj1] = sourcecode[src:idx1]
                     let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 4 + src + 2 + 1)
-                    "echo "debug" idx1 idj1 src tail codeflag[0]  targetcode[idj1][0] coutchapter  cmpcount
+                    "call Echom(10,0,'tangxinlou debug',6896,idx1,idj1,src,tail,codeflag[0], targetcode[idj1][0],coutchapter,cmpcount)
                 endif
             endif
             if codeflag[0] ==# matchstr(sourcecode[idx1], matchstr)
-                echo "tangxinlou23"
+                call Echom(10,0,'tangxinlou debug',6900, )
                 if src ==# 0
                     let src = idx1
                 else
                     let tail = idx1
                     let targetcode[idj1] = sourcecode[src:tail - 1]
                     let targetcode[idj1][0] = targetcode[idj1][0] . "|" . (coutchapter * 2 + cmpcount * 4 + src + 2 + 1)
-                    "echo "debug" idx1 idj1 src tail codeflag[0]  targetcode[idj1][0] coutchapter  cmpcount
+                    "call Echom(10,0,'tangxinlou debug',6907,idx1,idj1,src,tail,codeflag[0], targetcode[idj1][0],coutchapter,cmpcount)
                     let tail = 0
                     let src = idx1
                     let idj1 +=1
@@ -6893,10 +6920,10 @@ function! ParseCode(...) "文件内容列表，解析的标志
         let targetcode =  repeat(targetcode ,cmpcount)
         if "|" ==# matchstr(sourcecode[0],"|")
             let line = split(sourcecode[0],"|")[1]
-            echo "此章节解析" codeflag[0]  "有"  cmpcount "个,章节基础行是" line "行"
+            call Echom(10,0,'tangxinlou debug',6920, "此章节解析"  . codeflag[0] .  "有" . cmpcount . "个,章节基础行是" . line . "行")
         else
             let line = cmpcount * 2 + 2 + 1
-            echo "no chapter"
+            call Echom(10,0,'tangxinlou debug',6924, "no chapter")
         endif
         while idx1 < len(sourcecode)
             if codeflag[0] ==# matchstr(sourcecode[idx1], "```c$")
@@ -6952,24 +6979,23 @@ function! AnalyzeCode()
     let relativepath = Homedir("txl/parse",1)
     let codefile = readfile(expand("%:p"))
     if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
-        echo "之前修改过"
+        call Echom(10,0,'tangxinlou debug',6979, "之前修改过")
         let src = index(codefile,"《《《《《《《")
         let tail = index(codefile,"》》》》》》》")
         call remove(codefile,src,tail)
-        echo src tail
+        call Echom(10,0,'tangxinlou debug',6983, src,tail)
     endif
     let targetcode =  ParseCode(codefile,"# ")
     if type(targetcode) ==# 3
         while idx1 < len(targetcode)
-            echo targetcode[idx1][0]
+            call Echom(10,0,'tangxinlou debug',6988, targetcode[idx1][0])
             let codedict[idx1 . "|"  . targetcode[idx1][0]] = targetcode[idx1]
             "let codedict[idx1] = targetcode[idx1]
             let idx1 += 1
         endwhile
         let dictkeys =  sort(keys(codedict))
         let numberfunc = copy(dictkeys)
-        echo dictkeys
-        "echo codedict
+        call Echom(10,0,'tangxinlou debug',6995, dictkeys)
         let idx1 = 0
         while idx1 < len(dictkeys)
             let codedict[dictkeys[idx1]] = ParseCode(codedict[dictkeys[idx1]],"```c|```")
@@ -6986,7 +7012,7 @@ function! AnalyzeCode()
                     let numberfunc[idx1] = split(tempdictlist[0][0],"|")[2]
                 endif
                 "debug
-                "echo idx1 idj1
+                "call Echom(10,0,'tangxinlou debug',7012,idx1,idj1)
                 let tempdictlist[idj1] =  ListKeyWords(tempdictlist[idj1])
                 let idj1 += 1
             endwhile
@@ -7002,7 +7028,7 @@ function! AnalyzeCode()
             let codedict[dictkeys[idx1]] =  add(codedict[dictkeys[idx1]]," ")
             let idx1 += 1
         endwhile
-        echo numberfunc
+        call Echom(10,0,'tangxinlou debug',7028, numberfunc)
         let idx1 = 0
         let tempdictlist = []
         while idx1 < len(dictkeys)
@@ -7085,7 +7111,7 @@ function! ListKeyWords(...)
         if "" != matchstr(listwords[idx1],") {") && "" ==# matchstr(listwords[idx1],";") &&  "" != matchstr(listwords[idx1],"(") && len(split(split(listwords[idx1],"(")[0])) > 1
             if flag ==# 0
                 let tempvalue = split(listwords[0],"|")
-                "echo "debug" tempvalue[1]  idx1
+                "call Echom(10,0,'tangxinlou debug',7111, tempvalue[1],idx1)
                 let tempvalue[1] =  idx1 + tempvalue[1]
                 let listwords[0] = join(tempvalue,"|")
                 let codeidx1 = idx1
@@ -7097,7 +7123,7 @@ function! ListKeyWords(...)
     "找到了文件名，刷选文件名下一行的关键词
     if codeidx1 ==# 0
         let tempvalue = split(listwords[0],"|")
-        "echo "debug" tempvalue[1]  idx1
+        "call Echom(10,0,'tangxinlou debug',7123, tempvalue[1],idx1)
         let tempvalue[1] =  filenameidx1 + tempvalue[1] + 1
         let listwords[0] = join(tempvalue,"|")
         let codeidx1 = filenameidx1 + 1
@@ -7105,7 +7131,7 @@ function! ListKeyWords(...)
     "debug 行数
     let codeline = split(listwords[0],"|")[1]
     let templist = split(listwords[codeidx1],"\x00")
-    echo templist
+    call Echom(10,0,'tangxinlou debug',7131, templist)
     if count(storagekeywords,templist[0])
         let isstorage = 1
         if count(returnkeywords,templist[1])
@@ -7122,7 +7148,7 @@ function! ListKeyWords(...)
 
 
     if isstorage ==# 1 && isreturn ==# 2
-        "echo templist filename filenameidx1 line     debug
+        "call Echom(10,0,'tangxinlou debug',7148,templist,filename,filenameidx1,line)
         let keywords = split(templist[2],"(")[0]
     elseif isstorage ==# 0 && isreturn ==# 1
         let keywords = split(templist[1],"(")[0]
@@ -7885,8 +7911,8 @@ function! ExtractKeyCodes(...)
     if a:0 ==# 0
         let realityline = line('.')
         "call Echom(10,0,'tangxinlou debug', "begin")
-        "call SaveBuffer()
-        "call ClearBracket()
+        call SaveBuffer()
+        call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
     elseif a:0 != 0
         call SaveBuffer()
@@ -8038,7 +8064,7 @@ function! ExtractKeyCodes(...)
         endif
         echo tempstring
         "call Echom(10,0,'tangxinlou debug', "end")
-        "call RestoreBuffer()
+        call RestoreBuffer()
         syntax on
         syntax match javaFunction '\<\h\w*\>\ze\s*('
         hi link javaFunction Function
@@ -8465,7 +8491,7 @@ function! AddDebugLog(...)
     endif
     echo "g:debugid" . g:debugid
 
-    let filename = expand("%:t") . ":" . (line + 1)
+    let filename = expand("%") . ":" . (line + 1)
     set noignorecase
     if search(" TAG = ") != 0
         let TAGchar = "TAG"
@@ -8474,7 +8500,7 @@ function! AddDebugLog(...)
         let jnichar = jnichar . "(\"" . debugchar . g:debugid ."\");"
         call append(line('.'),jnichar)
         let lasttime = ""
-    elseif  matchstr(expand('%:t'),".cc") ==# ".cc"
+    elseif  matchstr(expand('%:t'),'\.cc') ==# ".cc"
         if a:0 ==# 4
             let tempfucline = copy(fuclinetail)
             let lasttime = "lastLogTime" . g:debugid
@@ -8556,7 +8582,7 @@ function! AddDebugLog(...)
             endif
             call cursor(line,1)
         endif
-    elseif  matchstr(expand('%:t'),".java") ==# ".java"
+    elseif  matchstr(expand('%:t'),'\.java') ==# ".java"
         if a:0 ==# 4
             let lasttime = "lastLogTime" . g:debugid
             let currentTime = "currentTime" . g:debugid
@@ -10036,7 +10062,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go,.pdl} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -10160,7 +10186,7 @@ function! GreplogChars(timer)
     let tempchar = ""
     let line = 0
     let col = 0
-    let grepchar = "grep -Esin  "
+    let grepchar = "grep -Esina "
     let currentwindowsid = win_getid()
     let currenttabid = tabpagenr()
     let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
@@ -10851,12 +10877,14 @@ function! DifferentiateLogFiles(...)
     let findresult = system(findcmd)
     if  findresult != ""
         let filespathdict["main"] = sort(split(findresult,"\n"))
+        let filespathdict["main"] = SortByExpression(filespathdict["main"])
     endif
 
     let findcmd = "find -iname " . "'*adsp_*'"
     let findresult = system(findcmd)
     if  findresult != ""
         let filespathdict["adsp"] = sort(split(findresult,"\n"))
+        let filespathdict["adsp"] = SortByExpression(filespathdict["adsp"])
     endif
     return filespathdict
 endfunction
@@ -10872,7 +10900,7 @@ function! SearchFile(...)
     let grepresult = []
     let tempresult = []
     "}}}}
-    let path = SortByExpression(path)
+    "let path = SortByExpression(path)
     if type(path) ==# 1
     elseif type(path) ==# 3
         while idx1 < len(path)
@@ -10913,9 +10941,6 @@ function! AutoAnalyzer(...)
     let analypath =  Homedir("autoanaly/result",2)
     let saveresult = "autoanaly/result"
     redraw
-    if a:0 ==# 1
-        let modeflag = a:1
-    endif
     let historysele = []
     let temphistorysele = []
     let systemversion = ""
@@ -10939,12 +10964,14 @@ function! AutoAnalyzer(...)
         let filterkeytem = copy(filterkey)
         call AddNumber(filterkeytem)
         let indexfilter1 = input("请输入mode a 是全搜索")
+    else
+        let indexfilter1 = a:1
     endif
     let systemversion = BinaryFileSearch("properties","\\[ro.vivo.product.version\\]")
     let fwversion = BinaryFileSearch("properties","vendor.connsys.bt_fw_ver\\]")
     let allresultlist = add(allresultlist,systemversion)
     let allresultlist = add(allresultlist,fwversion)
-    if indexfilter1 ==# 'a' || a:0 ==# 1
+    if indexfilter1 ==# 'a'
         let hcifiles = Findbluetoothlogs()
         let allresultlist = extend(allresultlist,hcifiles)
     endif
@@ -10952,7 +10979,7 @@ function! AutoAnalyzer(...)
     while idx1 < len(filterkey)
         let loglist = []
         let resultlist = []
-        if a:0 ==# 0 && indexfilter1 != 'a'
+        if indexfilter1 != 'a'
             let idx1 = len(filterkey) - 1
             let indexfilter = filterkey[indexfilter1]
             if indexfilter ==# "00temp"
@@ -11524,19 +11551,19 @@ function! UnzipFiles(...)
         if input("是否直接分析") ==# "yes"
             let isloop = "yes"
         endif
+        let targetnum = input("指定编号")
     endif
-    echo system('date')
+    call Dbug1(10,0,'UnzipFiles 122', system('date'))
     let curtime = system('date +%s')
     let pathsstring = ""
     let pathsstring = system("find  . -mindepth 1 -maxdepth 1 -type d")
     let findcmd = "find " . findmode . " -iname '*"  . filetype . "'"
-    echo findcmd
+    call Dbug1(10,0,'UnzipFiles 123', findcmd)
     let filename = split(system(findcmd),"\n")
     let downlog = readfile(downloadlogfile )
     let downlog = add(downlog, "###########################")
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "开始解压" .  filetype)
-    echo system('date')
-    echo "tangxinlou4"
+    call Dbug1(10,0,'UnzipFiles 124', system('date'))
     while idx1 < len(filename)
         if "" ==# matchstr(filename[idx1],"(")
             let targetfilepath = split(filename[idx1],filetype)[0]
@@ -11557,8 +11584,7 @@ function! UnzipFiles(...)
     endwhile
     "删除5天前zip
     let deletefile = split(system(findcmd .  " -mtime +5"),'\n')
-    echo system('date')
-    echo "tangxinlou5"
+    call Dbug1(10,0,'UnzipFiles 125', system('date'))
     "call system("rm -rf *.7z")
     if isdelete ==# "yes" && len(deletefile)  != 0
         "echo deletefile
@@ -11570,7 +11596,6 @@ function! UnzipFiles(...)
             call system("rm -rf " . item)
         endfor
     endif
-    echo "tangxinlou6"
     "删除10天前的所以文件
     let deletefile = split(system("find . -maxdepth 1 -type f -mtime +10"),'\n')
     if isdelete ==# "yes" && len(deletefile)  != 0
@@ -11586,12 +11611,11 @@ function! UnzipFiles(...)
     let downlog = add(downlog, strftime("%Y-%m-%d %H:%M:%S") . "解压完成" .  filetype)
     let downlog = add(downlog, "###########################")
     call writefile(downlog,downloadlogfile )
-    echo system('date')
+    call Dbug1(10,0,'UnzipFiles 126', system('date'))
     call ChangeDirectoryName()
-    echo system('date')
     if a:0 ==# 0
         if isloop ==# "yes"
-            call LoopAnalysis(isloop)
+            call LoopAnalysis(isloop,targetnum)
         else
             call input('111')
         endif
@@ -11658,39 +11682,129 @@ function! LoopAnalysis(...)
     let idx1 = 0
     let tempchar = ""
     let isloop = ""
-    if a:0 ==# 1
+    if a:0 ==# 2
         let isloop = a:1
+        let targetnum = a:2
+    else
+        let targetnum = 'a'
     endif
     "}}}}
     if isloop ==# "yes"
         let tempchar = ManageExtractionCode()
     else
-        echo ManageExtractionCode()
+        call Dbug1(10,0,'LoopAnalysis 127', ManageExtractionCode())
         let tempchar = input("输入提取码")
     endif
     if tempchar != ''
         let findcmd = findcmd . " | grep -E \"" . tempchar . "\""
     endif
     let paths = split(system(findcmd),"\n")
-    echo len(split(tempchar,'|'))
-    echo split(tempchar,'|')
+    call Dbug1(10,0,'LoopAnalysis 128', len(split(tempchar,'|')),split(tempchar,'|'))
     if len(paths) != len(split(tempchar,'|'))
         call UnzipFiles(1)
         let paths = split(system(findcmd),"\n")
     endif
-    echo paths
+    call Dbug1(10,0,'LoopAnalysis 129', paths)
     while idx1 < len(paths)
         redraw
         let directory = split(paths[idx1],'/')[1]
-        echo "tangxinlou 2" . directory
         execute 'cd ' . directory
-        echo directory
+        call Dbug1(10,0,'LoopAnalysis 130', directory)
         redraw
-        call AutoAnalyzer(1)
+        call AutoAnalyzer(targetnum)
         execute 'cd ..'
         let idx1 += 1
     endwhile
     "execute 'cd auto_export_20240125184947_20240125200343_234883337'
+endfunction
+"}}}}}
+
+"{{{{{2 function!  CompressAndSplitWithTar(...)，压缩包整合成小于100m的文件
+function! CompressAndSplitWithTar()
+    " ================== 可配置参数 ==================
+    let pattern       = input("输入编号")           " 搜索关键字（例：工单号/项目ID）
+    let split_size    = '95M'             " 分卷大小（支持K/M/G单位）
+    "let temp_tar      = 'temp_pack.tar'    " 临时压缩文件
+    let temp_tar      = '/z/temp/zip_part_' . pattern    " 临时压缩文件
+    let output_dir    = '/z/temp'    " 分割文件存放目录
+    " ================================================
+
+    " 生成动态文件名组件
+    let file_prefix = 'zip_part_' . pattern . '_'  " 核心修改点
+    let split_path = output_dir . '/' . file_prefix
+
+    " 创建输出目录（强制递归创建）
+    let mkdir_cmd = 'mkdir -p ' . shellescape(output_dir)
+    if system(mkdir_cmd) =~ 'error\|exist' && v:shell_error != 0
+        echo "Error: Cannot create output directory -> " . output_dir
+        return
+    endif
+
+    " 查找目标文件（增强过滤逻辑）
+    let find_cmd = 'find . -maxdepth 1 -type f -name "*.zip" -path "*' . pattern . '*" -print'
+    let files = split(system(find_cmd), "\n")
+    if empty(files)
+        echo "No files found matching pattern: " . pattern
+        return
+    endif
+
+    " 打包文件（处理特殊字符）
+    let tar_cmd = 'tar -cvf ' . shellescape(temp_tar)
+    for file in files
+        if !empty(file)
+            let tar_cmd .= ' ' . shellescape(file)
+        endif
+    endfor
+    if system(tar_cmd) =~ 'error' || v:shell_error != 0
+        echo "Tar failed. Command: " . tar_cmd
+        return
+    endif
+
+    " 智能分割（自动编号）
+    "let split_cmd = 'split  -b ' . split_size . ' ' .
+    "               \ shellescape(temp_tar) . ' ' .
+    "               \ shellescape(split_path)
+    "if system(split_cmd) =~ 'error' || v:shell_error != 0
+    "    echo "Split failed. Command: " . split_cmd
+    "    call system('rm -f ' . shellescape(temp_tar))
+    "    return
+    "endif
+
+    " 清理与反馈
+    "call system('rm -f ' . shellescape(temp_tar))
+    let result_files = split(glob(split_path . '*'), "\n")
+    echo "Generated " . len(result_files) . " split files:"
+    echo "└── " . output_dir . "/" . file_prefix . "[aa|ab|ac...]"
+endfunction
+"}}}}}
+
+"{{{{{2 function!  SmartCopy(...)，智能导出文件
+function! SmartCopy()
+    " ================== 可配置参数 ==================
+    let pattern       = input("输入编号")           " 搜索关键字（例：工单号/项目ID）
+    let split_size    = '95M'             " 分卷大小（支持K/M/G单位）
+    "let temp_tar      = 'temp_pack.tar'    " 临时压缩文件
+    let temp_tar      = '/z/temp/zip_part_' . pattern    " 临时压缩文件
+    let output_dir    = '/z/temp'    " 分割文件存放目录
+    " ================================================
+    let output_dir = output_dir . "/" . pattern
+    if "" ==# finddir(output_dir)
+        call system("mkdir " . output_dir)
+        echo output_dir . "没有这个文件现在新建这个文件"
+    else
+    endif
+    call system("rm -rf ". output_dir . "/*")
+    let findcmd = "find . -type d -name " . "'*" . pattern . "*'"
+    let targetpath = split(system(findcmd),'\n')
+
+    let tempstr = join(targetpath," ")
+    echom tempstr
+    let findcmd = " find "  . tempstr . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'"  . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
+    let targetfile = join(split(system(findcmd), '\n') ," ")
+    let cpcmd = "cp -rf "  . targetfile . " "  . output_dir
+    call system(cpcmd)
+    call input("11")
+
 endfunction
 "}}}}}
 
@@ -11719,12 +11833,11 @@ function! ChangeDirectoryName(...)
     let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
     let tempchar = ''
     "}}}}
-    echo system('date')
+    call Dbug1(10,0,'ChangeDirectoryName 132', system('date'))
     let currentTime = system('date +%s')
     "删除7天前的目录
     let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d -mtime +14 -printf \"%T@ %p\n\" | sort -n -r"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
-    echo system('date')
     for item in paths
         if "" != matchstr(item,"(")
             let  item = "'" . item . "'"
@@ -11735,7 +11848,6 @@ function! ChangeDirectoryName(...)
     let paths = []
     let paths = split(system("find . -mindepth 1 -maxdepth 1 -type d"),"\n")
     let paths  = map(paths, 'split(v:val, "/")[1]')
-    echo system('date')
     for item in paths
         if "" != matchstr(item,"(")
             let  item = "'" . item . "'"
@@ -11782,7 +11894,7 @@ function! ManageExtractionCode(...)
     let Extractioncodelist = GetOneOfTheColumns(Extractioncodefile,',',1)
     "}}}}
     let Alreadyanalyzed = system("ls " . Homedir("autoanaly/result",2))
-    echo Extractioncodelist
+    call Dbug1(10,0,'ManageExtractionCode 131', Extractioncodelist)
     for item in Extractioncodelist
         if matchstr(Alreadyanalyzed,item) ==# ""
             let templist = item . '|' . templist
