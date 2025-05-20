@@ -12592,6 +12592,26 @@ function! MergeLinesOfCode(...)
                 if targetline <= line && targetline != 0
                     let start = targetline + 1
                 endif
+            elseif CheckStringIsObtainOfList(foldstring,judge)
+                if matchstr(foldstring ,"{") ==# ""
+                    silent call cursor(line,1)
+                    let cursor =searchpairpos('(', '', ')', 'b')
+                    if cursor ==# [0,0] 
+                        if matchstr(getline(line),'(') != ""
+                            let start = line
+                            let cursor = search('(')
+                            let cursor =searchpairpos('(', '', ')', 'w')
+                            let end = cursor[0]
+                        else
+                            let start = line
+                            let end = line
+                        endif
+                    else
+                        let start = cursor[0]
+                        let cursor =searchpairpos('(', '', ')', 'w')
+                        let end = cursor[0]
+                    endif
+                endif
             endif
             let linelist = [start,end]
         endif
