@@ -9332,8 +9332,8 @@ function! IdentificationCodeComponents(...)
                                        "判断
     let judge = ["if (",
                 \"if(",
-                \"for(",
-                \"for (",
+                \"else if(",
+                \"else if (",
                 \]
     "let cycle = 7                      "循环
     let cycle   = [" for (",
@@ -12453,6 +12453,12 @@ function! MergeLinesOfCode(...)
     let laststring = ""
     let needflag = 0
     let tempstr = ""
+    let judge = ["if (",
+                \"if(",
+                \"else if(",
+                \"else if (",
+                \"  else",
+                \] 
     if iscomment ==# 0
         if line > 30
             if filetype != "java" &&  matchstr(join(getline(line -30,line)),"#") != ""
