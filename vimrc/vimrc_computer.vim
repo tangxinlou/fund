@@ -1,5 +1,5 @@
 "设置标志位
-let g:vimrcid = 133
+let g:vimrcid = 134
 let mapleader = ","
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -560,6 +560,13 @@ let g:filterchar = {
             \"00temp" : "temptemptem"}
 
 let g:alldebugflag = "true"
+
+let g:FileEmptyDictionary = {"00classname":"xx",
+            \"01interval":"0-0",
+            \"02globalVariable":[],
+            \"03function":[]
+            \"04structure":[]
+            \}
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
@@ -3206,6 +3213,9 @@ endfunction
 function! IsFileType(...)
     let filename = a:1
     let filetype = ""
+    if matchstr(filename,'/') != ""
+        let filename = split(filename,'/')[-1]
+    endif
     if matchstr(filename,'\.java') != ""
         let filetype = "java"
     elseif matchstr(filename,'\.cc') != ""
@@ -8876,7 +8886,7 @@ function! SimplifyCurrentFileFunctions(...)
 endfunction
 "}}}}}
 
-"{{{{{2   EncapsulateDifferentGrep(...) 封装grep 指令
+"{{{{{2   EncapsulateDifferentGrep(...) 封装grep指令
 function! EncapsulateDifferentGrep(...)
     "{{{{{3 变量定义
     let filename = a:1
@@ -8903,6 +8913,28 @@ function! EncapsulateDifferentGrep(...)
         let grepcmd = grepcmd . grepchar . filename
         call Dbug1(10,0,'EncapsulateDifferentGrep 101', grepcmd)
         let result = system(grepcmd)
+    endif
+    return result
+endfunction
+"}}}}}
+
+"{{{{{2   EncapsulateDifferentFind(...) 封装find指令
+function! EncapsulateDifferentFind(...)
+    "{{{{{3 变量定义
+    let path = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    let result = ""
+    "}}}}
+    if greptype ==# "file"
+        let findcommand = "find -type f -iname " . "'*" . grepchar ."*'"
+        call Dbug1(10,0,'EncapsulateDifferentFind 133', findcommand )
+        let result = system(findcommand)
+    endif
+    if result ==# ""
+        let result = []
+    else
+        let result = split(result,'\n')
     endif
     return result
 endfunction
@@ -9313,161 +9345,6 @@ function! CallStack(...)
 endfunction
 "}}}}}
 
-"{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
-function! IdentificationCodeComponents(...)
-    "{{{{{3 变量定义
-    let codestring = a:1
-    let filetype = a:2
-    let matchstr = ""
-    if a:0 ==# 3
-        let matchstr = a:3
-    endif
-    let flag = ""
-    let package = 0                    "包名
-    let import = 1                     "导包
-    let class = 2                      "类
-    let def = 3                        "定义值
-    let specify = 4                    "赋值指定值
-    let specifydef = 5                 "定义并指定初值
-                                       "判断
-    let judge = ["if (",
-                \"if(",
-                \"else if(",
-                \"else if (",
-                \]
-    "let cycle = 7                      "循环
-    let cycle   = [" for (",
-                \" for(",
-                \" while(",
-                \" while (",
-                \]
-
-                                        "switch
-    let switch  = [" switch (",
-                \" switch(",
-                \]
-    let case = 9                       "case
-    let default = 10                   "default
-    let return = 11                    "返回值
-    let call = 12
-    let func = 13
-    let statement = 14
-    let break = 15
-    let struct = 16
-    let enum = 17
-    "}}}}
-     "判断当前行是否继续调用函数
-      "有分号行
-        "单纯赋值没有调用
-        "回调
-        "调用函数
-         "调用本文件函数
-         "调用其他文件函数
-           "找到这个函数的类
-      "无分号行
-        "调用几个函数
-        if matchstr(codestring," case ") != ""
-            let flag = flag . "case"
-            return flag
-        elseif matchstr(codestring," break") != ""
-            let flag = flag . "break"
-            return flag
-        elseif matchstr(codestring," default:") != ""
-            let flag = flag . "default"
-            return flag
-        elseif matchstr(codestring,";") != ""
-            "{{{{3 有分号
-            if CheckStringIsObtainOfList(codestring,judge)
-                let flag = flag . "judge;"
-                return flag
-            endif
-            if matchstr(codestring,"package ") != ""
-                let flag = flag . "package"
-                return flag
-            endif
-            if matchstr(codestring,"import ") != ""
-                let flag = flag . "import"
-                return flag
-            endif
-
-
-            if matchstr(codestring," return ") != ""
-                let flag = flag . "return"
-                if  matchstr(codestring,"(") != ""
-                    let flag = flag . "call"
-                endif
-                return flag
-            endif
-            if matchstr(codestring," default:") != ""
-                let flag = flag . "default"
-                return flag
-            endif
-
-            if matchstr(codestring," =") != ""
-                let flag = flag . "specify"
-                if len(split(split(codestring," = ")[0])) > 1
-                    let flag = flag . "def"
-                endif
-                if  matchstr(codestring,"(") != ""  && matchstr(codestring,'"(') ==# ""
-                    let flag = flag . "call"
-                endif
-                return flag
-            endif
-
-
-
-            if  matchstr(codestring,"(") != ""
-                if len(split(split(codestring,"(")[0])) ==# 1
-                    let flag = flag . "call"
-                else
-                    let flag = flag . "statement"
-                endif
-                return flag
-            endif
-
-            if len(split(codestring)) > 1
-                let flag = flag . "def"
-                return flag
-            endif
-            "}}}}
-        elseif  matchstr(codestring,"{") != ""
-            "{{{{3  有括号
-            if CheckStringIsObtainOfList(codestring,switch)
-                let flag = flag . "switch"
-                return flag
-            endif
-            if CheckStringIsObtainOfList(codestring,judge)
-                let flag = flag . "judge"
-                return flag
-            endif
-            if CheckStringIsObtainOfList(codestring,cycle)
-                let flag = flag . "cycle"
-                return flag
-            endif
-            if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-                let flag = flag . "class"
-                return flag
-            endif
-            if matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-                let flag = flag . "enum"
-                return flag
-            endif
-            if matchstr(codestring,"struct ") != ""
-                let flag = flag . "struct"
-                return flag
-            endif
-
-            if IsFunction(codestring)
-                let flag = flag . "func"
-                return flag
-            endif
-
-            "}}}}
-        endif
-    return "unkonwn"
-endfunction
-"}}}}}
-
 "{{{{{2   StringComponents(...)判断字符串是什么成分和IdentificationCodeComponents混用
 "echo  StringComponents("service","def",getline('.'))
 function! StringComponents(...)
@@ -9495,64 +9372,6 @@ function! StringComponents(...)
     "elseif flag ==# "call"
     endif
    return result
-endfunction
-"}}}}}
-
-"{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
-"call IdentifyTheCurrentFile(1396,1401,"","service")
-function! IdentifyTheCurrentFile(...)
-    "{{{{{3 变量定义
-    let codelist = []
-    let filename = expand("%:t")
-    let filetype =  IsFileType(filename)
-    let line = 1
-    let numberlist = []
-    let srcnum  = -1
-    let tailnum = -1
-    let codestring  = ""
-    let  realityline = -1
-    let g:debugflag = 20
-    let flag = ""
-    let srcline = line
-    let tailline = line('$')
-    let type = ""
-    let matchstr = ""
-    if a:0 != 0
-        let srcline = a:1
-        let tailline = a:2
-        let type = a:3
-        let matchstr = a:4
-        let line = srcline
-    endif
-    "}}}}
-    set noignorecase
-    while line <= tailline
-        let  realityline = line
-        " echo  MergeLinesOfCode(line('.'))
-        let numberlist = MergeLinesOfCode(realityline)
-        if numberlist != []
-            let srcnum  = numberlist[0]
-            let tailnum = numberlist[1]
-            if srcnum <= tailnum
-                let codestring  =  GatherIntoRow(srcnum,tailnum)
-                let line = tailnum + 1
-                if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
-                    let flag = IdentificationCodeComponents(codestring,filetype)
-                    if type ==# "" || matchstr(flag,type) != ""
-                        let codestring  = realityline . codestring
-                        let codestring  = flag  . "    " . codestring
-                        let codelist = add(codelist,codestring)
-                    endif
-                endif
-            else
-                let line += 1
-            endif
-        else
-            let line += 1
-        endif
-    endwhile
-    let g:debuglist = codelist
-    return codelist
 endfunction
 "}}}}}
 
@@ -9935,7 +9754,7 @@ function! FindFiles(timer)
     if len(searchs) < 2
         return
     endif
-    let command = "find -iname " . "'*" . searchs ."*'"
+    let command = "find -type f -iname " . "'*" . searchs ."*'"
     echo command
     let searchstarge =  system(command)
     let searchstarge = split(searchstarge,"\n")
@@ -12367,6 +12186,272 @@ function! Exeample()
         execute "normal! :wq!\<cr>"
     endif
 endfunction
+
+"}}}
+"{{{{{ 自动分析代码
+"{{{{{2  AutomaticCodeAnalysis()  自动分析代码
+function! AutomaticCodeAnalysis()
+    "查找当前路径有哪些文件（java cc c h）
+    "先把文件字典化，类，子类，函数,全局变量
+    "为每个文件刷选关键代码（函数定义，类定义，结构体定义）
+    "串联关键代码（主要是调用，类的依赖，继承等等）
+endfunction
+"}}}}}
+
+"{{{{{2 function!  SearchForAllFiles(...) 寻找所有的代码文件
+function! SearchForAllFiles(...)
+    "{{{{{3 变量定义
+    let pathlist = []
+    let result = []
+    "}}}}
+    let result = EncapsulateDifferentFind('.',"file", '.' . 'java')
+    call Echom(10,0,'tangxinlou debug',12200, result)
+endfunction
+"}}}}}  
+
+"{{{{{2 function!  FileLexiconization(...) 文件字典化
+
+function! FileLexiconization(...)
+    "{{{{{3 变量定义
+    "let FileEmptyDictionary = g:FileEmptyDictionary
+    let g:FileEmptyDictionary = {"00classname":"xx",
+                \"01interval":"0-0",
+                \"02globalVariable":[],
+                \"03function":[]
+                \"04structure":[]
+                \}
+    let filepath = ""
+    let idx1 = 1
+    "}}}}
+    if a:0 ==# 0
+        let filepath = expand("%:p")
+        silent call cursor(line,1)
+    else
+        let filepath = a:1
+        let mode = a:2
+        execute "normal! :tabnew " . filepath . "\<cr>"
+        silent call cursor(line,1)
+        redraw
+    endif
+    while idx1 <= line('$')
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}   
+
+"{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
+function! IdentificationCodeComponents(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let filetype = a:2
+    let matchstr = ""
+    if a:0 ==# 3
+        let matchstr = a:3
+    endif
+    let flag = ""
+    let package = 0                    "包名
+    let import = 1                     "导包
+    let class = 2                      "类
+    let def = 3                        "定义值
+    let specify = 4                    "赋值指定值
+    let specifydef = 5                 "定义并指定初值
+                                       "判断
+    let judge = ["if (",
+                \"if(",
+                \"else if(",
+                \"else if (",
+                \]
+    "let cycle = 7                      "循环
+    let cycle   = [" for (",
+                \" for(",
+                \" while(",
+                \" while (",
+                \]
+
+                                        "switch
+    let switch  = [" switch (",
+                \" switch(",
+                \]
+    let case = 9                       "case
+    let default = 10                   "default
+    let return = 11                    "返回值
+    let call = 12
+    let func = 13
+    let statement = 14
+    let break = 15
+    let struct = 16
+    let enum = 17
+    "}}}}
+     "判断当前行是否继续调用函数
+      "有分号行
+        "单纯赋值没有调用
+        "回调
+        "调用函数
+         "调用本文件函数
+         "调用其他文件函数
+           "找到这个函数的类
+      "无分号行
+        "调用几个函数
+        if matchstr(codestring," case ") != ""
+            let flag = flag . "case"
+            return flag
+        elseif matchstr(codestring," break") != ""
+            let flag = flag . "break"
+            return flag
+        elseif matchstr(codestring," default:") != ""
+            let flag = flag . "default"
+            return flag
+        elseif matchstr(codestring,";") != ""
+            "{{{{3 有分号
+            if CheckStringIsObtainOfList(codestring,judge)
+                let flag = flag . "judge;"
+                return flag
+            endif
+            if matchstr(codestring,"package ") != ""
+                let flag = flag . "package"
+                return flag
+            endif
+            if matchstr(codestring,"import ") != ""
+                let flag = flag . "import"
+                return flag
+            endif
+
+
+            if matchstr(codestring," return ") != ""
+                let flag = flag . "return"
+                if  matchstr(codestring,"(") != ""
+                    let flag = flag . "call"
+                endif
+                return flag
+            endif
+            if matchstr(codestring," default:") != ""
+                let flag = flag . "default"
+                return flag
+            endif
+
+            if matchstr(codestring," =") != ""
+                let flag = flag . "specify"
+                if len(split(split(codestring," = ")[0])) > 1
+                    let flag = flag . "def"
+                endif
+                if  matchstr(codestring,"(") != ""  && matchstr(codestring,'"(') ==# ""
+                    let flag = flag . "call"
+                endif
+                return flag
+            endif
+
+
+
+            if  matchstr(codestring,"(") != ""
+                if len(split(split(codestring,"(")[0])) ==# 1
+                    let flag = flag . "call"
+                else
+                    let flag = flag . "statement"
+                endif
+                return flag
+            endif
+
+            if len(split(codestring)) > 1
+                let flag = flag . "def"
+                return flag
+            endif
+            "}}}}
+        elseif  matchstr(codestring,"{") != ""
+            "{{{{3  有括号
+            if CheckStringIsObtainOfList(codestring,switch)
+                let flag = flag . "switch"
+                return flag
+            endif
+            if CheckStringIsObtainOfList(codestring,judge)
+                let flag = flag . "judge"
+                return flag
+            endif
+            if CheckStringIsObtainOfList(codestring,cycle)
+                let flag = flag . "cycle"
+                return flag
+            endif
+            if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+                let flag = flag . "class"
+                return flag
+            endif
+            if matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+                let flag = flag . "enum"
+                return flag
+            endif
+            if matchstr(codestring,"struct ") != ""
+                let flag = flag . "struct"
+                return flag
+            endif
+
+            if IsFunction(codestring)
+                let flag = flag . "func"
+                return flag
+            endif
+
+            "}}}}
+        endif
+    return "unkonwn"
+endfunction
+"}}}}} 
+
+"{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
+"call IdentifyTheCurrentFile(1396,1401,"","service")
+function! IdentifyTheCurrentFile(...)
+    "{{{{{3 变量定义
+    let codelist = []
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
+    let line = 1
+    let numberlist = []
+    let srcnum  = -1
+    let tailnum = -1
+    let codestring  = ""
+    let  realityline = -1
+    let g:debugflag = 20
+    let flag = ""
+    let srcline = line
+    let tailline = line('$')
+    let type = ""
+    let matchstr = ""
+    if a:0 != 0
+        let srcline = a:1
+        let tailline = a:2
+        let type = a:3
+        let matchstr = a:4
+        let line = srcline
+    endif
+    "}}}}
+    set noignorecase
+    while line <= tailline
+        let  realityline = line
+        " echo  MergeLinesOfCode(line('.'))
+        let numberlist = MergeLinesOfCode(realityline)
+        if numberlist != []
+            let srcnum  = numberlist[0]
+            let tailnum = numberlist[1]
+            if srcnum <= tailnum
+                let codestring  =  GatherIntoRow(srcnum,tailnum)
+                let line = tailnum + 1
+                if  matchstr  ==# "" || matchstr(codestring,matchstr) != ""
+                    let flag = IdentificationCodeComponents(codestring,filetype)
+                    if type ==# "" || matchstr(flag,type) != ""
+                        let codestring  = realityline . codestring
+                        let codestring  = flag  . "    " . codestring
+                        let codelist = add(codelist,codestring)
+                    endif
+                endif
+            else
+                let line += 1
+            endif
+        else
+            let line += 1
+        endif
+    endwhile
+    let g:debuglist = codelist
+    return codelist
+endfunction
+"}}}}} 
+
 "{{{{{2 function!  ProcessEachLine(...)  每行都打印成标准代码样式
 nnoremap <F3> :call ProcessEachLine()<cr>
 function! ProcessEachLine(...)
@@ -12424,6 +12509,7 @@ function! ProcessEachLine(...)
     return codelist
 endfunction
 "}}}}}
+
 "{{{{{2 MergeLinesOfCode(...)判断那几行能合并成符合代码格式的一行
 "echo MergeLinesOfCode(line('.'))
 function! MergeLinesOfCode(...)
@@ -12625,8 +12711,9 @@ function! MergeLinesOfCode(...)
     silent call cursor(line,1)
     return linelist
 endfunction
-"}}}}}
-"}}}
+"}}}}} 
+
+"}}}}} 
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
 "gettabinfo()标签页信息
