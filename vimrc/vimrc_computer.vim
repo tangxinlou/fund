@@ -564,8 +564,8 @@ let g:alldebugflag = "true"
 let g:FileEmptyDictionary = {"00classname":"xx",
             \"01interval":"0-0",
             \"02globalVariable":[],
-            \"03function":[]
-            \"04structure":[]
+            \"03function":[],
+            \"04structure":[],
             \}
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
