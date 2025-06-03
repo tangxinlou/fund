@@ -517,9 +517,9 @@ let g:smallestunitdict = {
             " rfcomm connect "RFCOMM_StartReq|RFCOMM_CreateConnectionWithSecurity|RFCOMM peer:|rfc_mx_sm_execute|rfc_mx_sm|L2CEVT_L2CAP_CONFIG_RSP|PORT_StartCnf|rfc_mx_conf_cnf|RFCOMM_BufDataInd|bta_ag_mgmt_cback_|rfc_process_mx_message|rfc_port_sm_
             "\40l2cap connect l2cdefs.h" : "chnl_state|l2c_csm_execute|btm_sec_l2cap_access_req.*psm=|l2c_csm.cc.*st:|btm_sec_cb.cc.*AddService:.*psm:|l2c_link_timeout All channels closed|process_l2cap_cmd",
             "\"39sdp bt_psm_types.h  tBTA_DM_STATE" : "bta_dm_search_cb.state|starting service discovery|Discovery started|starting SDP discovery|services_to_search|search UUID =|btif_dm_search_services_evt",
-            " hci 指令hcidefs.h avrcp command response avrcp_common.h
+            " hci 指令hcidefs.h avrcp command response avrcp_common.h smp_int.h
 let g:filterchar = {
-            \"38broadcast" : "Skip deliver broadcast.*bluetooth",
+            \"38broadcast" : "Skip deliver broadcast.*bluetooth|bta_hh_",
             \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice",
             \"36bigdata" : "Address=.*manufacturer=",
             \"35headsetcod" : "romote_cod|add leaudio cod",
@@ -554,18 +554,18 @@ let g:filterchar = {
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present|processInitProfilePriorities',
             \"05a2dp_simple_connect avdt_defs.h" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|forcing LE transport for Bonding|A2dpService: connect|bta_av_better_stream_state_machine|a2dp_api: a2dp_api.cc|connectA2dp|src_connect_sink',
             \"04hfp_simple_connect reson 19 peer disconnect" : 'HeadsetStateMachine.*CONNECT_TIMEOUT|RFCOMM connection closed.*UUID=111F|connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetService: connect:|AG state machine even|State changed handle|btif_hf_upstreams_evt|btif_queue_connect_next',
-            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond',
+            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond|BR key is higher security than existing LE keys|Auto-reject pairing|smp_set_state: State change|smp_sm_event: Role:|smp_sm_event: addr:',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
             \"00temp" : "temptemptem"}
 
 let g:alldebugflag = "true"
 
-let g:FileEmptyDictionary = {"00classname":"xx",
-            \"01interval":"0-0",
-            \"02globalVariable":[],
-            \"03function":[],
-            \"04structure":[],
+let g:FileEmptyDictionary = {"00interval":"0-0",
+            \"01name":"xx",
+            \"02type":"",
+            \"03string":"",
+            \"04childnode":[],
             \}
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
@@ -840,6 +840,7 @@ function! MakeCompressedPackage()
     let iscopyiotconf = ""
     let iscopyapk = ""
     let iscopy15apk = ""
+    let iscopy16apk = ""
     let iscopyso = ""
     let templist = []
     let zipname = ""
@@ -1936,7 +1937,7 @@ function! SmartFileSwitching(...)
     if len(g:greplog2list) != 0
         let currenttimerwindowsidlist  = GetOneOfTheColumns(g:greplog2list,"|",1)
         let curenttabidlist = GetOneOfTheColumns(g:greplog2list,"|",2)
-        if count(currenttimerwindowsidlist,currentwindowsid) ==# 1 && count(curenttabidlist,currenttabid) ==# 1
+        if count(currenttimerwindowsidlist,currentwindowsid) ==# 1
             let istimerwindows = "true"
         endif
     endif
@@ -1989,6 +1990,10 @@ function! SmartFileSwitching(...)
                 endif
                 let @l = register
             endif
+            silent execute "normal! \<c-w>k"
+            call cursor(line,1)
+            silent execute  "normal! m`"
+            return
         else
             let path = split(curlinestring,'|')[0]
             let line = split(curlinestring,'|')[1]
@@ -2462,10 +2467,10 @@ function! GatherIntoRow(...)
             endif
         endif
         if idj1 > 0 && idj1 < len(tempchar) -1
-            let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+            let tempchar[idj1] = join(split(tempchar[idj1]," "))
         endif
         if idj1 ==# len(tempchar) -1 && idj1 != 0
-            let tempchar[idj1] = join(split(tempchar[idj1],"\x00"))
+            let tempchar[idj1] = join(split(tempchar[idj1]," "))
         endif
         let idj1 += 1
     endwhile
@@ -3761,25 +3766,25 @@ nnoremap <leader>ch :call VmakeChange()<cr>
 function! VmakeChange()
     let i = 0
     let pdname = ""
-    let a:MyGroup1 = ""
-    let a:MyGroup5 = ""
-    let a:MyGroup2 = ""
-    let a:MyGroup3 = []
-    let a:MyGroup4 = []
-    let a:MyGroup6 = []
-    let a:MyGroup7 = []
+    let MyGroup1 = ""
+    let MyGroup5 = ""
+    let MyGroup2 = ""
+    let MyGroup3 = []
+    let MyGroup4 = []
+    let MyGroup6 = []
+    let MyGroup7 = []
     let curversion = []
     if "yes" ==# input("是否更新日期")
         execute "normal! :r!date +\\%F-\\%T\<cr>"
         return
     endif
-    let a:MyGroup4 = IsCfgfile(input("请输入编译的项目"))
-    let a:MyGroup7 = copy(a:MyGroup4)
-    call AddNumber2(a:MyGroup7)
-    let a:MyGroup5 = input("请输入xml")
-    let curversion = IsVersion(a:MyGroup4[a:MyGroup5])
-    let a:MyGroup6 = split(a:MyGroup4[a:MyGroup5],"/")
-    let  @u = a:MyGroup6[len(a:MyGroup6) - 1]
+    let MyGroup4 = IsCfgfile(input("请输入编译的项目"))
+    let MyGroup7 = copy(MyGroup4)
+    call AddNumber2(MyGroup7)
+    let MyGroup5 = input("请输入xml")
+    let curversion = IsVersion(MyGroup4[MyGroup5])
+    let MyGroup6 = split(MyGroup4[MyGroup5],"/")
+    let  @u = MyGroup6[len(MyGroup6) - 1]
     "execute "normal! $a 2>&1 | tee builglog1.txt\<esc>"
     execute "normal! 03f\"ci\"\<esc>\"up"
     execute "normal! 03f\"lvllllly05f\"lvlllllp017f\"ci\"\<esc>:r!pwd\<cr>0v$hdk017f\"p0jddk"
@@ -3805,29 +3810,29 @@ function! VmakeChange()
     endif
     execute "normal! 03f\"yi\""
     execute "normal! 015f\"yi\""
-    let a:pathh = split(@@)
+    let pathh = split(@@)
     execute "normal! :r!date +\\%F-\\%T\<cr>"
-    if len(a:pathh) > 1
+    if len(pathh) > 1
         echo "tangxinlou len >1"
-        while i < len(a:pathh)
-            silent let a:MyGroup1 = system("cd "  . a:pathh[i] . "; git status . \| grep  \"On branch\"")
-            if "No such file or directory" !=# matchstr(a:MyGroup1, "No such file or directory")
-                let a:MyGroup1 = join(split(a:MyGroup1))
-                silent let a:MyGroup2 = join([a:pathh[i],a:MyGroup1]," ")
-                silent call add(a:MyGroup3,a:MyGroup2)
-                "silent let a:MyGroup2 = join(a:MyGroup3," ")
-                "silent call append(line('.'), a:MyGroup2)
+        while i < len(pathh)
+            silent let MyGroup1 = system("cd "  . pathh[i] . "; git status . \| grep  \"On branch\"")
+            if "No such file or directory" !=# matchstr(MyGroup1, "No such file or directory")
+                let MyGroup1 = join(split(MyGroup1))
+                silent let MyGroup2 = join([pathh[i],MyGroup1]," ")
+                silent call add(MyGroup3,MyGroup2)
+                "silent let MyGroup2 = join(MyGroup3," ")
+                "silent call append(line('.'), MyGroup2)
             endif
             let i += 1
         endwhile
-        silent call append(line('.'), join(a:MyGroup3," "))
+        silent call append(line('.'), join(MyGroup3," "))
         call cursor(line('.') + 1,1)
     else
         call Dbug1(10,0,'VmakeChange 84', "tangxinlou len <1")
-        silent let a:MyGroup =  system("git status . \| grep  \"On branch\"")
-        let  a:MyGroup = join(split(a:MyGroup))
-        if "On branch" ==# matchstr(a:MyGroup, "On branch")
-            silent call append(line('.'), a:MyGroup)
+        silent let MyGroup =  system("git status . \| grep  \"On branch\"")
+        let  MyGroup = join(split(MyGroup))
+        if "On branch" ==# matchstr(MyGroup, "On branch")
+            silent call append(line('.'), MyGroup)
             call cursor(line('.') + 1,1)
         endif
     endif
@@ -5251,11 +5256,14 @@ endfunction
 "}}}}}
 "{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + add 调用
 let g:addnoteflag = 0
+let g:bugchar = ""
 nnoremap <leader>add :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
-    let bugchar = "B241213-83933"
-
+    if g:bugchar ==# ""
+        let g:bugchar = input("输入bug号")
+    endif
+    let bugchar = g:bugchar
     let filelen = 0
     let idx1 = 0
     let notesflag = 0
@@ -9723,6 +9731,17 @@ function! ClassReplacementObject(...)
 
 endfunction
 "}}}}}
+
+"{{{{{2   DealingWithBrackets(...) 处理括号
+function! DealingWithBrackets(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let codetype = a:2
+    "}}}}
+
+
+endfunction
+"}}}}}
 "}}}}}
 "{{{{ 定时器
 
@@ -10756,6 +10775,7 @@ function! AutoAnalyzer(...)
     let allresultlist = []
     let tempfilterchar = ""
     let downloadpin = ""
+    let pathpin = ""
     let index = 0
     let analypath =  Homedir("autoanaly/result",2)
     let saveresult = "autoanaly/result"
@@ -10893,10 +10913,12 @@ function! AutoAnalyzer(...)
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"delay")
         let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
+        let pathpin = downloadpin[index -2] . "_" . downloadpin[index -1]
     else
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"fbk")
         let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
+        let pathpin = downloadpin[index -2] . "_" . downloadpin[index -1]
     endif
     let daildate = daildate ."结束" .  join(split(system("date '+%Y%m%d-%H.%M.%S'"),"\n"))
     let allresultlist = insert(allresultlist,string(daildate))
@@ -10917,6 +10939,7 @@ function! AutoAnalyzer(...)
         endif
         call writefile(allresultlist,saveresult)
         silent execute "normal! :e  " . saveresult . "\<cr>"
+        call SmartCopy(pathpin)
     endif
     echo g:Dimensionalflag
     if a:0 ==# 0
@@ -11416,7 +11439,7 @@ function! UnzipFiles(...)
         endfor
     endif
     "删除10天前的所以文件
-    let deletefile = split(system("find . -maxdepth 1 -type f -mtime +10"),'\n')
+    let deletefile = split(system("find . -maxdepth 1 -type f -mtime +30"),'\n')
     if isdelete ==# "yes" && len(deletefile)  != 0
         "echo deletefile
         for item in deletefile
@@ -11598,31 +11621,52 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  SmartCopy(...)，智能导出文件
-function! SmartCopy()
-    " ================== 可配置参数 ==================
-    let pattern       = input("输入编号")           " 搜索关键字（例：工单号/项目ID）
+function! SmartCopy(...)
+    if a:0 ==# 0
+        let pattern   = input("输入编号")
+    else
+        let pattern  = a:1
+    endif
     let split_size    = '95M'             " 分卷大小（支持K/M/G单位）
     "let temp_tar      = 'temp_pack.tar'    " 临时压缩文件
     let temp_tar      = '/z/temp/zip_part_' . pattern    " 临时压缩文件
     let output_dir    = '/z/temp'    " 分割文件存放目录
     " ================================================
-    let output_dir = output_dir . "/" . pattern
+    if pattern ==# ""
+        let output_dir = output_dir . "/" . "current"
+    else
+        let output_dir = output_dir . "/" . pattern
+    endif
     if "" ==# finddir(output_dir)
         call system("mkdir " . output_dir)
         echo output_dir . "没有这个文件现在新建这个文件"
     else
     endif
+    echom output_dir
     call system("rm -rf ". output_dir . "/*")
     let findcmd = "find . -type d -name " . "'*" . pattern . "*'"
-    let targetpath = split(system(findcmd),'\n')
-
-    let tempstr = join(targetpath," ")
-    echom tempstr
-    let findcmd = " find "  . tempstr . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'"  . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
-    let targetfile = join(split(system(findcmd), '\n') ," ")
-    let cpcmd = "cp -rf "  . targetfile . " "  . output_dir
-    call system(cpcmd)
-    call input("11")
+    if pattern ==# ""
+        let targetpath = '.'
+        let findcmd = " find "  . '.' . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'" . " -o -iname  '*mp4*'"  . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
+        let targetfile = join(split(system(findcmd), '\n') ," ")
+        let cpcmd = "cp -rf "  . targetfile . " "  . output_dir
+        call system(cpcmd)
+    else
+        let targetpath = split(system(findcmd),'\n')
+        echom targetpath
+        if targetpath != []
+            let tempstr = join(targetpath," ")
+            let findcmd = " find "  . tempstr . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'"  . " -o -iname  '*mp4*'" . " -o -iname  '*\.pcm'" . " -o -iname  '*\.vm'" . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
+            let targetfile = join(split(system(findcmd), '\n') ," ")
+            let cpcmd = "cp -rf "  . targetfile . " "  . output_dir
+            call system(cpcmd)
+        else
+            echom "没有找到目录"
+        endif
+    endif
+    if a:0 ==# 0
+        call input("11")
+    endif
 
 endfunction
 "}}}}}
@@ -12207,25 +12251,28 @@ function! SearchForAllFiles(...)
     let result = EncapsulateDifferentFind('.',"file", '.' . 'java')
     call Echom(10,0,'tangxinlou debug',12200, result)
 endfunction
-"}}}}}  
+"}}}}}
 
 "{{{{{2 function!  FileLexiconization(...) 文件字典化
 
 function! FileLexiconization(...)
     "{{{{{3 变量定义
-    "let FileEmptyDictionary = g:FileEmptyDictionary
-    let g:FileEmptyDictionary = {"00classname":"xx",
-                \"01interval":"0-0",
-                \"02globalVariable":[],
-                \"03function":[]
-                \"04structure":[]
+    let g:FileEmptyDictionary = {"00interval":"0-0",
+                \"01name":"xx",
+                \"02type":"",
+                \"03string":"",
+                \"04childnode":[],
                 \}
+
+    let FileDictionary = g:FileEmptyDictionary
     let filepath = ""
     let idx1 = 1
+    let start = 1
+    let end = line('$')
     "}}}}
     if a:0 ==# 0
         let filepath = expand("%:p")
-        silent call cursor(line,1)
+        silent call cursor(1,1)
     else
         let filepath = a:1
         let mode = a:2
@@ -12233,11 +12280,93 @@ function! FileLexiconization(...)
         silent call cursor(line,1)
         redraw
     endif
-    while idx1 <= line('$')
-        let idx1 += 1
+    let FileDictionary = CycleFill(start ."-".end,FileDictionary,0,"LexiconizationCallback")
+    return FileDictionary
+endfunction
+"}}}}}
+
+"{{{{{2  CycleFill(...)  循环填充字典
+function! CycleFill(...)
+    "{{{{{3 变量定义
+    let interval = a:1
+    let dict = deepcopy(a:2)
+    let flag = a:3
+    let callback = a:4
+    let start = split(interval,'-')[0]
+    let end = split(interval,'-')[1]
+    let Resultlist = []
+    let tempdict = []
+    "}}}}
+    while start <= end
+        let resultlist = call(callback,[start])
+        let dict["04childnode"] = add(dict["04childnode"],deepcopy(resultlist[2]))
+        let start = resultlist[0]
+        "if
+        "    CycleFill()
+        "endif
+    endwhile
+    return dict
+endfunction
+"}}}}}
+
+"{{{{{2  LexiconizationCallback(...) 字典化回调
+"function('MyHandler')
+function! LexiconizationCallback(...)
+    "{{{{{3 变量定义
+    let line = a:1
+    "let dict = deepcopy(a:2)
+    let dict = g:FileEmptyDictionary
+    let start = 0
+    let end = 0
+    let linelist = []
+    let string = ""
+    let resultlist = ["end","flag","dict"]
+    "}}}}
+    let linelist = MergeLinesOfCode(line)
+    if linelist ==# []
+        let resultlist[0] = line + 1
+        let resultlist[1] = "false"
+        let resultlist[2] = dict
+        return resultlist
+    endif
+    let end = linelist[1]
+    let string = GatherIntoRow(linelist[0],linelist[1])
+    let dict["03string"] = string
+
+    let resultlist[0] = end + 1
+    let resultlist[1] = "false"
+    let resultlist[2] = dict
+    return resultlist
+endfunction
+"}}}}}
+
+"{{{{{2  DictionaryPrintingCallback(...) 字典化回调
+function! DictionaryPrintingCallback(...)
+    "{{{{{3 变量定义
+    let dict = deepcopy(a:2)
+    let resultlist = a:2
+    let flag = a:3
+    "}}}}
+    let resultlist = add(resultlist,dict["03string"])
+    return resultlist
+endfunction
+"}}}}}
+
+
+"{{{{{2  LoopPrinting()  循环打印
+function! LoopPrinting()
+    "{{{{{3 变量定义
+    let dict = deepcopy(a:1)
+    let callback = a:2
+    let flag = a:3
+    let keylist = []
+    let idx1 = 0
+    "}}}}
+    while idx1 ==# 0
+
     endwhile
 endfunction
-"}}}}}   
+"}}}}}
 
 "{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
 function! IdentificationCodeComponents(...)
@@ -12392,7 +12521,7 @@ function! IdentificationCodeComponents(...)
         endif
     return "unkonwn"
 endfunction
-"}}}}} 
+"}}}}}
 
 "{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
 "call IdentifyTheCurrentFile(1396,1401,"","service")
@@ -12450,7 +12579,7 @@ function! IdentifyTheCurrentFile(...)
     let g:debuglist = codelist
     return codelist
 endfunction
-"}}}}} 
+"}}}}}
 
 "{{{{{2 function!  ProcessEachLine(...)  每行都打印成标准代码样式
 nnoremap <F3> :call ProcessEachLine()<cr>
@@ -12544,7 +12673,7 @@ function! MergeLinesOfCode(...)
                 \"else if(",
                 \"else if (",
                 \"  else",
-                \] 
+                \]
     if iscomment ==# 0
         if line > 30
             if filetype != "java" &&  matchstr(join(getline(line -30,line)),"#") != ""
@@ -12688,7 +12817,7 @@ function! MergeLinesOfCode(...)
                 if matchstr(foldstring ,"{") ==# ""
                     silent call cursor(line,1)
                     let cursor =searchpairpos('(', '', ')', 'b')
-                    if cursor ==# [0,0] 
+                    if cursor ==# [0,0]
                         if matchstr(getline(line),'(') != ""
                             let start = line
                             let cursor = search('(')
@@ -12711,9 +12840,8 @@ function! MergeLinesOfCode(...)
     silent call cursor(line,1)
     return linelist
 endfunction
-"}}}}} 
-
-"}}}}} 
+"}}}}}
+"}}}
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
 "gettabinfo()标签页信息
