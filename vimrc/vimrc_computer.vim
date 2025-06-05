@@ -12384,7 +12384,7 @@ function! LoopPrinting1(...)
           let resultlist = LoopPrinting1(dict["04childnode"][idx1],callback,flag,resultlist)
           let idx1 += 1
     endwhile
-    return resultlist --- vimrc_computer.vim	2025-06-05 20:15:57.081864100 +0800
+    return resultlist
 endfunction
 "}}}}}
 
