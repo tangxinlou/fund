@@ -3751,6 +3751,21 @@ function! SplitCodeString(...)
       return resultlist
 endfunction
 "}}}}}
+"{{{{{2  Flag2String(...) 根据flag 生成字符
+function! Flag2String(...)
+    "{{{{{3 变量定义
+    let flag = a:1
+    let string = ""
+    let tempchar = ""
+    let tempchar1 = "├── "
+    let tempchar2 = "│   "
+    "}}}}
+    "repeat("│   ",2)
+    let tempchar = repeat(tempchar2,flag - 1)
+    let tempchar = tempchar . tempchar1
+    return tempchar
+endfunction
+"}}}}}
 "}}}}
 "{{{{vmake 命令
 
@@ -12281,6 +12296,7 @@ function! FileLexiconization(...)
         redraw
     endif
     let FileDictionary = CycleFill(start ."-".end,FileDictionary,0,"LexiconizationCallback")
+    let g:debuglist  = LoopPrinting1(FileDictionary,"DictionaryPrintingCallback",0,[])
     return FileDictionary
 endfunction
 "}}}}}
@@ -12340,11 +12356,11 @@ function! LexiconizationCallback(...)
 endfunction
 "}}}}}
 
-"{{{{{2  DictionaryPrintingCallback(...) 字典化回调
+"{{{{{2  DictionaryPrintingCallback(...) 字典打印回调
 function! DictionaryPrintingCallback(...)
     "{{{{{3 变量定义
-    let dict = deepcopy(a:2)
-    let resultlist = a:2
+    let dict = deepcopy(a:1)
+    let resultlist = deepcopy(a:2)
     let flag = a:3
     "}}}}
     let resultlist = add(resultlist,dict["03string"])
@@ -12352,19 +12368,23 @@ function! DictionaryPrintingCallback(...)
 endfunction
 "}}}}}
 
-
-"{{{{{2  LoopPrinting()  循环打印
-function! LoopPrinting()
+"{{{{{2  LoopPrinting1(...)  循环打印
+function! LoopPrinting1(...)
     "{{{{{3 变量定义
     let dict = deepcopy(a:1)
     let callback = a:2
     let flag = a:3
+    let resultlist = deepcopy(a:4)
     let keylist = []
     let idx1 = 0
     "}}}}
-    while idx1 ==# 0
-
+    let resultlist = DictionaryPrintingCallback(dict,resultlist,flag)
+    let flag += 1
+    while idx1 < len(dict["04childnode"])
+          let resultlist = LoopPrinting1(dict["04childnode"][idx1],callback,flag,resultlist)
+          let idx1 += 1
     endwhile
+    return resultlist --- vimrc_computer.vim	2025-06-05 20:15:57.081864100 +0800
 endfunction
 "}}}}}
 
