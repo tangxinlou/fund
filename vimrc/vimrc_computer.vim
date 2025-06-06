@@ -564,7 +564,7 @@ let g:alldebugflag = "true"
 let g:FileEmptyDictionary = {"00interval":"0-0",
             \"01name":"xx",
             \"02type":"",
-            \"03string":"",
+            \"03string":'',
             \"04childnode":[],
             \}
 "}}}}}
@@ -2839,17 +2839,20 @@ function! FindAnotherBracketPosition(...)
     let index = -1
     let tempchar = getline('.')
     let curline = -1
+    "call Echom(10,0,'tangxinlou debug',2842, "begin")
     call Dbug1(10,0,'FindAnotherBracketPosition 46', char)
     if a:0 ==# 2
         silent call cursor(1,1)
-        silent let cursor =  JumpToNext('{','w')
-        let index = match(getline('.'), '\S')
-        let curline = copy(cursor[0])
-        call Dbug1(10,0,'FindAnotherBracketPosition 47', )
-        while IsComment(cursor[0]) ==# 1
-            call cursor(cursor[0] + 1,1)
+        "silent let cursor =  JumpToNext('{','w')
             let cursor =  searchpos('{','w')
-        endwhile
+        "let index = match(getline('.'), '\S')
+        "let curline = copy(cursor[0])
+        "call Dbug1(10,0,'FindAnotherBracketPosition 47', )
+        "while IsComment(cursor[0]) ==# 1
+        "    call cursor(cursor[0] + 1,1)
+        "    let cursor =  searchpos('{','w')
+        "endwhile
+        call Echom(10,0,'tangxinlou debug',2854, "end")
         return cursor
     endif
     if char ==# ')'
@@ -2871,6 +2874,7 @@ function! FindAnotherBracketPosition(...)
         "endif
         silent let cursor  = searchpairpos('{', '', '}', 'b')
         call Dbug1(10,0,'FindAnotherBracketPosition 48', cursor,getline(cursor[0]))
+        "call Echom(10,0,'tangxinlou debug',2917, "end")
         return cursor
     elseif char ==# '{'
         silent let col =  strridx(tempchar,'{')
@@ -3261,7 +3265,7 @@ function! JumpToNext(...)
         "call Dbug1(10,0,'JumpToNext 13',cursor  )
         let flag = 1
         "只要这个{在() 中就忽略
-        let obtaincursor = searchpairpos('(', '', ')', 'w')
+        let obtaincursor = searchpairpos('(', '', ')', 'w','',min([line('$'), line('.') + 50]))
         "call Dbug1(10,0,'JumpToNext 14',obtaincursor)
         if  obtaincursor != [0,0]
             if IsComment(obtaincursor[0],obtaincursor[1]) ==# 0 && ItString(obtaincursor) ==# 0
@@ -3749,6 +3753,23 @@ function! SplitCodeString(...)
           let idx1 += 1
       endwhile
       return resultlist
+endfunction
+"}}}}}
+"{{{{{2  Flag2String(...) 根据flag 生成字符
+function! Flag2String(...)
+    "{{{{{3 变量定义
+    let flag = a:1
+    let string = ""
+    let tempchar = ""
+    let tempchar1 = "├── "
+    let tempchar2 = "│   "
+    "}}}}
+    "repeat("│   ",2)
+    if flag >= 1
+        let tempchar = repeat(tempchar2,flag - 1)
+        let tempchar = tempchar . tempchar1
+    endif
+    return tempchar
 endfunction
 "}}}}}
 "{{{{{2  Flag2String(...) 根据flag 生成字符
@@ -12175,6 +12196,7 @@ function! FouncDeleLog()
         if matchstr(currentString,"tangxinlou debug") ==# "tangxinlou debug"
             call cursor(idx1,1)
             silent execute "normal! dd"
+"{{{{{2  Exeample()  例子
         else
             let idx1 += 1
         endif
@@ -12230,6 +12252,18 @@ function! Exeample()
        "silent tabnew
        "silent edit  AdapterService.java
        ":q!
+"}}}}}
+
+"{{{{{2  SpecialTest()  自动分析代码
+function! SpecialTest()
+    call Echom(10,0,'tangxinlou debug',12256, "begin")
+    "call searchpairpos('{', '', '}', 'b')
+    "echo searchpairpos('(', '', ')', 'w','',min([line('$'), line('.') + 50]))
+    echo searchpairpos('(', '', ')', 'b','',max([1, line('.') - 50]))
+    "echo searchpairpos('(', '', ')', 'b')
+    call Echom(10,0,'tangxinlou debug',12258, "end")
+endfunction
+"}}}}}
         "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
     else
         "处理传过来的文件
@@ -12272,13 +12306,6 @@ endfunction
 
 function! FileLexiconization(...)
     "{{{{{3 变量定义
-    let g:FileEmptyDictionary = {"00interval":"0-0",
-                \"01name":"xx",
-                \"02type":"",
-                \"03string":"",
-                \"04childnode":[],
-                \}
-
     let FileDictionary = g:FileEmptyDictionary
     let filepath = ""
     let idx1 = 1
@@ -12296,6 +12323,7 @@ function! FileLexiconization(...)
         redraw
     endif
     let FileDictionary = CycleFill(start ."-".end,FileDictionary,0,"LexiconizationCallback")
+    let g:debuglist  = LoopPrinting1(FileDictionary,"DictionaryPrintingCallback",1,[])
     let g:debuglist  = LoopPrinting1(FileDictionary,"DictionaryPrintingCallback",0,[])
     return FileDictionary
 endfunction
@@ -12315,7 +12343,9 @@ function! CycleFill(...)
     "}}}}
     while start <= end
         let resultlist = call(callback,[start])
-        let dict["04childnode"] = add(dict["04childnode"],deepcopy(resultlist[2]))
+        if resultlist[1] ==# "true"
+            let dict["04childnode"] = add(dict["04childnode"],deepcopy(resultlist[2]))
+        endif
         let start = resultlist[0]
         "if
         "    CycleFill()
@@ -12331,7 +12361,7 @@ function! LexiconizationCallback(...)
     "{{{{{3 变量定义
     let line = a:1
     "let dict = deepcopy(a:2)
-    let dict = g:FileEmptyDictionary
+    let dict = deepcopy(g:FileEmptyDictionary)
     let start = 0
     let end = 0
     let linelist = []
@@ -12350,7 +12380,7 @@ function! LexiconizationCallback(...)
     let dict["03string"] = string
 
     let resultlist[0] = end + 1
-    let resultlist[1] = "false"
+    let resultlist[1] = "true"
     let resultlist[2] = dict
     return resultlist
 endfunction
@@ -12362,8 +12392,9 @@ function! DictionaryPrintingCallback(...)
     let dict = deepcopy(a:1)
     let resultlist = deepcopy(a:2)
     let flag = a:3
+    let tempstring = Flag2String(flag)
     "}}}}
-    let resultlist = add(resultlist,dict["03string"])
+    let resultlist = add(resultlist,tempstring . dict["03string"])
     return resultlist
 endfunction
 "}}}}}
@@ -12374,6 +12405,7 @@ function! LoopPrinting1(...)
     let dict = deepcopy(a:1)
     let callback = a:2
     let flag = a:3
+    let resultlist = deepcopy(a:4)
     let resultlist = deepcopy(a:4)
     let keylist = []
     let idx1 = 0
