@@ -520,7 +520,7 @@ let g:smallestunitdict = {
             " hci 指令hcidefs.h avrcp command response avrcp_common.h smp_int.h
 let g:filterchar = {
             \"38broadcast" : "Skip deliver broadcast.*bluetooth|bta_hh_",
-            \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice",
+            \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice|at com.android.bluetooth",
             \"36bigdata" : "Address=.*manufacturer=",
             \"35headsetcod" : "romote_cod|add leaudio cod",
             \"34hearingaid" : "connectEnabledProfiles.*Hearing Aid Profile|HearingAidStateMachine.*process message|connectHearingAidNative|HearingAidStateMachine.*->|BluetoothHearingAid: setVolume",
@@ -544,7 +544,7 @@ let g:filterchar = {
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnectUUID=111F hfp bt_uuid16.h btif_sock_sdp.h, " : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
-            \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached",
+            \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached|BtGatt.AdvertiseManager",
             \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package|Skipping client: permission=false",
             \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close|BluetoothGatt: onClientConnectionState|BtGatt.GattService: registerClient|BluetoothGatt:|BtGatt.GattService: registerClient",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
@@ -707,7 +707,7 @@ function! QuckfixToggle()
             echom &fileencoding
             silent e! ++enc=utf-8
         endif
-        let g:debugflag = 20
+        let g:debugflag = 1
         silent vnoremap <c-c>
         silent nnoremap <c-v>
     else
@@ -718,7 +718,7 @@ function! QuckfixToggle()
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
         echo "打开鼠标,打开所有打印"
-        let g:debugflag = 1
+        let g:debugflag = 20
         vnoremap <c-c> y
         nnoremap <c-v> <esc>p
     endif
@@ -1534,7 +1534,6 @@ function! Echom(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   Dbug1(...) 打印log的函数
 "默认值是2，所有的都会打印
 "比较重要的设置成3
@@ -2967,6 +2966,14 @@ function! ClearBracket(...)
     " 块注释：跨行精准匹配
     silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "{}", "  ")#ge'
 
+
+    silent! execute '%s#\v//\zs%([()]*[()]+)*[()]*#\=tr(submatch(0), "()", "  ")#ge'
+
+
+    silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "()", "  ")#ge'
+
+    silent! execute '%s/\/\*\/\//\/\*/g'
+
     if a:0 ==# 0
         call HandlingParentheses()
     endif
@@ -3264,7 +3271,7 @@ function! JumpToNext(...)
         let cursor =  searchpos(char,drect)
         "call Dbug1(10,0,'JumpToNext 13',cursor  )
         let flag = 1
-        "只要这个{在() 中就忽略
+        "只要这个{在() 中就忽略,限定行数
         let obtaincursor = searchpairpos('(', '', ')', 'w','',min([line('$'), line('.') + 50]))
         "call Dbug1(10,0,'JumpToNext 14',obtaincursor)
         if  obtaincursor != [0,0]
@@ -3351,20 +3358,56 @@ function! FirstNonBlank(...)
     return col
 endfunction
 "}}}}}
-"{{{{{2 GetTwoNonBlank(...)获取字符串首个非空字符 + 非空字符后的一个字符
+"{{{{{2 GetTwoNonBlank(...)获取字符串非空字符开始的前两个字符
+"echo GetTwoNonBlank(getline(line('.')))
 function! GetTwoNonBlank(...)
-    let string = a:1
+    let string = copy(a:1)
     let length = len(string)
     let idx1 = 0
     let char = ""
+    let string = split(string,'\zs')
     while idx1 < length
         if string[idx1] != " "
             break
         endif
         let idx1 += 1
     endwhile
-    let char = string[idx1:idx1 + 1]
+    if idx1 + 1 < length
+        let char = string[idx1:idx1 + 1]
+        let char = join(char,"\x00")
+    else
+        let char = string[idx1]
+    endif
     return char
+endfunction
+"}}}}}
+"{{{{{2 GetLastNonBlank(...)获取字符串末尾倒数第一个非空字符
+"echo GetLastNonBlank(getline(line('.')))
+function! GetLastNonBlank(...)
+    let string = copy(a:1)
+    let idx1 = 0
+    let char = ""
+    let string = split(string,'\zs')
+    let length = len(string)
+    let idx1 = length - 1
+    while idx1 >= 0
+        if string[idx1] != " "
+            break
+        endif
+        let idx1 -= 1
+    endwhile
+    let char = string[idx1]
+    return char
+endfunction
+"}}}}}
+"{{{{{2 GetNonBlank(...)获取字符串对应字符
+"echo GetNonBlank(getline(line('.')))
+function! GetNonBlank(...)
+    let string = copy(a:1)
+    let resultlist = ["前两个非空字符","末尾一个非空字符"]
+    let resultlist[0] =  GetTwoNonBlank(string)
+    let resultlist[1] =  GetLastNonBlank(string)
+    return resultlist
 endfunction
 "}}}}}
 "{{{{{2 FindCorrespondingBracketPosition(...)在字符串中获取对应括号的位置
@@ -3376,17 +3419,30 @@ function! FindCorrespondingBracketPosition(...)
     let openflag = 0
     let closeflag = 0
     let resultposition = -1
+    if a:0 ==# 3
+        if a:3 ==# '<'
+            let leftchar = '<'
+            let rightchar = '>'
+        elseif a:3 ==# '('
+            let leftchar = '('
+            let rightchar = ')'
+        endif
+    else
+        let leftchar = '('
+        let rightchar = ')'
+    endif
+
     if type(codestring) ==# 1
         let codestring = split(codestring,'\zs')
     endif
-    if codestring[position] ==# '('
+    if codestring[position] ==# leftchar
         let idx1 = position + 1
         let openflag = 1
         while idx1 < len(codestring)
-            if codestring[idx1] ==# ')'
+            if codestring[idx1] ==# rightchar
                 let closeflag += 1
             endif
-            if codestring[idx1] ==# '('
+            if codestring[idx1] ==# leftchar
                 let openflag += 1
             endif
             if openflag ==# closeflag
@@ -3399,14 +3455,14 @@ function! FindCorrespondingBracketPosition(...)
         else
             let resultposition = a:2
         endif
-    elseif codestring[position] ==# ')'
+    elseif codestring[position] ==# rightchar
         let idx1 = position -1
         let closeflag = 1
         while idx1 >= 0
-            if codestring[idx1] ==# ')'
+            if codestring[idx1] ==# rightchar
                 let closeflag += 1
             endif
-            if codestring[idx1] ==# '('
+            if codestring[idx1] ==# leftchar
                 let openflag += 1
             endif
             if openflag ==# closeflag
@@ -3512,35 +3568,7 @@ function! ClearingNotesInCode(...)
     return tempchar
 endfunction
 "}}}}}
-"{{{{{2 IsFunction(...)当前字符串是否是函数
-function! IsFunction(...)
- let codestr = a:1
- let flag = -1
-
- if(CheckStringIsObtainOfList(codestr,g:nonfunctionlist))
-     let flag = 0
-     if matchstr(codestr,"class") != ""
-         if  matchstr(codestr,"class") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
-             let flag = 1
-         endif
-     endif
-     if matchstr(codestr,"enum ") != ""
-         if  matchstr(codestr,"enum ") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
-             let flag = 1
-         endif
-     endif
- else
-     if matchstr(codestr,"struct ") != ""  &&  count(codestr,'(') ==# 0 && count(codestr,')') ==# 0
-         let flag = 0
-     else
-         let flag = 1
-     endif
- endif
-
- return flag
-endfunction
-"}}}}}
-"{{{{{2  HandlingParentheses(...) 处理大括号
+"{{{{{2 HandlingParentheses(...)处理c文件中的if 和endif elseif
 function! HandlingParentheses(...)
     let elselist = []
     let lastline = -1
@@ -3699,63 +3727,19 @@ function! GetUpBrackets(...)
       let line = a:1
       let upline = -1
       let downline = -1
+      let currentline = line('.')
       call cursor(line,1)
       let upline = searchpairpos('{', '', '}', 'b')[0]
       if upline ==# 0
+          call cursor(currentline,1)
           return []
       endif
       let downline = searchpairpos('{', '', '}', 'w')[0]
+      call cursor(currentline,1)
       return [upline,downline]
 endfunction
 "}}}}}
-"{{{{{2 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
-function! SplitCodeString(...)
-      let strings = a:1
-      let resultlist = []
-      let srcint = -2
-      let tailint = -1
-      let idx1 = 0
-      let strings = split(strings,'\zs')
-      let srcint = 0
-      let tailint = 0
-      "call Echom(10,0,'tangxinlou debug',3649, strings)
-      while idx1 < len(strings)
-          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
-          if strings[idx1] ==#  " "
-              if idx1 ==# 0
-              else
-                  if strings[idx1 -1] != " "
-                      let tailint = idx1 -1
-                      "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
-                      let resultlist = add(resultlist,join(strings[srcint:tailint],''))
-                      "let resultlist = add(resultlist,strings[srcint:tailint])
-                  else
-                      let srcint = idx1
-                  endif
-              endif
-          elseif strings[idx1] ==# "("
-              let idx1 = FindCorrespondingBracketPosition(strings,idx1)
-              "call Echom(10,0,'tangxinlou debug',3664, idx1)
-          else
-              if idx1 ==# 0
-                  let srcint = 0
-              else
-                  if strings[idx1 -1] ==# " "
-                      let srcint = idx1
-                  endif
-              endif
-          endif
-          if idx1 ==# len(strings) -1
-              let tailint = idx1
-              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
-              "let resultlist = add(resultlist,strings[srcint:tailint])
-          endif
-          let idx1 += 1
-      endwhile
-      return resultlist
-endfunction
-"}}}}}
-"{{{{{2  Flag2String(...) 根据flag 生成字符
+"{{{{{2  Flag2String(...) 根据flag 生成├──字符
 function! Flag2String(...)
     "{{{{{3 变量定义
     let flag = a:1
@@ -3769,21 +3753,6 @@ function! Flag2String(...)
         let tempchar = repeat(tempchar2,flag - 1)
         let tempchar = tempchar . tempchar1
     endif
-    return tempchar
-endfunction
-"}}}}}
-"{{{{{2  Flag2String(...) 根据flag 生成字符
-function! Flag2String(...)
-    "{{{{{3 变量定义
-    let flag = a:1
-    let string = ""
-    let tempchar = ""
-    let tempchar1 = "├── "
-    let tempchar2 = "│   "
-    "}}}}
-    "repeat("│   ",2)
-    let tempchar = repeat(tempchar2,flag - 1)
-    let tempchar = tempchar . tempchar1
     return tempchar
 endfunction
 "}}}}}
@@ -10948,13 +10917,15 @@ function! AutoAnalyzer(...)
     if matchstr(downloadpin,"delay") != ""
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"delay")
+        let pathpin = downloadpin[index -1]
         let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
-        let pathpin = downloadpin[index -2] . "_" . downloadpin[index -1]
+        let allresultlist = insert(allresultlist,'/z/temp' . "/" . pathpin)
     else
         let downloadpin = split(downloadpin,'_')
         let index = index(downloadpin,"fbk")
+        let pathpin = downloadpin[index -1]
         let downloadpin = downloadpin[index -1] . "_" . downloadpin[index -2]
-        let pathpin = downloadpin[index -2] . "_" . downloadpin[index -1]
+        let allresultlist = insert(allresultlist,'/z/temp' . "/" . pathpin)
     endif
     let daildate = daildate ."结束" .  join(split(system("date '+%Y%m%d-%H.%M.%S'"),"\n"))
     let allresultlist = insert(allresultlist,string(daildate))
@@ -10964,6 +10935,7 @@ function! AutoAnalyzer(...)
         call writefile(allresultlist,"./analy.txt")
         silent execute "normal! :e ./analy.txt  \<cr>"
     else
+        call SmartCopy(pathpin)
         let saveresult = saveresult . '/' . downloadpin
         let saveresult = Homedir(saveresult,1)
         if len(readfile(saveresult)) != 0
@@ -10975,7 +10947,6 @@ function! AutoAnalyzer(...)
         endif
         call writefile(allresultlist,saveresult)
         silent execute "normal! :e  " . saveresult . "\<cr>"
-        call SmartCopy(pathpin)
     endif
     echo g:Dimensionalflag
     if a:0 ==# 0
@@ -11678,9 +11649,9 @@ function! SmartCopy(...)
         echo output_dir . "没有这个文件现在新建这个文件"
     else
     endif
-    echom output_dir
+
     call system("rm -rf ". output_dir . "/*")
-    let findcmd = "find . -type d -name " . "'*" . pattern . "*'"
+    let findcmd = "find /d/Download -type d -name " . "'*" . pattern . "*'"
     if pattern ==# ""
         let targetpath = '.'
         let findcmd = " find "  . '.' . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'" . " -o -iname  '*mp4*'"  . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
@@ -11689,7 +11660,9 @@ function! SmartCopy(...)
         call system(cpcmd)
     else
         let targetpath = split(system(findcmd),'\n')
-        echom targetpath
+        if a:0 ==# 0
+            echom targetpath
+        endif
         if targetpath != []
             let tempstr = join(targetpath," ")
             let findcmd = " find "  . tempstr . ' -type f  \('  . " -iname " . "'*main_log*'" . " -o -iname  '*adsp_*_log*'"  . " -o -iname  '*mp4*'" . " -o -iname  '*\.pcm'" . " -o -iname  '*\.vm'" . " -o -iname '*cfa*'"   . " -o -iname '*BT_FW_*'"  . ' \)'
@@ -11759,7 +11732,7 @@ function! ChangeDirectoryName(...)
                     let tempchar = substitute(item1, '_\*', '', 'g')
                     let tempchar = substitute(tempchar, '\*', '', 'g')
                     if matchstr(item1,"fbk_") ==# 'fbk_'
-                        echo  "mv " . item . " " . item . "_delay_" . tempchar
+                        "echo  "mv " . item . " " . item . "_delay_" . tempchar
                         call system("mv " . item . " " . item . "_" . tempchar )
                     else
                         "echo  "mv " . item . " " . item . "_" . tempchar
@@ -12196,7 +12169,6 @@ function! FouncDeleLog()
         if matchstr(currentString,"tangxinlou debug") ==# "tangxinlou debug"
             call cursor(idx1,1)
             silent execute "normal! dd"
-"{{{{{2  Exeample()  例子
         else
             let idx1 += 1
         endif
@@ -12212,6 +12184,7 @@ endfunction
 "}}}}
 "{{{例子
 
+"{{{{{2  Exeample()  例子
 function! Exeample()
      "{{{{{3 变量定义
     let filename = ""
@@ -12252,18 +12225,6 @@ function! Exeample()
        "silent tabnew
        "silent edit  AdapterService.java
        ":q!
-"}}}}}
-
-"{{{{{2  SpecialTest()  自动分析代码
-function! SpecialTest()
-    call Echom(10,0,'tangxinlou debug',12256, "begin")
-    "call searchpairpos('{', '', '}', 'b')
-    "echo searchpairpos('(', '', ')', 'w','',min([line('$'), line('.') + 50]))
-    echo searchpairpos('(', '', ')', 'b','',max([1, line('.') - 50]))
-    "echo searchpairpos('(', '', ')', 'b')
-    call Echom(10,0,'tangxinlou debug',12258, "end")
-endfunction
-"}}}}}
         "execute "normal! :r!date +\\%F-\\%T.\\%3N\<cr>"
     else
         "处理传过来的文件
@@ -12279,6 +12240,18 @@ endfunction
         execute "normal! :wq!\<cr>"
     endif
 endfunction
+"}}}}}
+
+"{{{{{2  SpecialTest() 特殊测试
+function! SpecialTest()
+    call Echom(10,0,'tangxinlou debug',12256, "begin")
+    "call searchpairpos('{', '', '}', 'b')
+    "echo searchpairpos('(', '', ')', 'w','',min([line('$'), line('.') + 50]))
+    echo searchpairpos('(', '', ')', 'b','',max([1, line('.') - 50]))
+    "echo searchpairpos('(', '', ')', 'b')
+    call Echom(10,0,'tangxinlou debug',12258, "end")
+endfunction
+"}}}}}
 
 "}}}
 "{{{{{ 自动分析代码
@@ -12312,6 +12285,7 @@ function! FileLexiconization(...)
     let start = 1
     let end = line('$')
     "}}}}
+
     if a:0 ==# 0
         let filepath = expand("%:p")
         silent call cursor(1,1)
@@ -12322,9 +12296,12 @@ function! FileLexiconization(...)
         silent call cursor(line,1)
         redraw
     endif
+    call SaveBuffer()
+    call ClearBracket()
     let FileDictionary = CycleFill(start ."-".end,FileDictionary,0,"LexiconizationCallback")
+    "call Echom(10,0,'tangxinlou debug',12315, FileDictionary)
     let g:debuglist  = LoopPrinting1(FileDictionary,"DictionaryPrintingCallback",1,[])
-    let g:debuglist  = LoopPrinting1(FileDictionary,"DictionaryPrintingCallback",0,[])
+    call RestoreBuffer()
     return FileDictionary
 endfunction
 "}}}}}
@@ -12332,24 +12309,29 @@ endfunction
 "{{{{{2  CycleFill(...)  循环填充字典
 function! CycleFill(...)
     "{{{{{3 变量定义
-    let interval = a:1
+    let interval = copy(a:1)
     let dict = deepcopy(a:2)
-    let flag = a:3
-    let callback = a:4
-    let start = split(interval,'-')[0]
-    let end = split(interval,'-')[1]
+    let flag = copy(a:3)
+    let callback = copy(a:4)
+    let start = str2nr(split(interval,'-')[0])
+    let end = str2nr(split(interval,'-')[1])
     let Resultlist = []
     let tempdict = []
     "}}}}
     while start <= end
         let resultlist = call(callback,[start])
         if resultlist[1] ==# "true"
+            "call Echom(10,0,'tangxinlou debug',12317, start)
+            let tempdict = CycleFill(resultlist[3],deepcopy(resultlist[2]),flag + 1,callback)
+            let dict["04childnode"] = add(dict["04childnode"],tempdict)
+        elseif resultlist[1] ==# "false"
             let dict["04childnode"] = add(dict["04childnode"],deepcopy(resultlist[2]))
         endif
-        let start = resultlist[0]
-        "if
-        "    CycleFill()
-        "endif
+        if  resultlist[0] != start
+            let start = resultlist[0]
+        else
+            let start += 1
+        endif
     endwhile
     return dict
 endfunction
@@ -12366,7 +12348,10 @@ function! LexiconizationCallback(...)
     let end = 0
     let linelist = []
     let string = ""
-    let resultlist = ["end","flag","dict"]
+    let resultlist = ["end","flag","dict","start"]
+    let UpBracketslist = []
+    let filename = expand("%:t")
+    let filetype =  IsFileType(filename)
     "}}}}
     let linelist = MergeLinesOfCode(line)
     if linelist ==# []
@@ -12375,12 +12360,31 @@ function! LexiconizationCallback(...)
         let resultlist[2] = dict
         return resultlist
     endif
+    let start = linelist[0]
     let end = linelist[1]
     let string = GatherIntoRow(linelist[0],linelist[1])
-    let dict["03string"] = string
+    "call Echom(10,0,'tangxinlou debug',12358, string)
+    let flag = IdentificationCodeComponents1(string,filetype)
+    "let dict["03string"] = flag . " " . string
+    let dict["03string"] = flag . " " . string(SplitCodeString(string))
+    if matchstr(flag,'class\|func') != ""
+        let UpBracketslist = []
+        if start != end
+            let UpBracketslist  = GetUpBrackets(end + 1)
+        endif
+        if UpBracketslist ==# []
+            let resultlist[0] = end + 1
+            let resultlist[1] = "false"
+        else
+            let resultlist[0] = UpBracketslist[1]  + 1
+            let resultlist[1] = "true"
+            let resultlist[3] = UpBracketslist[0] + 1 . '-' . UpBracketslist[1]
+        endif
+    else
+        let resultlist[0] = end + 1
+        let resultlist[1] = "false"
+    endif
 
-    let resultlist[0] = end + 1
-    let resultlist[1] = "true"
     let resultlist[2] = dict
     return resultlist
 endfunction
@@ -12394,7 +12398,9 @@ function! DictionaryPrintingCallback(...)
     let flag = a:3
     let tempstring = Flag2String(flag)
     "}}}}
-    let resultlist = add(resultlist,tempstring . dict["03string"])
+    if dict["03string"] != ''
+        let resultlist = add(resultlist,tempstring . dict["03string"])
+    endif
     return resultlist
 endfunction
 "}}}}}
@@ -12405,7 +12411,6 @@ function! LoopPrinting1(...)
     let dict = deepcopy(a:1)
     let callback = a:2
     let flag = a:3
-    let resultlist = deepcopy(a:4)
     let resultlist = deepcopy(a:4)
     let keylist = []
     let idx1 = 0
@@ -12703,6 +12708,8 @@ function! MergeLinesOfCode(...)
     let HeaderFilesLine = -1
     let ConditionFilesLine = -1
     let linelist = []
+    call SaveBuffer()
+    call ClearBracket()
     let iscomment = IsComment(line)
     let currentstring = ""
     let end = -1
@@ -12889,8 +12896,337 @@ function! MergeLinesOfCode(...)
             let linelist = [start,end]
         endif
     endif
+    call RestoreBuffer()
     silent call cursor(line,1)
     return linelist
+endfunction
+"}}}}}
+"}}}
+"{{{代码字符串模版判断
+"{{{{{2 IsFunction(...)当前字符串是否是函数
+function! IsFunction(...)
+ let codestr = a:1
+ let flag = -1
+
+ if(CheckStringIsObtainOfList(codestr,g:nonfunctionlist))
+     let flag = 0
+     if matchstr(codestr,"class") != ""
+         if  matchstr(codestr,"class") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
+             let flag = 1
+         endif
+     endif
+     if matchstr(codestr,"enum ") != ""
+         if  matchstr(codestr,"enum ") != ""  && count(codestr,'(') != 0 && count(codestr,')') != 0
+             let flag = 1
+         endif
+     endif
+ else
+     if matchstr(codestr,"struct ") != ""  &&  count(codestr,'(') ==# 0 && count(codestr,')') ==# 0
+         let flag = 0
+     else
+         let flag = 1
+     endif
+ endif
+
+ return flag
+endfunction
+"}}}}}
+"{{{{{2 function!  IdentificationCodeComponents1(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
+function! IdentificationCodeComponents1(...)
+    "{{{{{3 变量定义
+    let codestring = a:1
+    let filetype = a:2
+    let matchstr = ""
+    if a:0 ==# 3
+        let matchstr = a:3
+    endif
+    let flag = ""
+    let package = 0                    "包名
+    let import = 1                     "导包
+    let class = 2                      "类
+    let define = ["#if ",
+                \"#ifdef ",
+                \"#define ",
+                \"#else ",
+                \"#else if ",
+                \"#endif"]
+    let specify = 4                    "赋值指定值
+    let specifydef = 5                 "定义并指定初值
+                                       "判断
+    let judge = [" if (",
+                \" if(",
+                \" else if(",
+                \" else if (",
+                \"else{",
+                \"else {",
+                \]
+    "let cycle = 7                      "循环
+    let cycle   = [" for (",
+                \" for(",
+                \" while(",
+                \" while (",
+                \]
+
+                                        "switch
+    let switch  = [" switch (",
+                \" switch(",
+                \]
+    let case = 9                       "case
+    let default = 10                   "default
+    let return = 11                    "返回值
+    let call = 12
+    let func = 13
+    let statement = 14
+    let break = 15
+    let struct = 16
+    let enum = 17
+    let variabledef = 18  "变量赋值
+    let variablespecify  = 19 "变量赋值
+    let variabledefspecify  = 20 "变量定义赋值
+    let lock = ["synchronized(",
+                \"synchronized ("]
+    let Exception = [" try {",
+                \" try{",
+                \" catch (",
+                \" catch("]
+    let headfile = 21
+    let lambda = 22 "lambda表达式
+   " call Echom(10,0,'tangxinlou debug',12978, codestring)
+    let NonBlanklist = GetNonBlank(codestring)
+    let length = 0
+    let typelength = 0
+    "}}}}
+    if matchstr(codestring," case ") != ""
+        let flag = flag . "case"
+        return flag
+    endif
+    if matchstr(codestring," default:") != ""
+        let flag = flag . "default"
+        return flag
+    endif
+    if CheckStringIsObtainOfList(codestring,switch)
+        let flag = flag . "switch"
+        return flag
+    endif
+    if CheckStringIsObtainOfList(codestring,judge)
+        let flag = flag . "judge"
+        return flag
+    endif
+    if matchstr(codestring,"#include") != ""
+        let flag = flag . "headfile"
+        return flag
+    endif
+    if CheckStringIsObtainOfList(codestring,define)
+        let flag = flag . "define"
+        return flag
+    endif
+    if NonBlanklist[1] ==# ';'
+        "{{{{3 有分号
+        if matchstr(codestring,"package ") != ""
+            let flag = flag . "package"
+            return flag
+        endif
+        if matchstr(codestring," break") != ""
+            let flag = flag . "break"
+            return flag
+        endif
+        if matchstr(codestring,"import ") != ""
+            let flag = flag . "import"
+            return flag
+        endif
+        if matchstr(codestring," return ") != ""
+            let flag = flag . "return"
+            return flag
+        endif
+        let length = len(SplitCodeString(codestring))
+        if length ==# 1
+            let flag = "call"
+            return flag
+        else
+            if matchstr(codestring,"=") != ""
+                let typelength = len(split(split(codestring,'=')[0]))
+                if typelength ==# 1
+                    let flag = "variablespecify"
+                else
+                    let flag = "variabledefspecify"
+                endif
+                return flag
+            else
+                let flag  = "variabledef"
+                return flag
+            endif
+        endif
+        "}}}}
+    elseif NonBlanklist[1] ==# '{'
+        "{{{{3  有括号
+
+
+        if CheckStringIsObtainOfList(codestring,cycle)
+            let flag = flag . "cycle"
+            return flag
+        endif
+        if CheckStringIsObtainOfList(codestring,lock)
+            let flag = flag . "lock"
+            return flag
+        endif
+        if CheckStringIsObtainOfList(codestring,Exception)
+            let flag = flag . "Exception"
+            return flag
+        endif
+        if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+            let flag = flag . "class"
+            return flag
+        endif
+        if matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+            let flag = flag . "enum"
+            return flag
+        endif
+        if matchstr(codestring,"struct ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+            let flag = flag . "struct"
+            return flag
+        endif
+
+        if IsFunction(codestring)
+            let flag = flag . "func"
+            return flag
+        endif
+
+        if matchstr(codestring,"=") != ""
+            let typelength = len(split(split(codestring,'=')[0]))
+            if typelength ==# 1
+                let flag = "variablespecify"
+            else
+                let flag = "variabledefspecify"
+            endif
+            return flag
+        else
+            let flag  = "variabledef"
+            return flag
+        endif
+
+        "}}}}
+    elseif NonBlanklist[1] ==# '}'
+        if count(codestring,'{') != 0 && count(codestring,'}') != 0
+            if IsFunction(codestring)
+                let flag = flag . "func"
+                return flag
+            endif
+        endif
+
+    endif
+    return "unknown"
+endfunction
+"}}}}}
+"{{{{{2 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
+"echo SplitCodeString(getline(line('.')))
+function! SplitCodeString(...)
+      let strings = a:1
+      let resultlist = []
+      let srcint = -2
+      let tailint = -1
+      let idx1 = 0
+      let strings = split(strings,'\zs')
+      let srcint = 0
+      let tailint = 0
+      "call Echom(10,0,'tangxinlou debug',3649, strings)
+      while idx1 < len(strings)
+          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
+          if strings[idx1] != " " && srcint < 0
+              let srcint = idx1
+          endif
+          if strings[idx1] ==# "("
+              if srcint ==# idx1
+                  let resultlist = add(resultlist,"")
+              else
+                  let tailint = idx1 - 1
+                  let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              endif
+              let srcint = idx1 + 1
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+              let tailint = idx1 - 1
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              let srcint = idx1 + 1
+              let tailint = len(strings)
+          endif
+          if idx1 ==# len(strings) -1
+              let tailint = idx1
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              "let resultlist = add(resultlist,strings[srcint:tailint])
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
+"{{{{{2 SplitCharactersByBrackets(...)分割字符串通过括号分割，括号前面，括号里面，括号中间
+"echo SplitCharactersByBrackets(getline(line('.')))
+function! SplitCharactersByBrackets(...)
+      let strings = a:1
+      let resultlist = []
+      let srcint = -2
+      let tailint = -1
+      let idx1 = 0
+      let strings = split(strings,'\zs')
+      let srcint = 0
+      let tailint = 0
+      "call Echom(10,0,'tangxinlou debug',3649, strings)
+      while idx1 < len(strings)
+          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
+          if strings[idx1] ==#  " "
+              if idx1 ==# 0
+              else
+                  if strings[idx1 -1] != " "
+                      let tailint = idx1 -1
+                      "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
+                      let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+                      "let resultlist = add(resultlist,strings[srcint:tailint])
+                      let srcint = idx1
+                  else
+                      let srcint = idx1
+                  endif
+              endif
+          elseif strings[idx1] ==# "("
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+              "call Echom(10,0,'tangxinlou debug',3664, idx1)
+          elseif strings[idx1] ==# "<"
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
+          else
+              if idx1 ==# 0
+                  let srcint = 0
+              else
+                  if strings[idx1 -1] ==# " "
+                      let srcint = idx1
+                  endif
+              endif
+          endif
+          if idx1 ==# len(strings) -1
+              let tailint = idx1
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              "let resultlist = add(resultlist,strings[srcint:tailint])
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
+"{{{{{2 ParsingFunctions(...)解析函数
+function! ParsingFunctions(...)
+    let funcode = copy(a:1)
+    let codelist = SplitCodeString(funcode)
+    let resultlist = ["函数名","函数参数"]
+    let idx1 = 0
+    let funstring = ""
+    while idx1 < len(codelist)
+        if matchstr(codelist[idx1],'\w*(.*)') != ""
+            break
+        endif
+        let idx1 += 1
+    endwhile
+    let funstring = codelist[idx1]
+endfunction
+"}}}}}
+"{{{{{2 ParsingVariable(...)解析变量
+function! ParsingVariable(...)
 endfunction
 "}}}}}
 "}}}
@@ -12918,3 +13254,4 @@ endfunction
 "-i 表示忽略大小写进行匹配。
 "-n 表示显示匹配的行号。
 "let splitStrings = map(strings, 'split(v:val, ",")')
+
