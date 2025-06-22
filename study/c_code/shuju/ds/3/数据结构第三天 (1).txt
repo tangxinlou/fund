@@ -1,0 +1,221 @@
+typedef struct node 
+{
+	int data;
+	struct node *next;
+}linklist;
+
+1、创建一个空链表
+	linklist *head;
+	head = mallc();
+	head->next = NULL;
+	return head;
+
+2、头插法
+	linklist *temp;
+	temp = malloc();
+	temp->data = 数据;
+	
+	temp->next = head->next;
+	head->next = temp;
+	
+3、尾插法
+	linklist *temp;
+	
+	linklist *p = head;
+	while(p->next != NULL)
+		p = p->next;
+		
+	temp = malloc();
+	
+	p->next = temp;
+	temp->next = NULL;
+	
+4、查找数据(按位置查找) 假设查找第四个
+	linklist *p = head;
+	
+	if(post == 0)
+		return head;
+	int i = 1;
+	while(p->next != NULL)
+	{
+		if(i <= post)
+		{
+			p = p->next
+			i ++;
+		}
+		else 
+			return p;
+	}
+
+5、任意位置插入元素
+	找到要插入位置的前一个节点地址。调用p = find_data(head,post - 1)
+	linklist *temp = mallc();
+	temp->data = 数据;
+	
+	temp->next = p->next;
+	p->next = temp;
+	
+6、删除一个指定位置的节点
+	p = find_data(head,post - 1);//找到的是需要删除节点的前一个节点首地址
+	linklist *temp;
+	
+	temp = p->next;
+	p->next = temp->next;
+	free(temp);
+	temp = NULL;
+
+单链表的遍历:
+linklist *p = head->next;
+
+while(p != NULL)
+{
+	printf("%d",p->data);
+	p = p->next;
+}
+	
+7、循环链表
+	linklist *head;
+	head = mallc();
+	head->next = head;
+	return head;
+
+8、双向循环链表
+	typedef struct node 
+	{
+		int data;
+		struct node *next;
+		struct node *prev;
+	}linkloop;
+	
+	创建双向循环链表
+	linklist *head;
+	head = mallc();
+	head->next = head;
+	head->prev = head;
+	return head;
+	
+	插入元素：
+	linklist *temp;
+	temp = malloc();
+	temp->data = 数据;
+	
+	temp->next = head->next;
+	head->next->prev = temp;
+	head->next = temp;
+	temp->prev = head;
+
+栈
+栈区:内存中的一段空间，它是物理存在的。
+现在讲的栈:是一个逻辑，只要满足先进后出(后进先出)规则，都可以叫做栈，通常也被叫做堆栈。
+
+特性:1、是一个操作受限的线性表(只能在栈顶进行插入和删除)
+	 2、在栈顶添加元素，叫做入栈、压栈
+	 3、在栈顶删除冤死，叫做出栈、弹栈
+
+栈的存储结构:顺序存储、链式存储
+	
+顺序栈的结构体:	
+typedef struct 
+{
+	int buf[100];
+	int top;//代表栈顶(代表数组当前使用的最后一个元素)
+}seqstack;
+1、创建一个空顺序栈
+	seqstack *s;
+	s = mallc();
+	s->top = -1;
+	return s;
+2、入栈
+	判满
+	if(s->top == 99)
+	{
+		栈满
+		返回
+	}
+	s->top ++;
+	s->buf[s->top] = 数据;
+3、出栈
+	判空
+	if(s->top == -1)
+	{
+		栈空
+		返回
+	}
+	提取栈顶数据
+	s->top --;
+
+4、如何获取栈顶元素(不是出栈，只是显示出当前栈顶的内容)
+	printf("%d\n",s->buf[s->top]);
+	
+
+栈的链式存储——链栈
+typedef struct node 
+{
+	int data;
+	struct node *next; 
+}link;
+
+/*封装一个栈顶指针*/
+struct node *top;
+top = mallc();
+top->next = NULL;
+
+/*封装一个栈顶指针*/
+typedef struct 
+{
+	struct node *top;
+}linkstack;
+
+linklist *s;
+s = malloc();
+s->top = NULL;
+
+入栈 
+//当内存不足时会出现栈满的情况，但是这时已经不是程序可以解决的了。
+插入数据
+更新栈顶指针
+
+出栈:
+判断栈是否为空   if(s->top == NULL)
+单链表删除元素
+更新栈顶指针
+
+注意:栈底是单链表的尾，栈顶是单链表的头
+
+队列:一种先进先出、后进后出的线性表。
+存储结构——顺序存储和链式存储
+
+顺序存储结构:
+typedef struct 
+{
+	int buf[5];
+	int front;//队列头
+	int rear;//队列尾
+}seqqueue;
+
+
+1、创建一个空队列
+	seqqueue *q;
+	q = malloc();
+	q->front = q->rear = 0;
+	return q;
+	
+2、入队
+	判满，如果满报错退出
+	如果没有满，存放数据。
+	q->buf[q->？] = 数据
+	q->? （某个下标要自增）
+	
+3、出队
+	判空，如果为空，退出。
+	如果不为空。(删除元素)
+	
+	int value;
+	value = q->buf[q->?];
+	q->? 自增
+	
+	return value；
+
+
+
+
