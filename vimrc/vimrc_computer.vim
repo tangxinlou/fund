@@ -541,20 +541,20 @@ let g:filterchar = {
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
             \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to",
             \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
-            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus|AudioALSAHardwareResourceManager: -.*InputDevice",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
             \"14rfcomconnectUUID=111F hfp bt_uuid16.h btif_sock_sdp.h, " : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
             \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached|BtGatt.AdvertiseManager",
             \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package|Skipping client: permission=false",
             \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close|BluetoothGatt: onClientConnectionState|BtGatt.GattService: registerClient|BluetoothGatt:|BtGatt.GattService: registerClient",
             \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
-            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback",
+            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback|Need.*permission",
             \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=|call state is busy',
             \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
             \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present|processInitProfilePriorities',
             \"05a2dp_simple_connect avdt_defs.h" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|forcing LE transport for Bonding|A2dpService: connect|bta_av_better_stream_state_machine|a2dp_api: a2dp_api.cc|connectA2dp|src_connect_sink',
             \"04hfp_simple_connect reson 19 peer disconnect" : 'HeadsetStateMachine.*CONNECT_TIMEOUT|RFCOMM connection closed.*UUID=111F|connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetService: connect:|AG state machine even|State changed handle|btif_hf_upstreams_evt|btif_queue_connect_next',
-            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond|BR key is higher security than existing LE keys|Auto-reject pairing|smp_set_state: State change|smp_sm_event: Role:|smp_sm_event: addr:',
+            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond|BR key is higher security than existing LE keys|Auto-reject pairing|smp_set_state: State change|smp_sm_event: Role:|smp_sm_event: addr:|btsock_connect',
             \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
             \"00temp" : "temptemptem"}
@@ -2344,6 +2344,7 @@ function! SelectEntireCode(...)
     let idx1 = 0
     let result = ""
     let filename = ""
+    let filetype = ""
     let line = ""
     let srcnum = -1
     let tailnum = -1
@@ -2371,10 +2372,9 @@ function! SelectEntireCode(...)
     endif
     let idx1 = 0
     while idx1 < len(searchstarge)
-            let filename = split(searchstarge[idx1],":")[0]
-        if idx1 ==# 0 && matchstr(filename,".xml") ==# ""
-            let filelist = add(filelist,filename)
-        elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename  && matchstr(filename,".xml") ==# ""
+        let filename = split(searchstarge[idx1],":")[0]
+        let filetype = IsFileType(filename)
+        if matchstr("cccppjava",filetype) != "" && count(filelist,filename) ==# 0
             let filelist = add(filelist,filename)
         endif
         let idx1 += 1
@@ -2393,7 +2393,8 @@ function! SelectEntireCode(...)
         endif
         let filename = currentstrlist[0]
         let line = currentstrlist[1]
-        if matchstr(filename,'\.xml') ==# "" && matchstr(filename,'\.h') ==# ""
+        let filetype = IsFileType(filename)
+        if matchstr("cccppjava",filetype) != ""
             if idx1 ==# 0
                 call Dbug1(10,0,'SelectEntireCode 26', filename)
                 call SwitchBuff(filename)
@@ -2403,7 +2404,7 @@ function! SelectEntireCode(...)
             endif
             if matchstr(getline(line),"tangxinlou debug") != ""
                 "是加的debug 日志就忽略
-                break
+                continue
             endif
             silent setlocal foldmethod=syntax
             let numberlist = MergeLinesOfCode(line)
@@ -2657,7 +2658,7 @@ function! IsComment(...)
     endif
 
     silent call cursor(line,1)
-    silent let startcursor = searchpos("@.*(", 'b')
+    silent let startcursor = searchpos("@.*(", 'b','',max([1, line('.') - 50]))
     if startcursor != [0,0]
         let tempstr = getline(startcursor[0])
         let secondNonWhitespace = GetTwoNonBlank(tempstr)
@@ -2747,8 +2748,8 @@ function! IsComment(...)
                 if secondNonWhitespace ==# "//"
                     let iscomment = 1
                 elseif matchstr(getline(line),"@") != ""
-                    "call Echom(10,0,'tangxinlou debug',2699, 12)
                     let templist = SplitCodeString(getline(line))
+                    "call Echom(10,0,'tangxinlou debug',2752, templist)
                     let iscomment = 1
                     "FindCorrespondingBracketPosition(resultstr,idx1)
                     while idx1 < len(templist)
@@ -11446,7 +11447,7 @@ function! UnzipFiles(...)
         endfor
     endif
     "删除10天前的所以文件
-    let deletefile = split(system("find . -maxdepth 1 -type f -mtime +30"),'\n')
+    let deletefile = split(system("find . -maxdepth 1 -type f -mtime +90"),'\n')
     if isdelete ==# "yes" && len(deletefile)  != 0
         "echo deletefile
         for item in deletefile
@@ -12708,8 +12709,6 @@ function! MergeLinesOfCode(...)
     let HeaderFilesLine = -1
     let ConditionFilesLine = -1
     let linelist = []
-    call SaveBuffer()
-    call ClearBracket()
     let iscomment = IsComment(line)
     let currentstring = ""
     let end = -1
@@ -12896,7 +12895,6 @@ function! MergeLinesOfCode(...)
             let linelist = [start,end]
         endif
     endif
-    call RestoreBuffer()
     silent call cursor(line,1)
     return linelist
 endfunction
@@ -13117,9 +13115,9 @@ function! IdentificationCodeComponents1(...)
     return "unknown"
 endfunction
 "}}}}}
-"{{{{{2 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
-"echo SplitCodeString(getline(line('.')))
-function! SplitCodeString(...)
+"{{{{{2 SplitCharactersByBrackets(...)分割字符串通过括号分割，括号前面，括号里面，括号中间
+"echo SplitCharactersByBrackets(getline(line('.')))
+function! SplitCharactersByBrackets(...)
       let strings = a:1
       let resultlist = []
       let srcint = -2
@@ -13158,9 +13156,9 @@ function! SplitCodeString(...)
       return resultlist
 endfunction
 "}}}}}
-"{{{{{2 SplitCharactersByBrackets(...)分割字符串通过括号分割，括号前面，括号里面，括号中间
-"echo SplitCharactersByBrackets(getline(line('.')))
-function! SplitCharactersByBrackets(...)
+"{{{{{2 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
+"echo SplitCodeString(getline(line('.')))
+function! SplitCodeString(...)
       let strings = a:1
       let resultlist = []
       let srcint = -2
