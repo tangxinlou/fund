@@ -1,0 +1,530 @@
+<<<<<<<<<<<<<<<<
+###蓝牙专业知识
+蓝牙有两个库文件，libbluetooth.so libbluetooth_jni.so
+dlopen(kLibbluetooth, RTLD_NOW);  加载libbluetooth.so
+System.loadLibrary("bluetooth_jni"); 加载libbluetooth_jni.so
+主机设备进行扫描时，除了接收广播数据（ADV_IND）和扫描响应（SCAN_RSP），也会发送扫描请求（SCAN_REQ）。这是因为扫描请求的发送是为了获取更多关于被扫描设备的信息，以便主机能够决定是否要与该设备建立连接。
+主设备是否在扫描过程中发送扫描请求（SCAN_REQ）是由扫描类型（Scan Type）参数来决定的。具体来说，主设备可以选择"主动扫描"（active scanning）或"被动扫描"（passive scanning）。在主动扫描模式下，主设备会发送扫描请求（SCAN_REQ）给从设备，以获取更多设备信息。而在被动扫描模式下，主设备不会发送扫描请求，只是监听从设备发送的广播数据包。
+INTEROP_MTK_GAP_CRT_CONN_NOT_ALLOW_SWITCH_ROLE
+在 DUT 發起連線時，禁止對端裝置能夠發起 Role Switch觸發時間:
+在 DUT 發起連線時在 acl_create_classic_connection 中設定，禁止對端裝置能夠發起 Role Switch
+INTEROP_MTK_GAP_ROLE_SWITCH 強制 DUT 當 Central (Master)
+1. 設定該 Link 的不支援 Role Switch: 預防對端裝置後續又來要 master
+2. 向對端裝置做 BTM_SwitchRoleToCentral (Master): 向對端裝置要 master
+btif_dm_ble_sec_req_evt  自动回复确认配对
+new申请的空间拷贝的副本，释放的时候要用delete释放,mallow 申请的可以用free 释放
+码率 = 采样率 * 位数 * 通道数 单位kbps 1000bit 每s
+采样率 采集声音数据的频率
+位数 采集声音所用的位数 16bit 可以采集96db的声音
+通道数 同时采集数据的数目
+441000 * 16 * 2 = 1141.2kbps
+128kbps 码率10分钟数据量
+128kbps * 600 * 8 = 9600KB
+任何编码都是有损失的
+PCM	1,411kbps (CD)	无压缩	严格符合公式
+SBC	192~320kbps	有损压缩	仅为 PCM 的 14%~23%
+AAC	96~256kbps	有损压缩	仅为 PCM 的 7%~18%
+LDAC	330~990kbps	有损压缩	仅为 PCM 的 23%~70%
+蓝牙单个信道是1M， 协议规定了信道 1 * 2 =2 Msym/s 符号数 
+经过相位调整一个符号可以携带3bit 数据，蓝牙速度达到3Mbps/s
+小技巧：
+查看蓝牙打开代码时，bluetoothmanager 代码复杂可以跟踪mQuietEnable 变量
+########
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###蓝牙avrcp
+1. AVRCP 命令类型（Command Type）
+AVRCP 命令由 Controller（CT，如耳机） 发起，Target（TG，如手机） 响应。主要命令类型如下：
+PDU ID	命令类型	描述
+0x00	CONTROL	播放控制命令（如播放、暂停、下一曲等）。
+0x01	STATUS	查询设备状态（如播放状态、音量等）。
+0x05	NOTIFY	注册监听设备状态变化（如播放状态、曲目信息等）。
+2. 响应类型（Response Type）
+TG（手机）对 CT（耳机）命令的响应类型：
+响应值	响应类型	描述
+0x02	ACCEPTED	命令被接受并执行。
+0x03	REJECTED	命令被拒绝（如不支持的操作）。
+0x04	INTERIM	临时响应，立即返回当前状态（用于 NOTIFY 注册）。
+0x05	CHANGED	状态实际变化时的最终响应（用于 NOTIFY 通知）。
+ct 端连接后需要notify注册对应事件
+tg 端 interim 当前值
+等到tg 端这个值更新时回复 changed
+########
+>>>>>>>>>>>>>>> 
+<<<<<<<<<<<<<<<<
+###加密
+1.为啥知道公钥没用，需要私钥才能解密
+  -选择两个质数（除了1和本身不能被其他数整除） p = 3 q = 11
+  - 计算模数 n = p * q = 3 * 11 = 33
+  -计算欧拉函数 φ(n) - 与n互质的小于n的正整数个数
+  - φ(n) = (p -1) * (q -1) = 2 * 10 = 20
+  - 选择公钥  e (1 < e < φ(n)，且e与φ(n)互质) e 只能为3,公钥为3
+  - 互质 最大公约数为1
+  - 最大公约数 用质因分解法（）
+  - 分解质因数
+  - 3 是质数，直接写为：3 = 3¹
+  - 20 分解质因数：20 = 2² × 5¹
+  - 计算私钥 d，d*e ≡ 1 (mod φ(n))  ≡ 同余 ，就是 1 % 20 = 1，则 d*e % 20 也要为1,公钥只能为7
+  - 公钥加密 铭文 m =5， 加密公式密文c = m^e mod n = 5^3 %33 = 125 %33 = 26
+  - 私钥解密 m = c^d mod n  = 26*7 %33 = 5
+  - 公钥推算私钥  d = (1 % 20) / 3  当这个公钥是超过2048位，全世界电脑加一块也破解不了
+2.用小数字展示smp 的过程
+-设置参数 p = 23 g = 5
+-设备A 私钥a = 4，公钥A = g^a % p = 5^4 %23 = 625 % 23 = 4
+-设备B 私钥b = 7，公钥B = g^b % p = 5^7 %23 = 40(5^2%23=2,5^7 = 5^4 * 5^2 * 5) % 23 = 17
+-交换公钥，通过公钥计算DHkey
+DHkeya = B^a %p = 17 ^4 %23 = 8
+DHkeyb = A^b %p = 4 ^7 %23 = 8
+- 计算确认值，这里主要目的是看两边的DHkey 是否相等
+nonce_a = 3 随机值
+confirma = (DHkeya * nonce_a) % p = 8 * 3 % 23 = 1
+nonce_b = 9 随机值
+confirmb = (DHkeyb * nonce_b) % p = 8 * 7 % 23 = 3
+-交换确认值和随机值，带入自己的DHkey 校验值
+(DHkeya * nonce_b) % p ?= confirmb  8 * 9 % 23 ？= 3
+Ps 因为DHkey 相等则生成的LTK 相等 ，发送时通过LTK 解密，接收时通过LTK 解密
+ps 中间人攻击就是第三方设备插入到配对设备中间篡改数据
+  
+########
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###蓝牙hci 中指令
+kdkfj
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###蓝牙hfp
+AT+BIEV=2,100  电量
+1. HFP 1.0 - 1.4（早期版本）
+核心功能：基础通话控制（接听/挂断/拨号）、状态查询（信号强度、电量）。
+AT 指令：
+ATA, ATD, AT+CHUP, AT+CIND, AT+CLIP, AT+VGS, AT+VGM
+URC：
+RING, +CLIP, +CCWA, +CIEV
+2. HFP 1.5
+新增功能：多方通话控制（Call Hold and Multiparty）。
+新增 AT 指令：
+AT+CHLD（支持多方通话操作，如保持/切换通话）。
+3. HFP 1.6
+新增功能：语音识别（Voice Recognition）、增强状态指示。
+新增 AT 指令：
+AT+BVRA（启动/停止语音识别）。
+新增 URC：
++BVRA（语音识别状态更新）。
+4. HFP 1.7
+新增功能：
+宽带语音支持（Wideband Speech，即 mSBC 编码）。
+与语音助手深度集成（如 Siri、Google Assistant）。
+增强的电池和网络状态指示。
+新增 AT 指令：
+AT+BAC（协商音频编码，如 CVSD 或 mSBC）。
+AT+APLSIRI（Apple Siri 集成，仅限 Apple 设备）。
+AT+XAPL（Apple 设备扩展功能）。
+新增 URC：
++BCS（音频编码切换通知）。
++XAPL（Apple 设备状态同步）。
+5. HFP 1.7.1（当前最新版本）
+增强功能：
+改进的噪声消除（AT+NREC 参数扩展）。
+更细粒度的状态指示（+CIEV 支持更多指标）。
+更新内容：
+优化 AT+CIND 和 +CIEV 的兼容性（如电池电量百分比）。
+明确 AT+CHLD 的行为逻辑（多方通话操作冲突处理）。
+ATA	✅	接听来电（Answer Call）。
+AT+CHUP	✅	挂断当前通话（Hang Up）。
+ATD<number>;	✅	拨打电话（Dial Number）。
+AT+CHLD	✅	多方通话控制（Call Hold and Multiparty）：
+- 1: 保持并接听新来电
+- 2: 结束当前并接听新来电
+AT+BRSF	✅	协商双方支持的功能（Bluetooth Role and Supported Features）。
+AT+BAC	✅	协商支持的音频编码（如 CVSD、mSBC）。
+AT+CIND?	✅	查询设备状态（如信号、电量、通话状态）。
+AT+CMER	✅	启用事件上报（Event Reporting）。
+AT+VGS=<value>	✅	设置扬声器音量（Volume Gain for Speaker）。
+AT+VGM=<value>	✅	设置麦克风增益（Volume Gain for Microphone）。
+AT+BVRA=<state>	✅	启动/停止语音识别（Voice Recognition Activation）。
+AT+BLDN	✅	重拨上一次号码（Redial Last Number）。
+AT+NREC=<mode>	✅	控制噪声消除与回声抑制（Noise Reduction and Echo Cancellation）。
+RING	✅	通知免提设备有来电（触发响铃）。
++CLIP: <number>,<type>	✅	来电显示（携带主叫号码和号码类型）。
++CCWA: <number>,<type>	✅	呼叫等待通知（新来电等待接听）。
++CIEV: <indicator>, <value>	✅	状态更新通知（如电量、信号强度、服务状态）：
+- 1: 电池电量
+- 2: 网络信号
++VGS: <value>	✅	扬声器音量同步（AG 主动通知 HF 音量变化）。
++VGM: <value>	✅	麦克风增益同步（AG 主动通知 HF 增益变化）。
++BCS: <codec>	✅	音频编码切换通知（如从 CVSD 切换到 mSBC）。
++BIND: <supported>	✅	支持的蓝牙状态指示列表（如电池、信号）。
++BVRA: <state>	✅	语音识别状态更新（如语音助手激活/停止）。
+HFP 协议定义了 约 30 条 AT 指令，分为以下几大类：
+设备能力协商
+呼叫控制
+状态查询与指示
+音频控制
+网络与信号管理
+增强功能（如语音识别）
+核心 AT 指令列表及含义
+1. 设备能力协商
+AT 指令	含义
+AT+BRSF	交换双方支持的功能（Bluetooth Role and Supported Features）。
+AT+BAC	协商支持的音频编码格式（如 CVSD、mSBC）。
+2. 呼叫控制
+AT 指令	含义
+ATA	接听来电（Answer Call）。
+AT+CHUP	挂断当前通话（Hang Up）。
+ATD<number>;	拨打电话（Dial Number）。
+AT+CHLD	控制多方通话（Call Hold and Multiparty）：
+- +CHLD=1: 保持当前通话并接听新来电
+- +CHLD=2: 结束当前通话并接听新来电
+3. 状态查询与指示
+AT 指令	含义
+AT+CIND	查询或上报设备状态（Indicator Status）：
+- 信号强度（Signal）
+- 电池电量（Battery）
+- 通话状态（Call）
+AT+CLIP	来电显示（Calling Line Identification）。
+AT+CCWA	启用/禁用呼叫等待通知（Call Waiting Notification）。
+AT+COPS	查询当前网络运营商（Network Operator）。
+4. 音频控制
+AT 指令	含义
+AT+VGS	调节扬声器音量（Volume Gain for Speaker）。
+AT+VGM	调节麦克风增益（Volume Gain for Microphone）。
+AT+NREC	控制回声消除与噪声抑制（Noise Reduction and Echo Cancellation）。
+AT+BIA	禁用/启用特定状态指示（Bluetooth Indicators Activation）。
+5. 增强功能
+AT 指令	含义
+AT+BVRA	启动/停止语音识别（Bluetooth Voice Recognition Activation）。
+AT+APLSIRI	与语音助手集成（Apple Siri 或 Google Assistant）。
+6. 其他关键指令
+AT 指令	含义
+AT+CNUM	查询本机号码（Subscriber Number）。
+AT+CMER	启用事件上报（Event Reporting）。
+AT+CKPD	模拟按键操作（Key Pressed）。
+连接时有这些指令代表连上
+BTA_AG_LOCAL_EVT_BRSF 交互功能
+BTA_AG_AT_BAC_EVT     协商编码
+BTA_AG_AT_CIND_EVT    获取指示器
+BTA_AG_AT_CIND_EVT    获取指示器状态
+BTA_AG_LOCAL_EVT_CMER 启用时间上报
+BTA_AG_AT_CHLD_EVT    三方通话
+BTA_AG_AT_NREC_EVT    噪声消除
+########
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###蓝牙经典指令加参数
+ I_Create_Connection 是蓝牙主机（Host）通过 HCI 协议向控制器（Controller）发送的命令，用于发起与从设备的物理链路连接。
+目标设备的 BD_ADDR（蓝牙地址）
+数据包类型（DM1、DH1 等）
+寻呼扫描模式（Page Scan Mode）
+时钟偏移（CLK_offset）
+是否允许角色切换（Allow Role Switch）
+轮询间隔 是主设备向从设备发送 轮询数据包（Poll Packet） 的时间间隔。
+1到 255 个时隙（即 0.625 ms 到 160 ms）。
+主设备通过 LMP 协议向从设备发送 LMP_max_slot 或 LMP_slot_offset 
+经典蓝牙严格按照时隙通信（DH3 DH5 一个包使用3个或5个时隙）
+ble 蓝牙按照连接事件通信
+ble acl 建立指令参数
+1. Initiator Filter Policy
+作用：控制设备如何过滤扫描请求。
+取值：
+0x00：使用白名单（仅扫描白名单中的设备）。
+0x01：忽略白名单（扫描所有设备）。
+场景：用于限制连接目标设备范围。
+2. Own Address Type
+作用：指定本机（主设备）的蓝牙地址类型。
+取值：
+0x00：公共地址（Public Address）。
+0x01：随机地址（Random Address）。
+注意：需与设备实际地址类型一致。
+3. Peer Address Type & Peer Address
+作用：指定目标从设备的地址类型和地址。
+Peer Address Type：
+0x00：公共地址。
+0x01：随机地址。
+Peer Address：目标设备的 6 字节地址（小端模式）。
+关键：必须与从设备广播的地址一致。
+4. Initiating PHYs
+作用：指定发起连接时使用的物理层（PHY）模式。
+取值（按位掩码）：
+0x01：使用 LE 1M PHY（默认，1 Mbps 速率）。
+0x02：使用 LE 2M PHY（BLE 5.0+，2 Mbps 高速模式）。
+0x04：使用 LE Coded PHY（BLE 5.0+，长距离模式）。
+示例：0x01 | 0x02 表示同时支持 1M 和 2M PHY。
+5. Scan Interval & Scan Window
+作用：定义主设备在发起连接前的扫描行为。
+Scan Interval：扫描间隔时间（单位：0.625ms）。
+Scan Window：每次扫描的持续时间（单位：0.625ms）。
+规则：Scan_Window ≤ Scan_Interval。
+典型值：例如 Scan_Interval = 0x60（60ms），Scan_Window = 0x30（30ms）。
+6. Conn Interval Min/Max
+作用：连接间隔的最小值和最大值（单位：1.25ms）。
+范围：7.5ms（0x0006）至 4000ms（0x0C80）。
+规则：Conn_Interval_Min ≤ Conn_Interval_Max。
+示例：Conn_Interval_Min = 0x0010（20ms），Conn_Interval_Max = 0x0020（40ms）。
+7. Conn Latency
+作用：从设备延迟（Slave Latency），允许从设备跳过的连接事件数。
+范围：0–499。
+示例：0x000A（10），表示从设备最多可跳过 10 个连接事件。
+8. Supervision Timeout
+作用：监控超时时间（单位：10ms），超时后判定连接断开。
+范围：100ms（0x000A）至 32000ms（0x0C80）。
+关键规则：Supervision_Timeout > (1 + Conn_Latency) × Conn_Interval × 2。
+9. Min/Max CE Length
+作用：连接事件的最小和最大持续时间（单位：0.625ms）。
+影响：控制单次连接事件中传输的数据量。
+示例：Min_CE_Length = 0x0010（10ms），Max_CE_Length = 0x0020（20ms）。
+ 
+btif_dm_ble_sec_req_evt  自动回复确认配对
+new申请的空间拷贝的副本，释放的时候要用delete释放,mallow 申请的可以用free 释放
+########
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###代码要点
+new申请的空间拷贝的副本，释放的时候要用delete释放,mallow 申请的可以用free 释放
+常量地址是常量区，只读，任何通过指针取修改内容都是报段错误
+1. 常量（Constants）
+(1) 存储位置
+字符串字面量：存储在 只读数据段（.rodata），不可修改。
+const char* str = "Hello";  // "Hello" 在 .rodata 段
+const 修饰的变量：
+const char * pro;  数据不能变
+char * const pro; 指针不能变
+若为全局或静态变量（如 const int x = 10;）：存储在 只读数据段 或 静态存储区。
+若为局部变量（如函数内 const int y = 20;）：存储在 栈 中，但编译器可能将其优化为立即数。
+2. 变量（Variables）
+(1) 存储位置
+全局变量：存储在 静态存储区（.data 或 .bss）。
+int global_var;          // 未初始化的全局变量（.bss 段）
+int init_var = 100;      // 已初始化的全局变量（.data 段）
+静态变量：存储在 静态存储区。
+static int static_var;   // 静态变量（.bss 段）
+局部变量：存储在 栈（Stack） 中。
+void func( {
+        int local_var = 30;  // 栈内存
+}
+char* s = "secret";
+s[0] = 'S';  // 尝试修改.rodata段，触发段错误
+int* p = (int*)10;  // 假设地址0x0000000A未映射到进程内存空间
+*p = 100;           // 触发段错误（Linux）或访问冲突（Windows）
+char a[] = "hello";
+1. 声明时全量初始化
+// 常规初始化
+int arr1[5] = {1, 2, 3, 4, 5}; 
+// 省略数组长度（编译器自动计算）
+int arr2[] = {10, 20, 30};  // 长度=3
+2. 部分初始化
+// 前三个元素初始化，其余自动置0
+int arr3[5] = {1, 2, 3};  // → [1,2,3,0,0]
+// 指定位置的初始化（C99起）
+int arr4[5] = {[2]=5, [4]=8};  // → [0,0,5,0,8]
+3. 字符数组特殊规则
+char str1[6] = "hello";    // 显式指定长度（含'\0'）
+char str2[] = "world";     // 自动计算长度（长度=6）
+char str3[5] = {'a','b'};  // → ['a','b',0,0,0]
+4. 多维数组初始化
+int matrix[2][3] = {
+    {1,2,3},
+    {4,5,6}
+};
+// 简化写法
+int matrix2[][3] = {1,2,3,4,5};  // → {{1,2,3},{4,5,0}}
+二、赋值操作限制
+1. 数组名不可作为左值
+int a[3], b[3];
+// a = b;        // 错误：数组名是常量指针
+// a = {1,2,3};  // 错误：不能直接赋值初始化列表
+2. 合法赋值方式
+方式	示例代码	说明
+逐个元素赋值	a[0]=1; a[1]=2;	基础操作
+循环赋值	for(int i=0;i<3;i++) a[i]=b[i];	常用数组复制方式
+内存拷贝	memcpy(a, b, sizeof(b));	高效的大数组操作
+3. malloc 分配的空间
+(1) 存储位置
+堆（Heap）：动态分配的内存。
+int* p = (int*)malloc(sizeof(int) * 10);  // 堆内存
+(2) 特点
+手动管理：需显式调用 free 释放内存。
+生命周期：从 malloc 分配开始，到 free 释放为止。
+初始化：内存内容未初始化（可能为随机值）。
+失败处理：分配失败时返回 NULL。
+4. new 分配的空间
+(1) 存储位置
+堆（Heap）：动态分配的内存。
+int* p = new int;        // 堆内存
+(2) 特点
+手动管理：需显式调用 delete 释放内存。
+生命周期：从 new 分配开始，到 delete 释放为止。
+初始化：
+默认不初始化（如 new int）。
+可使用值初始化（如 new int() 初始化为 0）。
+失败处理：默认抛出 std::bad_alloc 异常（可通过 new (nothrow) 禁用异常）。))
+########
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###c语言考点
+一、变量与常量
+考点1：变量的存储位置
+问题：以下变量分别存储在哪个内存区？
+int global;              // 全局未初始化变量
+static int s_var = 10;   // 静态变量
+const char* str = "Hi";  // 字符串字面量
+void func() {
+    int local;           // 局部变量
+    int* p = malloc(4);  // 动态分配的内存
+}
+答案：
+global → .bss 段（未初始化的全局变量）
+s_var → .data 段（已初始化的静态变量）
+"Hi" → .rodata 段（字符串字面量）
+local → 栈（Stack）
+p → 栈（Stack）（指针变量本身）
+*p → 堆（Heap）（malloc 分配的内存）
+考点2：const 的作用
+问题：以下两种 const 声明的区别是什么？
+const int* p1;    // 指向常量的指针
+int* const p2;    // 常量指针
+答案：
+**const int* p1**：指针指向的数据不可修改，但指针本身可以指向其他地址。
+**int* const p2**：指针本身不可修改（必须初始化），但可以通过指针修改指向的数据。
+二、指针与数组
+考点3：指针与数组的关系
+问题：以下代码的输出是什么？为什么？
+int arr[3] = {1, 2, 3};
+int* p = arr;
+printf("%d\n", *(p + 1));  // 输出？
+printf("%d\n", p[1]);      // 输出？
+答案：
+两次输出均为 2。
+解释：数组名 arr 是指向首元素的指针，p + 1 等价于 &arr[1]，p[1] 等价于 arr[1]。
+考点4：指针运算
+问题：以下代码的输出是什么？
+int a[5] = {10, 20, 30, 40, 50};
+int* p = &a[1];
+printf("%d\n", p[-1]);    // 输出？
+printf("%d\n", *(p + 2)); // 输出？
+答案：
+p[-1] → 10（等价于 *(p - 1)）
+*(p + 2) → 40（等价于 a[3]）
+三、动态内存管理
+考点5：malloc 与 free
+问题：以下代码有什么问题？如何修正？
+int* p = malloc(5 * sizeof(int));
+p[5] = 10;  // 越界写入
+free(p);
+p = NULL;    // 问题？
+答案：
+错误1：p[5] 越界访问（有效下标为 0~4）。
+错误2：free(p) 后未将 p 置为 NULL，导致悬空指针（修正：free(p); p = NULL;）。
+考点6：内存泄漏
+问题：什么是内存泄漏？如何避免？
+答案：
+内存泄漏：动态分配的内存未被释放，导致程序持续占用内存。
+避免方法：
+确保 malloc/calloc 后必有 free。
+使用工具检测（如 Valgrind）。
+四、函数与作用域
+考点7：参数传递
+问题：以下代码能否交换 a 和 b 的值？为什么？
+void swap(int x, int y) {
+    int tmp = x;
+    x = y;
+    y = tmp;
+}
+int main() {
+    int a = 1, b = 2;
+    swap(a, b);
+}
+答案：
+不能。函数参数是值传递，修改的是 x 和 y 的副本，不影响 a 和 b。
+修正：传递指针（void swap(int* x, int* y)）。
+考点8：静态变量
+问题：以下代码的输出是什么？
+void counter() {
+    static int count = 0;
+    count++;
+    printf("%d\n", count);
+}
+int main() {
+    counter();  // 输出？
+    counter();  // 输出？
+}
+答案：
+1 和 2。静态变量 count 的生命周期为整个程序运行期间，且只初始化一次。
+五、结构体与联合体
+考点9：结构体内存对齐
+问题：以下结构体占多少字节（32 位系统）？
+struct Data {
+    char c;     // 1 字节
+    int i;      // 4 字节
+    short s;    // 2 字节
+};
+答案：
+12 字节。内存对齐规则：
+char c 占 1 字节，填充 3 字节对齐 int i。
+short s 占 2 字节，结构体总大小为最大成员（int）的整数倍。
+考点10：联合体的用途
+问题：联合体（union）的典型应用场景是什么？
+答案：
+同一内存区域存储不同类型数据，如协议解析、类型转换（如将 float 转为 4 字节 char 数组）。
+六、预处理器与文件操作
+考点11：宏定义
+问题：以下宏有什么问题？如何修正？
+#define SQUARE(x) x * x
+int result = SQUARE(2 + 3);  // 输出？
+答案：
+问题：SQUARE(2 + 3) 展开为 2 + 3 * 2 + 3，结果为 11（而非预期的 25）。
+修正：为宏参数加括号：#define SQUARE(x) ((x) * (x))。
+考点12：文件操作
+问题：如何判断文件是否打开成功？
+FILE* fp = fopen("test.txt", "r");
+if (/* 条件 */) {
+    printf("文件打开失败");
+}
+答案：
+条件应为 fp == NULL。
+ 
+########
+>>>>>>>>>>>>>>>
+ <<<<<<<<<<<<<<<<
+###协议栈加堆栈
+ packages/modules/Bluetooth/system/stack/Android.bp
+cc_library_static {
+    name: "libbt-stack-core",
+    srcs: ["..."],
+    shared_libs: [492         "liblog",
+        // 添加此行
+        "libutils",
+    ],
+    static_libs: [497         "libbluetooth-protos-lite"
+    ]
+}
+packages/modules/Bluetooth/system/stack/btm/btm_sec.cc
+#include <utils/CallStack.h>
+void BT_DumpCriticalStack() {
+    android::CallStack stack;
+    stack.update(2); // 跳过当前函数和 CallStack 构造函数
+    stack.log("BT_STACK", ANDROID_LOG_ERROR, "Critical Path Stack Trace:");
+}
+// 在认证流程中触发
+void btm_sec_authenticate(...) {
+    BT_DumpCriticalStack();
+    // 原有业务逻辑
+}
+>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<
+###蓝牙新功能
+MRC/iBF MRC是DX-3已有。iBF属于新增，理论3-6db的增益。 iBF可以增强功率，可以结合折叠屏，增强功率
+Lighening connect 2.0 using BLE Multi-phy Scan   Main radio可以同时扫1M和coded phy，减少使用ultra save天线时发生的各种错误 设计上来讲是好的功能，减少了ultra save的使用场景 lightening 2.0增强后，它就不需要ultra save了（老的情况下，会用ultra save来一起用）background scan会用ultra save
+ultra save(无蓝牙且无wifi link，只有1M ble scan或者是page scan，无其他蓝牙行为) 
+1M PHY：1M PHY是指1Mbps的物理层规范，它是蓝牙传统的物理层规范之一。它提供了较高的数据传输速率，适合用于对传输速率要求较高的应用场景，比如音频传输和数据传输等。
+Coded PHY：Coded PHY是蓝牙5.0引入的新的物理层规范。它使用了更低的数据传输速率（例如500 kbps和125 kbps），以换取更远的覆盖范围和更好的穿透能力。Coded PHY适合用于需要更广泛覆盖范围和更好穿透能力的应用，例如物联网设备和室内定位系统。
+BLE APC(Phase 2)  用于ASHA（助听器）场景。DX-3已有phase 1。此增加的phase 2并不增强性能，只是减少功耗 原始目标仅作用于ASHA双LE通路高负载场景； BLE多连接高负载场景同样有机会打到（目前没想过场景）
+Ultra save radio- RX sensitive improve  提升little 天线Rx灵敏度（可以有4db的rx收益）提升弱信号rx灵敏度；对用户体验收益不大；主要在BLE scan有收益，然而ble scan不需要过弱的扫描结果（会引发车钥匙的问题），因此无收益有风险，不上此功能会更好
+batch scan提升数量提升buffer，和高通追齐改动小，相对安全
+Find My device手机关机之后，手机发BLE广播以便实现手机被发现查找需要硬件支持；需要上层、产品等配合，暂时没有收到需求，硬件需要先动
+Fake HFP本质上是假广播vivo还是使用HFP，此功能无效
+Non-Con adv over ultra save Radio关机后，还能发包，省电FMD不上，这个功能要看下，是不是其他业务有需要
+Channel sounding测距精度小于1m。没有对端支持，可用手机+手机验收低风险。CS使用时，会对手机基本TRX有影响（带宽冲突）；channel sounding不使用时，对于蓝牙基本TRX不影响
+BMS source/assistant音量调整vivo不用BAS增强为三天线可切换评价风险还好，BAS在DX-2和DX-3都没有引发问题。但是硬件没有规划三天线，软件不要上。
+Btsnoop with filter减少HCI大小。但是有可能错过问题vivo不用
+########
+>>>>>>>>>>>>>>> 

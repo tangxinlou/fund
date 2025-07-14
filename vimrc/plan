@@ -1,0 +1,605 @@
+/*******************************************************
+$Author       : 唐新楼 
+$Last modified: 2025-07-11 19:10
+$Email        : 个人邮箱
+$blog         : https://blog.csdn.net/daweigongting
+$Filename     : plan
+$Description  : tangxinlou
+*******************************************************/ 
+
+
+<<<<<<<<<<<<<<<<
+###脚本优化
+脚本修改:
+static void event_shut_down_stack(ProfileStopCallback stopProfiles);  不要判断成调用
+static int disable(void)  bluetooth.cc 中的这个接口 ystem/tools/bdtool/bdtool.c:273:', '   CALL_AND_WAIT(bt_interface->disable(, adapter_state_changed);) 这个明显不是调用的bluetooth.cc 需要过滤
+
+ 识别不到类名，优化
+                 return ((AudioRoutingManager) service.getActiveDeviceManager())
+                        .activateDeviceProfile(device, BluetoothProfile.A2DP); 
+
+static bluetooth::core::EventCallbacks eventCallbacks{   结构体初始化
+struct EventCallbacks {  结构体定义
+
+
+
+ java 找接口和cc 找接口逻辑不一致
+ 找到接口
+   sGattIf->client->connect(clientif, str2addr(env, address), addressType,
+                           isDirect, transport, opportunistic, initiating_phys, needFastConn); 
+
+   sGattIf =
+      (btgatt_interface_t*)btIf->get_profile_interface(BT_PROFILE_GATT_ID); 
+
+   if (is_profile(profile_id, BT_PROFILE_GATT_ID))
+    return btif_gatt_get_interface(); 
+
+ const btgatt_interface_t* btif_gatt_get_interface() {
+  // TODO(jpawlowski) right now initializing advertiser field in static
+  // structure cause explosion of dependencies. It must be initialized here
+  // until those dependencies are properly abstracted for tests.
+  btgattInterface.scanner = get_ble_scanner_instance();
+  btgattInterface.advertiser = bluetooth::shim::get_ble_advertiser_instance();
+  btgattInterface.distance_measurement_manager =
+      bluetooth::shim::get_distance_measurement_instance();
+  return &btgattInterface;
+}
+
+
+  const btgatt_client_interface_t btgattClientInterface = {
+    btif_gattc_register_app,
+    btif_gattc_register_app_ext,
+    btif_gattc_unregister_app,
+    btif_gattc_open,
+ 
+
+回调看起来困难，想个脚本方便查找
+     }
+
+    callback_rc =
+        (*p_cb->p_callback)(p_cb->cb_evt, p_cb->pairing_bda, &cb_data);
+
+    if (callback_rc == BTM_SUCCESS) {
+      switch (p_cb->cb_evt) {
+        case SMP_IO_CAP_REQ_EVT:
+          p_cb->loc_auth_req = cb_data.io_req.auth_req;
+          p_cb->local_io_capability = cb_data.io_req.io_cap;
+          p_cb->loc_oob_flag = cb_data.io_req.oob_data;
+ 
+
+controller.cc  获取函数名不准
+
+
+
+模版函数需要重新匹配
+ template <bool little_endian>
+bool Iterator<little_endian>::operator<=(const Iterator<little_endian>& itr) const {
+    static auto lastLogTime1720 = std::chrono::steady_clock::now();
+ 
+     android/app/src/com/android/bluetooth/opp/BluetoothOppTransferHistory.jav
+                    updateNotificationWhenBtDisabled(); 代码选择需要确认下,很不好看
+
+
+android/app/src/com/android/bluetooth/gatt/AdvertiseManager.java
+    private void tryEnableMtkAdvReport() {
+        没有打印日志
+
+ gerrit/ard15/qcom/android_packages_modules_Bluetooth/system/stack/include/avrc_api.h
+搜索avrc_msg_cback  
+
+ *                  the tAVRC_MSG_CBACK callback function.
+ 没有显示成注释
+
+
+ 使用,a 获取不准函数名
+         mContext.registerReceiverForAllUsers(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        switch (intent.getAction()) {
+                            case Intent.ACTION_USER_SWITCHED:
+                                int foregroundUserId =
+                                        intent.getIntExtra(Intent.EXTRA_USER_HANDLE, 0);
+                                propagateForegroundUserId(foregroundUserId);
+                                break;
+                            case UserManager.ACTION_USER_RESTRICTIONS_CHANGED:
+                                Log.e(TAG,"service/src/com/android/server/bluetooth/BluetoothManagerService.java:771 tangxinlou debug 4" +  new Object(){}.getClass().getEnclosingMethod().getName());
+                                onUserRestrictionsChanged(getSendingUser());
+                                break;
+                            default:
+                                Log.e(
+                                        TAG,
+                                        "Unknown broadcast received in BluetoothManagerService"
+                                                + " receiver registered across all users");
+                        }
+                    }
+                },
+                filterUser,
+                null,
+                mHandler);
+
+
+
+
+
+ 
+    if (p_ccb->peer_cfg.fcr.mode == L2CAP_FCR_BASIC_MODE)l2c_csm_execute(p_ccb, L2CEVT_L2CAP_DATA, p_msg);
+
+~/gerrit/ard15/mtk/android_vendor_mediatek_proprietary_packages_modules_Bluetooth/system/stack/l2cap/l2c_main.cc:209:
+void l2c_rcv_acl_data(BT_HDR* p_msg) {
+  if (p_lcb->transport == BT_TRANSPORT_LE) {
+  } else {
+    if (p_ccb->peer_cfg.fcr.mode == L2CAP_FCR_BASIC_MODE)l2c_csm_execute(p_ccb, L2CEVT_L2CAP_DATA, p_msg);
+函数显示异常
+
+    没有显示成注释
+    @RequiresPermission(android.Manifest.permission.MODIFY_PHONE_STATE)
+
+
+    1967         public void onProcessCreated(int pid, int uid, String packageName,String processName) { }  这种空实现不需要添加debug 日志打印
+
+
+
+识别代码需要优化
+主要代码成分分为
+调用
+函数定义
+函数声明
+变量定义
+ 结构体变量
+ 结构体成员
+ 结构体初始化
+变量赋值
+ 结构体成员赋值
+变量值未改变只使用
+
+    这个函数没有加log
+void SMP_SecurityGrant(const RawAddress& bd_addr, tSMP_STATUS res) {
+
+system/stack/avdt/avdt_ccb_act.cc  这个文件没有添加日志
+ 
+@Database(entities = {Metadata.class},version = 122)  这种情况判断为注释
+android/app/src/com/android/bluetooth/btservice/storage/MetadataDatabase.java  
+>>>>>>>>>>>>>>> 
+
+<<<<<<<<<<<<<<<<
+###蓝牙hci 中指令
+
+kdkfj
+>>>>>>>>>>>>>>> 
+
+<<<<<<<<<<<<<<<<
+###写个apk
+1.写个apk，包含打开蓝牙,扫描，连接,ble
+20241008:
+1.android studio sdk 被删掉了
+
+ tabFrag  中间加listview   ViewPager 中间添加tab
+2.连接流程深入协议栈
+1)配对
+2)profile 连接
+3)小米手环同步信息
+3.hfp a2dp avrcp 各个帧及参数含义
+协议图片
+
+
+android studio 
+20241009
+1.file-settings-system settings-http proxy  内网需要设置代理不然一些东西下载不了，外网随意
+2.tools-sdk manager-android api 33
+3.tools-sdk manager-sdk tool -ndk 安装(勾选show package details，选择16的ndk)
+4.build-make project 编译成功
+20241011 
+家里电脑android studio 下载 gradle 怎么都不成功 
+1.file - settings - build - build tool - gradle 设置gradle 的版本 和jdk 的版本
+
+
+202411.1 重新加载测试工具另外一个工程 gradle 一直下载不了
+https://www.cnblogs.com/yyh888/p/18356064
+file - settings - build execution - build tools -gradle  随便下载不行要点击更新
+打开Android Studio，并打开您的项目。在顶部菜单中，选择 "File" -> "Project Structure"。在 "Project Structure" 窗口中，选择 "Project" 选项卡。在 "Project SDK" 部分，您将看到 "Gradle version" 的信息，它会显示当前项目使用的Gradle版本。
+
+
+20250609
+android studio 公司用不了
+C:\Users\72106341\.gradle  这个目录有很多软件默认配置，这里如果安装卸载过android studio 最好重新删掉一下
+1.file - settings - build - build tool - gradle 设置gradle 的路径
+2. Could not move temporary workspace (C:\Users\72106341\.gradle\caches\transforms-4\cd4204f01cd1314388cf70a3dc0b9a93-29d03ce9-31e0-4809-ad4f-774d557a0e3b) to immutable location (C:\Users\72106341\.gradle\caches\transforms-4\cd4204f01cd1314388cf70a3dc0b9a93)
+在C:\Users\72106341\.gradle\gradle.properties  加下面两个属性
+org.gradle.windows.fs.nio.forceDefaultFileSystem=true
+org.gradle.windows.fs.nio.disableWatchService=true
+
+
+20250624:
+1.manifest 中main activity 添加android:label="蓝牙自动化测试" 设置apk的名字
+
+2.添加一个activity
+2.1 创建SecondActivity.java,添加最简单activity 代码
+package com.example.bluetooth;
+import android.os.Bundle;
+import android.app.Activity;
+
+public class MainActivity extends Activity {
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+}
+2.2 在manifest 中添加SecondActivity
+        <activity
+            android:name="SecondActivity"
+            android:label="蓝牙自动化测试"
+            android:exported="true">
+        </activity> 
+
+2.3 添加最简layout activity_second.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!" />
+</LinearLayout> 
+
+3 添加一个按钮
+3.1 java 代码添加按钮
+
+import android.view.View;
+import android.view.View.OnClickListener; 
+import android.widget.Button;
+import android.content.Intent;
+    private Button btnSender = null;
+    private OnClickListener listener = new OnClickListener() {
+        public void onClick(View v) {
+            int id = v.getId();
+            if (id == R.id.btn_start_sender_activity) {
+                startSender();
+
+            }
+        }
+    };
+        btnSender = (Button)findViewById(R.id.btn_start_sender_activity);
+        btnSender.setOnClickListener(listener);
+    private void startSender() {
+        Intent senderIntent = new Intent(this, StartPairActivity.class);
+        startActivity(senderIntent);
+    }
+
+3.2 layout 添加按钮
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginTop="30dp"
+    android:orientation="horizontal"
+    android:gravity="center">
+
+    <Button
+        android:id="@+id/btn_start_sender_activity"
+        android:text="@string/bluetooth_btn_start_pair"/>
+    <Button
+        android:id="@+id/btn_start_receiver_activity"
+        android:layout_marginStart="20dp"
+        android:text="@string/bluetooth_btn_recv_pair"/>
+</LinearLayout>
+
+4.添加一个listview
+4.1 java 中添加listview 
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.view.View;
+import android.widget.AdapterView;
+        ArrayAdapter<String> pairedDevicesArrayAdapter = new ArrayAdapter<>(this, R.layout.device_name, R.id.device_name_text);
+        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
+        pairedListView.setAdapter(pairedDevicesArrayAdapter);
+        pairedListView.setClickable (true);
+        pairedListView.setOnItemClickListener(this.mDeviceClickListener);
+
+    private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView<?> adapterView, View view, int arg2, long arg3) {
+        }
+    };
+
+            for (BluetoothDevice device : devices) {
+                pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+            }
+
+private BaseAdapter baseAdapter = new BaseAdapter() {
+        public int getViewTypeCount() {
+        }
+        public int getItemViewType(int position) {
+        }
+        public int getCount() {
+        }
+        public Object getItem(int position) {
+        }
+        public long getItemId(int position) {
+        }
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+        }
+    };
+4.2 添加adapter 的layout 和listview 的layout
+
+    <ListView android:id="@+id/paired_devices"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+     <TextView
+        android:id="@+id/device_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+5 添加textview
+5.1 Java 中添加代码
+import android.widget.TextView;
+TextView v = (TextView) view.findViewById(R.id.device_name_text);
+ v.setVisibility(0);
+ // 0 可见，4不可见占空间，8不可见不占空间
+
+5.2 layout 添加布局
+    <TextView android:id="@+id/title_paired_devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!" />
+
+
+6 添加监听广播
+
+import android.content.IntentFilter;
+import android.content.Context;
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if ("android.bluetooth.device.action.FOUND".equals(action)) {
+
+            } 
+        }
+    };
+            registerReceiver(this.mReceiver, new IntentFilter("android.bluetooth.device.action.FOUND"));
+ 
+>>>>>>>>>>>>>>>
+
+<<<<<<<<<<<<<<<<
+###面试相关
+
+介绍你做过的项目（熟悉哪些平台）
+
+处理过哪些车载问题
+
+处理过哪些耳机问题
+
+是否有过处理市场用户投诉的经验
+
+搜索不到蓝牙设备如何分析
+
+打电话无声问题怎么分析（tx/rx）
+
+配对的模式有哪几种吗？如何确认使用哪种方式？手机与耳机配对一般用的哪种？
+
+在播放音乐过程中，进行微信通话，流程和状态变化是怎么样的
+
+音乐卡音问题如何分析，有哪些原因
+
+如果手机连接了一个耳机或者车载，待机功耗偏高，如何分析
+如果听音乐功耗偏高，有哪些可能影响的因素？
+
+A2DP延时如何优化
+
+tws一个耳机有声、一个无声原因是什么
+
+绝对音量相关
+
+对于一些兼容性问题，只在个别设备上出现，其他设备没有，要怎么处理
+
+一、基本蓝牙
+
+(1) BR/EDR 有多少个信道，，信道带宽是多少，最高和最低的中心频率是多少
+
+答：79, 1M, 2402和2480
+
+(2) BLE 有多少个信道，信道带宽是多少
+
+答：40,2M
+
+(3) 常规的跳频频率是多少？如何算得？
+
+答案应是：协议中1个slot是625us，以已连接情况为例子，每个slot master会切到一个新的频点进行通信。
+
+(4)各代蓝牙之间的典型优化
+
+1.1	速率1M，易干扰
+1.2	AFH 、eSCO、Faster Connection
+2.0	EDR
+2.1	NFC(OOB带外配对) SSP SSR
+3.0	
+HS(用wifi 11g)，鸡肋
+
+EPC(Enhanced Power Control) 降功耗
+
+4.0	LE
+(5)Inquiry 和 Inquiry scan
+
+Inquiry能获取到什么信息？
+
+答：在 EIR(Enhanced Inquiry Resp)中，会包含Device name, TX power level, service class UUIDs, and manufacturer’s data. 也会有RSSI, COD（class of device，设备类型）
+
+Inquiry scan需要设置什么重要参数
+
+答: interval window
+
+(6)连接过程分多少环节
+
+
+
+(7) SSP中 auth方式有几种，是怎么确定的
+
+答：Numeric Compare比对之后选择是否，passkey entry需要输入密码，Just work直接auth过
+
+根据IO capability的交换而来，Display Only; Display Yesno; Keyboard Only; NoInputNoOutput
+
+具体不细究
+
+
+
+(8)SSP最后一个环节 User Confirmation Req完成后，然后是什么环节，说出两个
+
+答：
+
+RNR: Remote Name Request
+
+Create Connection: 建立ACL连接
+
+
+
+(9)LMP version，可以获取对端的什么信息
+
+答：core spec版本号，芯片商，子版本号
+
+
+
+(10)LMP supervision timeout是什么作用，是否可以建立连接后进行更改
+
+答：Link 不交互数据能维持的时间；可以
+
+
+
+(11)是否可以在使用过程中，改变蓝牙的主从关系；一般为什么要这么做
+
+答：可以，通过role switch进行（HCI关键字 role change）；我方设备或者对端设备都可以进行
+
+常出于以下原因：兼容性、省电（slave可以进入省电）、共存性能
+
+二、A2DP
+
+1、手机连接耳机播放音乐，各角色名称
+
+答：手机 SRC（来源/上游）, 耳机SNK（下游）
+
+2、AVRCP的SDP中，有哪些feature值得关注？
+
+答：版本号；AVRCP 1.4增加很多功能.
+
+Browsing
+
+3、获取并设置音频编码流程是？
+
+答：(1)discovery:发现对端有多少支持codec(SEID)
+
+(2)Get capability，对这些codec获取详细信息
+
+(3)Set configuration，设置编码
+
+(4)open
+
+
+
+4、卡音问题如何分析
+
+答：发散题目。
+
+(1)RF性能是否ok
+
+(2)audio给的数据源是否不卡
+
+(3)有没有表征发送情况的固件统计信息，如audio送包时间、audio
+
+5、无声问题怎么分析
+
+答：发散题目
+
+(1)通路是否正确
+
+(2)音频dump是否无声
+
+(3)A2DP AVRCP是否都start了
+
+(4)airlog是否有音乐数据传输过去
+
+
+
+三、AVRCP
+
+1、CT是啥，TG是啥？
+
+答: CT是车载，TG是手机
+
+
+
+2、AVRCP有哪些feature是值得注意的
+
+答：开放性问题，Abs，Browsing
+
+
+
+3、比如要做一个AVRCP 1.3的兼容性名单，对于名单内的设备，手机伪装成自己是仅支持AVRCP 1.3，需要在哪几个环节注意的
+
+答: （1）SDP时，注意返回呢AVRCP 1.3
+
+(2) Get capability时，AVRCP 1.4的feature注意不要加进去
+
+
+
+4、更新车载进度条时的AVRCP流程大概是？
+
+答: (1)车载发来command: register一个PLAYBACK_POS_CHANGE
+
+(2)手机回复一个interim，表示接受注册
+
+(3)手机在进度条变化时，回复一个CHANGED的event，表示完成这个change
+
+声音延时
+
+offload场景，adsp直接对接btfw，需要fw知道自己的从adsp收包的时间 / 包入队时间 / 从队中发出的时间
+
+非offload场景，需要从HCI中看，audio写包到ACL的时间间隔；若无问题，需要从空中包看，是否fw发包过慢，环境问题还是IOT issue
+
+
+
+功耗
+
+请讲实际处理情况
+
+https://developer.android.com/guide/platform?hl=zh-cn
+
+用实际例子说明下什么是HAL层。
+
+RE: 比如蓝牙侧的driver层，仅有HAL层
+
+2、关于广播的理解
+
+广播的种类有哪几种？哪些会产生阻塞，如何避免？
+
+2、关于广播的理解
+
+广播的种类有哪几种？哪些会产生阻塞，如何避免？
+
+普通广播，动态和静态的接受者，收到顺序是否一致，为何这么设计？
+
+RE: 动态先收到；因为防止静态接收者所在进程没有运行，此时先要启动他
+
+
+
+五、common问题
+
+1、最大难度/成就感任务，有多少是你的功劳
+
+2、个人规划，对技术的追求。
+
+3、对加班看法
+
+4、为何换工作 
+>>>>>>>>>>>>>>>
