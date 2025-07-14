@@ -539,7 +539,7 @@ let g:filterchar = {
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
-            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to",
+            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to|BtGatt.GattService: onNotify\(|BtGatt.GattService: got characteristic",
             \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus|AudioALSAHardwareResourceManager: -.*InputDevice",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
@@ -688,10 +688,7 @@ nnoremap <F1> :call  QuckfixToggle()<cr>
 let g:quickfix_is_open = 0
 function! QuckfixToggle()
     if g:quickfix_is_open
-        set mouse=
-        set clipboard=exclude:clipboard
-        echo  "关闭鼠标,关闭所有打印"
-        let g:quickfix_is_open = 0
+
         "colorscheme default
         "highlight Folded   term=standout ctermfg=6 ctermbg=none guifg=Black guibg=#e3c1a5
         "highlight CursorColumn    term=reverse ctermbg=0 guibg=Grey40
@@ -703,24 +700,49 @@ function! QuckfixToggle()
         "echo "Current highlight group: " . synIDattr(synID(line("."), col("."), 1), "name")
         "verbose highlight javaMethod
         "echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')  当前光标下是什么高亮组
-        if &fileencoding != "utf-8"
+
+        echo  "关闭鼠标"
+        set mouse=
+        set clipboard=exclude:clipboard
+        let g:quickfix_is_open = 0
+        if @% != ""  && &fileencoding != "utf-8"
             echom &fileencoding
             silent e! ++enc=utf-8
         endif
-        let g:debugflag = 1
         silent vnoremap <c-c>
         silent nnoremap <c-v>
     else
-        let g:quickfix_is_open = 1
-        set mouse=a
-        set clipboard=unnamed
         "colorscheme morning
         "highlight MyGroup1 term=reverse ctermbg=White ctermfg=black guibg=Grey40
         "let m = matchadd("MyGroup1", "_")
-        echo "打开鼠标,打开所有打印"
-        let g:debugflag = 20
+
+        let g:quickfix_is_open = 1
+        set mouse=a
+        set clipboard=unnamed
+
+        echo "打开鼠标"
         vnoremap <c-c> y
         nnoremap <c-v> <esc>p
+        if @% != ""  && &fileencoding != "utf-8"
+            echom &fileencoding
+            silent e! ++enc=utf-8
+        endif
+
+    endif
+endfunction
+"}}}}}
+"{{{{{2  LogLevel()  切换log等级
+nnoremap <leader>l :call  LogLevel()<cr>
+let g:LogLevel = 0
+function! LogLevel()
+    if g:LogLevel
+        echom "关闭log 打印"
+        let g:debugflag = 1
+        let g:LogLevel = 0
+    else
+        echom "打开log 打印"
+        let g:debugflag = 20
+        let g:LogLevel = 1
     endif
 endfunction
 "}}}}}
@@ -2404,6 +2426,7 @@ function! SelectEntireCode(...)
             endif
             if matchstr(getline(line),"tangxinlou debug") != ""
                 "是加的debug 日志就忽略
+                let idx1 += 1
                 continue
             endif
             silent setlocal foldmethod=syntax
@@ -2852,7 +2875,8 @@ function! FindAnotherBracketPosition(...)
         "    call cursor(cursor[0] + 1,1)
         "    let cursor =  searchpos('{','w')
         "endwhile
-        call Echom(10,0,'tangxinlou debug',2854, "end")
+        "call Echom(10,0,'tangxinlou debug',2854, "end")
+        silent call cursor(line,col)
         return cursor
     endif
     if char ==# ')'
@@ -11742,7 +11766,7 @@ function! ChangeDirectoryName(...)
                     if item1 ==# "delay_*_core" || item1 ==# "*fbk_*_core"
                         let tempchar = split(item,'_')
                         if count(Extractioncodelist,tempchar[-1]) ==# 0
-                            let Extractioncodefile = insert(Extractioncodefile,"new,". tempchar[-1])
+                            let Extractioncodefile = insert(Extractioncodefile,"new,". tempchar[-1] . "_" . tempchar[-2])
                         endif
                     endif
                     break
@@ -11770,7 +11794,7 @@ function! ManageExtractionCode(...)
     call Dbug1(10,0,'ManageExtractionCode 131', Extractioncodelist)
     for item in Extractioncodelist
         if matchstr(Alreadyanalyzed,item) ==# ""
-            let templist = item . '|' . templist
+            let templist = split(item,'_')[0] . '|' . templist
         endif
     endfor
     return join(split(templist,'|'),'|')
@@ -13252,4 +13276,4 @@ endfunction
 "-i 表示忽略大小写进行匹配。
 "-n 表示显示匹配的行号。
 "let splitStrings = map(strings, 'split(v:val, ",")')
-
+"linux screen 控制终端会话
