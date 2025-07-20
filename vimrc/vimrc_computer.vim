@@ -362,18 +362,6 @@ inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<
 
 
 "}}}}
-"编辑vimrc文件{{{
-"编辑vimrc文件
-nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
-nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords",1)<cr>
-nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
-nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
-nnoremap <leader>tr :tabnew<cr>:execute "e " . Homedir("txl/transplant.txt",1)<cr>
-"加载vimrc文件
-nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
-nnoremap <leader>tt :source ~/.vimrc_tt<cr>
-""}}}
 "搜索命令{{{{
 nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/tang.txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
 nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>:tabm<cr>
@@ -613,6 +601,22 @@ function! Homedir(...)
     return dirpath
 endfunction
 "}}}}}
+"编辑vimrc文件{{{{2
+"编辑vimrc文件
+nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
+nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords",1)<cr>
+nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
+nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
+nnoremap <leader>tr :tabnew<cr>:execute "e " . Homedir("txl/transplant.txt",1)<cr>
+if g:homedir ==# "/d"
+    nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("work/fund/vimrc/keywords",1)<cr>
+    nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("work/fund/vimrc/plan",1)<cr>
+endif
+"加载vimrc文件
+nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
+nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+""}}}} 
 "{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
