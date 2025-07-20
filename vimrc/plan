@@ -84,11 +84,6 @@ android/app/src/com/android/bluetooth/gatt/AdvertiseManager.java
     private void tryEnableMtkAdvReport() {
         没有打印日志
 
- gerrit/ard15/qcom/android_packages_modules_Bluetooth/system/stack/include/avrc_api.h
-搜索avrc_msg_cback  
-
- *                  the tAVRC_MSG_CBACK callback function.
- 没有显示成注释
 
 
  使用,a 获取不准函数名
@@ -117,23 +112,6 @@ android/app/src/com/android/bluetooth/gatt/AdvertiseManager.java
                 filterUser,
                 null,
                 mHandler);
-
-
-
-
-
- 
-    if (p_ccb->peer_cfg.fcr.mode == L2CAP_FCR_BASIC_MODE)l2c_csm_execute(p_ccb, L2CEVT_L2CAP_DATA, p_msg);
-
-~/gerrit/ard15/mtk/android_vendor_mediatek_proprietary_packages_modules_Bluetooth/system/stack/l2cap/l2c_main.cc:209:
-void l2c_rcv_acl_data(BT_HDR* p_msg) {
-  if (p_lcb->transport == BT_TRANSPORT_LE) {
-  } else {
-    if (p_ccb->peer_cfg.fcr.mode == L2CAP_FCR_BASIC_MODE)l2c_csm_execute(p_ccb, L2CEVT_L2CAP_DATA, p_msg);
-函数显示异常
-
-    没有显示成注释
-    @RequiresPermission(android.Manifest.permission.MODIFY_PHONE_STATE)
 
 
     1967         public void onProcessCreated(int pid, int uid, String packageName,String processName) { }  这种空实现不需要添加debug 日志打印
