@@ -605,8 +605,9 @@ endfunction
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("autoanaly/keywords",1)<cr>
-nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("autoanaly/Extractioncode",1)<cr>
+nnoremap <leader>eb :tabnew<cr>:e /mnt/c/Users/Administrator/.vimrc<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("txl/keywords",1)<cr>
+nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("txl/Extractioncode",1)<cr>
 nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
 nnoremap <leader>tr :tabnew<cr>:execute "e " . Homedir("txl/transplant.txt",1)<cr>
 if g:homedir ==# "/d"
@@ -1921,6 +1922,99 @@ function! SimplifySearchResults(...)
     endif
 endfunction
 "}}}}}
+"{{{{{2   SimplifySearchResults1(...) 简化搜索结果1
+function! SimplifySearchResults1(...)
+"140行1s都不到
+    "{{{{{3 变量定义
+    let searchs = "setA"
+    let command = ""
+    let classdefinition = []  "类定义
+    let variabledef = []  "变量定义
+    let variabledefspecify  = [] "变量定义赋值
+    let functiondefinition = []       "函数定义
+    let functioncall = []     "函数调用
+    let variablespecify  = [] "变量赋值
+    let functiondeclaration = []  "函数申明
+    let Log = []              "打印
+    let judge = []            "判断
+    let Comment = []          "注释
+    let TEST = []             "test
+    let XML = []              "xml
+    let resultlist = [1,2,3,4,5,6,7,8]
+    "}}}}
+    if a:0 ==# 0
+        let searchstarge = []
+        let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+        let searchstarge =  system(command)
+        execute "normal! :r!date +\\%F-\\%T\<cr>"
+    else
+        let searchstarge = a:1
+        if len(searchstarge) ==# 0
+            return []
+        endif
+    endif
+    let searchstarge = split(searchstarge,"\n")
+    while idx1 < len(searchstarge)
+        let temchar = join(split(searchstarge[idx1],":")[2:])
+        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
+        if matchstr(split(searchstarge[idx1],":")[0],'\.xml') ==# ""
+            if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
+                if matchstr(temchar,"注释") ==# ""
+                else
+                    let Comment = add(Comment,tempchar)
+                endif
+            else
+                let TEST = add(TEST,tempchar)
+            endif
+
+        else
+            let XML = add(XML,tempchar)
+        endif
+        let idx1 += 1
+    endwhile
+    let resultlist = ResultClassification(searchstarge)
+    let definition = resultlist[1]
+    let definition = insert(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = insert(definition,["定义"])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["语句里面有分号识别调用"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[0])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["判断"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[3])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["头文件"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[7])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["打印"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[2])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["注释"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[4])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["test"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[5])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = add(definition,["XML"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[6])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = ListTo1D(definition,"█")
+    let definition = ListAddSpaces(definition,"█")
+    if a:0 ==# 0
+        execute "normal! :r!date +\\%F-\\%T\<cr>"
+        call append(line('.'),definition)
+    else
+        return definition
+    endif
+endfunction
+"}}}}} 
 "{{{{{2   JudgeString(...) 判断string是否对应char
 function! JudgeString(...)
     "{{{{{3 变量定义
@@ -2430,21 +2524,23 @@ function! SelectEntireCode(...)
             endif
             if matchstr(getline(line),"tangxinlou debug") != ""
                 "是加的debug 日志就忽略
-                let idx1 += 1
-                continue
-            endif
-            silent setlocal foldmethod=syntax
-            let numberlist = MergeLinesOfCode(line)
-            call Dbug1(10,0,'SelectEntireCode 28', numberlist)
-            if len(numberlist) != 0
-                let srcnum = numberlist[0]
-                let tailnum = numberlist[1]
-                let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
-                let searchstarge[idx1] = join(currentstrlist,":")
+                "let idx1 += 1
+                "continue
             else
-                let currentstrlist[2] = currentstrlist[2] . "注释"
-                let searchstarge[idx1] = join(currentstrlist,":")
+                silent setlocal foldmethod=syntax
+                let numberlist = MergeLinesOfCode(line)
+                call Dbug1(10,0,'SelectEntireCode 28', numberlist)
+                if len(numberlist) != 0
+                    let srcnum = numberlist[0]
+                    let tailnum = numberlist[1]
+                    let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
+                    let searchstarge[idx1] = join(currentstrlist,":")
+                else
+                    let currentstrlist[2] = currentstrlist[2] . "注释"
+                    let searchstarge[idx1] = join(currentstrlist,":")
+                endif
             endif
+
         else
         endif
         if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
@@ -3585,13 +3681,25 @@ function! ClearingNotesInCode(...)
     let idx1 = 0
     let srcnum = -1
     let tailnum = -1
-    while matchstr(tempchar,"\\/\\*") != ""
+    while matchstr(tempchar,"\\/\\*") != "" || matchstr(tempchar,"*/") != ""
+        let srcnum = -1
+        let tailnum = -1
         let srcnum  = match(tempchar,"\\/\\*")
         let tailnum = match(tempchar,"*/")
-        if srcnum ==# 0
-            let tempchar = tempchar[tailnum + 2:-1]
-        else
-            let tempchar = tempchar[0:srcnum -1]  . tempchar[tailnum + 2:-1]
+        if srcnum >= 0 && tailnum >= 0
+            if srcnum < tailnum
+                if srcnum ==# 0
+                    let tempchar = tempchar[tailnum + 2:-1]
+                else
+                    let tempchar = tempchar[0:srcnum -1]  . tempchar[tailnum + 2:-1]
+                endif
+            else
+                let tempchar = tempchar[tailnum + 2:-1]
+            endif
+        elseif srcnum ==# -1 && tailnum >= 0
+                let tempchar = tempchar[tailnum + 2:-1]
+        elseif srcnum >= 0 && tailnum ==# -1
+            let tempchar = tempchar[0:srcnum -1]
         endif
     endwhile
     return tempchar
@@ -12377,12 +12485,14 @@ function! LexiconizationCallback(...)
     let end = 0
     let linelist = []
     let string = ""
+    let flag = ""
     let resultlist = ["end","flag","dict","start"]
     let UpBracketslist = []
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
     "}}}}
     let linelist = MergeLinesOfCode(line)
+    "call Echom(10,0,'tangxinlou debug',12495, line)
     if linelist ==# []
         let resultlist[0] = line + 1
         let resultlist[1] = "false"
@@ -12395,12 +12505,11 @@ function! LexiconizationCallback(...)
     "call Echom(10,0,'tangxinlou debug',12358, string)
     let flag = IdentificationCodeComponents1(string,filetype)
     "let dict["03string"] = flag . " " . string
+    "let dict["03string"] = string
     let dict["03string"] = flag . " " . string(SplitCodeString(string))
     if matchstr(flag,'class\|func') != ""
         let UpBracketslist = []
-        if start != end
-            let UpBracketslist  = GetUpBrackets(end + 1)
-        endif
+        let UpBracketslist  = GetUpBrackets(end + 1)
         if UpBracketslist ==# []
             let resultlist[0] = end + 1
             let resultlist[1] = "false"
@@ -12962,9 +13071,9 @@ function! IdentificationCodeComponents1(...)
     "{{{{{3 变量定义
     let codestring = a:1
     let filetype = a:2
-    let matchstr = ""
+    let searchstr = ""
     if a:0 ==# 3
-        let matchstr = a:3
+        let searchstr  = a:3
     endif
     let flag = ""
     let package = 0                    "包名
@@ -12973,12 +13082,11 @@ function! IdentificationCodeComponents1(...)
     let define = ["#if ",
                 \"#ifdef ",
                 \"#define ",
+                \"#ifndef",
                 \"#else ",
                 \"#else if ",
                 \"#endif"]
-    let specify = 4                    "赋值指定值
-    let specifydef = 5                 "定义并指定初值
-                                       "判断
+    "let judge  = 6                                    "判断
     let judge = [" if (",
                 \" if(",
                 \" else if(",
@@ -13006,7 +13114,7 @@ function! IdentificationCodeComponents1(...)
     let break = 15
     let struct = 16
     let enum = 17
-    let variabledef = 18  "变量赋值
+    let variabledef = 18  "变量定义
     let variablespecify  = 19 "变量赋值
     let variabledefspecify  = 20 "变量定义赋值
     let lock = ["synchronized(",
@@ -13017,6 +13125,7 @@ function! IdentificationCodeComponents1(...)
                 \" catch("]
     let headfile = 21
     let lambda = 22 "lambda表达式
+    let staticfunc = ["static {"] "静态初始化代码
    " call Echom(10,0,'tangxinlou debug',12978, codestring)
     let NonBlanklist = GetNonBlank(codestring)
     let length = 0
@@ -13109,6 +13218,11 @@ function! IdentificationCodeComponents1(...)
         endif
         if matchstr(codestring,"struct ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "struct"
+            return flag
+        endif
+
+        if CheckStringIsObtainOfList(codestring,staticfunc)
+            let flag = flag . "staticfunc"
             return flag
         endif
 
@@ -13236,6 +13350,7 @@ function! SplitCodeString(...)
 endfunction
 "}}}}}
 "{{{{{2 ParsingFunctions(...)解析函数
+"echom SplitCodeString(getline(line('.')))
 function! ParsingFunctions(...)
     let funcode = copy(a:1)
     let codelist = SplitCodeString(funcode)
@@ -13281,3 +13396,4 @@ endfunction
 "-n 表示显示匹配的行号。
 "let splitStrings = map(strings, 'split(v:val, ",")')
 "linux screen 控制终端会话
+"repo sync -c --optimized-fetch --no-tags
