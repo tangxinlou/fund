@@ -145,6 +145,11 @@ iabbrev gittime git reflog show --date=iso
 iabbrev gitcfg git config my.log-compliance-check false
 iabbrev findsw  find . -type f -name "*.sw*"
 iabbrev gitshow  git show --name-status
+iabbrev duh  du -h --max-depth=1
+iabbrev free  free -h
+iabbrev cpu  lscpu
+iabbrev make  source build/envsetup.sh && make -j4 2>&1 <bar> tee build.log
+iabbrev repo  repo sync -c --optimized-fetch --no-tags
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
 "auto command自动命令{{{
@@ -367,7 +372,7 @@ nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/tang.txl"<c
 nnoremap <leader>gg :tabnew<cr>q:0ir!grep -sirn "<esc>pa" . <cr>:tabm<cr>
 "nnoremap <leader>f  :execute "grep! -Esirn  " shellescape(expand(@@))  "%:p" <cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>J
 "nnoremap <leader>f  :cexpr system('grep -Esinr  -RnI --exclude-dir={.git,.svn} --include=*{.c,.cc,.cpp,.java,.h} "BluetoothBondStateMachine"')
-"在vimrc文件中|不可以映射，可以使用<bar>代替|
+"在vimrc文件中|不可以映射，可以使用<bar>代替|管道
 "nnoremap <leader>ff   q:ivimgrep! /\<bar>headset\<bar>a2dp/j  %:p <cr>:copen<cr><esc><cr>
 nnoremap <leader>ff   q:ivimgrep! /<esc>"/pa/j %:p <cr>:copen<cr>:set modifiable<cr><esc><c-w>H
 "按,gc后会使用外置的grep搜索光标下的单词的个数和文件位置并用新的修改区保存起来
@@ -13396,4 +13401,3 @@ endfunction
 "-n 表示显示匹配的行号。
 "let splitStrings = map(strings, 'split(v:val, ",")')
 "linux screen 控制终端会话
-"repo sync -c --optimized-fetch --no-tags
