@@ -574,7 +574,7 @@ let g:FileEmptyDictionary = {"00interval":"0-0",
     let g:CommentNUM = 9          "注释
     let g:TESTNUM = 10             "test
     let g:XMLNUM = 11              "xml
-    let g:unknowNUM = 12
+    let g:unknowNUM = 12           "未知
 
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
@@ -1970,10 +1970,12 @@ function! SimplifySearchResults1(...)
     let targetcode = ""
     let codelist = ""
 
-    let resultlist = [1,2,3,4,5,6,7,8]
+    let resultlist = [0,1,2,3,4,5,6,7,8,9,10,11,12]
+    let definition = []
 
     let idx1 = 0
     let flag = ""
+    let mode = 0
 
     "}}}}
     if a:0 ==# 0
@@ -1983,6 +1985,7 @@ function! SimplifySearchResults1(...)
         execute "normal! :r!date +\\%F-\\%T\<cr>"
     else
         let searchstarge = a:1
+        let mode = a:2
         if len(searchstarge) ==# 0
             return []
         endif
@@ -2011,6 +2014,8 @@ function! SimplifySearchResults1(...)
                        let functioncall = add(functioncall,targetcode)
                    elseif matchstr(flag,"functiondeclaration") != ""
                        let functiondeclaration = add(functiondeclaration,targetcode)
+                   elseif matchstr(flag,"functiondefinition") != ""
+                       let functiondefinition = add(functiondefinition ,targetcode)
                    elseif matchstr(flag,"log") != ""
                        let Log = add(Log,targetcode)
                    elseif matchstr(flag,"judge") != ""
@@ -2030,38 +2035,85 @@ function! SimplifySearchResults1(...)
         endif
         let idx1 += 1
     endwhile
-    let resultlist = ResultClassification(searchstarge)
-    let definition = resultlist[1]
-    let definition = insert(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = insert(definition,["定义"])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    let definition = add(definition,["语句里面有分号识别调用"])
+
+    let resultlist[g:classdefinitionNUM] =  classdefinition
+    let resultlist[g:variabledefNUM] =  variabledef
+    let resultlist[g:variabledefspecifyNUM] = variabledefspecify
+    let resultlist[g:functiondefinitionNUM] =  functiondefinition
+    let resultlist[g:functioncallNUM] =  functioncall
+    let resultlist[g:variablespecifyNUM] = variablespecify
+    let resultlist[g:functiondeclarationNUM] = functiondeclaration
+    let resultlist[g:LogNUM] =  Log
+    let resultlist[g:judgeNUM] = judge
+    let resultlist[g:CommentNUM] = Comment
+    let resultlist[g:TESTNUM] =  TEST
+    let resultlist[g:XMLNUM] = XML
+    let resultlist[g:unknowNUM] = unknow
+    if mode ==# 1
+       return  resultlist
+    endif
+
+    "let resultlist = ResultClassification(searchstarge)
+    let definition = add(definition,["类定义"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[0])
+    let definition = extend(definition,resultlist[g:classdefinitionNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["函数定义"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:functiondefinitionNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["变量定义"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:variabledefNUM])
+    let definition = extend(definition,resultlist[g:variabledefspecifyNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["函数调用"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:functioncallNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["变量赋值"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:variablespecifyNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
     let definition = add(definition,["判断"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[3])
+    let definition = extend(definition,resultlist[g:judgeNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    let definition = add(definition,["头文件"])
+
+    let definition = add(definition,["函数声明"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[7])
+    let definition = extend(definition,resultlist[g:functiondeclarationNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
     let definition = add(definition,["打印"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[2])
+    let definition = extend(definition,resultlist[g:LogNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
     let definition = add(definition,["注释"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[4])
+    let definition = extend(definition,resultlist[g:CommentNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["未知"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:unknowNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+
     let definition = add(definition,["test"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[5])
+    let definition = extend(definition,resultlist[g:TESTNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
     let definition = add(definition,["XML"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[6])
+    let definition = extend(definition,resultlist[g:XMLNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
     let definition = ListTo1D(definition,"█")
     let definition = ListAddSpaces(definition,"█")
@@ -10112,7 +10164,7 @@ function! GrepChars(timer)
     if len(split(searchstarge,"\n")) < 600  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
         let searchstarge = SelectEntireCode(copy(searchstarge))
     endif
-    let searchstarge = SimplifySearchResults(copy(searchstarge))
+    let searchstarge = SimplifySearchResults1(copy(searchstarge),0)
     let searchstarge = insert(searchstarge,@g)
     call win_gotoid(g:windowgrepid)
     if line('$') > 3
@@ -13168,8 +13220,8 @@ function! IdentificationCodeComponents1(...)
     let case = 9                       "case
     let default = 10                   "default
     let return = 11                    "返回值
-    let call = 12
-    let func = 13
+    let functioncall  = 12
+    let functiondefinition = 13
     let statement = 14
     let break = 15
     let struct = 16
@@ -13186,7 +13238,7 @@ function! IdentificationCodeComponents1(...)
     let headfile = 21
     let lambda = 22 "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
-    let log = [" Log"," log","tangxinlou debug"]
+    let log = [" Log"," log","tangxinlou debug","debugLog("]
    " call Echom(10,0,'tangxinlou debug',12978, codestring)
     let NonBlanklist = GetNonBlank(codestring)
     let length = 0
@@ -13240,7 +13292,7 @@ function! IdentificationCodeComponents1(...)
         endif
         let length = len(SplitCodeString(codestring))
         if length ==# 1
-            let flag = "call"
+            let flag = "functioncall"
             return flag
         else
             if matchstr(codestring,"=") != ""
@@ -13292,7 +13344,7 @@ function! IdentificationCodeComponents1(...)
         endif
 
         if IsFunction(codestring)
-            let flag = flag . "func"
+            let flag = flag . "functiondefinition"
             return flag
         endif
 
@@ -13313,7 +13365,7 @@ function! IdentificationCodeComponents1(...)
     elseif NonBlanklist[1] ==# '}'
         if count(codestring,'{') != 0 && count(codestring,'}') != 0
             if IsFunction(codestring)
-                let flag = flag . "func"
+                let flag = flag . "functiondefinition"
                 return flag
             endif
         endif
