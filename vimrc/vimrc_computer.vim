@@ -148,7 +148,7 @@ iabbrev gitshow  git show --name-status
 iabbrev duh  du -h --max-depth=1
 iabbrev free  free -h
 iabbrev cpu  lscpu
-iabbrev make  source build/envsetup.sh && make -j4 2>&1 <bar> tee build.log
+iabbrev make  source build/envsetup.sh && make -j20 2>&1 <bar> tee build.log
 iabbrev repo  repo sync -c --optimized-fetch --no-tags
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "}}}
@@ -560,6 +560,22 @@ let g:FileEmptyDictionary = {"00interval":"0-0",
             \"03string":'',
             \"04childnode":[],
             \}
+
+    "code type sort num
+    let g:classdefinitionNUM = 0  "类定义
+    let g:variabledefNUM = 1  "变量定义
+    let g:variabledefspecifyNUM  = 2 "变量定义赋值
+    let g:functiondefinitionNUM = 3       "函数定义
+    let g:functioncallNUM = 4     "函数调用
+    let g:variablespecifyNUM  = 5 "变量赋值
+    let g:functiondeclarationNUM = 6  "函数申明
+    let g:LogNUM = 7              "打印
+    let g:judgeNUM = 8            "判断
+    let g:CommentNUM = 9          "注释
+    let g:TESTNUM = 10             "test
+    let g:XMLNUM = 11              "xml
+    let g:unknowNUM = 12
+
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
@@ -610,7 +626,7 @@ endfunction
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eb :tabnew<cr>:e /mnt/c/Users/Administrator/.vimrc<cr>
+nnoremap <leader>eb :tabnew<cr>:e /mnt/d/work/fund/vimrc/vimrc_computer.vim<cr>
 nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("txl/keywords",1)<cr>
 nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("txl/Extractioncode",1)<cr>
 nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
@@ -622,7 +638,7 @@ endif
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
-""}}}} 
+""}}}}
 "{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
@@ -1933,19 +1949,32 @@ function! SimplifySearchResults1(...)
     "{{{{{3 变量定义
     let searchs = "setA"
     let command = ""
+
+    "list
     let classdefinition = []  "类定义
     let variabledef = []  "变量定义
     let variabledefspecify  = [] "变量定义赋值
     let functiondefinition = []       "函数定义
-    let functioncall = []     "函数调用
     let variablespecify  = [] "变量赋值
+    let functioncall = []     "函数调用
     let functiondeclaration = []  "函数申明
     let Log = []              "打印
     let judge = []            "判断
     let Comment = []          "注释
     let TEST = []             "test
     let XML = []              "xml
+    let unknow = []           "未知
+
+    let filetype = ""
+    let srccode = ""
+    let targetcode = ""
+    let codelist = ""
+
     let resultlist = [1,2,3,4,5,6,7,8]
+
+    let idx1 = 0
+    let flag = ""
+
     "}}}}
     if a:0 ==# 0
         let searchstarge = []
@@ -1958,22 +1987,46 @@ function! SimplifySearchResults1(...)
             return []
         endif
     endif
+
     let searchstarge = split(searchstarge,"\n")
     while idx1 < len(searchstarge)
-        let temchar = join(split(searchstarge[idx1],":")[2:])
-        let tempchar = [split(searchstarge[idx1],":")[0] . ":" . split(searchstarge[idx1],":")[1] . ":","   " . split(join(split(searchstarge[idx1],":")[2:]),"^\\s\\+")[0]]
-        if matchstr(split(searchstarge[idx1],":")[0],'\.xml') ==# ""
-            if matchstr(split(searchstarge[idx1],":")[0],"test") ==# ""
-                if matchstr(temchar,"注释") ==# ""
+        let codelist = split(searchstarge[idx1],":")
+        let srccode = join(codelist[2:])
+        let targetcode = [codelist[0] . ":" . codelist[1] . ":","   " . split(join(codelist[2:]),"^\\s\\+")[0]]
+        let filetype = IsFileType(codelist[0])
+
+        if  filetype != "xml"
+            if matchstr(codelist[0],"test") ==# ""
+                if matchstr(srccode,"注释") ==# ""
+                   let flag = IdentificationCodeComponents1(srccode,filetype)
+                   if matchstr(flag,"class") != ""
+                       let classdefinition = add(classdefinition,targetcode)
+                   elseif matchstr(flag,"variabledef") != ""
+                       let variabledef = add(variabledef,targetcode)
+                   elseif matchstr(flag,"variablespecify") != ""
+                       let variablespecify = add(variablespecify,targetcode)
+                   elseif matchstr(flag,"variabledefspecify") != ""
+                       let variabledefspecify = add(variabledefspecify,targetcode)
+                   elseif matchstr(flag,"functioncall") != ""
+                       let functioncall = add(functioncall,targetcode)
+                   elseif matchstr(flag,"functiondeclaration") != ""
+                       let functiondeclaration = add(functiondeclaration,targetcode)
+                   elseif matchstr(flag,"log") != ""
+                       let Log = add(Log,targetcode)
+                   elseif matchstr(flag,"judge") != ""
+                       let judge = add(judge,targetcode)
+                   else
+                       let unknow  = add(unknow,targetcode)
+                   endif
                 else
-                    let Comment = add(Comment,tempchar)
+                    let Comment = add(Comment,targetcode)
                 endif
             else
-                let TEST = add(TEST,tempchar)
+                let TEST = add(TEST,targetcode)
             endif
 
         else
-            let XML = add(XML,tempchar)
+            let XML = add(XML,targetcode)
         endif
         let idx1 += 1
     endwhile
@@ -2019,7 +2072,7 @@ function! SimplifySearchResults1(...)
         return definition
     endif
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2   JudgeString(...) 判断string是否对应char
 function! JudgeString(...)
     "{{{{{3 变量定义
@@ -3372,6 +3425,8 @@ function! IsFileType(...)
         let filetype = "head"
     elseif matchstr(filename,'\.vimrc') != ""
         let filetype = "vimrc"
+    elseif matchstr(filename,'\.xml') != ""
+        let filetype = "xml"
     endif
     return filetype
 endfunction
@@ -13131,6 +13186,7 @@ function! IdentificationCodeComponents1(...)
     let headfile = 21
     let lambda = 22 "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
+    let log = [" Log"," log","tangxinlou debug"]
    " call Echom(10,0,'tangxinlou debug',12978, codestring)
     let NonBlanklist = GetNonBlank(codestring)
     let length = 0
@@ -13142,6 +13198,10 @@ function! IdentificationCodeComponents1(...)
     endif
     if matchstr(codestring," default:") != ""
         let flag = flag . "default"
+        return flag
+    endif
+    if CheckStringIsObtainOfList(codestring,log)
+        let flag = flag . "log"
         return flag
     endif
     if CheckStringIsObtainOfList(codestring,switch)
