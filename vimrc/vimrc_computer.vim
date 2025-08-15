@@ -2708,6 +2708,7 @@ function! GatherIntoRow(...)
         let idj1 += 1
     endwhile
     let foldstring = join(tempchar,"\x00")
+    let foldstring = ProcessingEqualSymbols(foldstring)
     let prvnum = FirstNonBlank(foldstring)
     if  matchstr(tempchar,"\\/\\*") != ""
         let foldstring = ClearingNotesInCode(foldstring)
@@ -4003,6 +4004,43 @@ function! Flag2String(...)
         let tempchar = tempchar . tempchar1
     endif
     return tempchar
+endfunction
+"}}}}}
+"{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的=符号
+function! ProcessingEqualSymbols(...)
+    "{{{{{3 变量定义
+    let string = copy(a:1)
+    let idx1 = 0
+    "}}}}
+    if matchstr(string,'=') ==# ""
+        return string
+    endif
+    let string = split(string,'\zs')
+    let idx1 = 1
+    while  idx1 < len(string)
+        if string[idx1 - 1] ==# '='
+            if string[idx1] ==# ' ' || string[idx1] ==# '='
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        else
+            if string[idx1] ==# '='
+                if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '=' || string[idx1 - 1] == '>' || string[idx1 - 1] == '<'||
+                            \ string[idx1 - 1] == '+' ||
+                            \ string[idx1 - 1] == '-' ||
+                            \ string[idx1 - 1] == '!'
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return join(string,"\x00")
 endfunction
 "}}}}}
 "}}}}
@@ -12604,7 +12642,7 @@ function! LexiconizationCallback(...)
     let filetype =  IsFileType(filename)
     "}}}}
     let linelist = MergeLinesOfCode(line)
-    "call Echom(10,0,'tangxinlou debug',12495, line)
+    call Echom(10,0,'tangxinlou debug',12495, line)
     if linelist ==# []
         let resultlist[0] = line + 1
         let resultlist[1] = "false"
@@ -12619,7 +12657,7 @@ function! LexiconizationCallback(...)
     "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
     let dict["03string"] = flag . " " . string(SplitCodeString(string))
-    if matchstr(flag,'class\|func') != ""
+    if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
         let UpBracketslist = []
         let UpBracketslist  = GetUpBrackets(end + 1)
         if UpBracketslist ==# []
@@ -13222,6 +13260,7 @@ function! IdentificationCodeComponents1(...)
     let return = 11                    "返回值
     let functioncall  = 12
     let functiondefinition = 13
+    let functiondeclaration = 25
     let statement = 14
     let break = 15
     let struct = 16
@@ -13239,6 +13278,10 @@ function! IdentificationCodeComponents1(...)
     let lambda = 22 "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
     let log = [" Log"," log","tangxinlou debug","debugLog("]
+
+    let codelist = []
+    let index = 0
+
    " call Echom(10,0,'tangxinlou debug',12978, codestring)
     let NonBlanklist = GetNonBlank(codestring)
     let length = 0
@@ -13247,28 +13290,22 @@ function! IdentificationCodeComponents1(...)
     if matchstr(codestring," case ") != ""
         let flag = flag . "case"
         return flag
-    endif
-    if matchstr(codestring," default:") != ""
+    elseif matchstr(codestring," default:") != ""
         let flag = flag . "default"
         return flag
-    endif
-    if CheckStringIsObtainOfList(codestring,log)
+    elseif CheckStringIsObtainOfList(codestring,log)
         let flag = flag . "log"
         return flag
-    endif
-    if CheckStringIsObtainOfList(codestring,switch)
+    elseif CheckStringIsObtainOfList(codestring,switch)
         let flag = flag . "switch"
         return flag
-    endif
-    if CheckStringIsObtainOfList(codestring,judge)
+    elseif CheckStringIsObtainOfList(codestring,judge)
         let flag = flag . "judge"
         return flag
-    endif
-    if matchstr(codestring,"#include") != ""
+    elseif matchstr(codestring,"#include") != ""
         let flag = flag . "headfile"
         return flag
-    endif
-    if CheckStringIsObtainOfList(codestring,define)
+    elseif CheckStringIsObtainOfList(codestring,define)
         let flag = flag . "define"
         return flag
     endif
@@ -13277,26 +13314,25 @@ function! IdentificationCodeComponents1(...)
         if matchstr(codestring,"package ") != ""
             let flag = flag . "package"
             return flag
-        endif
-        if matchstr(codestring," break") != ""
+        elseif matchstr(codestring," break") != ""
             let flag = flag . "break"
             return flag
-        endif
-        if matchstr(codestring,"import ") != ""
+        elseif matchstr(codestring,"import ") != ""
             let flag = flag . "import"
             return flag
-        endif
-        if matchstr(codestring," return ") != ""
+        elseif matchstr(codestring," return ") != ""
             let flag = flag . "return"
             return flag
         endif
-        let length = len(SplitCodeString(codestring))
+
+        let codelist = SplitCodeString(codestring)
+        let length = len(codelist)
         if length ==# 1
             let flag = "functioncall"
             return flag
         else
-            if matchstr(codestring,"=") != ""
-                let typelength = len(split(split(codestring,'=')[0]))
+            if count(codelist,"=") != 0
+                let typelength = index(codelist,"=")
                 if typelength ==# 1
                     let flag = "variablespecify"
                 else
@@ -13304,7 +13340,13 @@ function! IdentificationCodeComponents1(...)
                 endif
                 return flag
             else
+                if matchstr(codestring,'\w*(.*)') != ""
+                    let flag  = "functiondeclaration"
+                    "call Echom(10,0,'tangxinlou debug',13357,length,codelist)
+                    return flag
+                endif
                 let flag  = "variabledef"
+
                 return flag
             endif
         endif
@@ -13316,29 +13358,22 @@ function! IdentificationCodeComponents1(...)
         if CheckStringIsObtainOfList(codestring,cycle)
             let flag = flag . "cycle"
             return flag
-        endif
-        if CheckStringIsObtainOfList(codestring,lock)
+        elseif CheckStringIsObtainOfList(codestring,lock)
             let flag = flag . "lock"
             return flag
-        endif
-        if CheckStringIsObtainOfList(codestring,Exception)
+        elseif CheckStringIsObtainOfList(codestring,Exception)
             let flag = flag . "Exception"
             return flag
-        endif
-        if matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+        elseif matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "class"
             return flag
-        endif
-        if matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+        elseif matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "enum"
             return flag
-        endif
-        if matchstr(codestring,"struct ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+        elseif matchstr(codestring,"struct ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "struct"
             return flag
-        endif
-
-        if CheckStringIsObtainOfList(codestring,staticfunc)
+        elseif CheckStringIsObtainOfList(codestring,staticfunc)
             let flag = flag . "staticfunc"
             return flag
         endif
@@ -13348,8 +13383,11 @@ function! IdentificationCodeComponents1(...)
             return flag
         endif
 
-        if matchstr(codestring,"=") != ""
-            let typelength = len(split(split(codestring,'=')[0]))
+        let codelist = SplitCodeString(codestring)
+        let length = len(codelist)
+
+        if count(codelist,"=") != 0
+            let typelength = index(codelist,"=")
             if typelength ==# 1
                 let flag = "variablespecify"
             else
@@ -13358,6 +13396,7 @@ function! IdentificationCodeComponents1(...)
             return flag
         else
             let flag  = "variabledef"
+
             return flag
         endif
 
@@ -13426,6 +13465,7 @@ function! SplitCodeString(...)
       let strings = split(strings,'\zs')
       let srcint = 0
       let tailint = 0
+      let childstr = ""
       "call Echom(10,0,'tangxinlou debug',3649, strings)
       while idx1 < len(strings)
           "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
@@ -13437,11 +13477,9 @@ function! SplitCodeString(...)
                       "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
                       let resultlist = add(resultlist,join(strings[srcint:tailint],''))
                       "let resultlist = add(resultlist,strings[srcint:tailint])
-                      let srcint = idx1
-                  else
-                      let srcint = idx1
                   endif
               endif
+              let srcint = idx1 + 1
           elseif strings[idx1] ==# "("
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
               "call Echom(10,0,'tangxinlou debug',3664, idx1)
@@ -13458,7 +13496,10 @@ function! SplitCodeString(...)
           endif
           if idx1 ==# len(strings) -1
               let tailint = idx1
-              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              let childstr = join(strings[srcint:tailint],'')
+              if childstr != ""
+                  let resultlist = add(resultlist,childstr)
+              endif
               "let resultlist = add(resultlist,strings[srcint:tailint])
           endif
           let idx1 += 1
@@ -13488,6 +13529,15 @@ function! ParsingVariable(...)
 endfunction
 "}}}}}
 "}}}
+"{{{{  基础能力函数
+"{{{{{2 处理字符串
+"}}}}}
+"{{{{{2 处理列表
+"}}}}}
+"{{{{{2 处理数字
+"}}}}}
+"}}}
+
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
 "gettabinfo()标签页信息
