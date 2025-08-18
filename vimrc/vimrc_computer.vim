@@ -2694,8 +2694,11 @@ function! GatherIntoRow(...)
     let foldstring = join(tempchar,"\x00")
     let foldstring = ProcessingEqualSymbols(foldstring)
     let prvnum = FirstNonBlank(foldstring)
-    if  matchstr(tempchar,"\\/\\*") != ""
+    if  matchstr(foldstring,"\\/\\*") != ""
         let foldstring = ClearingNotesInCode(foldstring)
+    endif
+    if matchstr(foldstring,'@') != ""
+        let foldstring = ClearingNoteschildStr(foldstring)
     endif
     let afternum = FirstNonBlank(foldstring)
     if prvnum != afternum
@@ -13529,6 +13532,7 @@ endfunction
 function! ParsingFunctions(...)
     let funcode = copy(a:1)
     let codelist = SplitCodeString(funcode)
+    call Echom(10,0,'tangxinlou debug',13532, codelist)
     let resultlist = ["函数名","函数参数"]
     let parameter = ["参数类型","参数"]
     let targetstr = IsContain('\w*(.*)',codelist)
@@ -13544,6 +13548,37 @@ endfunction
 "}}}
 "{{{{  基础能力函数
 "{{{{{2 处理字符串
+"{{{{{2 ClearingNoteschildStr(...)在代码中清除@后面的字符
+function! ClearingNoteschildStr(...)
+    let codestring = copy(a:1)
+    let codestring = split(codestring,'\zs')
+    let srcnum = -1
+    let tailnum = -1
+    let idx1 = 0
+    if  codestring[3] ==# '@'
+    endif
+    while count(codestring,'@') != 0
+        if codestring[idx1] ==# "@"
+            let srcnum = idx1
+        elseif codestring[idx1] ==# '('
+            if srcnum != -1
+                let idx1 = FindCorrespondingBracketPosition(codestring,idx1,'(')
+            endif
+        elseif codestring[idx1] ==# ' '
+            if srcnum != -1
+                let tailnum = idx1
+                let codestring = extend(codestring[:srcnum - 1],codestring[tailnum:])
+                let srcnum = -1
+                let tailnum = -1
+                let idx1 = -1
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return join(codestring,'')
+endfunction
+"}}}}}
+
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
