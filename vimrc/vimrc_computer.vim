@@ -103,6 +103,7 @@ set clipboard=exclude:clipboard
 "let java_highlight_functions = "indent"
 "colorscheme torte
 colorscheme elflord
+set ambiwidth=single
 "syntax match javaFunction '\<\h\w*\>\ze\s*('
 "hi link javaFunction Function
 "}}}}}
@@ -1933,8 +1934,8 @@ function! SimplifySearchResults(...)
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
     let definition = extend(definition,resultlist[6])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    let definition = ListTo1D(definition,"█")
-    let definition = ListAddSpaces(definition,"█")
+    let definition = ListTo1D(definition,"▌")
+    let definition = ListAddSpaces(definition,"▌")
     if a:0 ==# 0
         execute "normal! :r!date +\\%F-\\%T\<cr>"
         call append(line('.'),definition)
@@ -1986,6 +1987,9 @@ function! SimplifySearchResults1(...)
     else
         let searchstarge = a:1
         let mode = a:2
+        if a:0 ==# 3
+            let searchs = a:3
+        endif
         if len(searchstarge) ==# 0
             return []
         endif
@@ -2001,7 +2005,8 @@ function! SimplifySearchResults1(...)
         if  filetype != "xml"
             if matchstr(codelist[0],"test") ==# ""
                 if matchstr(srccode,"注释") ==# ""
-                   let flag = IdentificationCodeComponents1(srccode,filetype)
+                   "let flag = IdentificationCodeComponents1(srccode,filetype)
+                   let flag = DeepDecisionFunction(srccode,searchs )
                    if matchstr(flag,"class") != ""
                        let classdefinition = add(classdefinition,targetcode)
                    elseif matchstr(flag,"variabledef") != ""
@@ -2115,8 +2120,8 @@ function! SimplifySearchResults1(...)
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
     let definition = extend(definition,resultlist[g:XMLNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    let definition = ListTo1D(definition,"█")
-    let definition = ListAddSpaces(definition,"█")
+    let definition = ListTo1D(definition,"▌")
+    let definition = ListAddSpaces(definition,"▌")
     if a:0 ==# 0
         execute "normal! :r!date +\\%F-\\%T\<cr>"
         call append(line('.'),definition)
@@ -2181,25 +2186,25 @@ function! SmartFileSwitching(...)
             let path = curlinestring
             let filename = split(path,'/')[-1]
             let register = getline(1)
-            "echo split(@f,'█')
-            if count(split(@f,'█'),register) ==# 0
-                let @f = register . '█'  . @f
+            "echo split(@f,'▌')
+            if count(split(@f,'▌'),register) ==# 0
+                let @f = register . '▌'  . @f
             endif
         elseif curwinid ==# g:windowgrepid
-            let curlinestring = split(curlinestring,'█')[0]
+            let curlinestring = split(curlinestring,'▌')[0]
             let path = split(curlinestring,':')[0]
             let line = split(curlinestring,':')[1]
             let filename = split(path,'/')[-1]
             let register = getline(1)
             let numberlist = getline(3,line('$'))
-            let tempstring = split(copy(@g),"█")
+            let tempstring = split(copy(@g),"▌")
             if count(tempstring,register) ==# 0
-                let register = join(ListStack(tempstring,register,100),"█")
+                let register = join(ListStack(tempstring,register,100),"▌")
                 let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             else
                 let index =  index(tempstring,register)
                 call  remove(tempstring,index)
-                let register = register . '█'  . join(tempstring,"█")
+                let register = register . '▌'  . join(tempstring,"▌")
                 call  remove(g:grepnumberlist,index)
                 let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             endif
@@ -2210,12 +2215,12 @@ function! SmartFileSwitching(...)
             let line = split(curlinestring,':')[0]
             let filename = split(path,'/')[-1]
             let register = getline(1)
-            if count(split(@l,'█'),register) ==# 0
-                let register = register . '█'  . @l
-                if len(split(register,"█")) > 100
-                    let register = split(register,"█")
+            if count(split(@l,'▌'),register) ==# 0
+                let register = register . '▌'  . @l
+                if len(split(register,"▌")) > 100
+                    let register = split(register,"▌")
                     let register = register[0:99]
-                    let register = join(register,"█")
+                    let register = join(register,"▌")
                 endif
                 let @l = register
             endif
@@ -2261,14 +2266,14 @@ function! SmartFileSwitching(...)
         if curwinid ==# g:windowgrepid
             let register = getline(1)
             let numberlist = getline(3,line('$'))
-            let tempstring = split(copy(@g),"█")
+            let tempstring = split(copy(@g),"▌")
             if count(tempstring,register) ==# 0
-                let register = join(ListStack(tempstring,register,100),"█")
+                let register = join(ListStack(tempstring,register,100),"▌")
                 let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             else
                 let index =  index(tempstring,register)
                 call  remove(tempstring,index)
-                let register = register . '█'  . join(tempstring,"█")
+                let register = register . '▌'  . join(tempstring,"▌")
                 call  remove(g:grepnumberlist,index)
                 let g:grepnumberlist = insert(g:grepnumberlist,numberlist)
             endif
@@ -3082,10 +3087,10 @@ function! FindAnotherBracketPosition(...)
         "let index = match(getline('.'), '\S')
         "let curline = copy(cursor[0])
         "call Dbug1(10,0,'FindAnotherBracketPosition 47', )
-        "while IsComment(cursor[0]) ==# 1
-        "    call cursor(cursor[0] + 1,1)
-        "    let cursor =  searchpos('{','w')
-        "endwhile
+        while IsComment(cursor[0]) ==# 1
+            call cursor(cursor[0] + 1,1)
+            let cursor =  searchpos('{','w')
+        endwhile
         "call Echom(10,0,'tangxinlou debug',2854, "end")
         silent call cursor(line,col)
         return cursor
@@ -4586,7 +4591,7 @@ function! CycleCherry()
         let idx1 = 0
         let templist = []
         while idx1 < len(cherrylist)
-            let templist = split(cherrylist[idx1],"█")
+            let templist = split(cherrylist[idx1],"▌")
             call CherryPick(templist[0],templist[1],templist[2])
             let idx1 += 1
         endwhile
@@ -4627,8 +4632,8 @@ function! ParsingCherry()
     while idx1 < index
         let tempchar = ""
         let tempchar = split(getline((idx1 * totallen) + childlen ),'/')[1]
-        let tempchar = tempchar ."█" . getline((idx1 * totallen) + childlen + 3 )
-        let tempchar = tempchar ."█" . getline((idx1 * totallen) + childlen + 4 )
+        let tempchar = tempchar ."▌" . getline((idx1 * totallen) + childlen + 3 )
+        let tempchar = tempchar ."▌" . getline((idx1 * totallen) + childlen + 4 )
         let resultlist = add(resultlist,tempchar)
         let idx1 += 1
     endwhile
@@ -5761,7 +5766,7 @@ function!  SelectAndModifyByName(...)
     let templist = []
     let tempchar = ""
     let path = ""
-    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s "
+    let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad▌\%an▌\%H▌\%s "
     if a:0 ==# 1
         let keychar = a:1
     else
@@ -5771,10 +5776,10 @@ function!  SelectAndModifyByName(...)
         let path = "-- " . path
         let command = command  . path
     endif
-    "let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad█\%an█\%H█\%s -- libs/"
+    "let command = "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:\%ad▌\%an▌\%H▌\%s -- libs/"
     let resultlist = split(system(command),"\n")
     while idx1 < len(resultlist)
-        let tempchar = split(resultlist[idx1],"█")
+        let tempchar = split(resultlist[idx1],"▌")
         if matchstr(tempchar[3],"Merge ") ==# ""
             if keychar ==# "" || matchstr(tempchar[1],keychar) != ""
                 let templist = add(templist,resultlist[idx1])
@@ -5826,7 +5831,7 @@ function! CompareTwoBranchChanges(...)
     call  SwitchBranches(branch,commit)
     let version2 = SelectAndModifyByName(keychar)
     call execute(":lcd  .." )
-    let Collection = SetOperationsBetweenLists(GetOneOfTheColumns(version1,"█",3),GetOneOfTheColumns(version2,"█",3),"差集")
+    let Collection = SetOperationsBetweenLists(GetOneOfTheColumns(version1,"▌",3),GetOneOfTheColumns(version2,"▌",3),"差集")
     if Collection[0] != []
         let AB = SelectionFromTheListByIndex(Collection[0],version1)
         let resultlist = add(resultlist,path ."仓")
@@ -8084,7 +8089,7 @@ function! ParseCodeFiles(...)
         call setline(1,codelist)
         execute "normal! \<c-w>l"
         call cursor(line,col)
-        let @/ = "█1█.*$"
+        let @/ = "▌1▌.*$"
     else
         if mode ==# 1
             let codelist = ListFunctionAamesAndClassNames(codelist)
@@ -8120,7 +8125,7 @@ function! LoopToDillDictionary(...)
     let endnodeformat  = {}
     let tempchar = ""
     let tempchar1 = "├──"
-    let tempchar2 = "│  █"
+    let tempchar2 = "│  ▌"
     "}}}}
     "字典拷贝一定要deepcopy,不然字典里面第二层成员还是同一个地址
     let nodeformat = deepcopy(dictformart)
@@ -8148,7 +8153,7 @@ function! LoopToDillDictionary(...)
                     "echo "line " . idx1 .  "flag " . flag . nodeformat["1-dictname"]
                     let tempchar = ""
                     let tempchar =  repeat(tempchar2,flag - 1) . tempchar1
-                    let codelist1 = add(codelist1,start ."-" .end .  "█" . flag . "█" . tempchar .  "█" . split(nodeformat["1-dictname"],"^\\s\\+")[0])
+                    let codelist1 = add(codelist1,start ."-" .end .  "▌" . flag . "▌" . tempchar .  "▌" . split(nodeformat["1-dictname"],"^\\s\\+")[0])
                 endif
             else
                 let start = 1
@@ -8315,7 +8320,9 @@ function! ExtractKeyCodes(...)
                             call cursor(switchlinetail,1)
                             let tempcursor = FindAnotherBracketPosition('}')
                             if tempcursor[0] ==# switchline
-                                let codelist = insert(codelist,tempstring)
+                                if tempstring != ""
+                                    let codelist = insert(codelist,tempstring)
+                                endif
                                 break
                             endif
                         endif
@@ -8325,7 +8332,9 @@ function! ExtractKeyCodes(...)
             endif
             call Dbug1(10,0,'ExtractKeyCodes 68', )
         endif
-        let codelist = insert(codelist,foldstring)
+        if foldstring != ""
+            let codelist = insert(codelist,foldstring)
+        endif
         call cursor(start[0],start[1])
         let lastline = start[0]
         call Dbug1(10,0,'ExtractKeyCodes 69', )
@@ -8336,14 +8345,13 @@ function! ExtractKeyCodes(...)
         let stackflag = 1
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
-            "call Echom(10,0,'tangxinlou debug',7997, result)
             if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
                 if stackflag > 0
                     if result != ""
                         if tempstring ==# ""
                             let tempstring =  result
                         else
-                            let tempstring = tempstring . "█" . result
+                            let tempstring = tempstring . "▌" . result
                         endif
                     endif
                     let stackflag -= 1
@@ -8353,7 +8361,7 @@ function! ExtractKeyCodes(...)
                     if tempstring ==# ""
                         let tempstring =  result
                     else
-                        let tempstring = tempstring . "█" . result
+                        let tempstring = tempstring . "▌" . result
                     endif
                 endif
             endif
@@ -8367,7 +8375,7 @@ function! ExtractKeyCodes(...)
         let @d = string(codelist)
         call AddNumber3(codelist)
         if filetype ==# "cc"
-            let tempstring = expand("%:t") . "█" . tempstring
+            let tempstring = expand("%:t") . "▌" . tempstring
         endif
         if matchstr(tempstring,"{") != ""
             call Echom(10,2,'tangxinlou debug',7966,filename,tempstring,realityline)
@@ -8391,7 +8399,7 @@ function! ExtractKeyCodes(...)
                         if tempstring ==# ""
                             let tempstring =  result
                         else
-                            let tempstring = tempstring . "█" . result
+                            let tempstring = tempstring . "▌" . result
                         endif
                     endif
                     let stackflag -= 1
@@ -8401,14 +8409,14 @@ function! ExtractKeyCodes(...)
                     if tempstring ==# ""
                         let tempstring =  result
                     else
-                        let tempstring = tempstring . "█" . result
+                        let tempstring = tempstring . "▌" . result
                     endif
                 endif
             endif
             let idx1 += 1
         endwhile
         if filetype ==# "cc"
-            let tempstring = expand("%:t") . "█" . tempstring
+            let tempstring = expand("%:t") . "▌" . tempstring
         endif
         call RestoreBuffer()
         if matchstr(tempstring,"{") != ""
@@ -8435,7 +8443,7 @@ function! ExtractKeyCodes(...)
                             if tempstring ==# ""
                                 let tempstring =  result
                             else
-                                let tempstring = tempstring . "█" . result
+                                let tempstring = tempstring . "▌" . result
                             endif
                         endif
                         let stackflag -= 1
@@ -8445,14 +8453,14 @@ function! ExtractKeyCodes(...)
                         if tempstring ==# ""
                             let tempstring =  result
                         else
-                            let tempstring = tempstring . "█" . result
+                            let tempstring = tempstring . "▌" . result
                         endif
                     endif
                 endif
                 let idx1 += 1
             endwhile
             if filetype ==# "cc"
-                let tempstring = expand("%:t") . "█" . tempstring
+                let tempstring = expand("%:t") . "▌" . tempstring
             endif
             let resultlist = add(resultlist,functionline)
             let resultlist = add(resultlist,tempstring)
@@ -8930,7 +8938,7 @@ function! AddDebugLog(...)
             if search("import \.*.Log;") ==# 0
                 silent execute "normal! gg"
                 call search("^package ")
-                call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+                call append(line('.'),"import android.util.Log;")
                 let line += 1
             endif
             call cursor(line,1)
@@ -8950,7 +8958,7 @@ function! AddDebugLog(...)
             if search("import \.*.Log;") ==# 0
                 silent execute "normal! gg"
                 call search("^package ")
-                call append(line('.'),"import com.android.bluetooth.vivo.Log;")
+                call append(line('.'),"import android.util.Log;")
                 if line('.') < line
                     let line += 1
                 endif
@@ -9172,7 +9180,7 @@ function! SimplifyCurrentFileFunctions(...)
         call setline(1,codelist111)
         execute "normal! \<c-w>l"
         call cursor(line,col)
-        let @/ = "█1█.*$"
+        let @/ = "▌1▌.*$"
         redraw
     else
         if mode ==# 1
@@ -9254,7 +9262,7 @@ function! LoopThroughDictionaries(...)
     let tempmemberkey = ""
     let tempchar = ""
     let tempchar1 = "├──"
-    let tempchar2 = "│  █"
+    let tempchar2 = "│  ▌"
     "}}}}
     let loopkeylist = keys(Loopdict)
     let g:charinterval = '-'
@@ -9293,11 +9301,11 @@ function! LoopThroughDictionaries(...)
             if looptypes ==# 1   "字典成员是字符
                 let tempchar = ""
                 let tempchar =  repeat(tempchar2,loopflag) . tempchar1
-                let Loopconstant = add(Loopconstant , loopflag . "█" . tempchar .  "█" . tempmemberkey)
+                let Loopconstant = add(Loopconstant , loopflag . "▌" . tempchar .  "▌" . tempmemberkey)
             elseif looptypes ==# 4  "字典成员是字典
                 let tempchar = ""
                 let tempchar =  repeat(tempchar2,loopflag) . tempchar1
-                let Loopconstant = add(Loopconstant , loopflag . "█" . tempchar .  "█" . tempmemberkey)
+                let Loopconstant = add(Loopconstant , loopflag . "▌" . tempchar .  "▌" . tempmemberkey)
                 call LoopThroughDictionaries(tempmember,Loopconstant,Loopfunc,loopflag + 1)
             endif
             let idx1 += 1
@@ -9377,35 +9385,35 @@ function! InventoryFiles(...)
     let codedict = ParseCodeFiles(filename,1)
     let codelist = codedict["codelist"]
     "获取函数首行和尾行
-    let ranglist  = GetOneOfTheColumns(codelist,"█",0)
+    let ranglist  = GetOneOfTheColumns(codelist,"▌",0)
     "提取关键节点,函数名列表，函数首行列表，class列表，class 成员列表
     let listlength = len(codelist)
     for i in range(0,listlength - 1)
         let curlitem = codelist[i]
         if matchstr(curlitem,"class") != ""
-            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(curlitem,'▌')[-1]
             let tempchar = split(tempchar)
             let indexnum = index(tempchar,"class")
             let functionnamelist  = add(functionnamelist,tempchar[indexnum + 1])
             let classname = add(classname,tempchar[indexnum + 1])
-            let tempchar = split(curlitem,'█')[0]
+            let tempchar = split(curlitem,'▌')[0]
             let tempchar = str2nr(split(tempchar,'-')[0])
             let firstlinelist  = add(firstlinelist,tempchar)
-            let tempchar = split(curlitem,'█')[0]
+            let tempchar = split(curlitem,'▌')[0]
             let tempchar = str2nr(split(tempchar,'-')[1])
             let lastlinelist  = add(lastlinelist,tempchar)
             let typelist = add(typelist,"class")
             let parameterlist = add(parameterlist,0)
             let classrang = add(classrang,ranglist[i])
         else
-            let tempchar = split(curlitem,'█')[-1]
+            let tempchar = split(curlitem,'▌')[-1]
             let tempchar = split(tempchar,'(')[0]
             let tempchar = split(tempchar)
             let functionnamelist  = add(functionnamelist ,tempchar[-1])
-            let tempchar = split(curlitem,'█')[0]
+            let tempchar = split(curlitem,'▌')[0]
             let tempchar = str2nr(split(tempchar,'-')[0])
             let firstlinelist  = add(firstlinelist,tempchar)
-            let tempchar = split(curlitem,'█')[0]
+            let tempchar = split(curlitem,'▌')[0]
             let tempchar = str2nr(split(tempchar,'-')[1])
             let lastlinelist  = add(lastlinelist,tempchar)
             let typelist = add(typelist,"func")
@@ -9573,10 +9581,10 @@ function! CallStack(...)
         if matchstr(laststackstring,"case ") != ""
             let index = count(laststackstring,"case ")
             let index = -1 - index
-            let tempchar = split(laststackstring,"█")[index]
+            let tempchar = split(laststackstring,"▌")[index]
         else
             call Dbug1(10,0,'CallStack 103', laststackstring)
-            let tempchar = split(laststackstring,"█")[-1]
+            let tempchar = split(laststackstring,"▌")[-1]
         endif
         if count(tempchar,"::") != 0
             let tempchar = split(tempchar ,"::")[-1]
@@ -9590,7 +9598,7 @@ function! CallStack(...)
         "if len(resultlist[0]) != 0 && flag < 6
         if len(resultlist[0]) != 0
             "有调用
-            let resultlist[0] = ListTo1D(resultlist[0] ,"█")
+            let resultlist[0] = ListTo1D(resultlist[0] ,"▌")
             let idx1 = 0
             while idx1 < len(resultlist[0])
                 "当前行是怎么被调用下来的
@@ -9816,7 +9824,7 @@ function! FindTheCalledParty(...)
         let position =   ChildStringPosition(tempstring ,funcname . '(')
         if position != []
             let classname = GetCallFuncName(position[0],tempstring,line)
-            let result  = classname . "█" . funcname
+            let result  = classname . "▌" . funcname
         endif
     endif
     return result
@@ -9958,7 +9966,7 @@ function! GetCallFuncName(...)
         let classname = ExtractKeyCodes(line)
         let index = count(classname,"case ")
         let index = -1 - index - 1
-        let classname = join(split(classname,"█")[0:index],"█")
+        let classname = join(split(classname,"▌")[0:index],"▌")
         let result  = classname
     else
         let idx1 = position - 2
@@ -9986,7 +9994,7 @@ function! GetCallFuncName(...)
             let classname = ExtractKeyCodes(line)
             let index = count(classname,"case ")
             let index = -1 - index - 1
-            let classname = join(split(classname,"█")[0:index],"█")
+            let classname = join(split(classname,"▌")[0:index],"▌")
             let result  = classname
             call Dbug1(10,0,'GetCallFuncName 109', "函数没有获取到")
         else
@@ -10011,8 +10019,8 @@ function! ClassReplacementObject(...)
         let classname = ExtractKeyCodes(line)
         let index = count(classname,"case ")
         let index = -1 - index - 1
-        let classname = join(split(classname,"█")[0:index],"█")
-        let result  = classname . "█" . funcname
+        let classname = join(split(classname,"▌")[0:index],"▌")
+        let result  = classname . "▌" . funcname
     else
         let objectname = split(funcname,'\.')
         if(separatorsnum + 1) ==# len(objectname)
@@ -10265,8 +10273,8 @@ function! SearcherChars()
            if line('.') ==# 2
                let line = line('.')
                let col = col('.')
-               let register = split(getline(2),"█")
-               let indexlist = StringPosition(getline(2),'█')
+               let register = split(getline(2),"▌")
+               let indexlist = StringPosition(getline(2),'▌')
                let index = ListIndex(indexlist,col)
                let targetlist = g:grepnumberlist[index]
                call setline(3,targetlist)
@@ -10631,20 +10639,20 @@ function! TreeContens(...)
     let templist = []
     let idx1 = 0
     let g:debugflag = 20
-    if matchstr(tempfile,"█") ==# ""
+    if matchstr(tempfile,"▌") ==# ""
         let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
         silent execute "normal! :tabnew\<cr>"
         silent execute "normal! :e " . tempfile . "\<cr>"
     else
         silent execute "normal! :tabnew\<cr>"
         let classfunc = copy(tempfile)
-        let tempchar = split(classfunc,"█")[-1]
+        let tempchar = split(classfunc,"▌")[-1]
         if matchstr(classfunc,' case ') != ""
         else
             let searchstarge  = EncapsulateDifferentGrep("","fuc",tempchar)
             let searchstarge = SelectEntireCode(copy(searchstarge))
             let resultlist = ResultClassification(searchstarge)
-            let resultlist[1] = ListTo1D(resultlist[1] ,"█")
+            let resultlist[1] = ListTo1D(resultlist[1] ,"▌")
             if len(resultlist[1]) != 0
                 while idx1 < len(resultlist[1])
                     let templist = split(resultlist[1][idx1],":")
@@ -10699,7 +10707,7 @@ function! UpdateTreeContens(...)
             if description != ""
                 echo  filename
                 echo description
-                let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ", 80 - strwidth(curcontesfile[idx1]) - 1),"  " . join(split(split(description,":")[1],"\x00"))],"█")
+                let curcontesfile[idx1] =join([curcontesfile[idx1] . repeat(" ", 80 - strwidth(curcontesfile[idx1]) - 1),"  " . join(split(split(description,":")[1],"\x00"))],"▌")
             endif
         endif
         let idx1 += 1
@@ -10745,8 +10753,8 @@ function! GetPotionFold(lnum)
     elseif  getline(a:lnum) =~? "<<<<<<<<<<<<<<<<" || getline(a:lnum) =~? ">>>>>>>>>>>>>>>"
         return '0'
     elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
-        if matchstr(getline(a:lnum),"█") ==# "█"
-            return count(split(getline(a:lnum),'█'),'│  ')
+        if matchstr(getline(a:lnum),"▌") ==# "▌"
+            return count(split(getline(a:lnum),'▌'),'│  ')
         else
             return count(split(getline(a:lnum)),'│  ')
         endif
@@ -11114,7 +11122,7 @@ function! AutoAnalyzer(...)
             let idx1 = len(filterkey) - 1
             let indexfilter = filterkey[indexfilter1]
             if indexfilter ==# "00temp"
-                let historysele = split(@l,'█')
+                let historysele = split(@l,'▌')
                 let temphistorysele = copy(historysele)
                 echo temphistorysele
                 call AddNumber2(temphistorysele)
@@ -11144,12 +11152,12 @@ function! AutoAnalyzer(...)
                     "关键词里面有+
                     let @/ = substitute(@/ , '+', '\\+', 'g')
                 endif
-                if count(split(@l,'█'),tempfilterchar) ==# 0
-                    let tempfilterchar = tempfilterchar  . '█'  . @l
-                    if len(split(tempfilterchar,"█")) > 10
-                        let tempfilterchar = split(tempfilterchar,"█")
+                if count(split(@l,'▌'),tempfilterchar) ==# 0
+                    let tempfilterchar = tempfilterchar  . '▌'  . @l
+                    if len(split(tempfilterchar,"▌")) > 10
+                        let tempfilterchar = split(tempfilterchar,"▌")
                         let tempfilterchar = tempfilterchar[0:9]
-                        let tempfilterchar = join(tempfilterchar,"█")
+                        let tempfilterchar = join(tempfilterchar,"▌")
                     endif
                     let @l = tempfilterchar
                 endif
@@ -11193,7 +11201,7 @@ function! AutoAnalyzer(...)
     let filterkey = sort(keys(Multidimensionaldict))
     for item in filterkey
         let templist = copy(Multidimensionaldict[item])
-        let templist = filter(templist, 'matchstr(v:val,"█") ==# ""')
+        let templist = filter(templist, 'matchstr(v:val,"▌") ==# ""')
         let Multidimensionallist = extend(Multidimensionallist,Multidimensionaldict[item])
     endfor
     let MultiDimensionalAnalysresult = MultidimensionalAnalyst(Multidimensionallist)
@@ -11414,8 +11422,8 @@ function! MultidimensionalAnalysis(...)
                 if  count(g:Dimensionalflag,Dimensionalflag) ==# 0
                     let g:Dimensionalflag = add(g:Dimensionalflag,Dimensionalflag)
                 endif
-                let analyloglist[index(analyloglist,item)] = Dimensionalflag  . '█' . item
-                let Multidimensionalresult = add(Multidimensionalresult,Dimensionalflag  . '█' . item)
+                let analyloglist[index(analyloglist,item)] = Dimensionalflag  . '▌' . item
+                let Multidimensionalresult = add(Multidimensionalresult,Dimensionalflag  . '▌' . item)
             endif
         endfor
     endfor
@@ -11440,16 +11448,16 @@ function! MultidimensionalAnalysisToObtainOperationTime(...)
     endif
     "\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}
     " echo matchstr("",'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
-    let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin || split(v:val, "█")[0] ==# end')
+    let loglist  = filter(loglist,'split(v:val, "▌")[0] ==# begin || split(v:val, "▌")[0] ==# end')
     let loglist   = UniqueList(loglist)
     while idx1 < len(loglist)
-        if matchstr(loglist[idx1],begin . '█') ==#  begin . '█'
+        if matchstr(loglist[idx1],begin . '▌') ==#  begin . '▌'
             let src = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
         endif
-        if matchstr(loglist[idx1],end . '█') ==#  end . '█'
+        if matchstr(loglist[idx1],end . '▌') ==#  end . '▌'
             let tail = matchstr(loglist[idx1],'\d\d-\d\d \d\d:\d\d:\d\d\.\d\{6\}')
             if tail > src && src != -1
-                let resultlist = add(resultlist,src . '█' . tail)
+                let resultlist = add(resultlist,src . '▌' . tail)
             endif
         endif
         let idx1 += 1
@@ -11479,7 +11487,7 @@ function! MultidimensionalAnalyst(...)
             if len(period) > 0
                 for item1 in period
                     let outputstring = []
-                    let temptime = split(item1,'█')
+                    let temptime = split(item1,'▌')
                     let beginchar = DatePlus1s(temptime[0],"-1")
                     let endchar = DatePlus1s(temptime[1],"-1")
                     let tempsolution = copy(Asolutionlist)
@@ -11511,7 +11519,7 @@ function! MultidimensionalAnalystExtract(...)
     let begin = a:1
     let loglist = copy(a:2)
     "}}}}
-    let loglist  = filter(loglist,'split(v:val, "█")[0] ==# begin')
+    let loglist  = filter(loglist,'split(v:val, "▌")[0] ==# begin')
     let loglist = UniqueList(loglist)
     return loglist
 endfunction
@@ -11774,7 +11782,7 @@ function! LogSearcher()
     let temphistorysele = []
     let  flag = ""
     "}}}}
-    let historysele = split(@l,'█')
+    let historysele = split(@l,'▌')
     let temphistorysele = copy(historysele)
     call AddNumber2(temphistorysele)
     let flag = input("请输入搜索的关键词")
@@ -11791,13 +11799,13 @@ function! LogSearcher()
     endif
     let grepcmd  = grepchar . " \"" .  keywords . "\" " . path
     let @/ = substitute(keywords, '|', '\\|', 'g')
-    "echo split(@l,'█')
-    if count(split(@l,'█'),keywords) ==# 0
-        let keywords = keywords . '█'  . @l
-        if len(split(keywords,"█")) > 100
-            let keywords = split(keywords,"█")
+    "echo split(@l,'▌')
+    if count(split(@l,'▌'),keywords) ==# 0
+        let keywords = keywords . '▌'  . @l
+        if len(split(keywords,"▌")) > 100
+            let keywords = split(keywords,"▌")
             let keywords = keywords[0:9]
-            let keywords = join(keywords,"█")
+            let keywords = join(keywords,"▌")
         endif
         let @l = keywords
     endif
@@ -12323,15 +12331,15 @@ function! FileAddLog(...)
                 else
                     if !CheckStringIsObtainOfList(tempchar,uncheck)
                         if line('.') ==# idx1
-                            "call Echom(10,0,'tangxinlou debug', idx1)
+                            "call Echom(10,0,'tangxinlou debug',12327, idx1)
                             let targetline = idx1
                             let keylist = ExtractKeyCodes(idx1,3)
                             let fucline = keylist[0]
-                            "call Echom(10,0,'tangxinlou debug',fucline )
+                            "call Echom(10,0,'tangxinlou debug',12330,fucline)
                             let fuclinetail = fucline
                             let functionname = keylist[1]
                             let keycode = keylist[2]
-                            let classfuc =  split(functionname,"█")
+                            let classfuc =  split(functionname,"▌")
                             let fucline =  MergeLinesOfCode(fucline)
                             if fucline ==# []
                                 call Echom(10,2,'tangxinlou debug',11938,"选择函数出错", idx1,filename)
@@ -12404,7 +12412,7 @@ function! FileAddLog(...)
                     let fuclinetail = fucline
                     let functionname = keylist[1]
                     let keycode = keylist[2]
-                    let classfuc =  split(functionname,"█")
+                    let classfuc =  split(functionname,"▌")
                     let fucline =  MergeLinesOfCode(fucline)
                     let tempflag = -1
                     let targetline = idx1
@@ -12642,7 +12650,7 @@ function! LexiconizationCallback(...)
     let filetype =  IsFileType(filename)
     "}}}}
     let linelist = MergeLinesOfCode(line)
-    call Echom(10,0,'tangxinlou debug',12495, line)
+    "call Echom(10,0,'tangxinlou debug',12495, line)
     if linelist ==# []
         let resultlist[0] = line + 1
         let resultlist[1] = "false"
@@ -13219,11 +13227,15 @@ endfunction
 "{{{{{2 function!  IdentificationCodeComponents1(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
 function! IdentificationCodeComponents1(...)
     "{{{{{3 变量定义
-    let codestring = a:1
-    let filetype = a:2
+    let codestring = copy(a:1)
     let searchstr = ""
-    if a:0 ==# 3
-        let searchstr  = a:3
+    if a:0 > 1
+        if a:0 >= 2
+            let filetype = a:2
+        endif
+        if a:0 >= 3
+            let searchstr  = a:3
+        endif
     endif
     let flag = ""
     let package = 0                    "包名
@@ -13413,6 +13425,31 @@ function! IdentificationCodeComponents1(...)
     return "unknown"
 endfunction
 "}}}}}
+"{{{{{2 DeepDecisionFunction(...)二次判定函数成分，对粗略判断后的代码二次判断
+function! DeepDecisionFunction(...)
+    "set noignorecase
+    let codestring = a:1
+    let searchstr = a:2
+    let flag = ""
+    let leftstr = ""
+    let index = 0
+    let codelist = []
+    let flag = IdentificationCodeComponents1(codestring)
+    if flag ==# "variabledefspecify" || flag ==# "variablespecify" 
+        let codelist = SplitCodeString(codestring)
+        if count(codelist,"=") != 0
+            let index = index(codelist,"=")
+            let leftstr = codelist[index -1]
+        endif
+        if matchstr(leftstr,searchstr) != ""
+            return flag
+        else
+            return "functioncall"
+        endif
+    endif
+    return flag
+endfunction
+"}}}}}  
 "{{{{{2 SplitCharactersByBrackets(...)分割字符串通过括号分割，括号前面，括号里面，括号中间
 "echo SplitCharactersByBrackets(getline(line('.')))
 function! SplitCharactersByBrackets(...)
