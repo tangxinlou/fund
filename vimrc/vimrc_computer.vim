@@ -1127,27 +1127,6 @@ function! MyCompareVersion(i1, i2)
     return 0
 endfunction
 "}}}}}
-"{{{{{2   IsContain(...) string list返回对应 列表项
-function! IsContain(...)
-    "{{{{{3 变量定义
-    let string = ""
-    let char = ""
-    let list = []
-    let idx1 = 0
-    let string = a:1
-    let list = a:2
-    "转义
-    let string = escape(string, '[]')
-    "}}}}
-    while idx1 < len(list)
-        let char = matchstr(list[idx1],string)
-        if char != ""
-            return list[idx1]
-        endif
-        let idx1 += 1
-    endwhile
-endfunction
-"}}}}}
 "{{{{{2   IsContainList(...) string list返回多个列表项
 function! IsContainList(...)
     "{{{{{3 变量定义
@@ -12664,7 +12643,9 @@ function! LexiconizationCallback(...)
     let flag = IdentificationCodeComponents1(string,filetype)
     "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
-    let dict["03string"] = flag . " " . string(SplitCodeString(string))
+    if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
+        let dict["03string"] = flag . " " . string(SplitCodeString(string))
+    endif
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
         let UpBracketslist = []
         let UpBracketslist  = GetUpBrackets(end + 1)
@@ -13544,21 +13525,16 @@ function! SplitCodeString(...)
       return resultlist
 endfunction
 "}}}}}
-"{{{{{2 ParsingFunctions(...)解析函数
-"echom SplitCodeString(getline(line('.')))
+"{{{{{2 ParsingFunctions(...)解析函数定义
 function! ParsingFunctions(...)
     let funcode = copy(a:1)
     let codelist = SplitCodeString(funcode)
     let resultlist = ["函数名","函数参数"]
-    let idx1 = 0
-    let funstring = ""
-    while idx1 < len(codelist)
-        if matchstr(codelist[idx1],'\w*(.*)') != ""
-            break
-        endif
-        let idx1 += 1
-    endwhile
-    let funstring = codelist[idx1]
+    let parameter = ["参数类型","参数"]
+    let targetstr = IsContain('\w*(.*)',codelist)
+    call Echom(10,0,'tangxinlou debug',13534, targetstr)
+    let targetstr = SplitCharactersByBrackets(targetstr)
+    call Echom(10,0,'tangxinlou debug',13535,targetstr)
 endfunction
 "}}}}}
 "{{{{{2 ParsingVariable(...)解析变量
@@ -13570,6 +13546,27 @@ endfunction
 "{{{{{2 处理字符串
 "}}}}}
 "{{{{{2 处理列表
+"{{{{{3   IsContain(...) string list返回匹配的列表项
+function! IsContain(...)
+    "{{{{{3 变量定义
+    let string = ""
+    let char = ""
+    let list = []
+    let idx1 = 0
+    let string = a:1
+    let list = a:2
+    "转义
+    let string = escape(string, '[]')
+    "}}}}
+    while idx1 < len(list)
+        let char = matchstr(list[idx1],string)
+        if char != ""
+            return list[idx1]
+        endif
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理数字
 "}}}}}
