@@ -2863,7 +2863,7 @@ function! IsComment(...)
         let col = a:2
     endif
 
-    silent call cursor(line,1)
+    silent call cursor(line,col('$'))
     silent let startcursor = searchpos("@.*(", 'b','',max([1, line('.') - 50]))
     if startcursor != [0,0]
         let tempstr = getline(startcursor[0])
@@ -12612,7 +12612,7 @@ function! LexiconizationCallback(...)
     let start = linelist[0]
     let end = linelist[1]
     let string = GatherIntoRow(linelist[0],linelist[1])
-    "call Echom(10,0,'tangxinlou debug',12358, string)
+    "call Echom(10,0,'tangxinlou debug',12358, string,line)
     let flag = IdentificationCodeComponents1(string,filetype)
     "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
@@ -12620,7 +12620,7 @@ function! LexiconizationCallback(...)
         if flag ==# "functiondefinition"
             let dict["03string"] = flag . " " . string(ParsingFunctions(string))
         elseif flag ==# "functioncall"
-            let dict["03string"] = flag . " " . string(ParsingFunctions(string))
+            let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
         else
             let dict["03string"] = flag . " " . string(SplitCodeString(string))
         endif
@@ -13420,9 +13420,8 @@ function! ParsingFunctions(...)
     let targetstr = IsContain('\w*(.*)',codelist)
     let targetstr = SplitCharactersByBrackets(targetstr)
     let resultlist[0] = targetstr[0]
-    call Echom(10,0,'tangxinlou debug',13544, funcode)
     if targetstr[1] != ""
-        let resultlist[1] = ParsingVariableParameter(targetstr[1],0)
+        let resultlist[1] = ParsingVariableParameter(targetstr[1])
     else
         let resultlist[1] = []
     endif
@@ -13432,29 +13431,24 @@ endfunction
 "{{{{{2 ParsingFunctionCalls(...)函数调用
 function! ParsingFunctionCalls(...)
     let funcode = copy(a:1)
-    let resultlist = ["调用对象","函数名","函数参数"]
+    let resultlist = []
     let tempstr = ""
+    let idx1 = 0
     let codelist = SplitCodeString(funcode)
     let targetstr = IsContain('\w*(.*)',codelist)
-    let targetstr = SplitCharactersByBrackets(targetstr)
-    let tempstr = split(targetstr[0],'\.')
-    call Echom(10,0,'tangxinlou debug',13441, tempstr)
-    if  len(tempstr) <= 2
-        let resultlist[0] = tempstr[0]
-        let resultlist[1] = tempstr[1] 
-    else
-        let resultlist[0] = join(tempstr[:-2],'.')
-        let resultlist[1] = tempstr[-1] 
-    endif
-
-    if targetstr[1] != ""
-        let resultlist[2] = ParsingVariableParameter(targetstr[1],1)
-    else
-        let resultlist[2] = []
-    endif
+    let targetstr = SplitStringByChar(targetstr,'.',-1)
+    while idx1 < len(targetstr)
+        if matchstr(targetstr[idx1],'(') != ""
+            let tempstr = SplitCharactersByBrackets(targetstr[idx1])
+            let resultlist = add(resultlist,tempstr[0])
+        else
+            let resultlist = add(resultlist,targetstr[idx1])
+        endif
+        let idx1 += 1
+    endwhile
     return resultlist
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2 ParsingVariable(...)解析变量
 function! ParsingVariable(...)
 endfunction
@@ -13462,7 +13456,6 @@ endfunction
 "{{{{{2 ParsingVariableParameter(...)解析函数参数
 function! ParsingVariableParameter(...)
     let parameter = copy(a:1)
-    let mode = a:2
     let resultlist = []
     let datalist = []
     let idx1 = 0
@@ -13471,9 +13464,7 @@ function! ParsingVariableParameter(...)
         while idx1 < len(parameter)
             let parameter[idx1] = split(parameter[idx1])
             let datalist = []
-            if mode ==# 0
-                let datalist = add(datalist,parameter[idx1][-2])
-            endif
+            let datalist = add(datalist,parameter[idx1][-2])
             let datalist = add(datalist,parameter[idx1][-1])
             let resultlist = add(resultlist,datalist)
             let idx1 += 1
@@ -13481,15 +13472,13 @@ function! ParsingVariableParameter(...)
     else
         let parameter = split(parameter)
         let datalist = []
-        if mode ==# 0
-            let datalist = add(datalist,parameter[-2])
-        endif
+        let datalist = add(datalist,parameter[-2])
         let datalist = add(datalist,parameter[-1])
         let resultlist = add(resultlist,datalist)
     endif
     return resultlist
 endfunction
-"}}}}} 
+"}}}}}
 "}}}
 "{{{{  基础能力函数
 "{{{{{2 处理字符串
@@ -13582,7 +13571,38 @@ function! SplitCodeString(...)
       endwhile
       return resultlist
 endfunction
-"}}}}} 
+"}}}}}
+"{{{{{3 SplitStringByChar(...)分割字符串略过括号，通过指定字符分割，指定方向
+"echo SplitStringByChar(getline(line('.')),'.',-1)
+function! SplitStringByChar(...)
+      let strings = a:1
+      let char = a:2
+      let int = -1
+      let resultlist = []
+      let srcint = -2
+      let tailint = -1
+      let idx1 = 0
+      let strings = split(strings,'\zs')
+      while idx1 < len(strings)
+          if strings[idx1] != " " && srcint < 0
+              let srcint = idx1
+          endif
+          if strings[idx1] ==# "("
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+          elseif strings[idx1] ==# char
+              let tailint = idx1 + int
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              let srcint = idx1
+          endif
+          if idx1 ==# len(strings) - 1
+              let tailint = len(strings) - 1
+              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
 "{{{{{3 ClearingNoteschildStr(...)在代码中清除@后面的字符
 function! ClearingNoteschildStr(...)
     let codestring = copy(a:1)
@@ -13633,9 +13653,9 @@ function! ClearBlank(...)
     let length = len(string)
     let col =  FirstNonBlank(string)
     let string = string[col:]
-    return string 
+    return string
 endfunction
-"}}}}} 
+"}}}}}
 
 "}}}}}
 "{{{{{2 处理列表
@@ -13681,7 +13701,7 @@ function! IsContainIndex(...)
     endwhile
     return -1
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{3 CheckStringIsObtainOfList(...)检查string 里面是否有list中的字符
 function! CheckStringIsObtainOfList(...)
     "JudgeString  功能类似
