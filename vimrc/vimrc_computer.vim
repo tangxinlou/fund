@@ -403,6 +403,15 @@ nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>:let &foldle
 "}}}}
 "函数{{{{
 "{{{{{2   全局变量
+let g:alldebugflag = "true"
+let g:debugid = 0
+let g:FileEmptyDictionary = {"00interval":"0-0",
+            \"01name":"xx",
+            \"02type":"",
+            \"03string":'',
+            \"04childnode":[],
+            \}
+"{{{{{3   仓库
 let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ 'android_packages_apps_Bluetooth',
             \ 'android_system_bt',
@@ -426,6 +435,8 @@ let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ "android_device_mediatek_common",
             \ "android_vendor_mediatek_proprietary_custom",
             \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
+"}}}}}
+"{{{{{3 非函数
 "判断带{有下面的就不是函数
 let g:nonfunctionlist = [" if(",
             \"  new ",
@@ -460,10 +471,9 @@ let g:nonfunctionlist = [" if(",
             \" = new ",
             \" public enum",
             \" static{"]
-let g:debugid = 0
-"sdpdefs.h uuid
-"hci_error_code.h  error code
-"port_api.h rfcom 断开原因
+
+"}}}}}
+"{{{{{3 自动分析
 let g:Removeduplicates = [
             \ 'AudioFlinger_Threads: volumedebug',
             \ 'getNewOutputDevices selected devices',
@@ -511,7 +521,10 @@ let g:smallestunitdict = {
             " rfcomm connect "RFCOMM_StartReq|RFCOMM_CreateConnectionWithSecurity|RFCOMM peer:|rfc_mx_sm_execute|rfc_mx_sm|L2CEVT_L2CAP_CONFIG_RSP|PORT_StartCnf|rfc_mx_conf_cnf|RFCOMM_BufDataInd|bta_ag_mgmt_cback_|rfc_process_mx_message|rfc_port_sm_
             "\40l2cap connect l2cdefs.h" : "chnl_state|l2c_csm_execute|btm_sec_l2cap_access_req.*psm=|l2c_csm.cc.*st:|btm_sec_cb.cc.*AddService:.*psm:|l2c_link_timeout All channels closed|process_l2cap_cmd",
             "\"39sdp bt_psm_types.h  tBTA_DM_STATE" : "bta_dm_search_cb.state|starting service discovery|Discovery started|starting SDP discovery|services_to_search|search UUID =|btif_dm_search_services_evt",
-            " hci 指令hcidefs.h avrcp command response avrcp_common.h smp_int.h
+            " hci 指令hcidefs.h  avrcp_common.h smp_int.h
+            "sdpdefs.h uuid
+            "hci_error_code.h  error code
+            "port_api.h rfcom 断开原因 
 let g:filterchar = {
             \"38broadcast" : "Skip deliver broadcast.*bluetooth|bta_hh_",
             \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice|at com.android.bluetooth",
@@ -553,15 +566,8 @@ let g:filterchar = {
             \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
             \"00temp" : "temptemptem"}
 
-let g:alldebugflag = "true"
-
-let g:FileEmptyDictionary = {"00interval":"0-0",
-            \"01name":"xx",
-            \"02type":"",
-            \"03string":'',
-            \"04childnode":[],
-            \}
-
+"}}}}}
+"{{{{{ 3 代码搜索结果
     "code type sort num
     let g:classdefinitionNUM = 0  "类定义
     let g:variabledefNUM = 1  "变量定义
@@ -576,7 +582,7 @@ let g:FileEmptyDictionary = {"00interval":"0-0",
     let g:TESTNUM = 10             "test
     let g:XMLNUM = 11              "xml
     let g:unknowNUM = 12           "未知
-
+"}}}}}
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
@@ -2864,7 +2870,7 @@ function! IsComment(...)
     endif
 
     silent call cursor(line,col('$'))
-    silent let startcursor = searchpos("@.*(", 'b','',max([1, line('.') - 50]))
+    silent let startcursor = searchpos("@.*(", 'b',max([1, line('.') - 50]))
     if startcursor != [0,0]
         let tempstr = getline(startcursor[0])
         let secondNonWhitespace = GetTwoNonBlank(tempstr)
@@ -3552,59 +3558,6 @@ function! ItString(...)
     return flag
 endfunction
 "}}}}}
-
-"{{{{{2 GetTwoNonBlank(...)获取字符串非空字符开始的前两个字符
-"echo GetTwoNonBlank(getline(line('.')))
-function! GetTwoNonBlank(...)
-    let string = copy(a:1)
-    let length = len(string)
-    let idx1 = 0
-    let char = ""
-    let string = split(string,'\zs')
-    while idx1 < length
-        if string[idx1] != " "
-            break
-        endif
-        let idx1 += 1
-    endwhile
-    if idx1 + 1 < length
-        let char = string[idx1:idx1 + 1]
-        let char = join(char,"\x00")
-    else
-        let char = string[idx1]
-    endif
-    return char
-endfunction
-"}}}}}
-"{{{{{2 GetLastNonBlank(...)获取字符串末尾倒数第一个非空字符
-"echo GetLastNonBlank(getline(line('.')))
-function! GetLastNonBlank(...)
-    let string = copy(a:1)
-    let idx1 = 0
-    let char = ""
-    let string = split(string,'\zs')
-    let length = len(string)
-    let idx1 = length - 1
-    while idx1 >= 0
-        if string[idx1] != " "
-            break
-        endif
-        let idx1 -= 1
-    endwhile
-    let char = string[idx1]
-    return char
-endfunction
-"}}}}}
-"{{{{{2 GetNonBlank(...)获取字符串对应字符
-"echo GetNonBlank(getline(line('.')))
-function! GetNonBlank(...)
-    let string = copy(a:1)
-    let resultlist = ["前两个非空字符","末尾一个非空字符"]
-    let resultlist[0] =  GetTwoNonBlank(string)
-    let resultlist[1] =  GetLastNonBlank(string)
-    return resultlist
-endfunction
-"}}}}}
 "{{{{{2 FindCorrespondingBracketPosition(...)在字符串中获取对应括号的位置
 "echo FindCorrespondingBracketPosition(getline(line('.')),col('.') -1)
 function! FindCorrespondingBracketPosition(...)
@@ -3674,37 +3627,7 @@ function! FindCorrespondingBracketPosition(...)
     return resultposition
 endfunction
 "}}}}}
-"{{{{{2 ClearingStringsInCode(...)在代码中清除字符串
-"echo ClearingStringsInCode(getline(line('.')))
-function! ClearingStringsInCode(...)
-    let codestring = a:1
-    let resultstr = ""
-    let indexlist = []
-    let idx1 = 0
-    let srcnum = -1
-    let tailnum = -1
-    if count(codestring,'"') != 0
-        let indexlist = StringPosition(codestring,'"')
-        while idx1 <= len(indexlist) / 2
-            if idx1 ==# 0
-                let srcnum = 0
-                let tailnum = indexlist[idx1 * 2] - 2
-            elseif idx1 ==# len(indexlist) / 2
-                let srcnum = indexlist[idx1 * 2 -1]
-                let tailnum = -1
-            else
-                let srcnum = indexlist[idx1 * 2 - 1]
-                let tailnum = indexlist[idx1 * 2] - 2
-            endif
-            let resultstr = resultstr . codestring[srcnum:tailnum]
-            let idx1 += 1
-        endwhile
-        return resultstr
-    else
-        return codestring
-    endif
-endfunction
-"}}}}}
+
 "{{{{{2 ClearPairedBrackets(...)在代码中清除成对括号   (.*) 删除掉
 "echo ClearPairedBrackets(getline(line('.')))
 function! ClearPairedBrackets(...)
@@ -8173,6 +8096,7 @@ function! ExtractKeyCodes(...)
     let switchline = -1
     let switchlinetail = -1
     let tempcursor = []
+    let flag = ""
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -8254,6 +8178,7 @@ function! ExtractKeyCodes(...)
             endif
         endif
         "当前是switch
+
         if matchstr(foldstring," switch")  != ""
             "前一个不是case
             call Dbug1(10,0,'ExtractKeyCodes 67', )
@@ -9465,41 +9390,7 @@ function! WhichFunctionIsIn(...)
 endfunction
 "}}}}}
 
-"{{{{{2   WhichFunctionToCall(...) 此行调用哪个函数
-function! WhichFunctionToCall(...)
-    "{{{{{3 变量定义
-    let line = a:1
-    let codestring =  ""
-    "}}}}
-    "按照标准代码获取整行
-    set noignorecase
-    let numberlist = MergeLinesOfCode(realityline)
-    let srcnum  = numberlist[0]
-    let tailnum = numberlist[1]
-    if srcnum <= tailnum
-        let codestring  =  GatherIntoRow(srcnum,tailnum)
-    endif
-    if matchstr(codestring,';') != ""
-        if count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-        else
 
-        endif
-    else
-    endif
-    "判断当前行是否继续调用函数
-      "有分号行
-        "单纯赋值没有调用
-        "回调
-        "调用函数
-         "调用本文件函数
-         "调用其他文件函数
-           "找到这个函数的类
-      "无分号行
-        "调用几个函数
-    set ignorecase
-    return ""
-endfunction
-"}}}}}
 
 "{{{{{2   CallStack(...) 打印调用栈
 function! CallStack(...)
@@ -12614,8 +12505,6 @@ function! LexiconizationCallback(...)
     let string = GatherIntoRow(linelist[0],linelist[1])
     "call Echom(10,0,'tangxinlou debug',12358, string,line)
     let flag = IdentificationCodeComponents1(string,filetype)
-    "let dict["03string"] = flag . " " . string
-    "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
         if flag ==# "functiondefinition"
             let dict["03string"] = flag . " " . string(ParsingFunctions(string))
@@ -12625,6 +12514,8 @@ function! LexiconizationCallback(...)
             let dict["03string"] = flag . " " . string(SplitCodeString(string))
         endif
     endif
+    let dict["03string"] = flag . " " . string
+    "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
         let UpBracketslist = []
         let UpBracketslist  = GetUpBrackets(end + 1)
@@ -12895,7 +12786,6 @@ endfunction
 "}}}}}
 
 "{{{{{2 function!  ProcessEachLine(...)  每行都打印成标准代码样式
-nnoremap <F3> :call ProcessEachLine()<cr>
 function! ProcessEachLine(...)
     "{{{{{3 变量定义
     let codelist = []
@@ -12978,9 +12868,12 @@ function! MergeLinesOfCode(...)
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
     let foldstring =  []
+    let NonBlanklist = []
     let laststring = ""
     let needflag = 0
     let tempstr = ""
+    let NonBlanklist = ""
+    let startcursor = []
     let judge = ["if (",
                 \"if(",
                 \"else if(",
@@ -12998,8 +12891,18 @@ function! MergeLinesOfCode(...)
             endif
         endif
         let currentstring = getline(line)
+        let NonBlanklist = GetNonBlank(currentstring)
+        "if NonBlanklist[1] ==# ','
+        "    call cursor(line,col('$'))
+        "    let startcursor =searchpairpos('(', '', ')', 'b','',max([1, line('.') - 50]))
+        "    if startcursor == [0,0]
+        "        return [line,line]
+        "    endif 
+        "endif
         let laststring = getline(line -1)
         if filetype != "java" && laststring != "" && laststring[len(laststring) - 1] ==# '\'
+            return [line,line]
+        elseif NonBlanklist[0][0] ==# '}' &&  NonBlanklist[1] ==# ';'
             return [line,line]
         elseif filetype != "java" &&  currentstring[0] ==# "#"
             return [line,line]
@@ -13151,6 +13054,10 @@ function! MergeLinesOfCode(...)
         endif
     endif
     silent call cursor(line,1)
+    let foldstring = ClearingStringsInCode(foldstring)
+    if count(foldstring,',') > 0 && count(foldstring,';') &&  count(foldstring,')') ==# 0 && count(foldstring,'(') ==# 0
+        let linelist = [line,line]
+    endif
     return linelist
 endfunction
 "}}}}}
@@ -13229,7 +13136,7 @@ function! IdentificationCodeComponents1(...)
                 \]
     let case = 9                       "case
     let default = 10                   "default
-    let return = 11                    "返回值
+    let Return = [" return ","return;"]                    "返回值
     let functioncall  = 12
     let functiondefinition = 13
     let functiondeclaration = 25
@@ -13248,10 +13155,11 @@ function! IdentificationCodeComponents1(...)
                 \" } finally {",
                 \" catch("]
     let headfile = 21
-    let lambda = 22 "lambda表达式
+    let lambda = ["}.execute();"] "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
     let log = [" Log"," log","tangxinlou debug","debugLog("]
 
+    let unknown = [" };"]
     let codelist = []
     let index = 0
 
@@ -13281,6 +13189,12 @@ function! IdentificationCodeComponents1(...)
     elseif CheckStringIsObtainOfList(codestring,define)
         let flag = flag . "define"
         return flag
+    elseif CheckStringIsObtainOfList(codestring,lambda)
+        let flag = flag . "lambda"
+        return flag
+    elseif CheckStringIsObtainOfList(codestring,unknown)
+        let flag = flag . "unknow"
+        return flag
     endif
     if NonBlanklist[1] ==# ';'
         "{{{{3 有分号
@@ -13293,7 +13207,7 @@ function! IdentificationCodeComponents1(...)
         elseif matchstr(codestring,"import ") != ""
             let flag = flag . "import"
             return flag
-        elseif matchstr(codestring," return ") != ""
+        elseif CheckStringIsObtainOfList(codestring,Return)
             let flag = flag . "return"
             return flag
         endif
@@ -13414,16 +13328,23 @@ endfunction
 "{{{{{2 ParsingFunctions(...)解析函数定义
 function! ParsingFunctions(...)
     let funcode = copy(a:1)
+    let index = -1
     let codelist = SplitCodeString(funcode)
-    let resultlist = ["函数名","函数参数","函数返回值"]
+    let resultlist = ["返回值","函数名","函数参数"]
     let parameter = ["参数类型","参数"]
     let targetstr = IsContain('\w*(.*)',codelist)
-    let targetstr = SplitCharactersByBrackets(targetstr)
-    let resultlist[0] = targetstr[0]
-    if targetstr[1] != ""
-        let resultlist[1] = ParsingVariableParameter(targetstr[1])
+    let index = IsContainIndex('\w*(.*)',codelist)
+    if index < 1
+        let resultlist[0] = ""
     else
-        let resultlist[1] = []
+        let resultlist[0] = codelist[index - 1]
+    endif
+    let targetstr = SplitCharactersByBrackets(targetstr)
+    let resultlist[1] = targetstr[0]
+    if targetstr[1] != ""
+        let resultlist[2] = ParsingVariableParameter(targetstr[1])
+    else
+        let resultlist[2] = []
     endif
     return resultlist
 endfunction
@@ -13656,7 +13577,89 @@ function! ClearBlank(...)
     return string
 endfunction
 "}}}}}
-
+"{{{{{2 GetTwoNonBlank(...)获取字符串非空字符开始的前两个字符
+"echo GetTwoNonBlank(getline(line('.')))
+function! GetTwoNonBlank(...)
+    let string = copy(a:1)
+    let length = len(string)
+    let idx1 = 0
+    let char = ""
+    let string = split(string,'\zs')
+    while idx1 < length
+        if string[idx1] != " "
+            break
+        endif
+        let idx1 += 1
+    endwhile
+    if idx1 + 1 < length
+        let char = string[idx1:idx1 + 1]
+        let char = join(char,"\x00")
+    else
+        let char = string[idx1]
+    endif
+    return char
+endfunction
+"}}}}}
+"{{{{{2 GetLastNonBlank(...)获取字符串末尾倒数第一个非空字符
+"echo GetLastNonBlank(getline(line('.')))
+function! GetLastNonBlank(...)
+    let string = copy(a:1)
+    let idx1 = 0
+    let char = ""
+    let string = split(string,'\zs')
+    let length = len(string)
+    let idx1 = length - 1
+    while idx1 >= 0
+        if string[idx1] != " "
+            break
+        endif
+        let idx1 -= 1
+    endwhile
+    let char = string[idx1]
+    return char
+endfunction
+"}}}}}
+"{{{{{2 GetNonBlank(...)获取字符串对应字符
+"echo GetNonBlank(getline(line('.')))
+function! GetNonBlank(...)
+    let string = copy(a:1)
+    let resultlist = ["前两个非空字符","末尾一个非空字符"]
+    let resultlist[0] =  GetTwoNonBlank(string)
+    let resultlist[1] =  GetLastNonBlank(string)
+    return resultlist
+endfunction
+"}}}}} 
+"{{{{{2 ClearingStringsInCode(...)在代码中清除字符串
+"echo ClearingStringsInCode(getline(line('.')))
+function! ClearingStringsInCode(...)
+    let codestring = a:1
+    let resultstr = ""
+    let indexlist = []
+    let idx1 = 0
+    let srcnum = -1
+    let tailnum = -1
+    if count(codestring,'"') != 0
+        let indexlist = StringPosition(codestring,'"')
+        while idx1 <= len(indexlist) / 2
+            if idx1 ==# 0
+                let srcnum = 0
+                let tailnum = indexlist[idx1 * 2] - 2
+            elseif idx1 ==# len(indexlist) / 2
+                let srcnum = indexlist[idx1 * 2 -1]
+                let tailnum = -1
+            else
+                let srcnum = indexlist[idx1 * 2 - 1]
+                let tailnum = indexlist[idx1 * 2] - 2
+            endif
+            let resultstr = resultstr . codestring[srcnum:tailnum]
+            let idx1 += 1
+        endwhile
+        return resultstr
+    else
+        return codestring
+    endif
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
@@ -13720,6 +13723,27 @@ endfunction
 "}}}}}
 "{{{{{2 处理数字
 "}}}}}
+"}}}
+"{{{{  函数调用快速查找
+"{{{{{2   WhichFunctionToCall(...) 此行调用哪个函数
+nnoremap <F3> :call WhichFunctionToCall(line('.'))<cr>
+function! WhichFunctionToCall(...)
+    "{{{{{3 变量定义
+    let line = a:1
+    let codestring =  ""
+    let calllist = []
+    let flag = ""
+    "}}}}
+    "按照标准代码获取整行
+    let codestring = StandardCharacters(line)
+    let flag =  IdentificationCodeComponents1(codestring)
+    if flag ==# "functioncall"
+        let codelist = ParsingFunctionCalls(codestring)
+        call Echom(10,0,'tangxinlou debug',13736, codelist)
+    endif
+    return 
+endfunction
+"}}}}} 
 "}}}
 
 "winnr() 窗口id
