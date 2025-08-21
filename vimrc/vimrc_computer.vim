@@ -3627,7 +3627,6 @@ function! FindCorrespondingBracketPosition(...)
     return resultposition
 endfunction
 "}}}}}
-
 "{{{{{2 ClearPairedBrackets(...)在代码中清除成对括号   (.*) 删除掉
 "echo ClearPairedBrackets(getline(line('.')))
 function! ClearPairedBrackets(...)
@@ -8073,6 +8072,7 @@ nnoremap <leader>a :call ExtractKeyCodes()<cr>
 function! ExtractKeyCodes(...)
     "{{{{{3 变量定义
     let codelist = []
+    let linelist = []
     let idx1 = 0
     let start = 0
     let tempchar = ""
@@ -8129,6 +8129,7 @@ function! ExtractKeyCodes(...)
         call Dbug1(10,0,'ExtractKeyCodes 63', foldstring)
     endif
     let codelist = add(codelist,foldstring)
+    let linelist = add(linelist,realityline)
     let idx1 = 1
     let lastline = realityline
     if IsFunction(foldstring)
@@ -8143,6 +8144,7 @@ function! ExtractKeyCodes(...)
             let col = match(tempstring, '\S')
         else
             call remove(codelist,0)
+            call remove(linelist,0)
         endif
         if col > 4
             let start = FindAnotherBracketPosition('}')
@@ -8199,6 +8201,7 @@ function! ExtractKeyCodes(...)
                             if tempcursor[0] ==# switchline
                                 if tempstring != ""
                                     let codelist = insert(codelist,tempstring)
+                                    let linelist = insert(linelist,lastline)
                                 endif
                                 break
                             endif
@@ -8211,6 +8214,7 @@ function! ExtractKeyCodes(...)
         endif
         if foldstring != ""
             let codelist = insert(codelist,foldstring)
+            let linelist = insert(linelist,start[0])
         endif
         call cursor(start[0],start[1])
         let lastline = start[0]
@@ -8251,6 +8255,7 @@ function! ExtractKeyCodes(...)
         call cursor(realityline,col)
         let @d = string(codelist)
         call AddNumber3(codelist)
+        call AddNumber3(linelist)
         if filetype ==# "cc"
             let tempstring = expand("%:t") . "▌" . tempstring
         endif
@@ -9071,60 +9076,6 @@ function! SimplifyCurrentFileFunctions(...)
 endfunction
 "}}}}}
 
-"{{{{{2   EncapsulateDifferentGrep(...) 封装grep指令
-function! EncapsulateDifferentGrep(...)
-    "{{{{{3 变量定义
-    let filename = a:1
-    let greptype = a:2
-    let grepchar = a:3
-    let revertchar = '@' . grepchar
-    let revertgrepcmd = "grep -v "
-    let revertgrepcmd = "grep -v "  .  revertchar
-    if filename ==# ""
-        let grepcmd = "grep -Esnrw --binary-files=without-match  --include=*{.c,.cc,.cpp,.java,.h} "
-    else
-        let grepcmd = "grep -Esnrw --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
-    endif
-    let result = ""
-    "}}}}
-    if greptype ==# "fuc"
-        "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
-        let grepchar = '"' . grepchar  .'" '
-        let grepcmd = grepcmd . grepchar . filename
-        call Dbug1(10,0,'EncapsulateDifferentGrep 100', grepcmd,revertgrepcmd)
-        let result = system(grepcmd . " | " . revertgrepcmd)
-    elseif greptype ==# "class"
-        let grepchar = '"class ' . grepchar  .'" '
-        let grepcmd = grepcmd . grepchar . filename
-        call Dbug1(10,0,'EncapsulateDifferentGrep 101', grepcmd)
-        let result = system(grepcmd)
-    endif
-    return result
-endfunction
-"}}}}}
-
-"{{{{{2   EncapsulateDifferentFind(...) 封装find指令
-function! EncapsulateDifferentFind(...)
-    "{{{{{3 变量定义
-    let path = a:1
-    let greptype = a:2
-    let grepchar = a:3
-    let result = ""
-    "}}}}
-    if greptype ==# "file"
-        let findcommand = "find -type f -iname " . "'*" . grepchar ."*'"
-        call Dbug1(10,0,'EncapsulateDifferentFind 133', findcommand )
-        let result = system(findcommand)
-    endif
-    if result ==# ""
-        let result = []
-    else
-        let result = split(result,'\n')
-    endif
-    return result
-endfunction
-"}}}}}
-
 "{{{{{2   LoopThroughDictionaries(...) 循环处理字典
 function! LoopThroughDictionaries(...)
     "{{{{{3 变量定义
@@ -9389,8 +9340,6 @@ function! WhichFunctionIsIn(...)
     return ""
 endfunction
 "}}}}}
-
-
 
 "{{{{{2   CallStack(...) 打印调用栈
 function! CallStack(...)
@@ -10053,7 +10002,7 @@ function! GrepChars(timer)
     if len(split(searchstarge,"\n")) < 600  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
         let searchstarge = SelectEntireCode(copy(searchstarge))
     endif
-    let searchstarge = SimplifySearchResults1(copy(searchstarge),0)
+    let searchstarge = SimplifySearchResults1(copy(searchstarge),0,searchs)
     let searchstarge = insert(searchstarge,@g)
     call win_gotoid(g:windowgrepid)
     if line('$') > 3
@@ -13052,12 +13001,13 @@ function! MergeLinesOfCode(...)
             endif
             let linelist = [start,end]
         endif
+        let foldstring = ClearingStringsInCode(foldstring)
+        if JudgingCharacters(foldstring)
+        else
+            let linelist = [line,line]
+        endif 
     endif
     silent call cursor(line,1)
-    let foldstring = ClearingStringsInCode(foldstring)
-    if count(foldstring,',') > 0 && count(foldstring,';') &&  count(foldstring,')') ==# 0 && count(foldstring,'(') ==# 0
-        let linelist = [line,line]
-    endif
     return linelist
 endfunction
 "}}}}}
@@ -13255,7 +13205,7 @@ function! IdentificationCodeComponents1(...)
             let flag = flag . "class"
             return flag
         elseif matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-            let flag = flag . "enum"
+            let flag = flag . "struct"
             return flag
         elseif matchstr(codestring,"struct ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "struct"
@@ -13294,15 +13244,21 @@ function! IdentificationCodeComponents1(...)
                 let flag = flag . "functiondefinition"
                 return flag
             endif
+        elseif NonBlanklist[0][0] ==# '}' &&  NonBlanklist[1] ==# ';'
+            if ClearAllBlank(codestring) != "};"
+                 let flag = flag . "struct"
+                return flag
+            endif
         endif
-
+        if 
+        endif
     endif
     return "unknown"
 endfunction
 "}}}}}
 "{{{{{2 DeepDecisionFunction(...)二次判定函数成分，对粗略判断后的代码二次判断
 function! DeepDecisionFunction(...)
-    "set noignorecase
+    set noignorecase
     let codestring = a:1
     let searchstr = a:2
     let flag = ""
@@ -13314,14 +13270,15 @@ function! DeepDecisionFunction(...)
         let codelist = SplitCodeString(codestring)
         if count(codelist,"=") != 0
             let index = index(codelist,"=")
-            let leftstr = codelist[index -1]
+            let leftstr = codelist[:index -1]
         endif
-        if matchstr(leftstr,searchstr) != ""
+        if count(leftstr,searchstr) != 0
             return flag
         else
             return "functioncall"
         endif
     endif
+    set ignorecase
     return flag
 endfunction
 "}}}}}
@@ -13342,7 +13299,7 @@ function! ParsingFunctions(...)
     let targetstr = SplitCharactersByBrackets(targetstr)
     let resultlist[1] = targetstr[0]
     if targetstr[1] != ""
-        let resultlist[2] = ParsingVariableParameter(targetstr[1])
+        let resultlist[2] = ParsingVariableParameter(targetstr[1],0)
     else
         let resultlist[2] = []
     endif
@@ -13355,13 +13312,23 @@ function! ParsingFunctionCalls(...)
     let resultlist = []
     let tempstr = ""
     let idx1 = 0
+    let parameter = []
     let codelist = SplitCodeString(funcode)
     let targetstr = IsContain('\w*(.*)',codelist)
-    let targetstr = SplitStringByChar(targetstr,'.',-1)
+    let targetstr = SplitStringByChar(targetstr,'.',-1,0)
+    let datalist = []
     while idx1 < len(targetstr)
         if matchstr(targetstr[idx1],'(') != ""
+            let datalist = []
             let tempstr = SplitCharactersByBrackets(targetstr[idx1])
-            let resultlist = add(resultlist,tempstr[0])
+            let datalist = add(datalist,tempstr[0])
+            if tempstr[1] != "" 
+                let parameter = ParsingVariableParameter(tempstr[1],1)
+            else
+                let parameter = []
+            endif
+            let datalist = add(datalist,parameter)
+            let resultlist = add(resultlist,datalist)
         else
             let resultlist = add(resultlist,targetstr[idx1])
         endif
@@ -13377,26 +13344,23 @@ endfunction
 "{{{{{2 ParsingVariableParameter(...)解析函数参数
 function! ParsingVariableParameter(...)
     let parameter = copy(a:1)
+    let mode = a:2  "0 函数定义，1函数调用
     let resultlist = []
     let datalist = []
     let idx1 = 0
-    if matchstr(parameter,',') != ""
-        let parameter = split(parameter,',')
-        while idx1 < len(parameter)
-            let parameter[idx1] = split(parameter[idx1])
+    let parameter = SplitStringByChar(parameter,',',0,1)
+    while idx1 < len(parameter)
+        if mode ==# 0
+            let parameter[idx1] = SplitStringByChar(parameter[idx1]," ",0,1)
             let datalist = []
             let datalist = add(datalist,parameter[idx1][-2])
             let datalist = add(datalist,parameter[idx1][-1])
             let resultlist = add(resultlist,datalist)
-            let idx1 += 1
-        endwhile
-    else
-        let parameter = split(parameter)
-        let datalist = []
-        let datalist = add(datalist,parameter[-2])
-        let datalist = add(datalist,parameter[-1])
-        let resultlist = add(resultlist,datalist)
-    endif
+        else
+            let resultlist = add(resultlist,parameter[idx1])
+        endif
+        let idx1 += 1
+    endwhile
     return resultlist
 endfunction
 "}}}}}
@@ -13494,30 +13458,38 @@ function! SplitCodeString(...)
 endfunction
 "}}}}}
 "{{{{{3 SplitStringByChar(...)分割字符串略过括号，通过指定字符分割，指定方向
-"echo SplitStringByChar(getline(line('.')),'.',-1)
+"echo SplitStringByChar(getline(line('.')),'.',-1,0)
 function! SplitStringByChar(...)
       let strings = a:1
       let char = a:2
-      let int = -1
+      let int = a:3
+      let mode = a:4 " 0的时候char 保留，1的时候char不保留
       let resultlist = []
       let srcint = -2
       let tailint = -1
       let idx1 = 0
+      let strings = ClearBlank(strings)
       let strings = split(strings,'\zs')
+      let srcint = 0
       while idx1 < len(strings)
-          if strings[idx1] != " " && srcint < 0
-              let srcint = idx1
-          endif
           if strings[idx1] ==# "("
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
           elseif strings[idx1] ==# char
-              let tailint = idx1 + int
-              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
-              let srcint = idx1
+              if strings[idx1 - 1] != char
+                  if mode ==# 0
+                      let tailint = idx1 + int
+                      let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
+                      let srcint = tailint + 1 
+                  elseif mode ==# 1
+                      let tailint = idx1 -1
+                      let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
+                      let srcint = idx1 + 1
+                  endif
+              endif
           endif
           if idx1 ==# len(strings) - 1
               let tailint = len(strings) - 1
-              let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+              let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
           endif
           let idx1 += 1
       endwhile
@@ -13552,28 +13524,46 @@ function! ClearingNoteschildStr(...)
     return join(codestring,'')
 endfunction
 "}}}}}
-"{{{{{2 FirstNonBlank(...)获取字符串首个非空字符位置
+"{{{{{2 FirstNonBlank(...)获取字符串首个非空字符位置,行末非空字符位置
 function! FirstNonBlank(...)
     let string = a:1
+    if a:0 ==  2
+        let mode = a:2
+    else
+        let mode = 0
+    endif
+    let col = ""
     let length = len(string)
-    let idx1 = 0
-    let col = -1
-    while idx1 < length
-        if string[idx1] != " "
-            break
-        endif
-        let idx1 += 1
-    endwhile
+    if mode ==# 0
+        let idx1 = 0
+        while idx1 < length
+            if string[idx1] != " "
+                break
+            endif
+            let idx1 += 1
+        endwhile
+    elseif mode ==# 1
+        let idx1 = length -1
+        while idx1 > 0
+            if string[idx1] != " "
+                break
+            endif
+            let idx1 -= 1
+        endwhile
+    endif
     let col = idx1
     return col
 endfunction
 "}}}}}
-"{{{{{2 ClearBlank(...)去掉字符串行首的空白字符
+"{{{{{2 ClearBlank(...)去掉字符串行首的空白字符 ,行末空白字符
 function! ClearBlank(...)
     let string = a:1
     let length = len(string)
-    let col =  FirstNonBlank(string)
-    let string = string[col:]
+    let src = ""
+    let tail = ""
+    let src =  FirstNonBlank(string)
+    let tail =  FirstNonBlank(string,1)
+    let string = string[src:tail]
     return string
 endfunction
 "}}}}}
@@ -13660,6 +13650,38 @@ function! ClearingStringsInCode(...)
     endif
 endfunction
 "}}}}} 
+"{{{{{2 JudgingCharacters(...)判断字符串中特定字符是不是在括号里面
+function! JudgingCharacters(...)
+    let strings = a:1
+    let strings = split(strings,'\zs')
+    let idx1 = 0
+    let flag = 1
+    while idx1 < len(strings)
+        if strings[idx1] ==# ','
+            let flag = 0
+        elseif strings[idx1] ==# '('
+            let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+        endif
+        let idx1 += 1
+    endwhile
+    return flag
+endfunction
+"}}}}}  
+"{{{{{2 ClearAllBlank(...)去掉字符串所有空白字符
+function! ClearAllBlank(...)
+    let strings = a:1
+    let strings = split(strings,'\zs')
+    let resultstr = ""
+    let idx1 = 0
+    while idx1 < len(strings)
+        if strings[idx1] != " "
+            let resultstr = resultstr . strings[idx1]
+        endif
+        let idx1 += 1
+    endwhile
+    return resultstr
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
@@ -13733,6 +13755,7 @@ function! WhichFunctionToCall(...)
     let codestring =  ""
     let calllist = []
     let flag = ""
+    let idx1 = 0
     "}}}}
     "按照标准代码获取整行
     let codestring = StandardCharacters(line)
@@ -13740,8 +13763,69 @@ function! WhichFunctionToCall(...)
     if flag ==# "functioncall"
         let codelist = ParsingFunctionCalls(codestring)
         call Echom(10,0,'tangxinlou debug',13736, codelist)
+        while idx1 < len(codelist)
+            let idx1 + 1
+        endwhile
     endif
     return 
+endfunction
+"}}}}} 
+"{{{{{3   CallFindDefine(...) 通过函数调用找到对应函数定义
+function! CallFindDefine(...)
+    "{{{{{3 变量定义
+    "}}}}
+endfunction
+"}}}}} 
+"{{{{{2   EncapsulateDifferentGrep(...) 封装grep指令
+function! EncapsulateDifferentGrep(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    let revertchar = '@' . grepchar
+    let revertgrepcmd = "grep -v "
+    let revertgrepcmd = "grep -v "  .  revertchar
+    if filename ==# ""
+        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    else
+        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    endif
+    let result = ""
+    "}}}}
+    if greptype ==# "fuc"
+        "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
+        let grepchar = '"' . grepchar  .'" '
+        let grepcmd = grepcmd . grepchar . filename
+        call Dbug1(10,0,'EncapsulateDifferentGrep 100', grepcmd,revertgrepcmd)
+        let result = system(grepcmd . " | " . revertgrepcmd)
+    elseif greptype ==# "class"
+        let grepchar = '"class ' . grepchar  .'" '
+        let grepcmd = grepcmd . grepchar . filename
+        call Dbug1(10,0,'EncapsulateDifferentGrep 101', grepcmd)
+        let result = system(grepcmd)
+    endif
+    return result
+endfunction
+"}}}}}
+"{{{{{2   EncapsulateDifferentFind(...) 封装find指令
+function! EncapsulateDifferentFind(...)
+    "{{{{{3 变量定义
+    let path = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    let result = ""
+    "}}}}
+    if greptype ==# "file"
+        let findcommand = "find -type f -iname " . "'*" . grepchar ."*'"
+        call Dbug1(10,0,'EncapsulateDifferentFind 133', findcommand )
+        let result = system(findcommand)
+    endif
+    if result ==# ""
+        let result = []
+    else
+        let result = split(result,'\n')
+    endif
+    return result
 endfunction
 "}}}}} 
 "}}}
