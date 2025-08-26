@@ -530,17 +530,23 @@ Btsnoop with filter减少HCI大小。但是有可能错过问题vivo不用
 >>>>>>>>>>>>>>>
 <<<<<<<<<<<<<<<<
 ###蓝牙优化
-1.蓝牙avrcp 绝对音量管控
-2.蓝牙avrcp 远程设备事件管控
-3.蓝牙hfp volume future 管控（需要audio 一起改）
-4.蓝牙ble 扫描参数管控
-5.蓝牙连接参数管控
-6.蓝牙ble 连接mtu 控制
-7.蓝牙hfp at指令时序控制
-8.蓝牙车载a2dp 编码控制
-9.蓝牙avrcp notify 机制优化（需要audio 一起）
-10.le audio （需要对端设备一起调试）
-11. 后续广播数据处理，ble 属性事件搭建（需要重新抽象一个文件专门处理）
+蓝牙avrcp 绝对音量管控
+蓝牙avrcp 远程设备事件管控
+蓝牙hfp volume future 管控（需要audio 一起改）
+蓝牙ble 扫描参数管控
+蓝牙连接参数管控
+蓝牙ble 连接mtu 控制
+蓝牙hfp at指令时序控制
+蓝牙车载a2dp 编码控制
+蓝牙avrcp notify 机制优化（需要audio 一起）
+le audio （需要对端设备一起调试）
+后续广播数据处理，ble 属性事件搭建（需要重新抽象一个文件专门处理）
+
+功率复写
+btsnoop 日志大小限制
+蓝牙静态地址
+名单配置jsons加载
+协议栈和profile 的数据通道
 
 ########
 >>>>>>>>>>>>>>> 

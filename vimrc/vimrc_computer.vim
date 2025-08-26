@@ -633,7 +633,6 @@ endfunction
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eb :tabnew<cr>:e /mnt/d/work/fund/vimrc/vimrc_computer.vim<cr>
 nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("txl/keywords",1)<cr>
 nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("txl/Extractioncode",1)<cr>
 nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
@@ -645,6 +644,12 @@ endif
 "加载vimrc文件
 nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
 nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+
+if "" != finddir("/mnt/d")
+    nnoremap <leader>eb :tabnew<cr>:e /mnt/d/work/fund/vimrc/vimrc_computer.vim<cr>
+    nnoremap <leader>ef :tabnew<cr>:e  /mnt/d/work/fund/vimrc/plan<cr>
+    nnoremap <leader>eg :tabnew<cr>:e  /mnt/d/work/fund/vimrc/keywords<cr>
+endif
 ""}}}}
 "{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
@@ -7248,7 +7253,6 @@ function! AnalyzeCode()
     endif
 endfunction
 "}}}}}
-
 "{{{{{  ListKeyWords()  获取关键词
 function! ListKeyWords(...)
     "{{{{{3 变量定义
@@ -7388,7 +7392,6 @@ function! ListKeyWords(...)
     return listkeywords
 endfunction
 "}}}}}
-
 "{{{{{  DrawTimingDiagram()  画时序图
 function! DrawTimingDiagram(...)
     let drawcode = a:1
@@ -7443,7 +7446,6 @@ function! DrawTimingDiagram(...)
     return drawlist
 endfunction
 "}}}}}
-
 "{{{{{  GetMatchNumber()  获取匹配次数
 function! GetMatchNumber(...)
     let matchlist = a:1
@@ -7467,7 +7469,6 @@ function! GetMatchNumber(...)
     return matchcount
 endfunction
 "}}}}}
-
 "{{{{{2   SelectCode(...) 选中代码
 function! SelectCode(...)
     "{{{{{3 变量定义
@@ -7553,7 +7554,6 @@ function! SelectCode(...)
 
 endfunction
 "}}}}}
-
 "{{{{{2 function!  TraverseNodes(...)            遍历结构体                    普通模式<F8>调用
 "nnoremap <F8>  :call TraverseNodes("/opt6/tangxinlouosc/aosp/packages/modules/Bluetooth/system/bta/av/bta_av_int.h","union tBTA_AV_DATA {")<cr>
 nnoremap <F8>  :call TraverseNodes("tBTA_AV_DATA")<cr>
@@ -7693,7 +7693,6 @@ function! TraverseNodes(...)
     "call append(line("."),headnode )
 endfunction
 "}}}}}
-
 "{{{{{2   ResultJudgment(...) 判断搜索结果
 "nnoremap <F8>  :call ResultJudgment("tBTA_AV_DATA")<cr>
 function! ResultJudgment(...)
@@ -7734,7 +7733,6 @@ function! ResultJudgment(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   ListToDict(...) 填充字典
 function! ListToDict(...)
     "{{{{{3 变量定义
@@ -7774,7 +7772,6 @@ function! ListToDict(...)
     return nodeformat
 endfunction
 "}}}}}
-
 "{{{{{2   Isnote(...) 判断是否是注释
 function! Isnote(...)
     "{{{{{3 变量定义
@@ -7790,7 +7787,6 @@ function! Isnote(...)
     return isnote
 endfunction
 "}}}}}
-
 "{{{{{2   PrintDict(...) 打印字典
 function! PrintDict(...)
     "{{{{{3 变量定义
@@ -7862,7 +7858,6 @@ function! PrintDict(...)
 
 endfunction
 "}}}}}
-
 "{{{{{2   StructureDefinition(...) 结构体定义
 "nnoremap <F8>  :call StructureDefinition("tBTA_AV_API_ENABLE")<cr>
 function! StructureDefinition(...)
@@ -7876,7 +7871,6 @@ function! StructureDefinition(...)
 
 endfunction
 "}}}}}
-
 "{{{{{2   GetFoldLevel(...) 获取每行的foldlevel
 nnoremap getfold :call GetFoldLevel()<cr>
 function! GetFoldLevel(...)
@@ -7902,7 +7896,6 @@ function! GetFoldLevel(...)
     return foldlist
 endfunction
 "}}}}}
-
 "{{{{{2 function!  ParseCodeFiles(...)           解析代码文件                  普通模式par调用
 nnoremap par :call ParseCodeFiles()<cr>
 function! ParseCodeFiles(...)
@@ -7978,7 +7971,6 @@ function! ParseCodeFiles(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   LoopToDillDictionary(...) 填充本节点，循环填下一节点
 function! LoopToDillDictionary(...)
     "{{{{{3 变量定义
@@ -8065,7 +8057,6 @@ function! LoopToDillDictionary(...)
     return nodeformat
 endfunction
 "}}}}}
-
 "{{{{{2   ExtractKeyCodes(...) 提取关键代码
 nnoremap <leader>a :call ExtractKeyCodes()<cr>
 "nnoremap <leader>a :echo ExtractKeyCodes(line('.'),1)<cr>
@@ -8075,6 +8066,7 @@ function! ExtractKeyCodes(...)
     let linelist = []
     let idx1 = 0
     let start = 0
+    let end = 0
     let tempchar = ""
     let realityline = 0
     let path = ""
@@ -8114,22 +8106,20 @@ function! ExtractKeyCodes(...)
     endif
     let col = col('.')
     let foldstring = getline(realityline)
-    if (count(foldstring,'(') != count(foldstring,')')) || matchstr(foldstring,';') ==# "" || matchstr(foldstring,'{') ==# ""
-        let numberlist = MergeLinesOfCode(realityline)
-        "call Echom(10,0,'tangxinlou debug',7791, numberlist,realityline,MergeLinesOfCode(realityline))
-        if numberlist ==# []
-            let foldstring = ""
-        else
-            let srcnum  = numberlist[0]
-            let tailnum = numberlist[1]
-            if srcnum <= tailnum
-                let foldstring =  GatherIntoRow(srcnum,tailnum)
-            endif
+    let numberlist = MergeLinesOfCode(realityline)
+    "call Echom(10,0,'tangxinlou debug',7791, numberlist,realityline,MergeLinesOfCode(realityline))
+    if numberlist ==# []
+        let foldstring = ""
+    else
+        let srcnum  = numberlist[0]
+        let tailnum = numberlist[1]
+        if srcnum <= tailnum
+            let foldstring =  GatherIntoRow(srcnum,tailnum)
         endif
-        call Dbug1(10,0,'ExtractKeyCodes 63', foldstring)
     endif
+    call Dbug1(10,0,'ExtractKeyCodes 63', foldstring)
     let codelist = add(codelist,foldstring)
-    let linelist = add(linelist,realityline)
+    let linelist = add(linelist,[srcnum,tailnum])
     let idx1 = 1
     let lastline = realityline
     if IsFunction(foldstring)
@@ -8165,20 +8155,18 @@ function! ExtractKeyCodes(...)
             endif
         endif
         call Dbug1(10,0,'ExtractKeyCodes 65', )
-        let foldstring = StandardCharacters(start[0])
+        let end  = searchpairpos('{', '', '}', 'w')
+        call searchpairpos('{', '', '}', 'b')
+        let numberlist = MergeLinesOfCode(start[0])
+        let srcnum  = numberlist[0]
+        let tailnum = numberlist[1]
+        if srcnum <= tailnum
+            let foldstring =  GatherIntoRow(srcnum,tailnum)
+        endif
         if IsFunction(foldstring)
             let functionline = start[0]
         endif
         call Dbug1(10,0,'ExtractKeyCodes 66', foldstring)
-        "目标行格式不对
-        if ((count(foldstring,'(') != count(foldstring,')')) && matchstr(foldstring,") {") ==# ") {") || matchstr(foldstring,"  implements ") != ""
-            let numberlist = MergeLinesOfCode(start[0])
-            let srcnum  = numberlist[0]
-            let tailnum = numberlist[1]
-            if srcnum <= tailnum
-                let foldstring =  GatherIntoRow(srcnum,tailnum)
-            endif
-        endif
         "当前是switch
 
         if matchstr(foldstring," switch")  != ""
@@ -8201,7 +8189,7 @@ function! ExtractKeyCodes(...)
                             if tempcursor[0] ==# switchline
                                 if tempstring != ""
                                     let codelist = insert(codelist,tempstring)
-                                    let linelist = insert(linelist,lastline)
+                                    let linelist = insert(linelist,[start[0] + idk1,start[0] + idk1])
                                 endif
                                 break
                             endif
@@ -8214,7 +8202,7 @@ function! ExtractKeyCodes(...)
         endif
         if foldstring != ""
             let codelist = insert(codelist,foldstring)
-            let linelist = insert(linelist,start[0])
+            let linelist = insert(linelist,[srcnum,end[0]])
         endif
         call cursor(start[0],start[1])
         let lastline = start[0]
@@ -8227,7 +8215,7 @@ function! ExtractKeyCodes(...)
         while idx1 < len(codelist)
             let result = WhichFunctionIsIn(codelist[idx1])
             if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
-                if stackflag > 0
+                "if stackflag > 0
                     if result != ""
                         if tempstring ==# ""
                             let tempstring =  result
@@ -8235,8 +8223,8 @@ function! ExtractKeyCodes(...)
                             let tempstring = tempstring . "▌" . result
                         endif
                     endif
-                    let stackflag -= 1
-                endif
+                "    let stackflag -= 1
+                "endif
             else
                 if result != ""
                     if tempstring ==# ""
@@ -8255,7 +8243,7 @@ function! ExtractKeyCodes(...)
         call cursor(realityline,col)
         let @d = string(codelist)
         call AddNumber3(codelist)
-        call AddNumber3(linelist)
+        call Echom(10,0,'tangxinlou debug',8260,linelist)
         if filetype ==# "cc"
             let tempstring = expand("%:t") . "▌" . tempstring
         endif
@@ -8297,7 +8285,7 @@ function! ExtractKeyCodes(...)
             endif
             let idx1 += 1
         endwhile
-        if filetype ==# "cc"
+        if filetype ==# "cc" || filetype ==# "headfile"
             let tempstring = expand("%:t") . "▌" . tempstring
         endif
         call RestoreBuffer()
@@ -8356,7 +8344,6 @@ function! ExtractKeyCodes(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   FillInNotes(...) 填充关键代码
 nnoremap <leader>p :call FillInNotes()<cr>
 "```c
@@ -8386,7 +8373,6 @@ function! FillInNotes(...)
     let @i = ""
 endfunction
 "}}}}}
-
 "{{{{{2   FormatCode(...) 格式化文件
 function! FormatCode(...)
     "{{{{{3 变量定义
@@ -8640,7 +8626,6 @@ function! FormatCode(...)
     execute "normal! :wq!\<cr>"
 endfunction
 "}}}}}
-
  "{{{{{2  AddDebugLog(...) 添加debug日志
 nnoremap <F5> :call AddDebugLog()<cr>
 "package jni stack 添加debug日志
@@ -8871,7 +8856,6 @@ function! AddDebugLog(...)
     return line
 endfunction
 "}}}}}
-
 "{{{{{2  ListFunctionAamesAndClassNames(...) 列出函数名和类名
 "列出函数名和类名
 function! ListFunctionAamesAndClassNames(...)
@@ -8919,7 +8903,6 @@ function! ListFunctionAamesAndClassNames(...)
     return codelist
 endfunction
 "}}}}}
-
 "{{{{{2 function!  OrganizeJavaCodeLogic(...) 整理代码逻辑
 function! OrganizeJavaCodeLogic(...)
     "{{{{{3 变量定义
@@ -8937,7 +8920,6 @@ function! OrganizeJavaCodeLogic(...)
     call append(line('.'),string(classdict))
 endfunction
 "}}}}}
-
 "{{{{{2 function!  SimplifyCurrentFileFunctions(...)           简化当前文件的函数                  普通模式sif调用
 nnoremap sif :call SimplifyCurrentFileFunctions()<cr>
 function! SimplifyCurrentFileFunctions(...)
@@ -9075,7 +9057,6 @@ function! SimplifyCurrentFileFunctions(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   LoopThroughDictionaries(...) 循环处理字典
 function! LoopThroughDictionaries(...)
     "{{{{{3 变量定义
@@ -9141,7 +9122,6 @@ function! LoopThroughDictionaries(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2  function! TagListFiles(...) 列出当前变量在当前文件分布
 let g:Tagwindidlistvalue = []
 let g:Tagwindidlistkey = []
@@ -9184,7 +9164,6 @@ function! TagListFiles(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2 function!  InventoryFiles(...) 清查当前文件
 "二级表
 " 函数名 类型,分布,首行,参数,classname classrang,末行
@@ -9295,7 +9274,6 @@ function! InventoryFiles(...)
     return classdict
 endfunction
 "}}}}}
-
 "{{{{{2   WhichFunctionIsIn(...) 此行代码在哪个函数里面
 function! WhichFunctionIsIn(...)
     "{{{{{3 变量定义
@@ -9340,7 +9318,6 @@ function! WhichFunctionIsIn(...)
     return ""
 endfunction
 "}}}}}
-
 "{{{{{2   CallStack(...) 打印调用栈
 function! CallStack(...)
     "{{{{{3 变量定义
@@ -9444,7 +9421,6 @@ function! CallStack(...)
     return ""
 endfunction
 "}}}}}
-
 "{{{{{2   StringComponents(...)判断字符串是什么成分和IdentificationCodeComponents混用
 "echo  StringComponents("service","def",getline('.'))
 function! StringComponents(...)
@@ -9474,7 +9450,6 @@ function! StringComponents(...)
    return result
 endfunction
 "}}}}}
-
 "{{{{{2   FunctionCallParsing(...) 函数调用解析
 "call  FunctionCallParsing("               enforceCdmAssociation(service.mCompanionDeviceManager, service,source.getPackageName(), Binder.getCallingUid(), device);", "getCallingUid")
 function! FunctionCallParsing(...)
@@ -9486,7 +9461,6 @@ function! FunctionCallParsing(...)
 
 endfunction
 "}}}}}
-
 "{{{{{2   FindTheCalledParty(...) 查找是调用的哪个函数
 "echo  FindTheCalledParty(1776,"getConnectedDevices")
 function! FindTheCalledParty(...)
@@ -9523,7 +9497,6 @@ function! FindTheCalledParty(...)
     return result
 endfunction
 "}}}}}
-
 "{{{{{2 function!  IdentifyAllCalls(...) 识别当前文件所有行调用
 "call IdentifyAllCalls(1879,1883,"")
 function! IdentifyAllCalls(...)
@@ -9582,7 +9555,6 @@ function! IdentifyAllCalls(...)
     return codelist
 endfunction
 "}}}}}
-
 "{{{{{2   IdentifyCalls(...) 识别当前行所有调用
 "echo IdentifyCalls(getline('.'))
 function! IdentifyCalls(...)
@@ -9638,7 +9610,6 @@ function! IdentifyCalls(...)
     return result
 endfunction
 "}}}}}
-
 "{{{{{2   GetCallFuncName(...) 获取调用类名字
 function! GetCallFuncName(...)
     "{{{{{3 变量定义
@@ -9697,7 +9668,6 @@ function! GetCallFuncName(...)
     return result
 endfunction
 "}}}}}
-
 "{{{{{2   ClassReplacementObject(...) 类替换对象名
 function! ClassReplacementObject(...)
     "{{{{{3 变量定义
@@ -9724,7 +9694,6 @@ function! ClassReplacementObject(...)
 
 endfunction
 "}}}}}
-
 "{{{{{2   DealingWithBrackets(...) 处理括号
 function! DealingWithBrackets(...)
     "{{{{{3 变量定义
@@ -11871,7 +11840,6 @@ function! ModifyColors(...)
     echo  colors[ModifyColors]
     execute 'colorscheme ' . colors[ModifyColors]
     let g:ModifyColors += 1
-    call input("111")
 endfunction
 "}}}}}
 "}}}
@@ -13701,6 +13669,8 @@ function! CodeComponentSearch(...)
     let filename = a:1
     let greptype = a:2
     let grepchar = a:3
+    "let start = a:4
+    "let end = a:5
     let idx1 = 0
     if filename ==# ""
         let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
