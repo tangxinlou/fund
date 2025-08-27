@@ -13570,6 +13570,71 @@ function! SplitSearchResult(...)
     return resultstr
 endfunction
 "}}}}}
+"{{{{{3 SplitStringByStr(...)分割字符串略过括号，通过指定字符分割，指定方向
+"echo SplitStringByStr(getline(line('.')),["&&","||"])
+function! SplitStringByStr(...)
+      let strings = a:1
+      let splitstr = a:2
+      let resultlist = []
+      let srcint = -2
+      let tailint = -1
+      let idx1 = 0
+      let strings = ClearBlank(strings)
+      let strings = split(strings,'\zs')
+      let srcint = 0
+      let int = -1
+      let targetstr = join(strings[0:1],'')
+      let tempstr = ""
+      while idx1 < len(strings)
+          let targetstr = IsCompareStrings(targetstr,splitstr)
+          if strings[idx1] ==# "("
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+          elseif targetstr != ""
+              let int = len(targetstr)
+              let tailint = idx1 - 1
+              let tempstr = ClearBlank(join(strings[srcint:tailint],''))
+              if tempstr != ""
+                  let resultlist = add(resultlist,tempstr)
+              endif
+              let srcint = tailint + int + 1
+          endif
+          if idx1 ==# len(strings) - 1
+              let tailint = len(strings) - 1
+              let tempstr = ClearBlank(join(strings[srcint:tailint],''))
+              if tempstr != ""
+                  let resultlist = add(resultlist,tempstr)
+              endif
+              let idx1 += 1
+          else
+              let idx1 += 1
+              let targetstr = join(strings[idx1:idx1 + 1],'') 
+          endif
+      endwhile
+      return resultlist
+endfunction
+"}}}}} 
+"{{{{{2 IsCompareStrings(...)比较字符串
+function! IsCompareStrings(...)
+     let str = a:1
+     let targetstr = a:2
+     let flag = ""
+     let idx1 = 0
+     if type(targetstr) ==# 1
+         if str ==# targetstr 
+             let flag = targetstr  
+         endif
+     elseif type(targetstr) ==# 3
+         while idx1 < len(targetstr)
+             if str ==# targetstr[idx1]
+                 let flag = targetstr[idx1]  
+             endif
+             let idx1 += 1
+         endwhile
+     endif
+     return flag
+endfunction
+"}}}}} 
+
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
