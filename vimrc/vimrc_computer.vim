@@ -364,9 +364,6 @@ inoremap  <c-l>l <esc>kli/<esc>lvdi<esc>kli/<esc>lvdi<esc>kli/<esc>lvdi
 "}}}}
 "markdown{{{{
 inoremap <leader>form \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka <esc>ji-<esc>ki \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkka \|<esc>ji\|<esc>ji\|<esc>ji\|<esc>kkkl<c-v>lljjjdvlldjvdki
-
-
-
 "}}}}
 "搜索命令{{{{
 nnoremap gf  :execute  "grep! -sirn"  shellescape(expand(@@)) "~/txl/tang.txl"<cr>:!clear<cr>:copen<cr>:set modifiable<cr><c-w>H
@@ -3444,29 +3441,6 @@ function! ListIndex(...)
     return index
 endfunction
 "}}}}}
-"{{{{{2 IsFileType(...) filetype 文件类型
-function! IsFileType(...)
-    let filename = a:1
-    let filetype = ""
-    if matchstr(filename,'/') != ""
-        let filename = split(filename,'/')[-1]
-    endif
-    if matchstr(filename,'\.java') != ""
-        let filetype = "java"
-    elseif matchstr(filename,'\.cc') != ""
-        let filetype = "cc"
-    elseif matchstr(filename,'\.cpp') != ""
-        let filetype = "cpp"
-    elseif matchstr(filename,'\.h') != ""
-        let filetype = "head"
-    elseif matchstr(filename,'\.vimrc') != ""
-        let filetype = "vimrc"
-    elseif matchstr(filename,'\.xml') != ""
-        let filetype = "xml"
-    endif
-    return filetype
-endfunction
-"}}}}}
 "{{{{{2 JumpToNext(...)跳转到下一个的{ 规避{}
 "echo JumpToNext('{','w')
 "echo searchpos('{','w')
@@ -3890,47 +3864,8 @@ function! Flag2String(...)
     return tempchar
 endfunction
 "}}}}}
-"{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的=符号
-function! ProcessingEqualSymbols(...)
-    "{{{{{3 变量定义
-    let string = copy(a:1)
-    let idx1 = 0
-    "}}}}
-    if matchstr(string,'=') ==# ""
-        return string
-    endif
-    let string = split(string,'\zs')
-    let idx1 = 1
-    while  idx1 < len(string)
-        if string[idx1 - 1] ==# '='
-            if string[idx1] ==# ' ' || string[idx1] ==# '='
-            else
-                let string = insert(string, ' ', idx1)
-                let idx1 = 1
-                continue
-            endif
-        else
-            if string[idx1] ==# '='
-                if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '=' || string[idx1 - 1] == '>' || string[idx1 - 1] == '<'||
-                            \ string[idx1 - 1] == '+' ||
-                            \ string[idx1 - 1] == '-' ||
-                            \ string[idx1 - 1] == '!'
-                else
-                    let string = insert(string, ' ', idx1)
-                    let idx1 = 1
-                    continue
-                endif
-            endif
-        endif
-        let idx1 += 1
-    endwhile
-    return join(string,"\x00")
-endfunction
-"}}}}}
 "}}}}
 "{{{{vmake 命令
-
-
 "{{{{{2 function! VmakeChange()                  格式化vmake 命令，在vmake 命令标记分支，时间  普通模式下逗号 + ch 调用
 "nnoremap <leader>ch 03f"lvllllly05f"lvlllllp015f"ci"<esc>:r!pwd<cr>0v$hdk015f"p0jddk
 "使用execute 和normal!特殊字符需要加\
@@ -4014,7 +3949,6 @@ function! VmakeChange()
     endif
 endfunction
 "}}}}}
-
 "{{{{{2  IsCfgfile(a,b)查找a目录b文件，返回文件列表带绝对路径
 function! IsCfgfile(...) "1 项目 2路径 3 安卓版本
     let iscfgfile = "tangxinlou"
@@ -4044,7 +3978,6 @@ function! IsCfgfile(...) "1 项目 2路径 3 安卓版本
     return isfiles1
 endfunction
 "}}}}
-
 "{{{{{2  AddNumber() 列表中的绝对路径取文件，添加标号
 function! AddNumber(...)
     let isnumber = "tangxinlou"
@@ -4075,7 +4008,6 @@ function! AddNumber(...)
     return
 endfunction
 "}}}}}
-
 "{{{{{2  AddNumber1() 列表中绝对路径前加标号，并打印
 function! AddNumber1(...)
     let isnumber = "tangxinlou"
@@ -4095,7 +4027,6 @@ function! AddNumber1(...)
     return
 endfunction
 "}}}}}
-
 "{{{{{2  AddNumber2() 列表中绝对路径取文件，添加标号，用echo 打印
 function! AddNumber2(...)
     let isnumber = "tangxinlou"
@@ -4117,7 +4048,6 @@ function! AddNumber2(...)
     return
 endfunction
 "}}}}}
-
 "{{{{{2  AddNumber3() 列表中绝对路径前加标号，并echo打印
 function! AddNumber3(...)
     let isnumber = "tangxinlou"
@@ -4173,7 +4103,6 @@ function! Getchar()
     return b
 endfunction
 "}}}}}
-
 " Interactively change the window size
 "{{{{{2  InteractiveWindow()  循环输入选择项
 function! InteractiveWindow()
@@ -4189,8 +4118,6 @@ function! InteractiveWindow()
     endwhile
 endfunction
 "}}}}}
-
-
 "}}}}}
 "{{{{{涉及git的函数
 "{{{{{2  GitStatus()  git status  找到需要提交的文件，把临时文件去掉，为git add 做准备
@@ -8064,6 +7991,8 @@ function! ExtractKeyCodes(...)
     "{{{{{3 变量定义
     let codelist = []
     let linelist = []
+    let flaglist = []
+    let keylist = []
     let idx1 = 0
     let start = 0
     let end = 0
@@ -8080,7 +8009,8 @@ function! ExtractKeyCodes(...)
     let tempstring = ""
     let lastline = -1
     let g:alldebugflag = "true"
-    let functionline = "-1"
+    let functionlinefront = "-1"
+    let functionlineback = "-1"
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
     let stackflag = ""
@@ -8120,10 +8050,13 @@ function! ExtractKeyCodes(...)
     call Dbug1(10,0,'ExtractKeyCodes 63', foldstring)
     let codelist = add(codelist,foldstring)
     let linelist = add(linelist,[srcnum,tailnum])
+    let flag = IdentificationCodeComponents1(foldstring)
+    let flaglist = add(flaglist,flag)
     let idx1 = 1
     let lastline = realityline
-    if IsFunction(foldstring)
-        let functionline = realityline
+    if flag ==# "functiondefinition"
+        let functionlinefront = srcnum -1
+        let functionlineback = tailnum + 1
     endif
     while idx1 > 0
         "let col = match(getline('.'), '\S')
@@ -8135,6 +8068,7 @@ function! ExtractKeyCodes(...)
         else
             call remove(codelist,0)
             call remove(linelist,0)
+            call remove(flaglist,0)
         endif
         if col > 4
             let start = FindAnotherBracketPosition('}')
@@ -8163,9 +8097,7 @@ function! ExtractKeyCodes(...)
         if srcnum <= tailnum
             let foldstring =  GatherIntoRow(srcnum,tailnum)
         endif
-        if IsFunction(foldstring)
-            let functionline = start[0]
-        endif
+
         call Dbug1(10,0,'ExtractKeyCodes 66', foldstring)
         "当前是switch
 
@@ -8190,6 +8122,8 @@ function! ExtractKeyCodes(...)
                                 if tempstring != ""
                                     let codelist = insert(codelist,tempstring)
                                     let linelist = insert(linelist,[start[0] + idk1,start[0] + idk1])
+                                    let flag = IdentificationCodeComponents1(tempstring)
+                                    let flaglist = insert(flaglist,flag)
                                 endif
                                 break
                             endif
@@ -8203,6 +8137,12 @@ function! ExtractKeyCodes(...)
         if foldstring != ""
             let codelist = insert(codelist,foldstring)
             let linelist = insert(linelist,[srcnum,end[0]])
+            let flag = IdentificationCodeComponents1(foldstring)
+            let flaglist = insert(flaglist,flag)
+            if flag ==# "functiondefinition"
+                let functionlinefront = srcnum -1
+                let functionlineback = tailnum + 1
+            endif
         endif
         call cursor(start[0],start[1])
         let lastline = start[0]
@@ -8213,27 +8153,15 @@ function! ExtractKeyCodes(...)
         let idx1 = 0
         let stackflag = 1
         while idx1 < len(codelist)
-            let result = WhichFunctionIsIn(codelist[idx1])
-            if IdentificationCodeComponents(codelist[idx1],filetype) ==# "func"
-                "if stackflag > 0
-                    if result != ""
-                        if tempstring ==# ""
-                            let tempstring =  result
-                        else
-                            let tempstring = tempstring . "▌" . result
-                        endif
-                    endif
-                "    let stackflag -= 1
-                "endif
-            else
-                if result != ""
-                    if tempstring ==# ""
-                        let tempstring =  result
-                    else
-                        let tempstring = tempstring . "▌" . result
-                    endif
+            let result = WhichFunctionIsIn(codelist[idx1],flaglist[idx1])
+            if result != ""
+                if tempstring ==# ""
+                    let tempstring =  result
+                else
+                    let tempstring = tempstring . "▌" . result
                 endif
             endif
+            let keylist = add(keylist,result)
             let idx1 += 1
         endwhile
 
@@ -8244,6 +8172,9 @@ function! ExtractKeyCodes(...)
         let @d = string(codelist)
         call AddNumber3(codelist)
         call Echom(10,0,'tangxinlou debug',8260,linelist)
+        call Echom(10,0,'tangxinlou debug',8182,flaglist)
+        call Echom(10,0,'tangxinlou debug',8176, keylist)
+        call Echom(10,0,'tangxinlou debug',8177, ObtainKeyInformation(linelist,flaglist,keylist))
         if filetype ==# "cc"
             let tempstring = expand("%:t") . "▌" . tempstring
         endif
@@ -9274,50 +9205,7 @@ function! InventoryFiles(...)
     return classdict
 endfunction
 "}}}}}
-"{{{{{2   WhichFunctionIsIn(...) 此行代码在哪个函数里面
-function! WhichFunctionIsIn(...)
-    "{{{{{3 变量定义
-    let codestring = copy(a:1)
-    let templist = []
-    let tempchar = ""
-    "}}}}
-    "函数
-    "判断
-    "调用
-    if matchstr(codestring,"class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-        let templist = split(codestring)
-        let indexnum = index(templist,"class")
-        return templist[indexnum + 1]
-    elseif matchstr(codestring,"public enum") != ""
-        let templist = split(codestring)
-        let indexnum = index(templist,"enum")
-        return templist[indexnum + 1]
-    elseif matchstr(codestring,"struct ") != ""  &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
-        let templist = split(codestring)
-        let indexnum = index(templist,"struct")
-        return templist[indexnum + 1]
-    elseif matchstr(codestring," interface ") != ""
-        let templist = split(codestring)
-        let indexnum = index(templist,"interface")
-        return templist[indexnum + 1]
-    elseif  matchstr(codestring,";") != ""
-    elseif  join(split(codestring)) ==# "{"
-    elseif  matchstr(codestring,"case ") != ""
-        let tempchar = matchstr(codestring," case .*:")
-        if tempchar  != ""
-            return join(split(tempchar))
-        else
-            return join(split(codestring))
-        endif
-    elseif IsFunction(codestring)
-        let codestring = split(codestring,'(')[0]
-        let templist = split(codestring)
-        call Dbug1(10,0,'WhichFunctionIsIn 102', templist)
-        return templist[-1]
-    endif
-    return ""
-endfunction
-"}}}}}
+
 "{{{{{2   CallStack(...) 打印调用栈
 function! CallStack(...)
     "{{{{{3 变量定义
@@ -9706,7 +9594,6 @@ endfunction
 "}}}}}
 "}}}}}
 "{{{{ 定时器
-
 "{{{{{  FindFiles()  find回调
 if len(timer_info()) ==# 0
     let g:windowfindid = 0
@@ -9750,7 +9637,6 @@ function! FindFiles(timer)
     redraw
 endfunction
 "}}}}}
-
 "{{{{{  Searcher()  搜索器  普通模式<F9>调用
 nnoremap <F9> :call   Searcher()<cr>
 function! Searcher()
@@ -9811,7 +9697,6 @@ function! Searcher()
     endif
 endfunction
 "}}}}}
-
 "{{{{{  GrepChars()  grep回调
 if len(timer_info()) ==# 0
     let g:windowgrepid = 0
@@ -9891,7 +9776,6 @@ function! GrepChars(timer)
     redraw
 endfunction
 "}}}}}
-
 "{{{{{  SearcherChars()  grep搜索字符串普通模式<F10>调用
 nnoremap <F10> :call   SearcherChars()<cr>
 function! SearcherChars()
@@ -9973,7 +9857,6 @@ function! SearcherChars()
     endif
 endfunction
 "}}}}}
-
 "{{{{{  GreplogChars()  grep log 回调
 
 function! GreplogChars(timer)
@@ -10049,7 +9932,6 @@ function! GreplogChars(timer)
     redraw
 endfunction
 "}}}}}
-
 "{{{{{  SearcherlogChars()  搜索log 普通模式逗号 f 调用
 if len(timer_info()) ==# 0
     "winid serarchwinid tapid timerid firstgrep grepfile grepchar"记录上次停留的log
@@ -10143,7 +10025,6 @@ function! SearcherlogChars()
     endif
 endfunction
 "}}}}}
-
 "}}}}
 "{{{{ 批量处理
 "{{{{{  BatchHandle()  批量处理
@@ -10492,7 +10373,6 @@ function! VisualiZationcsv(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2   JoinTwoTables(...) 拼接两个表格
 function! JoinTwoTables(...)
     "{{{{{3 变量定义
@@ -10532,7 +10412,6 @@ function! JoinTwoTables(...)
     let g:debuglist = tableA
 endfunction
 "}}}}}
-
 "{{{{{  ProcessingBigData(...)  处理大数据
 function! ProcessingBigData(...)
     let data = a:1
@@ -10544,7 +10423,6 @@ function! ProcessingBigData(...)
     return tempstr
 endfunction
 "}}}}}
-
 "{{{{{  TableSwipe(...)  表格刷选
 function! TableSwipe(...)
     let result = []
@@ -10562,7 +10440,6 @@ function! TableSwipe(...)
     return result
 endfunction
 "}}}}}
-
 "{{{{{2   ExpansionAndContraction(...) 填充空格和消除空格
 function! ExpansionAndContraction(...)
     "{{{{{3 变量定义
@@ -10583,7 +10460,6 @@ function! ExpansionAndContraction(...)
     return  filelists
 endfunction
 "}}}}}
-
 "}}}
 "{{{{  自动分析日志
 "\([0-9A-Fa-fxX]\{2\}:\)\{5\}[0-9A-Fa-fxX]\{2\}
@@ -11734,7 +11610,6 @@ endfunction
 "}}}}}
 "}}}
 "{{{{  python
-
 "{{{{{2   PythonTest(...) python test 传参数
 function! PythonTest()
     "{{{{{3 变量定义
@@ -11786,7 +11661,6 @@ EOF
 call input("11")
 endfunction
 "}}}}}
-
 "}}}
 "{{{{  调整窗口
 "{{{{{2   WidChanged(...) 调整窗口
@@ -11893,7 +11767,6 @@ function! FouncAddLog(...)
     call append(line('.'),string(classdict))
 endfunction
 "}}}}}
-
 "{{{{{2 function!  FileAddLog(...) 当前文件每个转折都打印一行log
 function! FileAddLog(...)
     "{{{{{3 变量定义
@@ -12095,7 +11968,6 @@ function! FileAddLog(...)
     endif
 endfunction
 "}}}}}
-
 "{{{{{2 function!  FouncDeleLog(...) 删除打印
 function! FouncDeleLog()
     "{{{{{3 变量定义
@@ -12136,10 +12008,8 @@ function! FouncDeleLog()
     endif
 endfunction
 "}}}}}
-
 "}}}}
 "{{{例子
-
 "{{{{{2  Exeample()  例子
 function! Exeample()
      "{{{{{3 变量定义
@@ -12197,7 +12067,6 @@ function! Exeample()
     endif
 endfunction
 "}}}}}
-
 "{{{{{2  SpecialTest() 特殊测试
 function! SpecialTest()
     call Echom(10,0,'tangxinlou debug',12256, "begin")
@@ -12208,7 +12077,6 @@ function! SpecialTest()
     call Echom(10,0,'tangxinlou debug',12258, "end")
 endfunction
 "}}}}}
-
 "}}}
 "{{{{{ 自动分析代码
 "{{{{{2  AutomaticCodeAnalysis()  自动分析代码
@@ -12219,7 +12087,6 @@ function! AutomaticCodeAnalysis()
     "串联关键代码（主要是调用，类的依赖，继承等等）
 endfunction
 "}}}}}
-
 "{{{{{2 function!  SearchForAllFiles(...) 寻找所有的代码文件
 function! SearchForAllFiles(...)
     "{{{{{3 变量定义
@@ -12230,7 +12097,6 @@ function! SearchForAllFiles(...)
     call Echom(10,0,'tangxinlou debug',12200, result)
 endfunction
 "}}}}}
-
 "{{{{{2 function!  FileLexiconization(...) 文件字典化
 
 function! FileLexiconization(...)
@@ -12261,7 +12127,6 @@ function! FileLexiconization(...)
     return FileDictionary
 endfunction
 "}}}}}
-
 "{{{{{2  CycleFill(...)  循环填充字典
 function! CycleFill(...)
     "{{{{{3 变量定义
@@ -12292,7 +12157,6 @@ function! CycleFill(...)
     return dict
 endfunction
 "}}}}}
-
 "{{{{{2  LexiconizationCallback(...) 字典化回调
 "function('MyHandler')
 function! LexiconizationCallback(...)
@@ -12354,7 +12218,6 @@ function! LexiconizationCallback(...)
     return resultlist
 endfunction
 "}}}}}
-
 "{{{{{2  DictionaryPrintingCallback(...) 字典打印回调
 function! DictionaryPrintingCallback(...)
     "{{{{{3 变量定义
@@ -12369,7 +12232,6 @@ function! DictionaryPrintingCallback(...)
     return resultlist
 endfunction
 "}}}}}
-
 "{{{{{2  LoopPrinting1(...)  循环打印
 function! LoopPrinting1(...)
     "{{{{{3 变量定义
@@ -12389,7 +12251,6 @@ function! LoopPrinting1(...)
     return resultlist
 endfunction
 "}}}}}
-
 "{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
 function! IdentificationCodeComponents(...)
     "{{{{{3 变量定义
@@ -12544,7 +12405,6 @@ function! IdentificationCodeComponents(...)
     return "unkonwn"
 endfunction
 "}}}}}
-
 "{{{{{2 function!  IdentifyTheCurrentFile(...) 当前文件每行成分
 "call IdentifyTheCurrentFile(1396,1401,"","service")
 function! IdentifyTheCurrentFile(...)
@@ -12602,7 +12462,6 @@ function! IdentifyTheCurrentFile(...)
     return codelist
 endfunction
 "}}}}}
-
 "{{{{{2 function!  ProcessEachLine(...)  每行都打印成标准代码样式
 function! ProcessEachLine(...)
     "{{{{{3 变量定义
@@ -12659,7 +12518,6 @@ function! ProcessEachLine(...)
     return codelist
 endfunction
 "}}}}}
-
 "{{{{{2 MergeLinesOfCode(...)判断那几行能合并成符合代码格式的一行
 "echo MergeLinesOfCode(line('.'))
 function! MergeLinesOfCode(...)
@@ -12966,7 +12824,6 @@ function! IdentificationCodeComponents1(...)
     let variabledef = 18  "变量定义
     let variablespecify  = 19 "变量赋值
     let variabledefspecify  = 20 "变量定义赋值
-    let variableput = 28 "变量给值
     let lock = ["synchronized(",
                 \"synchronized ("]
     let Exception = [" try {",
@@ -12978,8 +12835,8 @@ function! IdentificationCodeComponents1(...)
     let lambda = ["}.execute();"] "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
     let log = [" Log"," log","tangxinlou debug","debugLog("]
-
     let unknown = [" };"]
+    let interface = 39
     let codelist = []
     let index = 0
 
@@ -13060,8 +12917,6 @@ function! IdentificationCodeComponents1(...)
         "}}}}
     elseif NonBlanklist[1] ==# '{'
         "{{{{3  有括号
-
-
         if CheckStringIsObtainOfList(codestring,cycle)
             let flag = flag . "cycle"
             return flag
@@ -13073,6 +12928,9 @@ function! IdentificationCodeComponents1(...)
             return flag
         elseif matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "class"
+            return flag
+        elseif matchstr(codestring," interface ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+            let flag = flag . " interface "
             return flag
         elseif matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "struct"
@@ -13131,24 +12989,76 @@ function! DeepDecisionFunction(...)
     set noignorecase
     let codestring = a:1
     let searchstr = a:2
+    "变量
+    let variableright = 28 "赋值右值
+    let variableleft = 29 "赋值左值
+    let variabletype = 30 "变量类型
+    let variablevalue = 31 "变量值
+    "函数
+    let formalparameter = 32 "形参
+    let actualargument = 33 "实参
+    let functionreturnvalue = 34 "函数返回值
     let flag = ""
     let leftstr = ""
     let index = 0
     let codelist = []
+    let calllist = []
+    let idx1 = 0
     let flag = IdentificationCodeComponents1(codestring)
-    if flag ==# "variabledefspecify" || flag ==# "variablespecify"
-        let codelist = SplitCodeString(codestring)
-        if count(codelist,"=") != 0
-            let index = index(codelist,"=")
-            let leftstr = codelist[:index -1]
-        endif
-        if count(leftstr,searchstr) != 0
-            return flag
-        else
-            if matchstr(codestring,"(") ==# ""
-                return "variableput"
+    if matchstr(codestring,searchstr) != ""
+        if flag ==# "variablespecify" || flag ==# "variabledefspecify"
+            let codelist = SplitCodeString(codestring)
+            if count(codelist,"=") != 0
+                let index = index(codelist,"=")
+                let leftstr = codelist[:index -1]
+            endif
+            if matchstr(leftstr,searchstr) != ""
+                if flag ==# "variabledefspecify"
+                    if matchstr(codelist[index - 2],searchstr) != ""
+                        let flag = "variabletype"
+                    endif
+                endif
+                return flag
             else
-                return "functioncall"
+                if matchstr(codestring,"(") ==# ""
+                    return "variableright"
+                else
+                    return "functioncall"
+                endif
+            endif
+        elseif flag ==# "variabledef"
+            let codelist = SplitCodeString(codestring)
+            if matchstr(codelist[-2],searchstr) != ""
+                let flag = "variabletype"
+            endif
+            return flag
+        elseif flag ==# "functioncall"
+            let calllist = ParsingFunctionCalls(codestring)
+            let idx1 = 0
+            while idx1 < len(calllist)
+                if type(calllist[idx1]) ==# 3
+                    if matchstr(string(calllist[idx1][1]),searchstr) != ""
+                        let flag = "actualargument"
+                    endif
+                endif
+                let idx1 += 1
+            endwhile
+        elseif flag ==# "functiondefinition"
+            let calllist = ParsingFunctionCalls(codestring)
+            if calllist != []
+                if matchstr(string(calllist[0]),searchstr) != ""
+                    let flag = "functionreturnvalue"
+                elseif matchstr(string(calllist[2]),searchstr) != ""
+                    let idx1 = 0
+                    while idx1 < len(calllist[2])
+                        if matchstr(calllist[2][0]) != ""
+                            let flag = "formalparametertype"
+                        else
+                            let flag = "formalparametervalue"
+                        endif
+                        let idx1 += 0
+                    endwhile
+                endif
             endif
         endif
     endif
@@ -13187,9 +13097,10 @@ function! ParsingFunctionCalls(...)
     let tempstr = ""
     let idx1 = 0
     let parameter = []
+    "["函数名",["参数1","参数2"]]
     let codelist = SplitCodeString(funcode)
     let targetstr = IsContain('\w*(.*)',codelist)
-    let targetstr = SplitStringByChar(targetstr,'.',-1,0)
+    let targetstr = SplitStringByStr(targetstr,['.'])
     let datalist = []
     while idx1 < len(targetstr)
         if matchstr(targetstr[idx1],'(') != ""
@@ -13215,6 +13126,28 @@ endfunction
 function! ParsingVariable(...)
 endfunction
 "}}}}}
+"{{{{{2 ParsingVariable(...)解析判断
+"echom ParsingVariable(getline(line('.')),[])
+function! ParsingVariable(...)
+    let codestr = copy(a:1)
+    let resultlist= deepcopy(a:2)
+    let targetvar = ""
+    let idx1 = 0
+    let targetvar = SplitCharactersByBrackets(codestr)
+    call Echom(10,0,'tangxinlou debug',13230, targetvar,codestr)
+    let targetvar = SplitStringByStr(targetvar[1],["&&","||"])
+    call Echom(10,0,'tangxinlou debug',13233, targetvar)
+    while idx1 < len(targetvar)
+        if targetvar[idx1][0] ==# '('
+            let resultlist = ParsingVariable(targetvar[idx1],resultlist)
+        else
+            let resultlist = add(resultlist,targetvar[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
 "{{{{{2 ParsingVariableParameter(...)解析函数参数
 function! ParsingVariableParameter(...)
     let parameter = copy(a:1)
@@ -13222,10 +13155,10 @@ function! ParsingVariableParameter(...)
     let resultlist = []
     let datalist = []
     let idx1 = 0
-    let parameter = SplitStringByChar(parameter,',',0,1)
+    let parameter = SplitStringByStr(parameter,[','])
     while idx1 < len(parameter)
         if mode ==# 0
-            let parameter[idx1] = SplitStringByChar(parameter[idx1]," ",0,1)
+            let parameter[idx1] = SplitStringByStr(parameter[idx1],[" "])
             let datalist = []
             let datalist = add(datalist,parameter[idx1][-2])
             let datalist = add(datalist,parameter[idx1][-1])
@@ -13238,6 +13171,78 @@ function! ParsingVariableParameter(...)
     return resultlist
 endfunction
 "}}}}}
+"{{{{{2 WhichFunctionIsIn(...) 解析代码关键词
+function! WhichFunctionIsIn(...)
+    "{{{{{3 变量定义
+    let codestring = copy(a:1)
+    let flag = a:2
+    let templist = []
+    let tempchar = ""
+    "}}}}
+    if flag ==# "class"
+        let templist = split(codestring)
+        let indexnum = index(templist,"class")
+        return templist[indexnum + 1]
+    elseif flag ==# "enum"
+        let templist = split(codestring)
+        let indexnum = index(templist,"enum")
+        return templist[indexnum + 1]
+    elseif flag ==# "struct"
+        let templist = split(codestring)
+        let indexnum = index(templist,"struct")
+        return templist[indexnum + 1]
+    elseif flag ==# "interface"
+        let templist = split(codestring)
+        let indexnum = index(templist,"interface")
+        return templist[indexnum + 1]
+    elseif flag ==# "case"
+        let tempchar = matchstr(codestring," case .*:")
+        if tempchar  != ""
+            return join(split(tempchar))
+        else
+            return join(split(codestring))
+        endif
+    elseif flag ==# "functiondefinition"
+        return ParsingFunctions(codestring)[1]
+    endif
+    return ""
+endfunction
+"}}}}}
+"{{{{{2 ObtainKeyInformation(...)获取当前行关键信息
+function! ObtainKeyInformation(...)
+    let linelist = a:1
+    let flaglist = a:2
+    let keylist = a:3
+    let idx = -1
+    "let resultlist = ["函数位置"，"父类位置","父父类位置","函数index","父类index","父父类index"]
+    let resultlist = ["","","","","",""]
+    call Echom(10,0,'tangxinlou debug',13217, linelist,flaglist,keylist)
+    let idx = index(flaglist,"functiondefinition")
+    call Echom(10,0,'tangxinlou debug',13220, idx)
+    if idx != -1
+        let resultlist[0] = join(keylist[0:idx],"▌")
+        let resultlist[3] = idx
+    endif
+
+
+    let idx = index(reverse(copy(flaglist)),"class")
+    let idx = len(flaglist) - idx -1
+    call Echom(10,0,'tangxinlou debug',13226, idx)
+    if idx != -1
+        let resultlist[1] = join(keylist[0:idx],"▌")
+        let resultlist[4] = idx
+    endif
+
+    let idx = index(flaglist,"class")
+    call Echom(10,0,'tangxinlou debug',13235, idx)
+    if idx != -1
+        let resultlist[2] = join(keylist[0:idx],"▌")
+        let resultlist[5] = idx
+    endif
+
+    return resultlist
+endfunction
+"}}}}}
 "}}}
 "{{{{  基础能力函数
 "{{{{{2 处理字符串
@@ -13246,31 +13251,32 @@ endfunction
 function! SplitCharactersByBrackets(...)
       let strings = a:1
       let resultlist = []
-      let srcint = -2
       let tailint = -1
       let idx1 = 0
       let strings = split(strings,'\zs')
+      let srcint = len(strings) - 1
       "call Echom(10,0,'tangxinlou debug',3649, strings)
       let idx1 = len(strings) -1
       while idx1 >= 0
           "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
-          if strings[idx1] != " " && srcint < 0
-              let srcint = idx1
-          endif
           if strings[idx1] ==# ")"
               if srcint ==# idx1
                   let resultlist = add(resultlist,"")
               else
                   let tailint = idx1 + 1
-                  let resultlist = insert(resultlist,join(strings[tailint:srcint],''))
+                  let resultlist = insert(resultlist,ClearBlank(join(strings[tailint:srcint],'')))
               endif
               let srcint = idx1 - 1
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
               let tailint = idx1 + 1
               let resultlist = insert(resultlist,join(strings[tailint:srcint],''))
-              let srcint = idx1 - 1
-              let tailint = 0
-              let resultlist = insert(resultlist,ClearBlank(join(strings[tailint:srcint],'')))
+              if idx1 ==# 0
+                  let resultlist = insert(resultlist,"")
+              else
+                  let srcint = idx1 - 1
+                  let tailint = 0
+                  let resultlist = insert(resultlist,ClearBlank(join(strings[tailint:srcint],'')))
+              endif
               let idx1 = 0
           endif
           let idx1 -= 1
@@ -13332,6 +13338,7 @@ function! SplitCodeString(...)
 endfunction
 "}}}}}
 "{{{{{3 SplitStringByChar(...)分割字符串略过括号，通过指定字符分割，指定方向
+"这个函数被 SplitStringByStr替换
 "echo SplitStringByChar(getline(line('.')),'.',-1,0)
 function! SplitStringByChar(...)
       let strings = a:1
@@ -13570,7 +13577,7 @@ function! SplitSearchResult(...)
     return resultstr
 endfunction
 "}}}}}
-"{{{{{3 SplitStringByStr(...)分割字符串略过括号，通过指定字符分割，指定方向
+"{{{{{3 SplitStringByStr(...)通过指定的字符串分割字符
 "echo SplitStringByStr(getline(line('.')),["&&","||"])
 function! SplitStringByStr(...)
       let strings = a:1
@@ -13583,10 +13590,10 @@ function! SplitStringByStr(...)
       let strings = split(strings,'\zs')
       let srcint = 0
       let int = -1
-      let targetstr = join(strings[0:1],'')
+      let targetstr = ""
       let tempstr = ""
       while idx1 < len(strings)
-          let targetstr = IsCompareStrings(targetstr,splitstr)
+          let targetstr = IsCompareStrings(strings,splitstr,idx1)
           if strings[idx1] ==# "("
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
           elseif targetstr != ""
@@ -13604,37 +13611,82 @@ function! SplitStringByStr(...)
               if tempstr != ""
                   let resultlist = add(resultlist,tempstr)
               endif
-              let idx1 += 1
-          else
-              let idx1 += 1
-              let targetstr = join(strings[idx1:idx1 + 1],'') 
           endif
+          let idx1 += 1
       endwhile
       return resultlist
 endfunction
-"}}}}} 
+"}}}}}
 "{{{{{2 IsCompareStrings(...)比较字符串
 function! IsCompareStrings(...)
-     let str = a:1
-     let targetstr = a:2
-     let flag = ""
-     let idx1 = 0
-     if type(targetstr) ==# 1
-         if str ==# targetstr 
-             let flag = targetstr  
-         endif
-     elseif type(targetstr) ==# 3
-         while idx1 < len(targetstr)
-             if str ==# targetstr[idx1]
-                 let flag = targetstr[idx1]  
-             endif
-             let idx1 += 1
-         endwhile
-     endif
-     return flag
+    let code = a:1
+    let targetstr = a:2
+    let index = a:3
+    let flag = ""
+    let idx1 = 0
+    let str = ""
+    let targetlen = -1
+    let codelen = len(code)
+    if type(targetstr) ==# 1
+        let targetlen = len(targetstr)
+        if (index + targetlen -1) < codelen
+            let str = join(code[index:index + targetlen -1],'')
+            if str ==# targetstr
+                let flag = targetstr
+            endif
+        endif
+    elseif type(targetstr) ==# 3
+        while idx1 < len(targetstr)
+            let targetlen = len(targetstr[idx1])
+            if (index + targetlen -1) < codelen
+                let str = join(code[index:index + targetlen -1],'')
+                if str ==# targetstr[idx1]
+                    let flag = targetstr[idx1]
+                endif
+            endif
+            let idx1 += 1
+        endwhile
+    endif
+    return flag
 endfunction
-"}}}}} 
-
+"}}}}}
+"{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的=符号
+function! ProcessingEqualSymbols(...)
+    "{{{{{3 变量定义
+    let string = copy(a:1)
+    let idx1 = 0
+    "}}}}
+    if matchstr(string,'=') ==# ""
+        return string
+    endif
+    let string = split(string,'\zs')
+    let idx1 = 1
+    while  idx1 < len(string)
+        if string[idx1 - 1] ==# '='
+            if string[idx1] ==# ' ' || string[idx1] ==# '='
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        else
+            if string[idx1] ==# '='
+                if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '=' || string[idx1 - 1] == '>' || string[idx1 - 1] == '<'||
+                            \ string[idx1 - 1] == '+' ||
+                            \ string[idx1 - 1] == '-' ||
+                            \ string[idx1 - 1] == '!'
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return join(string,"\x00")
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
@@ -13696,7 +13748,53 @@ function! CheckStringIsObtainOfList(...)
 endfunction
 "}}}}}
 "}}}}}
+"{{{{{2 处理字典
+"}}}}}
 "{{{{{2 处理数字
+"}}}}}
+"{{{{{2 处理文件名
+"{{{{{3 IsFileType(...) filetype 文件类型
+function! IsFileType(...)
+    let filename = a:1
+    let filetype = ""
+    if matchstr(filename,'/') != ""
+        let filename = split(filename,'/')[-1]
+    endif
+    if matchstr(filename,'\.java') != ""
+        let filetype = "java"
+    elseif matchstr(filename,'\.cc') != ""
+        let filetype = "cc"
+    elseif matchstr(filename,'\.cpp') != ""
+        let filetype = "cpp"
+    elseif matchstr(filename,'\.h') != ""
+        let filetype = "head"
+    elseif matchstr(filename,'\.vimrc') != ""
+        let filetype = "vimrc"
+    elseif matchstr(filename,'\.xml') != ""
+        let filetype = "xml"
+    endif
+    return filetype
+endfunction
+"}}}}}
+"{{{{{3 IsFilePath(...) 文件名得到文件路径
+function! IsFilePath(...)
+    let filename = a:1
+    "let filename = expand("%")
+    let filepath = split(filename,'\zs')
+    let idx1 = len(filepath) - 1
+
+    while idx1 > 0
+        if filepath[idx1] ==# '/'
+            break
+        endif
+        let idx1 -= 1
+    endwhile
+    let filepath = join(filepath[0:idx1 - 1],'')
+    return filepath
+endfunction
+"}}}}}
+"}}}}}
+"{{{{{2 处理行号相关
 "}}}}}
 "}}}
 "{{{{  函数调用快速查找
@@ -13820,103 +13918,29 @@ function! EncapsulateDifferentFind(...)
     return result
 endfunction
 "}}}}}
-"{{{{{2   FuncToDefine(...) 函数调用找到对应函数定义,找包名
+"{{{{{2   FuncToDefine(...) 函数调用时找包名
 function! FuncToDefine(...)
     "{{{{{3 变量定义
-    let funcline = a:1
-    let curline = a:2
-    let funcstring = a:3
-    let localvariable = ""
-    let flag = ""
-    let filename = expand("%:t")
+    let searchstr = a:1
+    let filename = a:2
+    let line = a:3
+    let filepath = IsFilePath(filename)
     let filetype =  IsFileType(filename)
-    let codestring = ""
-    let cursor = []
-    let tempchar = ""
-    let AbsolutePath = expand("%:p:h")
+    let resultstr = ""
     "}}}}
     "第三种同路径的包名
-    let searchstarge  = EncapsulateDifferentGrep(AbsolutePath ,"class",funcstring)
-    if matchstr(searchstarge,funcstring) ==# funcstring
-        return funcstring
-    endif
+    "echom CodeComponentSearch("./src/com/android/bluetooth/btservice/AdapterService.java","import","OobData")
+    let resultstr = CodeComponentSearch(filename,"import",searchstr)
+
+
     "第一种当前函数里面局部变量
-    "let localvariable = IdentifyTheCurrentFile(1396,1401,'func\|def',"service")
-    "echo  string(IdentifyTheCurrentFile(1785,1797,'def',"service"))
-    let localvariable = IdentifyTheCurrentFile(funcline,curline,'def',funcstring)
-    if localvariable != []
-        let codestring = join(split(localvariable[-1])[2:])
-        if  StringComponents(funcstring ,"def",codestring)
-            if count(codestring,"<") != 0
-                let tempchar = split(codestring,"<")[0]
-                let tempchar = split(tempchar)[-1]
-            elseif matchstr(codestring,"=") != ""
-                let tempchar = split(codestring,";")[0]
-                let tempchar = split(tempchar,"=")[0]
-                let tempchar = split(tempchar)[-2]
-            else
-                let tempchar = split(codestring,";")[0]
-                let tempchar = split(tempchar)[-2]
-            endif
-
-            if tempchar != ""
-                return tempchar
-            endif
-        endif
-    endif
     "第二种函数参数
-    let localvariable = IdentifyTheCurrentFile(funcline,curline,'func',funcstring)
-    if localvariable != []
-        let codestring = join(split(localvariable[0])[2:])
-        let tempchar = split(codestring,'(')[1]
-        let tempchar = split(tempchar,')')[0]
-        let tempchar = split(tempchar,',')
-        let iscontain =  IsContain(funcstring,tempchar)
-        let tempchar = split(iscontain)[0]
-        return tempchar
-    endif
-
     "第四种全局变量
     "第五种包名
-    "echo searchpos('\<' . "service" . '\>','w')
-    "let flag = IdentificationCodeComponents(codestring,filetype)
-    call cursor(1,1)
-    let cursor = searchpos('\<' . funcstring . '\>','w')
-    while IsComment(cursor[0]) ==# 1
-        call cursor(cursor[0] + 1,1)
-        let cursor = searchpos('\<' . funcstring . '\>','w')
-    endwhile
-    if cursor != []
-        let codestring  = StandardCharacters(cursor[0])
-        let flag = IdentificationCodeComponents(codestring,filetype)
-        if flag ==# "import"
-            let tempchar = split(codestring,";")[0]
-            let tempchar = split(tempchar,'\.')[-1]
-        elseif matchstr(flag,"def") != ""
-            if  StringComponents(funcstring ,"def",codestring)
-                if count(codestring,"<") != 0
-                    let tempchar = split(codestring,"<")[0]
-                    let tempchar = split(tempchar)[-1]
-                elseif matchstr(codestring,"=") != ""
-                    let tempchar = split(codestring,";")[0]
-                    let tempchar = split(tempchar,"=")[0]
-                    let tempchar = split(tempchar)[-2]
-                else
-                    let tempchar = split(codestring,";")[0]
-                    let tempchar = split(tempchar)[-2]
-                endif
-            endif
-        endif
-        call cursor(curline,1)
-        if tempchar != ""
-            return tempchar
-        endif
-    endif
-    return tempchar
 endfunction
 "}}}}}
-"}}}
 
+"}}}
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
 "gettabinfo()标签页信息

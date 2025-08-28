@@ -138,6 +138,13 @@ system/stack/avdt/avdt_ccb_act.cc  这个文件没有添加日志
  
 @Database(entities = {Metadata.class},version = 122)  这种情况判断为注释
 android/app/src/com/android/bluetooth/btservice/storage/MetadataDatabase.java  
+
+
+20250828 
+这种有类型转换，需要注意下
+registerProfileService((ProfileService) msg.obj);
+
+
 >>>>>>>>>>>>>>> 
 
 <<<<<<<<<<<<<<<<
