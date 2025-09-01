@@ -7995,6 +7995,8 @@ function! ExtractKeyCodes(...)
     let tempcursor = []
     let flag = ""
     let currentstr = ""
+    let cursorline = -1
+    let cursorcol = -1
     "}}}}
     setlocal foldmethod=syntax
     if a:0 ==# 0
@@ -8009,6 +8011,8 @@ function! ExtractKeyCodes(...)
         let realityline = a:1
         if a:0 ==# 2
             let filename = a:2
+            let cursorline = line('.')
+            let cursorcol = col('.')
             silent tabnew
             call SwitchBuff(filename)
         else
@@ -8184,6 +8188,7 @@ function! ExtractKeyCodes(...)
             call Echom(10,0,'tangxinlou debug',8177,resultlist)
         elseif a:0 == 2
             :q!
+            call cursor(cursorline,cursorcol)
         endif
         return[tempstring,functionlinefront,functionlineback,filename,realityline,linelist,flaglist,keylist,resultlist,codelist,currentstr]
 endfunction
@@ -12105,11 +12110,13 @@ function! LexiconizationCallback(...)
             let dict["03string"] = flag . " " . string(ParsingFunctions(string))
         elseif flag ==# "functioncall"
             let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
+        elseif flag ==# "judge"
+            let dict["03string"] = flag . " " . string(ParsingJudge(string,[]))
         else
             let dict["03string"] = flag . " " . string(SplitCodeString(string))
         endif
     endif
-    let dict["03string"] = flag . " " . string
+    "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
         let UpBracketslist = []
@@ -12775,6 +12782,9 @@ function! IdentificationCodeComponents1(...)
     elseif matchstr(codestring," default:") != ""
         let flag = flag . "default"
         return flag
+    elseif matchstr(codestring,"注释") != ""
+        let flag = flag . "注释"
+        return flag
     elseif CheckStringIsObtainOfList(codestring,log)
         let flag = flag . "log"
         return flag
@@ -12850,10 +12860,10 @@ function! IdentificationCodeComponents1(...)
         elseif CheckStringIsObtainOfList(codestring,Exception)
             let flag = flag . "Exception"
             return flag
-        elseif matchstr(codestring," class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+        elseif matchstr(codestring,"class ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . "class"
             return flag
-        elseif matchstr(codestring," interface ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
+        elseif matchstr(codestring,"interface ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
             let flag = flag . " interface "
             return flag
         elseif matchstr(codestring," enum ") != "" &&  count(codestring,'(') ==# 0 && count(codestring,')') ==# 0
@@ -12885,7 +12895,6 @@ function! IdentificationCodeComponents1(...)
             return flag
         else
             let flag  = "variabledef"
-
             return flag
         endif
 
@@ -12902,15 +12911,13 @@ function! IdentificationCodeComponents1(...)
                 return flag
             endif
         endif
-        if
-        endif
     endif
     return "unknown"
 endfunction
 "}}}}}
 "{{{{{2 DeepDecisionFunction(...)二次判定函数成分，对粗略判断后的代码二次判断
 function! DeepDecisionFunction(...)
-    "set noignorecase
+    set noignorecase
     let codestring = a:1
     let searchstr = a:2
     "变量
@@ -12931,6 +12938,7 @@ function! DeepDecisionFunction(...)
     let calllist = []
     let idx1 = 0
     let flag = IdentificationCodeComponents1(codestring)
+    let codestring = ClearCodeSemicolon(codestring)
     if matchstr(codestring,searchstr) != ""
         if flag ==# "variablespecify" || flag ==# "variabledefspecify"
             let codelist = SplitCodeString(codestring)
@@ -12974,20 +12982,23 @@ function! DeepDecisionFunction(...)
                 let idx1 += 1
             endwhile
         elseif flag ==# "functiondefinition"
-            let calllist = ParsingFunctionCalls(codestring)
+            let calllist = ParsingFunctions(codestring)
+            "call Echom(10,0,'tangxinlou debug',12988, calllist,codestring)
             if calllist != []
                 if matchstr(string(calllist[0]),searchstr) != ""
                     let flag = "functionreturnvalue"
                 elseif matchstr(string(calllist[2]),searchstr) != ""
                     let idx1 = 0
                     while idx1 < len(calllist[2])
-                        if matchstr(calllist[2][0]) != ""
+                        if matchstr(calllist[2][0],searchstr) != ""
                             let flag = "formalparametertype"
                         else
                             let flag = "formalparametervalue"
                         endif
-                        let idx1 += 0
+                        let idx1 += 1
                     endwhile
+                elseif matchstr(string(calllist[1]),searchstr) != ""
+                    let flag = "functiondefinition"
                 endif
             endif
         endif
@@ -13004,6 +13015,9 @@ function! ParsingFunctions(...)
     let resultlist = ["返回值","函数名","函数参数"]
     let parameter = ["参数类型","参数"]
     let targetstr = IsContain('\w*(.*)',codelist)
+    if targetstr ==# ""
+        return []
+    endif
     let index = IsContainIndex('\w*(.*)',codelist)
     if index < 1
         let resultlist[0] = ""
@@ -13056,20 +13070,23 @@ endfunction
 function! ParsingVariable(...)
 endfunction
 "}}}}}
-"{{{{{2 ParsingVariable(...)解析判断
-"echom ParsingVariable(getline(line('.')),[])
-function! ParsingVariable(...)
+"{{{{{2 ParsingJudge(...)解析判断
+"echom ParsingJudge(getline(line('.')),[])
+function! ParsingJudge(...)
     let codestr = copy(a:1)
     let resultlist= deepcopy(a:2)
     let targetvar = ""
     let idx1 = 0
+    if count(codestr,'(') ==# 0
+        return []
+    endif
     let targetvar = SplitCharactersByBrackets(codestr)
-    call Echom(10,0,'tangxinlou debug',13230, targetvar,codestr)
+    "call Echom(10,0,'tangxinlou debug',13230, targetvar,codestr)
     let targetvar = SplitStringByStr(targetvar[1],["&&","||"])
-    call Echom(10,0,'tangxinlou debug',13233, targetvar)
+    "call Echom(10,0,'tangxinlou debug',13233, targetvar)
     while idx1 < len(targetvar)
         if targetvar[idx1][0] ==# '('
-            let resultlist = ParsingVariable(targetvar[idx1],resultlist)
+            let resultlist = ParsingJudge(targetvar[idx1],resultlist)
         else
             let resultlist = add(resultlist,targetvar[idx1])
         endif
@@ -13105,6 +13122,7 @@ endfunction
 function! WhichFunctionIsIn(...)
     "{{{{{3 变量定义
     let codestring = copy(a:1)
+    let codestring  = ClearCodeSemicolon(codestring)
     let flag = a:2
     let templist = []
     let tempchar = ""
@@ -13121,10 +13139,23 @@ function! WhichFunctionIsIn(...)
         let templist = split(codestring)
         let indexnum = index(templist,"struct")
         return templist[indexnum + 1]
+    elseif flag ==# "variabletype"
+        let templist  = SplitCodeString(codestring)
+        if count(templist,"=") != 0
+            let index = index(templist,"=")
+            let templist = templist[:index -1]
+            return templist[-2]
+        else
+            return templist[-2]
+        endif
+        return templist[indexnum + 1]
     elseif flag ==# "interface"
         let templist = split(codestring)
         let indexnum = index(templist,"interface")
         return templist[indexnum + 1]
+    elseif flag ==# "import"
+        let templist = split(codestring,'\.')
+        return templist[-1]
     elseif flag ==# "case"
         let tempchar = matchstr(codestring," case .*:")
         if tempchar  != ""
@@ -13167,6 +13198,21 @@ function! ObtainKeyInformation(...)
     endif
 
     return resultlist
+endfunction
+"}}}}}
+"{{{{{2 FunctionParameters2Type(...)通过函数形参获取type
+function! FunctionParameters2Type(...)
+    let funclist = a:1
+    let value = a:2
+    let parameterslist = deepcopy(funclist[2])
+    let idx1 = 0
+    while idx1 < len(parameterslist)
+        if parameterslist[idx1][1] ==# value
+            return parameterslist[idx1][0]
+        endif
+        let idx1 += 1
+    endwhile
+    return ""
 endfunction
 "}}}}}
 "}}}
@@ -13498,7 +13544,7 @@ function! SplitSearchResult(...)
     let line =  codelist[1]
     let srccode = join(codelist[2:])
     let resultstr[0]  = filename
-    let resultstr[1]  = line
+    let resultstr[1]  = str2nr(line)
     let resultstr[2]  = srccode
     return resultstr
 endfunction
@@ -13611,6 +13657,16 @@ function! ProcessingEqualSymbols(...)
         let idx1 += 1
     endwhile
     return join(string,"\x00")
+endfunction
+"}}}}}
+"{{{{{2 ClearCodeSemicolon(...)代码字符串末尾的分号
+function! ClearCodeSemicolon(...)
+    let string = copy(a:1)
+    let string = ClearBlank(string)
+    if string[len(string) -1] ==# ';'
+        let string = string[0:-2]
+    endif
+    return string
 endfunction
 "}}}}}
 "}}}}}
@@ -13744,7 +13800,7 @@ function! SwitchBuff(...)
         call Dbug1(10,0,'SwitchBuff 53', )
         return 1
     endif
-    silen execute("edit " . filepath)
+    silen execute("edit! " . filepath)
     return 0
 endfunction
 "}}}}}
@@ -13761,21 +13817,47 @@ function! WhichFunctionToCall(...)
     let flag = ""
     let idx1 = 0
     let modulelist = []
+    let simplestr = ""
+    let upclasslist = ""
     "}}}}
     "按照标准代码获取整行
     let modulelist = ExtractKeyCodes(line)
     let codestring = modulelist[-1]
+    let upclasslist =modulelist[-3][1]
     let flag =  IdentificationCodeComponents1(codestring)
     if flag ==# "functioncall"
         let codelist = ParsingFunctionCalls(codestring)
         call Echom(10,0,'tangxinlou debug',13736, codelist)
         while idx1 < len(codelist)
             if type(codelist[idx1]) ==# 1
-               "判断当前是类名
+                "判断当前是类名
+                let codelist[idx1] = FuncToDefine(codelist[idx1],modulelist)
             elseif type(codelist[idx1]) ==# 3
+                if idx1 ==# 0
+                    let simplestr = upclasslist  . "▌" . codelist[0][0]
+                    let resultstr = CodeComponentSearch("","functiondefinition",codelist[0][0],simplestr)
+                    if resultstr != []
+                        let resultstr = resultstr[0]
+                        let resultstr = SplitSearchResult(resultstr)[2]
+                        let resultstr = ParsingFunctions(resultstr)
+                        let codelist[idx1] = resultstr
+                    endif
+                elseif idx1 ==# 1
+                    let simplestr = codelist[0] . "▌" . codelist[1][0]
+                    let resultstr = CodeComponentSearch("","functiondefinition",codelist[1][0],simplestr)
+                    if resultstr != []
+                        let resultstr = resultstr[0]
+                        let resultstr = SplitSearchResult(resultstr)[2]
+                        let resultstr = ParsingFunctions(resultstr)
+                        let codelist[idx1] = resultstr
+                    endif
+                    call Echom(10,0,'tangxinlou debug',13820, resultstr,codelist,simplestr)
+                else
+                endif
             endif
             let idx1 += 1
         endwhile
+        call Echom(10,0,'tangxinlou debug',13856, codelist)
     endif
     return
 endfunction
@@ -13788,8 +13870,7 @@ function! CodeComponentSearch(...)
     let greptype = a:2
     let grepchar = a:3
     if a:0 > 3
-        let start = a:4
-        let end = a:5
+        let comparestr = a:4
     endif
     let idx1 = 0
     if filename ==# ""
@@ -13802,17 +13883,21 @@ function! CodeComponentSearch(...)
     let codestring = ""
     let flag = ""
     let searchstr = copy(grepchar)
+    let simplestr = ""
     "}}}}
     let grepchar = '"' . grepchar  .'" '
     let grepcmd = grepcmd . grepchar . filename
+    "call Echom(10,0,'tangxinlou debug',13864, grepcmd,greptype)
     let result = system(grepcmd)
     let result = split(SelectEntireCode(copy(result)),"\n")
     while idx1 < len(result)
         let codestring = SplitSearchResult(result[idx1])
         let flag = DeepDecisionFunction(codestring[2],searchstr)
+        "call Echom(10,0,'tangxinlou debug',13873,codestring[2], flag,greptype)
         if flag ==# greptype
             if a:0 > 3
-                if codestring[1] >= start && codestring[1] <= end
+                let simplestr = ExtractKeyCodes(codestring[1],codestring[0])[0]
+                if matchstr(comparestr,simplestr) != ""
                     let resultlist = add(resultlist,result[idx1])
                 endif
             else
@@ -13886,8 +13971,9 @@ endfunction
 function! FuncToDefine(...)
     "{{{{{3 变量定义
     let searchstr = a:1
-    "let modulelist = a:2
-    let modulelist = ExtractKeyCodes(line('.'))
+    let modulelist = a:2
+    "let modulelist = ExtractKeyCodes(line('.'))
+    let simplestr = modulelist[0]
     let filename = modulelist[3]
     let line = modulelist[4]
     let linelist = modulelist[-6]
@@ -13897,27 +13983,46 @@ function! FuncToDefine(...)
     let filepath = IsFilePath(copy(filename))
     let filetype =  IsFileType(filename)
     let resultstr = ""
-    let localstart = linelist[resultlist[3]][0]
-    let localend = line
+    let packagestr = ""
     "后续通过 resultlist[2] 和类型比较是否是全局变量
-    let globalstart = linelist[resultlist[5]][0]
-    let globalend = linelist[resultlist[5]][1]
     "}}}}
-    "第一种当前函数里面局部变量
-    let resultstr = CodeComponentSearch(filename,"variablevalue",searchstr,localstart,localend )
-    call Echom(10,0,'tangxinlou debug',13903, resultstr)
+    "第一种当前函数里面变量
+    let resultstr = CodeComponentSearch(filename,"variablevalue",searchstr,simplestr)
+    "call Echom(10,0,'tangxinlou debug',13903, resultstr)
+    if resultstr != []
+        let resultstr = resultstr[0]
+        let resultstr = SplitSearchResult(resultstr)[2]
+        let packagestr = WhichFunctionIsIn(resultstr,"variabletype")
+        "call Echom(10,0,'tangxinlou debug',13943, packagestr)
+        return packagestr
+    endif
     "第二种函数参数
     let resultstr = ParsingFunctions(functioncode)
-    call Echom(10,0,'tangxinlou debug',13908, resultstr)
+    if resultstr != []
+        let packagestr = FunctionParameters2Type(resultstr,searchstr)
+        "call Echom(10,0,'tangxinlou debug',13908, resultstr,packagestr)
+        return packagestr
+    endif
     "第三种同路径的包名
     let resultstr = CodeComponentSearch(filepath,"class",searchstr)
-    call Echom(10,0,'tangxinlou debug',13912, resultstr)
-    "第四种全局变量
-    let resultstr = CodeComponentSearch(filename,"variablevalue",searchstr,globalstart,globalend )
-    call Echom(10,0,'tangxinlou debug',13914, resultstr)
-    "第五种包名
+    "call Echom(10,0,'tangxinlou debug',13962, resultstr)
+    if resultstr != []
+        let resultstr = resultstr[0]
+        let resultstr = SplitSearchResult(resultstr)[2]
+        let packagestr  = WhichFunctionIsIn(resultstr,"class")
+        "call Echom(10,0,'tangxinlou debug',13944, packagestr)
+        return packagestr
+    endif
+    "第四种包名
     let resultstr = CodeComponentSearch(filename,"import",searchstr)
-    call Echom(10,0,'tangxinlou debug',13920, resultstr)
+    call Echom(10,0,'tangxinlou debug',13971, resultstr)
+    if resultstr != []
+        let resultstr = resultstr[0]
+        let resultstr = SplitSearchResult(resultstr)[2]
+        let packagestr  = WhichFunctionIsIn(resultstr,"import")
+        "call Echom(10,0,'tangxinlou debug',13943, packagestr)
+        return packagestr
+    endif
 endfunction
 "}}}}}
 
