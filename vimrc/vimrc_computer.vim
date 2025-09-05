@@ -772,11 +772,13 @@ let g:LogLevel = 0
 function! LogLevel()
     if g:LogLevel
         echom "关闭log 打印"
-        let g:debugflag = 1
+        let g:debugflag = 20
+        call Echom(10,0,'tangxinlou debug',776, g:debugflag)
         let g:LogLevel = 0
     else
         echom "打开log 打印"
-        let g:debugflag = 20
+        let g:debugflag = 1
+        call Echom(10,0,'tangxinlou debug',781, g:debugflag)
         let g:LogLevel = 1
     endif
 endfunction
@@ -1986,6 +1988,7 @@ function! SimplifySearchResults1(...)
     while idx1 < len(searchstarge)
         let codelist = split(searchstarge[idx1],":")
         let srccode = join(codelist[2:])
+        call Echom(10,0,'tangxinlou debug',1989, searchstarge[idx1])
         let targetcode = [codelist[0] . ":" . codelist[1] . ":","   " . split(join(codelist[2:]),"^\\s\\+")[0]]
         let filetype = IsFileType(codelist[0])
 
@@ -2560,7 +2563,6 @@ function! SelectEntireCode(...)
     let begintime = 0
     let endtime = 0
     let templist = []
-    let g:debugflag = 20
     syntax off
     let filelist = []
     "}}}}
@@ -2581,14 +2583,16 @@ function! SelectEntireCode(...)
     while idx1 < len(searchstarge)
         let filename = split(searchstarge[idx1],":")[0]
         let filetype = IsFileType(filename)
-        if matchstr("cccppjava",filetype) != "" && count(filelist,filename) ==# 0
+        if matchstr("cccppjavahead",filetype) != "" && count(filelist,filename) ==# 0
             let filelist = add(filelist,filename)
         endif
         let idx1 += 1
     endwhile
     silent tabnew
     silent execute( "args " . join(filelist))
+    call Echom(10,0,'tangxinlou debug',2592, "dfd")
     call Dbug1(10,0,'SelectEntireCode 25', "end")
+    call Echom(10,0,'tangxinlou debug',2594, "dkfdjk")
     let idx1  = 0
     while idx1 < len(searchstarge)
         let templist = split(searchstarge[idx1],":")
@@ -2616,13 +2620,13 @@ function! SelectEntireCode(...)
             else
                 silent setlocal foldmethod=syntax
                 let numberlist = MergeLinesOfCode(line)
-                call Dbug1(10,0,'SelectEntireCode 28', numberlist)
                 if len(numberlist) != 0
                     let srcnum = numberlist[0]
                     let tailnum = numberlist[1]
                     let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
                     let searchstarge[idx1] = join(currentstrlist,":")
                 else
+
                     let currentstrlist[2] = currentstrlist[2] . "注释"
                     let searchstarge[idx1] = join(currentstrlist,":")
                 endif
@@ -2879,7 +2883,7 @@ function! IsComment(...)
         if matchstr(secondNonWhitespace,"@") ==# "@"
             silent let startcursor = searchpos("(", 'w')
             silent let endcursor = searchpairpos('(', '', ')', 'w')
-            if line >= startcursor[0] && line <= endcursor[0]
+            if line >= startcursor[0] && line <= endcursor[0] && endcursor[0] != startcursor[0]
                 return 1
             endif
         endif
@@ -3083,11 +3087,10 @@ function! FindAnotherBracketPosition(...)
     elseif char ==# '}'
         "silent let col =  strridx(tempchar,'}')
         silent call cursor(line('.'),  1)
-        "for (Uri uri : new Uri[]{Mms.CONTENT_URI, Sms.CONTENT_URI}) {  修复这种情况
-        "if (count(tempchar,'{') != 0 && count(tempchar,'}') != 0) && (StringPosition(tempchar,'{')[0] < StringPosition(tempchar,'}')[0])
-        "    silent let cursor =  searchpos('{','b')
-        "endif
         silent let cursor  = searchpairpos('{', '', '}', 'b')
+        while DetermineStringChar(getline(cursor[0]),cursor[1] -1) ==# 1
+            silent let cursor  = searchpairpos('{', '', '}', 'b')
+        endwhile
         call Dbug1(10,0,'FindAnotherBracketPosition 48', cursor,getline(cursor[0]))
         "call Echom(10,0,'tangxinlou debug',2917, "end")
         return cursor
@@ -3165,6 +3168,8 @@ function! ClearBracket(...)
 
     silent! execute '%s/\/\*\/\//\/\*/g'
 
+
+ silent! execute '%s#\v(["''])\zs[^{''"]*\zs{\ze[^{''"]*\ze(["''])#\=tr(submatch(0), "{}", "")#ge'
     if a:0 ==# 0
         call HandlingParentheses()
     endif
@@ -9133,7 +9138,6 @@ function! CallStack(...)
     let flag = a:4
     let laststackstring = copy(a:5)
     let searchstarge = ""
-    let g:debugflag = 20
     let idx1 = 0
     let templist = ""
     let tempchar = ""
@@ -9316,7 +9320,6 @@ function! IdentifyAllCalls(...)
     let tailnum = -1
     let codestring  = ""
     let  realityline = -1
-    let g:debugflag = 20
     let flag = ""
     let srcline = line
     let tailline = line('$')
@@ -9665,7 +9668,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,.bp,.go} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -9674,8 +9677,10 @@ function! GrepChars(timer)
     let searchstarge =  system(command)
     if len(split(searchstarge,"\n")) < 600  && ("analy.txt" != matchstr(g:lastgrepfile,"analy.txt"))
         let searchstarge = SelectEntireCode(copy(searchstarge))
+        let searchstarge = SimplifySearchResults1(copy(searchstarge),0,searchs)
+    else
+        let searchstarge = SimplifySearchResults(copy(searchstarge),0,searchs)
     endif
-    let searchstarge = SimplifySearchResults1(copy(searchstarge),0,searchs)
     let searchstarge = insert(searchstarge,@g)
     call win_gotoid(g:windowgrepid)
     if line('$') > 3
@@ -9943,6 +9948,16 @@ function! SearcherlogChars()
     endif
 endfunction
 "}}}}}
+"{{{{{  DebugTemporarily()  临时debug
+"echom DebugTemporarily("star")
+function! DebugTemporarily(...)
+        let searchs = a:1
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,} " . "'" . searchs . "'"
+        let searchstarge =  system(command)
+        let searchstarge = SelectEntireCode(copy(searchstarge))
+        let searchstarge = SimplifySearchResults1(copy(searchstarge),0,searchs)
+endfunction
+"}}}}}
 "}}}}
 "{{{{ 批量处理
 "{{{{{  BatchHandle()  批量处理
@@ -10099,7 +10114,6 @@ function! TreeContens(...)
     let tempchar = ""
     let templist = []
     let idx1 = 0
-    let g:debugflag = 20
     if matchstr(tempfile,"▌") ==# ""
         let tempfile = split(system("find -iname  " . tempfile),"\n")[0]
         silent execute "normal! :tabnew\<cr>"
@@ -10207,21 +10221,42 @@ endfunction
 "fold{{{{  markdown  txt 类型文件折叠和高亮
 "{{{{{2   GetPotionFold(...) 计算foldlevel
 function! GetPotionFold(lnum)
+    let line = copy(a:lnum)
+    let templine = -1
+    let tempcol = -1
+    let cursor = []
+    let tempchar = ""
+    let length = 3
+    let foldnr = -1
     if getline(a:lnum) =~? '\v^\s*$'
-        return '-1'
+        let foldnr = -1
     elseif  getline(a:lnum) =~? "```c" || getline(a:lnum) =~? "```"
-        return '0'
-    elseif  getline(a:lnum) =~? "<<<<<<<<<<<<<<<<" || getline(a:lnum) =~? ">>>>>>>>>>>>>>>"
-        return '0'
+        let foldnr = 0
+    elseif matchstr(getline(a:lnum),"{{{") != ""  "}}}
+        let tempchar = getline(a:lnum)
+        let length = len(tempchar)
+        let foldnr = str2nr(tempchar[3])  + 1
     elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
         if matchstr(getline(a:lnum),"▌") ==# "▌"
-            return count(split(getline(a:lnum),'▌'),'│  ')
+            let foldnr = count(split(getline(a:lnum),'▌'),'│  ')
         else
-            return count(split(getline(a:lnum)),'│  ')
+            let foldnr = count(split(getline(a:lnum)),'│  ')
         endif
-    else
-        return '1'
+    else          
+        let templine = line('.')
+        let tempcol = col('.')
+        call cursor(line,1)
+        let cursor = searchpairpos('{{{', '', '}}}', 'b')
+        if cursor != []
+            let tempchar = getline(cursor[0])
+            let length = len(tempchar)
+            let foldnr = str2nr(tempchar[3]) + 2
+        else
+            let foldnr = -1
+        endif
+        call cursor(templine,tempcol)
     endif
+    return foldnr
 endfunction
 "}}}}}
 "{{{{{2   GetPotionFold1(...) 计算foldlevel
@@ -11661,7 +11696,6 @@ function! FouncAddLog(...)
     let classdict = {}
     let idx1 = 0
     let mode = 0
-    let g:debugflag = 20
     "}}}}
     let mode = input("1是加log2是删log")
     let filetype = input("1是java2是cc3是cpp")
@@ -11731,7 +11765,6 @@ function! FileAddLog(...)
                 \" static{"]
     let functionname = ""
     let tempchar = ""
-    let g:debugflag = 20
     let filenamelist = []
     let tempflag = -1
     let classfuc = ""
@@ -12107,13 +12140,13 @@ function! LexiconizationCallback(...)
     let flag = IdentificationCodeComponents1(string,filetype)
     if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
         if flag ==# "functiondefinition"
-            let dict["03string"] = flag . " " . string(ParsingFunctions(string))
+            "let dict["03string"] = flag . " " . string(ParsingFunctions(string))
         elseif flag ==# "functioncall"
             let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
         elseif flag ==# "judge"
             let dict["03string"] = flag . " " . string(ParsingJudge(string,[]))
         else
-            let dict["03string"] = flag . " " . string(SplitCodeString(string))
+            "let dict["03string"] = flag . " " . string(SplitCodeString(string))
         endif
     endif
     "let dict["03string"] = flag . " " . string
@@ -12338,7 +12371,6 @@ function! IdentifyTheCurrentFile(...)
     let tailnum = -1
     let codestring  = ""
     let  realityline = -1
-    let g:debugflag = 20
     let flag = ""
     let srcline = line
     let tailline = line('$')
@@ -12394,7 +12426,6 @@ function! ProcessEachLine(...)
     let tailnum = -1
     let codestring  = ""
     let  realityline = -1
-    let g:debugflag = 20
     let flag = ""
     let srcline = line
     let tailline = line('$')
@@ -12628,7 +12659,7 @@ function! MergeLinesOfCode(...)
             elseif CheckStringIsObtainOfList(foldstring,judge)
                 if matchstr(foldstring ,"{") ==# ""
                     silent call cursor(line,1)
-                    let cursor =searchpairpos('(', '', ')', 'b')
+                    let cursor = searchpairpos('(', '', ')', 'b','',max([1, line('.') - 30]))
                     if cursor ==# [0,0]
                         if matchstr(getline(line),'(') != ""
                             let start = line
@@ -12981,6 +13012,8 @@ function! DeepDecisionFunction(...)
                 endif
                 let idx1 += 1
             endwhile
+        elseif flag ==# "return"
+
         elseif flag ==# "functiondefinition"
             let calllist = ParsingFunctions(codestring)
             "call Echom(10,0,'tangxinlou debug',12988, calllist,codestring)
@@ -13082,7 +13115,7 @@ function! ParsingJudge(...)
     endif
     let targetvar = SplitCharactersByBrackets(codestr)
     "call Echom(10,0,'tangxinlou debug',13230, targetvar,codestr)
-    let targetvar = SplitStringByStr(targetvar[1],["&&","||"])
+    let targetvar = SplitStringByStr(targetvar[1],["&&","||","!=",">=","<=","=="," < "," > "])
     "call Echom(10,0,'tangxinlou debug',13233, targetvar)
     while idx1 < len(targetvar)
         if targetvar[idx1][0] ==# '('
@@ -13215,6 +13248,29 @@ function! FunctionParameters2Type(...)
     return ""
 endfunction
 "}}}}}
+"{{{{{2 ParsingExpression(...)表达式
+function! ParsingExpression(...)
+    let codelist = a:1
+    let resultlist = a:2
+endfunction
+"}}}}}
+"{{{{{2 DetermineCodeType(...)判断携带括号到底是什么代码
+"携带了括号的代码
+"1 强制转换（A2dpService）
+"2 约定作用域 1 >（1 + 34）
+"3 函数名stop()
+"echom DetermineCodeType(getline(line('.')))
+function! DetermineCodeType(...)
+    let codestr = copy(a:1)
+    let codelist = SplitCodeString(codestr)
+    let targetstr = IsContain('\w*(.*)',codelist)
+    if targetstr[0] ==# '('
+        return 1
+    endif
+    return 0
+endfunction
+"}}}}}
+
 "}}}
 "{{{{  基础能力函数
 "{{{{{2 处理字符串
@@ -13277,7 +13333,7 @@ function! SplitCodeString(...)
                   if strings[idx1 -1] != " "
                       let tailint = idx1 -1
                       "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
-                      let resultlist = add(resultlist,join(strings[srcint:tailint],''))
+                      let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
                       "let resultlist = add(resultlist,strings[srcint:tailint])
                   endif
               endif
@@ -13298,7 +13354,7 @@ function! SplitCodeString(...)
           endif
           if idx1 ==# len(strings) -1
               let tailint = idx1
-              let childstr = join(strings[srcint:tailint],'')
+              let childstr = ClearBlank(join(strings[srcint:tailint],''))
               if childstr != ""
                   let resultlist = add(resultlist,childstr)
               endif
@@ -13667,6 +13723,57 @@ function! ClearCodeSemicolon(...)
         let string = string[0:-2]
     endif
     return string
+endfunction
+"}}}}}
+"{{{{{2 FineCodeSegmentation(...)精细分割代码为一小块一小块
+"echom FineCodeSegmentation(getline(line('.')),[])
+function! FineCodeSegmentation(...)
+    let codestr = copy(a:1)
+    let resultstr = a:2
+    let idx1 = 0
+    let codelist = []
+    let codestr = SplitCodeString(codestr)
+    while idx1 < len(codestr)
+        if codestr[idx1][0] ==# '('
+            let codelist =  SplitCharactersByBrackets(codestr[idx1])
+            let resultstr = FineCodeSegmentation(codelist[1],resultstr)
+            let resultstr = FineCodeSegmentation(codelist[2],resultstr)
+        else
+            let resultstr = add(resultstr,codestr[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    return resultstr
+endfunction
+"}}}}}
+"{{{{{2 DetermineStringChar(...)判断字符是否在字符串里面
+"代码里面"只能成对出现，单数要么是语法错误，或者全行都是字符串
+"echom DetermineStringChar(getline(line('.')))
+function! DetermineStringChar(...)
+    let strings = copy(a:1)
+    let pos = a:2
+    let strings = split(strings,'\zs')
+    let src = -1
+    let tail = -1
+    let idx1 = 0
+    let flag = 0
+    while idx1 < len(strings)
+        if strings[idx1] ==# '"'
+            if idx1 == 0 || strings[idx1 - 1] != '\'
+                if src <= tail
+                    let src = idx1
+                else
+                    let tail = idx1
+                    if pos <= tail && pos >= src
+                        let flag = 1
+                        break
+                    endif
+                endif
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return flag
 endfunction
 "}}}}}
 "}}}}}
