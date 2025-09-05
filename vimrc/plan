@@ -1,4 +1,112 @@
 {{{0
+###面试相关
+介绍你做过的项目（熟悉哪些平台）
+处理过哪些车载问题
+处理过哪些耳机问题
+是否有过处理市场用户投诉的经验
+搜索不到蓝牙设备如何分析
+打电话无声问题怎么分析（tx/rx）
+配对的模式有哪几种吗？如何确认使用哪种方式？手机与耳机配对一般用的哪种？
+在播放音乐过程中，进行微信通话，流程和状态变化是怎么样的
+音乐卡音问题如何分析，有哪些原因
+如果手机连接了一个耳机或者车载，待机功耗偏高，如何分析
+如果听音乐功耗偏高，有哪些可能影响的因素？
+A2DP延时如何优化
+tws一个耳机有声、一个无声原因是什么
+绝对音量相关
+对于一些兼容性问题，只在个别设备上出现，其他设备没有，要怎么处理
+一、基本蓝牙
+(1) BR/EDR 有多少个信道，，信道带宽是多少，最高和最低的中心频率是多少
+答：79, 1M, 2402和2480
+(2) BLE 有多少个信道，信道带宽是多少
+答：40,2M
+(3) 常规的跳频频率是多少？如何算得？
+答案应是：协议中1个slot是625us，以已连接情况为例子，每个slot master会切到一个新的频点进行通信。
+(4)各代蓝牙之间的典型优化
+1.1	速率1M，易干扰
+1.2	AFH 、eSCO、Faster Connection
+2.0	EDR
+2.1	NFC(OOB带外配对) SSP SSR
+3.0
+HS(用wifi 11g)，鸡肋
+EPC(Enhanced Power Control) 降功耗
+4.0	LE
+(5)Inquiry 和 Inquiry scan
+Inquiry能获取到什么信息？
+答：在 EIR(Enhanced Inquiry Resp)中，会包含Device name, TX power level, service class UUIDs, and manufacturer’s data. 也会有RSSI, COD（class of device，设备类型）
+Inquiry scan需要设置什么重要参数
+答: interval window
+(6)连接过程分多少环节
+(7) SSP中 auth方式有几种，是怎么确定的
+答：Numeric Compare比对之后选择是否，passkey entry需要输入密码，Just work直接auth过
+根据IO capability的交换而来，Display Only; Display Yesno; Keyboard Only; NoInputNoOutput
+具体不细究
+(8)SSP最后一个环节 User Confirmation Req完成后，然后是什么环节，说出两个
+答：
+RNR: Remote Name Request
+Create Connection: 建立ACL连接
+(9)LMP version，可以获取对端的什么信息
+答：core spec版本号，芯片商，子版本号
+(10)LMP supervision timeout是什么作用，是否可以建立连接后进行更改
+答：Link 不交互数据能维持的时间；可以
+(11)是否可以在使用过程中，改变蓝牙的主从关系；一般为什么要这么做
+答：可以，通过role switch进行（HCI关键字 role change）；我方设备或者对端设备都可以进行
+常出于以下原因：兼容性、省电（slave可以进入省电）、共存性能
+二、A2DP
+1、手机连接耳机播放音乐，各角色名称
+答：手机 SRC（来源/上游）, 耳机SNK（下游）
+2、AVRCP的SDP中，有哪些feature值得关注？
+答：版本号；AVRCP 1.4增加很多功能.
+Browsing
+3、获取并设置音频编码流程是？
+答：(1)discovery:发现对端有多少支持codec(SEID)
+(2)Get capability，对这些codec获取详细信息
+(3)Set configuration，设置编码
+(4)open
+4、卡音问题如何分析
+答：发散题目。
+(1)RF性能是否ok
+(2)audio给的数据源是否不卡
+(3)有没有表征发送情况的固件统计信息，如audio送包时间、audio
+5、无声问题怎么分析
+答：发散题目
+(1)通路是否正确
+(2)音频dump是否无声
+(3)A2DP AVRCP是否都start了
+(4)airlog是否有音乐数据传输过去
+三、AVRCP
+1、CT是啥，TG是啥？
+答: CT是车载，TG是手机
+2、AVRCP有哪些feature是值得注意的
+答：开放性问题，Abs，Browsing
+3、比如要做一个AVRCP 1.3的兼容性名单，对于名单内的设备，手机伪装成自己是仅支持AVRCP 1.3，需要在哪几个环节注意的
+答: （1）SDP时，注意返回呢AVRCP 1.3
+(2) Get capability时，AVRCP 1.4的feature注意不要加进去
+4、更新车载进度条时的AVRCP流程大概是？
+答: (1)车载发来command: register一个PLAYBACK_POS_CHANGE
+(2)手机回复一个interim，表示接受注册
+(3)手机在进度条变化时，回复一个CHANGED的event，表示完成这个change
+声音延时
+offload场景，adsp直接对接btfw，需要fw知道自己的从adsp收包的时间 / 包入队时间 / 从队中发出的时间
+非offload场景，需要从HCI中看，audio写包到ACL的时间间隔；若无问题，需要从空中包看，是否fw发包过慢，环境问题还是IOT issue
+功耗
+请讲实际处理情况
+https://developer.android.com/guide/platform?hl=zh-cn
+用实际例子说明下什么是HAL层。
+RE: 比如蓝牙侧的driver层，仅有HAL层
+2、关于广播的理解
+广播的种类有哪几种？哪些会产生阻塞，如何避免？
+2、关于广播的理解
+广播的种类有哪几种？哪些会产生阻塞，如何避免？
+普通广播，动态和静态的接受者，收到顺序是否一致，为何这么设计？
+RE: 动态先收到；因为防止静态接收者所在进程没有运行，此时先要启动他
+五、common问题
+1、最大难度/成就感任务，有多少是你的功劳
+2、个人规划，对技术的追求。
+3、对加班看法
+4、为何换工作
+}}}
+{{{0
 ###脚本优化
 脚本修改:
 static void event_shut_down_stack(ProfileStopCallback stopProfiles);  不要判断成调用
@@ -309,112 +417,5 @@ import android.content.BroadcastReceiver;
 }}}
 }}}
 }}}
-{{{0
-###面试相关
-介绍你做过的项目（熟悉哪些平台）
-处理过哪些车载问题
-处理过哪些耳机问题
-是否有过处理市场用户投诉的经验
-搜索不到蓝牙设备如何分析
-打电话无声问题怎么分析（tx/rx）
-配对的模式有哪几种吗？如何确认使用哪种方式？手机与耳机配对一般用的哪种？
-在播放音乐过程中，进行微信通话，流程和状态变化是怎么样的
-音乐卡音问题如何分析，有哪些原因
-如果手机连接了一个耳机或者车载，待机功耗偏高，如何分析
-如果听音乐功耗偏高，有哪些可能影响的因素？
-A2DP延时如何优化
-tws一个耳机有声、一个无声原因是什么
-绝对音量相关
-对于一些兼容性问题，只在个别设备上出现，其他设备没有，要怎么处理
-一、基本蓝牙
-(1) BR/EDR 有多少个信道，，信道带宽是多少，最高和最低的中心频率是多少
-答：79, 1M, 2402和2480
-(2) BLE 有多少个信道，信道带宽是多少
-答：40,2M
-(3) 常规的跳频频率是多少？如何算得？
-答案应是：协议中1个slot是625us，以已连接情况为例子，每个slot master会切到一个新的频点进行通信。
-(4)各代蓝牙之间的典型优化
-1.1	速率1M，易干扰
-1.2	AFH 、eSCO、Faster Connection
-2.0	EDR
-2.1	NFC(OOB带外配对) SSP SSR
-3.0
-HS(用wifi 11g)，鸡肋
-EPC(Enhanced Power Control) 降功耗
-4.0	LE
-(5)Inquiry 和 Inquiry scan
-Inquiry能获取到什么信息？
-答：在 EIR(Enhanced Inquiry Resp)中，会包含Device name, TX power level, service class UUIDs, and manufacturer’s data. 也会有RSSI, COD（class of device，设备类型）
-Inquiry scan需要设置什么重要参数
-答: interval window
-(6)连接过程分多少环节
-(7) SSP中 auth方式有几种，是怎么确定的
-答：Numeric Compare比对之后选择是否，passkey entry需要输入密码，Just work直接auth过
-根据IO capability的交换而来，Display Only; Display Yesno; Keyboard Only; NoInputNoOutput
-具体不细究
-(8)SSP最后一个环节 User Confirmation Req完成后，然后是什么环节，说出两个
-答：
-RNR: Remote Name Request
-Create Connection: 建立ACL连接
-(9)LMP version，可以获取对端的什么信息
-答：core spec版本号，芯片商，子版本号
-(10)LMP supervision timeout是什么作用，是否可以建立连接后进行更改
-答：Link 不交互数据能维持的时间；可以
-(11)是否可以在使用过程中，改变蓝牙的主从关系；一般为什么要这么做
-答：可以，通过role switch进行（HCI关键字 role change）；我方设备或者对端设备都可以进行
-常出于以下原因：兼容性、省电（slave可以进入省电）、共存性能
-二、A2DP
-1、手机连接耳机播放音乐，各角色名称
-答：手机 SRC（来源/上游）, 耳机SNK（下游）
-2、AVRCP的SDP中，有哪些feature值得关注？
-答：版本号；AVRCP 1.4增加很多功能.
-Browsing
-3、获取并设置音频编码流程是？
-答：(1)discovery:发现对端有多少支持codec(SEID)
-(2)Get capability，对这些codec获取详细信息
-(3)Set configuration，设置编码
-(4)open
-4、卡音问题如何分析
-答：发散题目。
-(1)RF性能是否ok
-(2)audio给的数据源是否不卡
-(3)有没有表征发送情况的固件统计信息，如audio送包时间、audio
-5、无声问题怎么分析
-答：发散题目
-(1)通路是否正确
-(2)音频dump是否无声
-(3)A2DP AVRCP是否都start了
-(4)airlog是否有音乐数据传输过去
-三、AVRCP
-1、CT是啥，TG是啥？
-答: CT是车载，TG是手机
-2、AVRCP有哪些feature是值得注意的
-答：开放性问题，Abs，Browsing
-3、比如要做一个AVRCP 1.3的兼容性名单，对于名单内的设备，手机伪装成自己是仅支持AVRCP 1.3，需要在哪几个环节注意的
-答: （1）SDP时，注意返回呢AVRCP 1.3
-(2) Get capability时，AVRCP 1.4的feature注意不要加进去
-4、更新车载进度条时的AVRCP流程大概是？
-答: (1)车载发来command: register一个PLAYBACK_POS_CHANGE
-(2)手机回复一个interim，表示接受注册
-(3)手机在进度条变化时，回复一个CHANGED的event，表示完成这个change
-声音延时
-offload场景，adsp直接对接btfw，需要fw知道自己的从adsp收包的时间 / 包入队时间 / 从队中发出的时间
-非offload场景，需要从HCI中看，audio写包到ACL的时间间隔；若无问题，需要从空中包看，是否fw发包过慢，环境问题还是IOT issue
-功耗
-请讲实际处理情况
-https://developer.android.com/guide/platform?hl=zh-cn
-用实际例子说明下什么是HAL层。
-RE: 比如蓝牙侧的driver层，仅有HAL层
-2、关于广播的理解
-广播的种类有哪几种？哪些会产生阻塞，如何避免？
-2、关于广播的理解
-广播的种类有哪几种？哪些会产生阻塞，如何避免？
-普通广播，动态和静态的接受者，收到顺序是否一致，为何这么设计？
-RE: 动态先收到；因为防止静态接收者所在进程没有运行，此时先要启动他
-五、common问题
-1、最大难度/成就感任务，有多少是你的功劳
-2、个人规划，对技术的追求。
-3、对加班看法
-4、为何换工作
-}}}
+
 
