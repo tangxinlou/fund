@@ -551,3 +551,55 @@ btsnoop 日志大小限制
 ########
 >>>>>>>>>>>>>>> 
 
+<<<<<<<<<<<<<<<<
+###玩pixel 5
+
+1.刷机，根据build 号下载对应镜像
+2.root 下载magisk 制作root boot 镜像
+3.push 文件，只能替换不能新增，在/data/adb/modules/PixelMod 新加一个magisk 模块
+4.把apk push 到system/priv-app 目录，而不至于不断重启
+构建magisk 模块
+DebugAppFix/
+├── system/
+│    └── priv-app/
+│        └── debugapp/
+│            └── app-debug.apk   # 你的 APK
+├── META-INF/
+│    └── com/
+│       └── google/
+│            └── android/
+│               ├── update-binary
+│               └── updater-script
+├── service.sh                   # 关键脚本
+├── post-fs-data.sh                   # 关键脚本
+└── module.prop
+
+module.prop
+
+id=PixelMod
+name=Pixel系统修改
+version=1.0
+author=You
+description=修改Email应用
+
+service.sh
+#!/system/bin/sh
+resetprop ro.control_privapp_permissions log
+setprop ro.allow.mock.location 1
+setprop pm.dexopt.disable_bg_dexopt true
+magiskpolicy --live "allow zygote app_data_file file execute_no_trans"
+magiskpolicy --live "allow system_server system_app_data_file file execute"
+magiskpolicy --live "allow priv_app sysfs file { read open }"
+resetprop ro.boot.verifiedbootstate orange
+resetprop ro.oem_unlock_supported 1
+
+
+ post-fs-data.sh
+# 在 Magisk 模块的 post-fs-data.sh 中添加
+echo  0 > /sys/fs/selinux/enforce
+magiskpolicy --live "allow * * *"
+
+########
+>>>>>>>>>>>>>>>
+
+
