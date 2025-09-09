@@ -164,14 +164,10 @@ augroup filetype_make
 augroup END
 augroup filetype_markdown
     "autocmd FileType markdown  setlocal foldmethod=manual syntax marker
-    autocmd FileType markdown  setlocal foldmethod=expr
-    autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
-    autocmd FileType text  setlocal foldmethod=expr
-    autocmd FileType text  setlocal foldexpr=GetPotionFold(v:lnum)
-    autocmd FileType special setlocal foldmethod=expr
-    autocmd FileType special   setlocal foldexpr=GetPotionFold(v:lnum)
-    autocmd FileType markdown  :highlight MyGroup1 term=reverse ctermbg=black guibg=Grey40
-    autocmd FileType markdown  :let m = matchadd("MyGroup1", "_")
+    "autocmd FileType markdown  setlocal foldmethod=expr
+    "autocmd FileType markdown  setlocal foldexpr=GetPotionFold(v:lnum)
+    "autocmd FileType markdown  :highlight MyGroup1 term=reverse ctermbg=black guibg=Grey40
+    "autocmd FileType markdown  :let m = matchadd("MyGroup1", "_")
 augroup END
 augroup filetype_dts
     autocmd FileType dts  setlocal foldmethod=indent
@@ -179,7 +175,7 @@ augroup filetype_dts
 augroup END
 augroup filetype_csv
     autocmd BufNewFile,BufRead *.csv      setf csv
-    autocmd BufEnter * :call SetFileType()
+    "autocmd BufEnter * :call SetFileType()
     "autocmd WinEnter * :call DynamicallyOpenTheMouse()
     "autocmd QuitPre *.csv   :call VisualiZationcsv(2,",")
 augroup END
@@ -350,6 +346,7 @@ nnoremap <F12>  : call CallStack(0,[],line('.'),0,"",[])<cr>
 "nnoremap <F12>  : call WhichFunctionToCall(line('.'))<cr>
 "nnoremap <F12>  : call Exeample()<cr>
 nnoremap  <leader>temp : call  JoinTwoTables()<cr>
+nnoremap <leader>za  : call FoldSetting()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -408,6 +405,7 @@ let g:FileEmptyDictionary = {"00interval":"0-0",
             \"03string":'',
             \"04childnode":[],
             \}
+let g:foldmarker = 0
 "{{{{{3   仓库
 let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ 'android_packages_apps_Bluetooth',
@@ -585,9 +583,7 @@ let g:filterchar = {
 if join(split(system("uname"))) ==# "Linux"
     let g:homedir = $HOME
 else
-    if finddir("/z") != ""
-        let g:homedir = "/z"
-    else
+    if finddir("/d") != ""
         let g:homedir = "/d"
         "git信息异常变动，gitbash
         "call system("git config --global core.autocrlf false")
@@ -1630,8 +1626,8 @@ function! AddLineNumber(...)
             let idx1 += 1
         endwhile
     else
-        execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
-        "execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
+        "execute "normal! :%s/^/\\=line('.').\" \"\<cr>"
+        execute "normal! :%s/^/\\=foldlevel('.').\" \"\<cr>"
     endif
 
     "nnoremap <leader>y :%s/^/\=line(".")." "/<cr>
@@ -1988,7 +1984,6 @@ function! SimplifySearchResults1(...)
     while idx1 < len(searchstarge)
         let codelist = split(searchstarge[idx1],":")
         let srccode = join(codelist[2:])
-        call Echom(10,0,'tangxinlou debug',1989, searchstarge[idx1])
         let targetcode = [codelist[0] . ":" . codelist[1] . ":","   " . split(join(codelist[2:]),"^\\s\\+")[0]]
         let filetype = IsFileType(codelist[0])
 
@@ -2590,9 +2585,7 @@ function! SelectEntireCode(...)
     endwhile
     silent tabnew
     silent execute( "args " . join(filelist))
-    call Echom(10,0,'tangxinlou debug',2592, "dfd")
     call Dbug1(10,0,'SelectEntireCode 25', "end")
-    call Echom(10,0,'tangxinlou debug',2594, "dkfdjk")
     let idx1  = 0
     while idx1 < len(searchstarge)
         let templist = split(searchstarge[idx1],":")
@@ -3167,9 +3160,6 @@ function! ClearBracket(...)
     silent! execute '%s#\v/\*\zs\_.{-}\ze\*/#\=tr(submatch(0), "()", "  ")#ge'
 
     silent! execute '%s/\/\*\/\//\/\*/g'
-
-
- silent! execute '%s#\v(["''])\zs[^{''"]*\zs{\ze[^{''"]*\ze(["''])#\=tr(submatch(0), "{}", "")#ge'
     if a:0 ==# 0
         call HandlingParentheses()
     endif
@@ -3842,6 +3832,12 @@ function! Flag2String(...)
         let tempchar = tempchar . tempchar1
     endif
     return tempchar
+endfunction
+"}}}}}
+"{{{{{2  FoldSetting(...) 设置折叠
+function! FoldSetting(...)
+     setlocal foldmethod=expr
+     setlocal foldexpr=GetPotionFold(v:lnum)
 endfunction
 "}}}}}
 "}}}}
@@ -8482,6 +8478,7 @@ endfunction
 "}}}}}
  "{{{{{2  AddDebugLog(...) 添加debug日志
 nnoremap <F5> :call AddDebugLog()<cr>
+"Log.d(tag, Log.getStackTraceString(new Throwable("Call stack trace:")));
 "package jni stack 添加debug日志
 function! AddDebugLog(...)
     "{{{{{3 变量定义
@@ -9668,7 +9665,7 @@ function! GrepChars(timer)
     if g:lastgrepfile != "" && ("analy.txt" ==# matchstr(g:lastgrepfile,"analy.txt"))
         let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,*} " . "'" . searchs . "'"
     else
-        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h,} " . "'" . searchs . "'"
+        let command = "grep -EsinR --binary-files=without-match  --include=*{.c,.cc,.cpp,.xml,.java,.h} " . "'" . searchs . "'"
     endif
     echo command
     if @/ != searchs
@@ -9679,7 +9676,7 @@ function! GrepChars(timer)
         let searchstarge = SelectEntireCode(copy(searchstarge))
         let searchstarge = SimplifySearchResults1(copy(searchstarge),0,searchs)
     else
-        let searchstarge = SimplifySearchResults(copy(searchstarge),0,searchs)
+        let searchstarge =  split(searchstarge,"\n")
     endif
     let searchstarge = insert(searchstarge,@g)
     call win_gotoid(g:windowgrepid)
@@ -9814,7 +9811,7 @@ function! GreplogChars(timer)
     if g:greplog2list[index][6] ==# searchs
         return
     endif
-    if len(searchs) < 4
+    if len(searchs) < 2
         return
     endif
     if matchstr(searchs,'.$') ==# '|'
@@ -10222,41 +10219,58 @@ endfunction
 "{{{{{2   GetPotionFold(...) 计算foldlevel
 function! GetPotionFold(lnum)
     let line = copy(a:lnum)
-    let templine = -1
-    let tempcol = -1
+    let templine = line('.')
+    let tempcol = col('.')
     let cursor = []
     let tempchar = ""
     let length = 3
     let foldnr = -1
-    if getline(a:lnum) =~? '\v^\s*$'
-        let foldnr = -1
-    elseif  getline(a:lnum) =~? "```c" || getline(a:lnum) =~? "```"
-        let foldnr = 0
-    elseif matchstr(getline(a:lnum),"{{{") != ""  "}}}
-        let tempchar = getline(a:lnum)
-        let length = len(tempchar)
-        let foldnr = str2nr(tempchar[3])  + 1
-    elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
-        if matchstr(getline(a:lnum),"▌") ==# "▌"
-            let foldnr = count(split(getline(a:lnum),'▌'),'│  ')
-        else
-            let foldnr = count(split(getline(a:lnum)),'│  ')
-        endif
-    else          
-        let templine = line('.')
-        let tempcol = col('.')
-        call cursor(line,1)
-        let cursor = searchpairpos('{{{', '', '}}}', 'b')
-        if cursor != []
-            let tempchar = getline(cursor[0])
-            let length = len(tempchar)
-            let foldnr = str2nr(tempchar[3]) + 2
-        else
-            let foldnr = -1
-        endif
-        call cursor(templine,tempcol)
+    let totalline = line('$')
+    let currentstr = getline(a:lnum)
+    if tatalline > 15000
+        return -1
     endif
-    return foldnr
+    if a:lnum ==# 1
+        let g:foldmarker = 0
+    endif
+    if currentstr  =~? '\v^\s*$'
+        let foldnr = -1
+        return foldnr
+    elseif  currentstr   =~? '^```c' || currentstr  =~? '^```'
+        let foldnr = 0
+        return foldnr
+    elseif  currentstr  =~? "^<<<<<<<<<<<<<<<<" || currentstr  =~? "^>>>>>>>>>>>>>>>"
+        let foldnr = 0
+        return foldnr
+    elseif currentstr =~? '^{{{'  || currentstr  =~? '^}}}'
+        if currentstr =~? '^{{{' "}}}
+            let tempchar = getline(a:lnum)
+            let length = len(tempchar)
+            let foldnr = str2nr(tempchar[3])  + 1
+            let g:foldmarker = foldnr
+        else
+            call cursor(line,1)
+            let cursor = searchpairpos('{{{', '', '}}}', 'b')
+            call cursor(templine,tempcol)
+            if cursor != []
+                let tempchar = getline(cursor[0])
+                let length = len(tempchar)
+                let foldnr = str2nr(tempchar[3]) + 2
+            endif
+        endif
+        return foldnr
+    "elseif getline('.') =~? '^.*├' || getline('.') =~? '^.*└'
+    elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
+        if matchstr(currentstr,"▌") ==# "▌"
+            let foldnr = count(split(currentstr,'▌'),'│  ')
+        else
+            let foldnr = count(split(currentstr),'│  ')
+        endif
+        return foldnr
+    else
+       let foldnr = g:foldmarker + 1
+       return foldnr
+    endif
 endfunction
 "}}}}}
 "{{{{{2   GetPotionFold1(...) 计算foldlevel
