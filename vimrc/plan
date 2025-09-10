@@ -211,6 +211,10 @@ android/app/src/com/android/bluetooth/btservice/storage/MetadataDatabase.java
 20250828
 这种有类型转换，需要注意下
 registerProfileService((ProfileService) msg.obj);
+
+20250910
+smp_key_distribution 这个函数通过<F10> 搜索的时候报错
+
 }}}
 {{{0
 ###蓝牙hci 中指令

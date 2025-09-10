@@ -603,6 +603,16 @@ magiskpolicy --live "allow * * *"
 }}}
 }}}
 
+{{{1
+让pixel 完整输出日志
+persist.logd.size=256m
+persist.logd.kernel.size=256m
+stop logd && start logd
+kernel.msgmnb = 1073741824  # 1GB
+kernel.msgmax = 524288      # 单条消息最大长度
+logcat -G 256m
+echo 256000000 > /sys/module/logger/parameters/log_size
+}}}
 {{{0
 }}}
 

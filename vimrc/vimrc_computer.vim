@@ -2682,6 +2682,7 @@ function! GatherIntoRow(...)
         let idj1 += 1
     endwhile
     let foldstring = join(tempchar,"\x00")
+    let foldstring  = ClearingStringsInCode(foldstring)
     let foldstring = ProcessingEqualSymbols(foldstring)
     let prvnum = FirstNonBlank(foldstring)
     if  matchstr(foldstring,"\\/\\*") != ""
@@ -3272,8 +3273,10 @@ function! StringPosition(...)
     let strings = split(strings,'\zs')
     while idx1 < len(strings)
         "if strings[idx1] ==# char2nr(char)
-        if strings[idx1] ==# char
-            let indexlist = add(indexlist,idx1 + 1)
+        if idx1 ==# 0 || strings[idx1 -1] != '\'
+            if strings[idx1] ==# char
+                let indexlist = add(indexlist,idx1 + 1)
+            endif
         endif
         let idx1 += 1
     endwhile
@@ -10259,12 +10262,12 @@ function! GetPotionFold(lnum)
             endif
         endif
         return foldnr
-    "elseif getline('.') =~? '^.*├' || getline('.') =~? '^.*└'
-    elseif "├" ==# matchstr(getline(a:lnum),'├') || "└" ==# matchstr(getline(a:lnum),'└')
+    "elseif getline('.') =~? '^.*├─' || getline('.') =~? '^.*└'
+    elseif "├" ==# matchstr(getline(a:lnum),'├─') || "└" ==# matchstr(getline(a:lnum),'└')
         if matchstr(currentstr,"▌") ==# "▌"
-            let foldnr = count(split(currentstr,'▌'),'│  ')
+            let foldnr = count(split(currentstr,'▌'),'│ ')
         else
-            let foldnr = count(split(currentstr),'│  ')
+            let foldnr = count(currentstr'│ ')
         endif
         return foldnr
     else
@@ -13355,7 +13358,7 @@ function! SplitCodeString(...)
           elseif strings[idx1] ==# "("
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
               "call Echom(10,0,'tangxinlou debug',3664, idx1)
-          elseif strings[idx1] ==# "<"
+          elseif strings[idx1] ==# "<" && (strings[idx1 + 1] != " " && strings[idx1 + 1] != "=")
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
           else
               if idx1 ==# 0
@@ -13556,13 +13559,13 @@ function! ClearingStringsInCode(...)
         while idx1 <= len(indexlist) / 2
             if idx1 ==# 0
                 let srcnum = 0
-                let tailnum = indexlist[idx1 * 2] - 2
+                let tailnum = indexlist[idx1 * 2] - 1
             elseif idx1 ==# len(indexlist) / 2
-                let srcnum = indexlist[idx1 * 2 -1]
+                let srcnum = indexlist[idx1 * 2 -1] - 1
                 let tailnum = -1
             else
-                let srcnum = indexlist[idx1 * 2 - 1]
-                let tailnum = indexlist[idx1 * 2] - 2
+                let srcnum = indexlist[idx1 * 2 - 1]  - 1
+                let tailnum = indexlist[idx1 * 2] - 1
             endif
             let resultstr = resultstr . codestring[srcnum:tailnum]
             let idx1 += 1
@@ -13692,20 +13695,40 @@ function! IsCompareStrings(...)
     return flag
 endfunction
 "}}}}}
-"{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的=符号
+"{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的= && || !符号
+"echo ProcessingEqualSymbols(getline(line('.')))
 function! ProcessingEqualSymbols(...)
     "{{{{{3 变量定义
     let string = copy(a:1)
     let idx1 = 0
     "}}}}
-    if matchstr(string,'=') ==# ""
-        return string
-    endif
     let string = split(string,'\zs')
     let idx1 = 1
+    "处理 == != >= <= -= += ! && ||
     while  idx1 < len(string)
         if string[idx1 - 1] ==# '='
             if string[idx1] ==# ' ' || string[idx1] ==# '='
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        elseif string[idx1 - 1] ==# '!'
+            if string[idx1] != '='
+                call Echom(10,0,'tangxinlou debug',13716, idx1)
+                call remove(string,idx1 - 1)
+                let idx1 = 1
+                continue
+            endif
+        elseif string[idx1 - 1] ==# '&'
+            if string[idx1] ==# ' ' || string[idx1] ==# '=' || string[idx1] ==# '&'
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        elseif string[idx1 - 1] ==# '|'
+            if string[idx1] ==# ' ' || string[idx1] ==# '=' || string[idx1] ==# '|'
             else
                 let string = insert(string, ' ', idx1)
                 let idx1 = 1
@@ -13716,7 +13739,25 @@ function! ProcessingEqualSymbols(...)
                 if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '=' || string[idx1 - 1] == '>' || string[idx1 - 1] == '<'||
                             \ string[idx1 - 1] == '+' ||
                             \ string[idx1 - 1] == '-' ||
-                            \ string[idx1 - 1] == '!'
+                            \ string[idx1 - 1] == '!' ||
+                            \ string[idx1 - 1] == '&' ||
+                            \ string[idx1 - 1] == '|'
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+            if string[idx1] ==# '&'
+                if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '&'
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+            if string[idx1] ==# '|'
+                if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '|'
                 else
                     let string = insert(string, ' ', idx1)
                     let idx1 = 1
