@@ -13484,13 +13484,9 @@ endfunction
 "{{{{{2 ClearBlank(...)去掉字符串行首的空白字符 ,行末空白字符
 function! ClearBlank(...)
     let string = a:1
-    let length = len(string)
-    let src = ""
-    let tail = ""
-    let src =  FirstNonBlank(string)
-    let tail =  FirstNonBlank(string,1)
-    let string = string[src:tail]
-    return string
+    let trimmed = substitute(string, '^\s\+', '', '')
+    let trimmed = substitute(trimmed, '\s\+$', '', '')
+    return trimmed
 endfunction
 "}}}}}
 "{{{{{2 GetTwoNonBlank(...)获取字符串非空字符开始的前两个字符
@@ -13831,6 +13827,24 @@ function! DetermineStringChar(...)
     return flag
 endfunction
 "}}}}}
+"{{{{{2 SimplifyTheCodeModel(...)简化代码模型
+"echo SimplifyTheCodeModel(getline(line('.')))
+function! SimplifyTheCodeModel(...)
+    call Echom(10,0,'tangxinlou debug',13837, 1)
+    let string = copy(a:1)
+    call Echom(10,0,'tangxinlou debug',13839, 3)
+    let string = ClearBlank(string)
+    call Echom(10,0,'tangxinlou debug',13841, 4)
+    let length = len(string)
+    let exclusions = ["new","class","if","for","switch","return"]
+    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@![.a-zA-Z]\+\>'
+    let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
+    "let pattern = '\C\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
+    let result = substitute(string, pattern, 'X', 'g')
+    call Echom(10,0,'tangxinlou debug',13844, 2)
+    return result
+endfunction
+"}}}}} 
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
