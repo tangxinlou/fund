@@ -612,6 +612,7 @@ kernel.msgmnb = 1073741824  # 1GB
 kernel.msgmax = 524288      # 单条消息最大长度
 logcat -G 256m
 echo 256000000 > /sys/module/logger/parameters/log_size
+nohup logcat -b all -v threadtime -f /sdcard/bluetooth_debug.log >/dev/null 2>&1 &
 }}}
 {{{0
 }}}
