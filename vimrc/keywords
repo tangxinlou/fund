@@ -553,7 +553,16 @@ btsnoop 日志大小限制
 {{{0
 ###玩pixel 5
 {{{1
-pixel 能替换编译的apk ，能push 自己写的工具apk
+编译代码刷版本
+1.repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-14.0_r1
+2.https://developers.google.com/android/drivers?hl=zh-cn  下载对应版本的驱动包  执行extract-google_devices-redfin.sh extract-qcom-redfin.sh
+3. make -j20 
+4.export ANDROID_PRODUCT_OUT=xxx/out/target/product/sailfish
+5.fastboot flashall -w
+}}} 
+
+{{{1
+magisk pixel 能替换编译的apk ，能push 自己写的工具apk
 1.刷机，根据build 号下载对应镜像
 2.root 下载magisk 制作root boot 镜像
 3.push 文件，只能替换不能新增，在/data/adb/modules/PixelMod 新加一个magisk 模块
@@ -604,6 +613,7 @@ magiskpolicy --live "allow * * *"
 }}}
 
 {{{1
+配置 
 让pixel 完整输出日志
 persist.logd.size=256m
 persist.logd.kernel.size=256m
@@ -611,9 +621,35 @@ stop logd && start logd
 kernel.msgmnb = 1073741824  # 1GB
 kernel.msgmax = 524288      # 单条消息最大长度
 logcat -G 256m
+echom "7 4 1 7" > /proc/sys/kernel/printk  所有内核日志都输出
 echo 256000000 > /sys/module/logger/parameters/log_size
 nohup logcat -b all -v threadtime -f /sdcard/bluetooth_debug.log >/dev/null 2>&1 &
-}}}
-{{{0
+/system/etc/init/hw/init.usb.rc  设置adb 端口5555 setprop service.adb.tcp.port 5555
+
+开机自动抓日志
+
+system/etc/init/hw/init.rc 有如下几个步骤
+1.early-init → 2. init → 3. early-fs → 4. fs → 5. post-fs → 6. early-boot → 7. boot → 8. 按 class 启动服务
+在post-fs 阶段logd （log 守护进程） 被拉起来，此时会通过logcatd 这个服务去抓取log 放到/data/misc/logd 目录
+
+system/etc/init/logcatd.rc  logcatd 服务
+service logcatd /system/bin/logcatd -L -b all -v threadtime -v usec -v printable -D -f /data/misc/logd/main_log -r ${logd.logpersistd.rotate_kbytes:-32720} -n 10 -G 256m  --id=${ro.build.id}
+    class late_start
+    disabled
+    # logd for write to /data/misc/logd, log group for read from log daemon
+    user logd
+    group log
+    task_profiles ServiceCapacityLow
+    oom_score_adjust -600
+
 }}}
 
+{{{0
+蓝牙修改代码小技巧
+hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, {0x8c, 0x58, 0x23, 0x47, 0x1b, 0x86})
+hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, Address addr)
+Address 实际是一个6个成员的数组
+
+}}}  
+{{{0
+}}}

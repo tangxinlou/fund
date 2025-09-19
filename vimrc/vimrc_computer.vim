@@ -397,15 +397,6 @@ nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>:let &foldle
 "}}}}
 "函数{{{{
 "{{{{{2   全局变量
-let g:alldebugflag = "true"
-let g:debugid = 0
-let g:FileEmptyDictionary = {"00interval":"0-0",
-            \"01name":"xx",
-            \"02type":"",
-            \"03string":'',
-            \"04childnode":[],
-            \}
-let g:foldmarker = 0
 "{{{{{3   仓库
 let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ 'android_packages_apps_Bluetooth',
@@ -541,7 +532,7 @@ let g:filterchar = {
             \"21tool" : "collectresult.*\\[E",
             \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
             \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
-            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to|BtGatt.GattService: onNotify\(|BtGatt.GattService: got characteristic",
+            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to|BtGatt.GattService: onNotify|BtGatt.GattService: got characteristic",
             \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
             \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus|AudioALSAHardwareResourceManager: -.*InputDevice",
             \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
@@ -578,6 +569,15 @@ let g:filterchar = {
     let g:XMLNUM = 11              "xml
     let g:unknowNUM = 12           "未知
 "}}}}}
+let g:alldebugflag = "true"
+let g:debugid = 0
+let g:FileEmptyDictionary = {"00interval":"0-0",
+            \"01name":"xx",
+            \"02type":"",
+            \"03string":'',
+            \"04childnode":[],
+            \}
+let g:foldmarker = 0
 "}}}}}
 "{{{{{2   Homedir(...) 家目录
 if join(split(system("uname"))) ==# "Linux"
@@ -1990,8 +1990,8 @@ function! SimplifySearchResults1(...)
         if  filetype != "xml"
             if matchstr(codelist[0],"test") ==# ""
                 if matchstr(srccode,"注释") ==# ""
-                   "let flag = IdentificationCodeComponents1(srccode,filetype)
-                   let flag = DeepDecisionFunction(srccode,searchs )
+                   let flag = IdentificationCodeComponents1(srccode,filetype)
+                   "let flag = DeepDecisionFunction(srccode,searchs )
                    if matchstr(flag,"class") != ""
                        let classdefinition = add(classdefinition,targetcode)
                    elseif matchstr(flag,"variabledef") != ""
@@ -2888,7 +2888,6 @@ function! IsComment(...)
         silent call cursor(line,1)
         let tempstr = getline(line)
         let secondNonWhitespace = GetTwoNonBlank(tempstr)
-        call Dbug1(10,0,'IsComment 7',secondNonWhitespace)
 
         silent let endcursor = searchpos('\*\/','w')
         silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
@@ -2916,7 +2915,6 @@ function! IsComment(...)
                 endif
             endif
         else
-            call Dbug1(10,0,'IsComment 16', endcursor,startcursor,line ,secondNonWhitespace )
             if startcursor[0] < line &&  line < endcursor[0]
                 let iscomment = 1
             elseif  startcursor[0] ==# line &&  endcursor[0] != line
@@ -2925,7 +2923,6 @@ function! IsComment(...)
                     let iscomment = 1
                 elseif srcnum > 1
                     let tempchar = join(split(tempstr[0:srcnum -2]))
-                    call Dbug1(10,0,'IsComment 83', tempchar)
                     if tempchar ==# ""
                         let iscomment = 1
                     endif
@@ -2988,7 +2985,6 @@ function! IsComment(...)
     call Dbug1(10,0,'IsComment 19', iscomment)
     if a:0 != 1
         if iscomment ==# 0
-            call Dbug1(10,0,'IsComment 8',col,getline(line))
             if matchstr(getline(line) ,"//") != ""
                 let position =  ChildStringPosition(getline(line) ,"//")
                 if position != [] &&  position[1] < col
@@ -3000,7 +2996,6 @@ function! IsComment(...)
                 silent let endcursor = searchpos('\*\/','w')
                 silent let startcursor = searchpairpos('\/\*', '', '\*\/', 'b')
 
-                call Dbug1(10,0,'IsComment 11', endcursor,startcursor)
                 if startcursor[0] < line &&  line < endcursor[0]
                     let iscomment = 1
                 elseif  startcursor[0] ==#  line &&  line ==# endcursor[0]
@@ -8007,7 +8002,7 @@ function! ExtractKeyCodes(...)
         let realityline = line('.')
         let filename = expand("%")
         let filetype =  IsFileType(filename)
-        "call Echom(10,0,'tangxinlou debug', "begin")
+        call Echom(10,0,'tangxinlou debug',8005, "begin")
         call SaveBuffer()
         call ClearBracket()
         call Dbug1(10,0,'ExtractKeyCodes 61', )
@@ -8190,6 +8185,7 @@ function! ExtractKeyCodes(...)
             call Echom(10,0,'tangxinlou debug',8182,flaglist)
             call Echom(10,0,'tangxinlou debug',8176,keylist)
             call Echom(10,0,'tangxinlou debug',8177,resultlist)
+            call Echom(10,0,'tangxinlou debug',8188, "end")
         elseif a:0 == 2
             :q!
             call cursor(cursorline,cursorcol)
@@ -11681,8 +11677,9 @@ function! ModifyColors(...)
                 \"zaibatsu",
                 \"zellner",]
     "}}}}
-    echo  colors[ModifyColors]
     execute 'colorscheme ' . colors[ModifyColors]
+    echo  colors[ModifyColors]
+    call input("11")
     let g:ModifyColors += 1
 endfunction
 "}}}}}
@@ -13844,7 +13841,7 @@ function! SimplifyTheCodeModel(...)
     call Echom(10,0,'tangxinlou debug',13844, 2)
     return result
 endfunction
-"}}}}} 
+"}}}}}
 "}}}}}
 "{{{{{2 处理列表
 "{{{{{3   IsContain(...) string list返回匹配的列表项
