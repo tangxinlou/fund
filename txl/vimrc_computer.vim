@@ -1,6 +1,286 @@
 "设置标志位
 let g:vimrcid = 134
 let mapleader = ","
+"{{{{{2   全局变量
+"{{{{{3   仓库
+let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
+            \ 'android_packages_apps_Bluetooth',
+            \ 'android_system_bt',
+            \ 'android_frameworks_base',
+            \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
+            \ 'android_device_mediatek_vendor_common',
+            \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
+            \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
+            \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
+            \ "android_kernel-4.14",
+            \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
+            \ "android_packages_modules_Bluetooth",
+            \ "android_prebuilts_module_sdk_Bluetooth",
+            \ "vendor_vivo_source_frameworks_services",
+            \ "android_cts",
+            \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
+            \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
+            \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
+            \ "android_vendor_mediatek_proprietary_tinysys_common",
+            \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
+            \ "android_device_mediatek_common",
+            \ "android_vendor_mediatek_proprietary_custom",
+            \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
+"}}}}}
+"{{{{{3 非函数
+"判断带{有下面的就不是函数
+let g:nonfunctionlist = [" if(",
+            \"  new ",
+            \"=new " ,
+            \" interface ",
+            \"class ",
+            \"enum ",
+            \"} catch",
+            \"() -> {",
+            \"namespace ",
+            \" if (",
+            \" try{",
+            \" try {",
+            \" try (",
+            \" for(",
+            \" for (",
+            \" synchronized (",
+            \" synchronized(",
+            \" switch (",
+            \" else{",
+            \" else {",
+            \"else {",
+            \"else if",
+            \" case ",
+            \" default:",
+            \" do {",
+            \" do {",
+            \" switch(",
+            \" while (",
+            \" while(",
+            \" static {",
+            \" = new ",
+            \" public enum",
+            \" static{"]
+
+"}}}}}
+"{{{{{3 自动分析
+let g:Removeduplicates = [
+            \ 'AudioFlinger_Threads: volumedebug',
+            \ 'getNewOutputDevices selected devices',
+            \'Remote device name is',
+            \'interop_database_match',
+            \'btif_dm_update_rmt_device_name',
+            \]
+ let g:MultiDimensionalAnalysisSolution =  [
+             \['101','102','201',"a2dp 通路",'A'],
+             \['103','104','201',"hfp 通路",'A'],
+             \]
+let g:DimensionalAnalysis  = [
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING','101'],
+            \['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING','102'],
+            \['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn','103'],
+            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected','104'],
+            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioDisconnecting -> Connected','104'],
+            \['APM_AudioPolicyManager: getNewOutputDevices selected devices','201'],
+            \['volumedebug track','202'],
+            \]
+let g:Dimensionalmsg = {
+            \'101' : "开启播放",
+            \'102' : "停止播放",
+            \'103' : "建立sco",
+            \'104' : "断开sco",
+            \}
+let g:Dimensionalflag = []
+"第二个参数[-2,1000]
+"第一位是flag -1 既不计算也不显示，-2不计算但是显示
+"第二位是时间，虽然这一行不计算，但是下一行还需要这个值计算
+let g:smallestunitdict = {
+            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, ''], ['BtGatt.GattService: clientDisconnect', [-2,4703.0], ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', 5714.0, '']],
+            \"10aclconnectstate": [['aclStateChangeCallback: Adapter State: ON Connected', 0.0, ''], ['aclStateChangeCallback: Adapter State: ON Disconnected', [-2,1000.0], '']],
+            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,''],["BluetoothAdapterService: cancelDiscovery",-2,'']],
+            \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING', [-2,1000.0], '']],
+            \"07hfpVirtual_simple_start_call": [['HeadsetService: startScoUsingVirtualVoiceCall', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 260.0, ''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
+            \"06hfp_simple_start_call": [['Telecom: Telecom: VivoCallsManager: setCallState CONNECTING -> DIALING', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 2917.0, ''],['HeadsetService: stopScoUsingVirtualVoiceCall',[-2,1000],''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
+            \"05a2dp_simple_connect avdt_defs.h": [['A2dpStateMachine: Connection state .*: DISCONNECTED->CONNECTING', 0.0, ''], ['A2dpStateMachine: Connection state .*: CONNECTING->CONNECTED', 672.0, '']],
+            \"04hfp_simple_connect reson 19 peer disconnect": [['HeadsetStateMachine: Connecting: currentDevice=.*, msg=connection state changed: .*: Disconnected -> Connecting', 0.0, ''], ['HeadsetStateMachine: Connected: currentDevice=.*, msg=connection state changed: .*: Connecting -> Connected', 505.0, '']],
+            \"03bond hci_packets.pdl" : [['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_NONE => BOND_BONDING', 0.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_BONDING => BOND_BONDED', 4695.0, '']],
+            \"02auto_connect": [['BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on', 28631.0, ''], ['BluetoothPhonePolicy: autoConnect:HFP Device', 28634.0, ''], ['autoConnectHeadset: Connecting HFP with', 28634.0, ''], ['BluetoothPhonePolicy: autoConnect:A2DP Device', 28635.0, ''], ['BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP', 28635.0, '']],
+            \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
+            \}
+
+            " rfcomm connect "RFCOMM_StartReq|RFCOMM_CreateConnectionWithSecurity|RFCOMM peer:|rfc_mx_sm_execute|rfc_mx_sm|L2CEVT_L2CAP_CONFIG_RSP|PORT_StartCnf|rfc_mx_conf_cnf|RFCOMM_BufDataInd|bta_ag_mgmt_cback_|rfc_process_mx_message|rfc_port_sm_
+            "\40l2cap connect l2cdefs.h" : "chnl_state|l2c_csm_execute|btm_sec_l2cap_access_req.*psm=|l2c_csm.cc.*st:|btm_sec_cb.cc.*AddService:.*psm:|l2c_link_timeout All channels closed|process_l2cap_cmd",
+            "\"39sdp bt_psm_types.h  tBTA_DM_STATE" : "bta_dm_search_cb.state|starting service discovery|Discovery started|starting SDP discovery|services_to_search|search UUID =|btif_dm_search_services_evt",
+            " hci 指令hcidefs.h  avrcp_common.h smp_int.h
+            "sdpdefs.h uuid
+            "hci_error_code.h  error code
+            "port_api.h rfcom 断开原因
+let g:filterchar = {
+            \"38broadcast" : "Skip deliver broadcast.*bluetooth|bta_hh_",
+            \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice|at com.android.bluetooth",
+            \"36bigdata" : "Address=.*manufacturer=",
+            \"35headsetcod" : "romote_cod|add leaudio cod",
+            \"34hearingaid" : "connectEnabledProfiles.*Hearing Aid Profile|HearingAidStateMachine.*process message|connectHearingAidNative|HearingAidStateMachine.*->|BluetoothHearingAid: setVolume",
+            \"33leaudio volume" : "AS.BtHelper: setLeAudioVolume|LeAudioService: SetVolume|VolumeControlService: setGroupVolume|VolumeControlService: setAvrcpVolume",
+            \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
+            \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest|vivoTWS-GattManager: onCharacteristicWrite",
+            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:|exited due to signal",
+            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|updateShareStatus|sendIntentIfCompleted|Can't open file for OUTBOUND|putSendFileInf|BluetoothOppHandoverReceiver: Action",
+            \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
+            \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
+            \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT|SetDefaultLogLevel",
+            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason|btm_sco_connection_failed",
+            \"24twsbatteryearversion" : "sendBatteryLevelChangedBroadcast|tws wear state|vivoTWS-CheckUpdateTask.*SimpleEarInfo{right_version",
+            \"23avrcpstatus stop play puase 012" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged|getCurrentPlayStatus|isDropKey: key_drop|dispatchMediaKeyEvent|MediaSessionRecord: setPlaybackState",
+            \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
+            \"21tool" : "collectresult.*\\[E",
+            \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
+            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
+            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to|BtGatt.GattService: onNotify|BtGatt.GattService: got characteristic",
+            \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
+            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus|AudioALSAHardwareResourceManager: -.*InputDevice",
+            \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
+            \"14rfcomconnectUUID=111F hfp bt_uuid16.h btif_sock_sdp.h, " : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
+            \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached|BtGatt.AdvertiseManager",
+            \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package|Skipping client: permission=false",
+            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close|BluetoothGatt: onClientConnectionState|BtGatt.GattService: registerClient|BluetoothGatt:|BtGatt.GattService: registerClient",
+            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
+            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback|Need.*permission",
+            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=|call state is busy',
+            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
+            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present|processInitProfilePriorities',
+            \"05a2dp_simple_connect avdt_defs.h" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|forcing LE transport for Bonding|A2dpService: connect|bta_av_better_stream_state_machine|a2dp_api: a2dp_api.cc|connectA2dp|src_connect_sink',
+            \"04hfp_simple_connect reson 19 peer disconnect" : 'HeadsetStateMachine.*CONNECT_TIMEOUT|RFCOMM connection closed.*UUID=111F|connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetService: connect:|AG state machine even|State changed handle|btif_hf_upstreams_evt|btif_queue_connect_next',
+            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond|BR key is higher security than existing LE keys|Auto-reject pairing|smp_set_state: State change|smp_sm_event: Role:|smp_sm_event: addr:|btsock_connect',
+            \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
+            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
+            \"00temp" : "temptemptem"}
+
+"}}}}}
+"{{{{{ 3 代码搜索结果
+    "code type sort num
+    let g:classdefinitionNUM = 0  "类定义
+    let g:variabledefNUM = 1  "变量定义
+    let g:variabledefspecifyNUM  = 2 "变量定义赋值
+    let g:functiondefinitionNUM = 3       "函数定义
+    let g:functioncallNUM = 4     "函数调用
+    let g:variablespecifyNUM  = 5 "变量赋值
+    let g:functiondeclarationNUM = 6  "函数申明
+    let g:LogNUM = 7              "打印
+    let g:judgeNUM = 8            "判断
+    let g:CommentNUM = 9          "注释
+    let g:TESTNUM = 10             "test
+    let g:XMLNUM = 11              "xml
+    let g:unknowNUM = 12           "未知
+"}}}}}
+"{{{{{ 3 普通全局变量
+let g:alldebugflag = "true"
+let g:debugid = 0
+let g:FileEmptyDictionary = {"00interval":"0-0",
+            \"01name":"xx",
+            \"02type":"",
+            \"03string":'',
+            \"04childnode":[],
+            \}
+let g:foldmarker = 0
+"}}}}}
+"}}}}}
+"{{{{{2   Homedir(...) 家目录
+if join(split(system("uname"))) ==# "Linux"
+    let g:homedir = $HOME
+else
+    if finddir("/d") != ""
+        let g:homedir = "/d"
+        "git信息异常变动，gitbash
+        "call system("git config --global core.autocrlf false")
+        "call system("git config --global core.filemode false")
+        "call system("git config --global core.safecrlf true")
+    endif
+endif
+function! Homedir(...)
+    "{{{{{3 变量定义
+    let dirpath = a:1
+    let type = ""
+    if a:0 ==# 2
+        let type = a:2
+    endif
+    let path = ""
+    "}}}}
+    let dirpath = g:homedir . "/" . dirpath
+    if type ==# 1
+        if "" ==# findfile(dirpath)
+            let path = "/" . join(split(dirpath,"/")[0:-2],"/")
+            call system("mkdir " . path)
+            call system("touch " . dirpath)
+            "call writefile([],dirpath)
+            echo dirpath . "没有这个文件现在新建这个文件"
+        else
+            "echo dirpath
+        endif
+    elseif type ==# 2
+        if "" ==# finddir(dirpath)
+            call system("mkdir " . dirpath)
+            echo dirpath . "没有这个文件夹现在新建这个文件夹"
+        else
+            "echo dirpath
+        endif
+    endif
+    return dirpath
+endfunction
+"}}}}}
+"{{{{{2   Txldir(...) 配置目录
+if join(split(system("uname"))) ==# "Linux"
+    if "" != finddir("/mnt/d")
+        let g:txldir = "/mnt/d/work/fund"
+    else
+        let g:txldir = $HOME
+    endif
+else
+    if finddir("/d") != ""
+        let g:txldir = "/d/work/fund"
+    endif
+endif
+function! Txldir(...)
+    "{{{{{3 变量定义
+    let dirpath = a:1
+    let type = ""
+    if a:0 ==# 2
+        let type = a:2
+    endif
+    let path = ""
+    "}}}}
+    let dirpath = g:txldir . "/" . dirpath
+    if type ==# 1
+        if "" ==# findfile(dirpath)
+            let path = "/" . join(split(dirpath,"/")[0:-2],"/")
+            call system("mkdir " . path)
+            call system("touch " . dirpath)
+        else
+        endif
+    elseif type ==# 2
+        if "" ==# finddir(dirpath)
+            call system("mkdir " . dirpath)
+        else
+        endif
+    endif
+    return dirpath
+endfunction
+"}}}}}
+"编辑vimrc文件{{{{2
+"编辑vimrc文件
+nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
+nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Txldir("txl/keywords",1)<cr>
+nnoremap <leader>ee :tabnew<cr>:execute "e " . Txldir("txl/Extractioncode",1)<cr>
+nnoremap <leader>ef :tabnew<cr>:execute "e " . Txldir("txl/plan",1)<cr>
+nnoremap <leader>tr :tabnew<cr>:execute "e " . Txldir("txl/transplant.txt",1)<cr>
+nnoremap <leader>eb :tabnew<cr>:execute "e " . Txldir("txl/vimrc_computer.vim",1)<cr>
+nnoremap <leader>es :tabnew<cr>:execute "e " . Txldir("study/bluetooth",1)<cr>
+"加载vimrc文件
+nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
+nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+""}}}}
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
 function! AddTitle()
@@ -396,254 +676,6 @@ nnoremap <leader>cc  0"ayt\|0f\|lvf\|h"by0:tabnew<cr>:execute "e" expand(@a)<cr>
 nnoremap <leader>zz  0v$hy:tabnew<cr>:setlocal foldmethod=syntax<cr>:let &foldlevel=100<cr>q:ie <esc>p<cr>
 "}}}}
 "函数{{{{
-"{{{{{2   全局变量
-"{{{{{3   仓库
-let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
-            \ 'android_packages_apps_Bluetooth',
-            \ 'android_system_bt',
-            \ 'android_frameworks_base',
-            \ 'android_vendor_mediatek_proprietary_hardware_connectivity_firmware_rom_patch',
-            \ 'android_device_mediatek_vendor_common',
-            \ 'android_vendor_mediatek_kernel_modules_connectivity_bt_mt66xx',
-            \ 'android_vendor_qcom_opensource_commonsys_system_bt' ,
-            \ 'android_vendor_qcom_opensource_commonsys_bluetooth_ext',
-            \ "android_kernel-4.14",
-            \ "android_vendor_mediatek_proprietary_hardware_connectivity_bluetooth_driver_mt66xx",
-            \ "android_packages_modules_Bluetooth",
-            \ "android_prebuilts_module_sdk_Bluetooth",
-            \ "vendor_vivo_source_frameworks_services",
-            \ "android_cts",
-            \ "android_vendor_mediatek_kernel_modules_connectivity_bt_linux_v2",
-            \ "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth",
-            \ "android_vendor_mediatek_proprietary_tinysys_adsp_HIFI3",
-            \ "android_vendor_mediatek_proprietary_tinysys_common",
-            \ "android_vendor_mediatek_proprietary_tinysys_adsp_common",
-            \ "android_device_mediatek_common",
-            \ "android_vendor_mediatek_proprietary_custom",
-            \ "android_vendor_mediatek_proprietary_packages_modules_Bluetooth"]
-"}}}}}
-"{{{{{3 非函数
-"判断带{有下面的就不是函数
-let g:nonfunctionlist = [" if(",
-            \"  new ",
-            \"=new " ,
-            \" interface ",
-            \"class ",
-            \"enum ",
-            \"} catch",
-            \"() -> {",
-            \"namespace ",
-            \" if (",
-            \" try{",
-            \" try {",
-            \" try (",
-            \" for(",
-            \" for (",
-            \" synchronized (",
-            \" synchronized(",
-            \" switch (",
-            \" else{",
-            \" else {",
-            \"else {",
-            \"else if",
-            \" case ",
-            \" default:",
-            \" do {",
-            \" do {",
-            \" switch(",
-            \" while (",
-            \" while(",
-            \" static {",
-            \" = new ",
-            \" public enum",
-            \" static{"]
-
-"}}}}}
-"{{{{{3 自动分析
-let g:Removeduplicates = [
-            \ 'AudioFlinger_Threads: volumedebug',
-            \ 'getNewOutputDevices selected devices',
-            \'Remote device name is',
-            \'interop_database_match',
-            \'btif_dm_update_rmt_device_name',
-            \]
- let g:MultiDimensionalAnalysisSolution =  [
-             \['101','102','201',"a2dp 通路",'A'],
-             \['103','104','201',"hfp 通路",'A'],
-             \]
-let g:DimensionalAnalysis  = [
-            \['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING','101'],
-            \['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING','102'],
-            \['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn','103'],
-            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected','104'],
-            \['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioDisconnecting -> Connected','104'],
-            \['APM_AudioPolicyManager: getNewOutputDevices selected devices','201'],
-            \['volumedebug track','202'],
-            \]
-let g:Dimensionalmsg = {
-            \'101' : "开启播放",
-            \'102' : "停止播放",
-            \'103' : "建立sco",
-            \'104' : "断开sco",
-            \}
-let g:Dimensionalflag = []
-"第二个参数[-2,1000]
-"第一位是flag -1 既不计算也不显示，-2不计算但是显示
-"第二位是时间，虽然这一行不计算，但是下一行还需要这个值计算
-let g:smallestunitdict = {
-            \"11gattconnect": [['BluetoothGatt: connect() - device: .*, auto', 0.0, ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Connected', 593.0, ''], ['BtGatt.GattService: clientDisconnect', [-2,4703.0], ''], ['client_connect_cback: No active GAP service found for peer:.* callback:Disconnected', 5714.0, '']],
-            \"10aclconnectstate": [['aclStateChangeCallback: Adapter State: ON Connected', 0.0, ''], ['aclStateChangeCallback: Adapter State: ON Disconnected', [-2,1000.0], '']],
-            \"09扫描": [["BluetoothAdapterService: startDiscovery",0,''],["BluetoothAdapterService: cancelDiscovery",-2,'']],
-            \"08a2dp_simple_start_play": [['StartRequest: accepted', 0.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:NOT_PLAYING->PLAYING', 481.0, ''], ['A2dpStateMachine: A2DP Playing state : device: .* State:PLAYING->NOT_PLAYING', [-2,1000.0], '']],
-            \"07hfpVirtual_simple_start_call": [['HeadsetService: startScoUsingVirtualVoiceCall', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 260.0, ''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
-            \"06hfp_simple_start_call": [['Telecom: Telecom: VivoCallsManager: setCallState CONNECTING -> DIALING', 0.0, ''], ['HeadsetStateMachine: AudioOn: currentDevice=.*, msg=audio state changed: .*: Connected -> AudioOn', 2917.0, ''],['HeadsetService: stopScoUsingVirtualVoiceCall',[-2,1000],''],['HeadsetStateMachine: Connected: currentDevice=.*, msg=audio state changed: .*: AudioOn -> Connected', [-2,10000], '']],
-            \"05a2dp_simple_connect avdt_defs.h": [['A2dpStateMachine: Connection state .*: DISCONNECTED->CONNECTING', 0.0, ''], ['A2dpStateMachine: Connection state .*: CONNECTING->CONNECTED', 672.0, '']],
-            \"04hfp_simple_connect reson 19 peer disconnect": [['HeadsetStateMachine: Connecting: currentDevice=.*, msg=connection state changed: .*: Disconnected -> Connecting', 0.0, ''], ['HeadsetStateMachine: Connected: currentDevice=.*, msg=connection state changed: .*: Connecting -> Connected', 505.0, '']],
-            \"03bond hci_packets.pdl" : [['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_NONE => BOND_BONDING', 0.0, ''], ['BluetoothBondStateMachine: Bond State Change Intent:.* BOND_BONDING => BOND_BONDED', 4695.0, '']],
-            \"02auto_connect": [['BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on', 28631.0, ''], ['BluetoothPhonePolicy: autoConnect:HFP Device', 28634.0, ''], ['autoConnectHeadset: Connecting HFP with', 28634.0, ''], ['BluetoothPhonePolicy: autoConnect:A2DP Device', 28635.0, ''], ['BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP', 28635.0, '']],
-            \"01bluetoothenable": [['AdapterProperties: Setting state to OFF', 0.0, ''], ['AdapterProperties: Setting state to BLE_TURNING_ON', 96.0, ''], ['AdapterProperties: Address is', 478.0, ''], ['AdapterProperties: Setting state to BLE_ON', 524.0, ''], ['AdapterProperties: Setting state to TURNING_ON', 540.0, ''], ['AdapterProperties: Setting state to ON', 786.0, '']],
-            \}
-
-            " rfcomm connect "RFCOMM_StartReq|RFCOMM_CreateConnectionWithSecurity|RFCOMM peer:|rfc_mx_sm_execute|rfc_mx_sm|L2CEVT_L2CAP_CONFIG_RSP|PORT_StartCnf|rfc_mx_conf_cnf|RFCOMM_BufDataInd|bta_ag_mgmt_cback_|rfc_process_mx_message|rfc_port_sm_
-            "\40l2cap connect l2cdefs.h" : "chnl_state|l2c_csm_execute|btm_sec_l2cap_access_req.*psm=|l2c_csm.cc.*st:|btm_sec_cb.cc.*AddService:.*psm:|l2c_link_timeout All channels closed|process_l2cap_cmd",
-            "\"39sdp bt_psm_types.h  tBTA_DM_STATE" : "bta_dm_search_cb.state|starting service discovery|Discovery started|starting SDP discovery|services_to_search|search UUID =|btif_dm_search_services_evt",
-            " hci 指令hcidefs.h  avrcp_common.h smp_int.h
-            "sdpdefs.h uuid
-            "hci_error_code.h  error code
-            "port_api.h rfcom 断开原因
-let g:filterchar = {
-            \"38broadcast" : "Skip deliver broadcast.*bluetooth|bta_hh_",
-            \"37exception" : "bt_.*fail|bluetooth.*exception|isCarkitDevice|at com.android.bluetooth",
-            \"36bigdata" : "Address=.*manufacturer=",
-            \"35headsetcod" : "romote_cod|add leaudio cod",
-            \"34hearingaid" : "connectEnabledProfiles.*Hearing Aid Profile|HearingAidStateMachine.*process message|connectHearingAidNative|HearingAidStateMachine.*->|BluetoothHearingAid: setVolume",
-            \"33leaudio volume" : "AS.BtHelper: setLeAudioVolume|LeAudioService: SetVolume|VolumeControlService: setGroupVolume|VolumeControlService: setAvrcpVolume",
-            \"32batchscan" : "onBatchScanStartStopped|onBatchScanReports|mtk_bta_batch_scan_reports_cb|BTM_BleReadScanReports",
-            \"31acountconnect" : "vivoTWS-GattManager: onCharacteristicChanged characteristic|handleGattCharacteristic createBond|GattManager: handlePairRequest|vivoTWS-GattManager: onCharacteristicWrite",
-            \"30hwerror" : "com.android.bluetooth.*has died|LogMsg: Received H/W Error|BT_FW assert|Bluetooth service died|ActivityManager: Killing.*com.android.bluetooth|com.android.bluetooth.*died because of ANR|MESSAGE_TIMEOUT_BIND|bluetooth: asser|init_uart.*stpbt|蓝牙打开失败|com.android.bluetooth.*died because of|com.android.bluetooth.*cause:|exited due to signal",
-            \"29oppandpan" : "onConnect BluetoothSocket|Get incoming connection|Start Obex Server|BtOppService: HINT|BtOppService: TOTAL|Incoming Notification ID|BluetoothOppReceiver: Receiver|BluetoothOppReceiver:  action|BluetoothOppNotification: mCurrentBytes|BtOppTransfer: L2cap socket connection|BtOppTransfer: Create.*session|BtOppTransfer: Start session|BtOppTransfer: Stop mSession|BtOppTransfer:  Action|Receiving file completed|PanService: Pan Device state|updateShareStatus|sendIntentIfCompleted|Can't open file for OUTBOUND|putSendFileInf|BluetoothOppHandoverReceiver: Action",
-            \"28interopmatch" : "interop_database_match|interop_config_init: interop_config_init",
-            \"27vivoshare" : "Share-BLEService: Connecting|Share-ShareLink-BleObserver: onFailure",
-            \"26btelevel" : "BTE_InitTraceLevels TRC_AVDT|BTE_InitTraceLevels -- TRC_AVDT|SetDefaultLogLevel",
-            \"25scoreason" : "btm_acl_iso_disconnected|HeadsetService:.*connectAudio|BluetoothHeadsetServiceJni: AudioStateCallback|bta_ag_create_sco|bta_ag_sco_disc_cback|setAclDisconnectReason|btm_sco_connection_failed",
-            \"24twsbatteryearversion" : "sendBatteryLevelChangedBroadcast|tws wear state|vivoTWS-CheckUpdateTask.*SimpleEarInfo{right_version",
-            \"23avrcpstatus stop play puase 012" : "MediaSessionService: Sending KeyEvent|opcode=Opcode::PASS_THROUGH|Reject invalid addressed|PlaybackStatusNotificationResponse|MetadataChanged|getCurrentPlayStatus|isDropKey: key_drop|dispatchMediaKeyEvent|MediaSessionRecord: setPlaybackState",
-            \"22gamemode" : "GameModeManager: enter game mode|GameModeManager.*exit game mode:",
-            \"21tool" : "collectresult.*\\[E",
-            \"20absetvolume" : "AS.BtHelper: setAvrcpAbsoluteVolumeIndex|AvrcpNativeInterface: sendVolumeChanged",
-            \"19a2dpcodec" : "A2dpStateMachine: A2DP Codec Config:.*->|ableOptionalCodecs|SelectSourceCodec:|SetCodecUserConfig|setCodecConfigPreference|bta_av_config_ind: codec|bta_av_reconfig: Reconfig codec",
-            \"18att" : "bta_gatts_send_request_cback|onResponseSendCompleted|GATTS_SendRsp:|BtGatt.GattService: .*Characteristic|BtGatt.GattService: on.*Characteristic|bt_gatt_callbacks.*characteristic_cb|Sending ATT command to|BtGatt.GattService: onNotify|BtGatt.GattService: got characteristic",
-            \"17absolutevolume" : "AvrcpConnect|SDP Completed features|avrc_sdp_cback|AVRC_FindService|avct_lcb_open_ind|AVRC_Open|avrc_ctrl_cback|AcceptorControlCb|SdpLookup|DynamicAbsVolumeManager: getAbsoluteCap device|bluetooth::avrcp::ConnectionHandler::AcceptorControlCb|AvrcpNativeInterface: deviceConnected|AvrcpNativeInterface: deviceDisconnected|updateAbsoluteCap cap|ConnectionHandler::AvrcpConnect|ConnectionHandler::InitiatorControlCb|HandleVolumeChanged|Absolute volume disabled by property|l2c_csm_send_config_req: real_psm = (0x17)|avrcp_service.cc.*ConnectDevice: address|volumeDeviceConnected|AvrcpTargetService: deviceConnected",
-            \"16audiooutput" : "APM_AudioPolicyManager: startOutput.* stream [2345]|getNewOutputDevices selected|MediaFocusControl: requestAudioFocus|AudioALSAHardwareResourceManager: -.*InputDevice",
-            \"15volume" : "volumedebug.*streamType:[1234567]|onTrackStateCallback.*appname.*sessionid|AudioMTKGainController: setVoiceVolume(), index|AS.AudioService: setStreamVolume.*com.android.bluetooth",
-            \"14rfcomconnectUUID=111F hfp bt_uuid16.h btif_sock_sdp.h, " : "port_release_port p_port|RFCOMM_CreateConnectionWithSecurity|RFCOMM connection closed|BluetoothSocket:|RFCOMM_CreateConnection failed",
-            \"13gattadv" : "BtGatt.AdvertiseManager: stopAdvertisingSet|BtGatt.AdvertiseManager: startAdvertisingSet|Number of max instances 8 reached|BtGatt.AdvertiseManager",
-            \"12gattscan" : "BtGatt.GattService: startScan|BtVcdTimer: startScan|BtVcdTimer: stopScan|BtVcdTimer: configureRegularScanParams|BtGatt.ScanManager.*Package|Skipping client: permission=false",
-            \"11gattconnect" : "connectEnabledProfiles|BluetoothGatt: connect.*auto|client_connect_cback:.*connected|BtGatt.GattService: clientDisconnect|BtGatt.ContextMap:.*app|GATT_Disconnect|GATT_Connect|pem  : BLE_REGITION_APP|BtGatt.GattService: clientConnect|BluetoothGatt: connect|client_connect_cback|clientDisconnect|bta_gattc_open_fail|bta_hh_le_open_fail|onClientConnected|BtGatt.GattService: registerServer|BtGatt.GattService: onServerRegistered| Send EATT Connect |BluetoothGatt: close|BluetoothGatt: onClientConnectionState|BtGatt.GattService: registerClient|BluetoothGatt:|BtGatt.GattService: registerClient",
-            \"10aclconnectstate" : "aclStateChangeCallback.* Adapter State: ON.*Connected|OnConnectFail: Connection failed|btm_sec_disconnected clearing pending|Disconnection complete device|bluetooth: OnConnectFail|ISO disconnection from GD|btm_sco_on_disconnected",
-            \"09扫描" : "BluetoothAdapterService: startDiscovery|BluetoothAdapterService: cancelDiscovery|BluetoothRemoteDevices: deviceFoundCallback|Need.*permission",
-            \"08a2dp_simple_start_play" : 'StartRequest: accepted|A2dpStateMachine: A2DP Playing state.*->\w+|BTAudioSessionAidl.*SessionType=|streamStarted - SessionType=|BTAudioHalDeviceProxy:.*session_type=|call state is busy',
-            \"07hfpVirtual_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetService: .*connectAudio|BluetoothHeadset: startScoUsingVirtualVoiceCall|HeadsetService: startScoUsingVirtualVoiceCall|HeadsetStateMachine:.*msg=TIME_SPACE_A2DP_SCO|BTHF: PhoneStateChange|bta_ag_sco.cc|bluetooth: bta_ag_sco_event: SCO_state_change|bta_ag_create_sco|bluetooth: bta_ag_sco_event.*Ignoring event|stopScoUsingVirtualVoiceCall|bta_ag_sco_close|startBluetoothsco|HeadsetService:  isInCall|HeadsetService: connectAudio:|isInCall|stopScoUsingVirtualVoiceCall',
-            \"06hfp_simple_start_call" : 'HeadsetStateMachine: .*msg=audio state changed.*-> \w+|telecom.*setcallstate.*-> \w+|HeadsetService: .*connectAudio|HeadsetStateMachine:.*msg=broadcastAudioState.*->|HeadsetStateMachine: Set VGS|HeadsetStateMachine.*mSpeakerVolume|InCallController: Failed to connect|InCallController: Attempting to bind to InCall|HeadsetService: connectAudio:|AS.AudioService: setMode|BluetoothHeadset: disconnectAudio|HeadsetService - Not present|processInitProfilePriorities',
-            \"05a2dp_simple_connect avdt_defs.h" : 'connectEnabledProfiles|A2dpStateMachine: Connection state.*->\w+|A2dpStateMachine.*CONNECT_TIMEOUT|trigger reconnect|must wait for le services discovery|forcing LE transport for Bonding|A2dpService: connect|bta_av_better_stream_state_machine|a2dp_api: a2dp_api.cc|connectA2dp|src_connect_sink',
-            \"04hfp_simple_connect reson 19 peer disconnect" : 'HeadsetStateMachine.*CONNECT_TIMEOUT|RFCOMM connection closed.*UUID=111F|connectEnabledProfiles|HeadsetStateMachine.*connection state changed.*-> \w+|HeadsetService: connect:|AG state machine even|State changed handle|btif_hf_upstreams_evt|btif_queue_connect_next',
-            \"03bond hci_packets.pdl" : 'bluetoothbondstate.*=> \w+|BTM_GetRemoteDeviceName, NV name =|btif_dm_update_rmt_device_name|BluetoothBondStateMachine: Bond address is|tool_BondCreate|bta_dm_bond: Bonding with peer device|SDP_CreateRecord|change_pairing_state|btm_sec_execute_procedure.*Start authentication|scheduling SDP for|sendUuidsInternal|btif_dm_search_services_evt|btif_dm_create_bond|BR key is higher security than existing LE keys|Auto-reject pairing|smp_set_state: State change|smp_sm_event: Role:|smp_sm_event: addr:|btsock_connect',
-            \"02auto_connect" : "BluetoothPhonePolicy: autoConnect: Initiate auto connection on BT on|BluetoothPhonePolicy: autoConnect:HFP Device|autoConnectHeadset: Connecting HFP with|BluetoothPhonePolicy: autoConnect:A2DP Device|BluetoothPhonePolicy: autoConnectA2dp: connecting A2DP",
-            \"01bluetoothenable" : 'AdapterProperties: Address is|AdapterProperties: Setting state to \w+|BluetoothManagerService.*able.*\(|BluetoothManagerService:.*STATE_CHANGED|BluetoothAdapterService.*able\(|starting profile|event_start_up_stack',
-            \"00temp" : "temptemptem"}
-
-"}}}}}
-"{{{{{ 3 代码搜索结果
-    "code type sort num
-    let g:classdefinitionNUM = 0  "类定义
-    let g:variabledefNUM = 1  "变量定义
-    let g:variabledefspecifyNUM  = 2 "变量定义赋值
-    let g:functiondefinitionNUM = 3       "函数定义
-    let g:functioncallNUM = 4     "函数调用
-    let g:variablespecifyNUM  = 5 "变量赋值
-    let g:functiondeclarationNUM = 6  "函数申明
-    let g:LogNUM = 7              "打印
-    let g:judgeNUM = 8            "判断
-    let g:CommentNUM = 9          "注释
-    let g:TESTNUM = 10             "test
-    let g:XMLNUM = 11              "xml
-    let g:unknowNUM = 12           "未知
-"}}}}}
-let g:alldebugflag = "true"
-let g:debugid = 0
-let g:FileEmptyDictionary = {"00interval":"0-0",
-            \"01name":"xx",
-            \"02type":"",
-            \"03string":'',
-            \"04childnode":[],
-            \}
-let g:foldmarker = 0
-"}}}}}
-"{{{{{2   Homedir(...) 家目录
-if join(split(system("uname"))) ==# "Linux"
-    let g:homedir = $HOME
-else
-    if finddir("/d") != ""
-        let g:homedir = "/d"
-        "git信息异常变动，gitbash
-        "call system("git config --global core.autocrlf false")
-        "call system("git config --global core.filemode false")
-        "call system("git config --global core.safecrlf true")
-    endif
-endif
-function! Homedir(...)
-    "{{{{{3 变量定义
-    let dirpath = a:1
-    let type = ""
-    if a:0 ==# 2
-        let type = a:2
-    endif
-    let path = ""
-    "}}}}
-    let dirpath = g:homedir . "/" . dirpath
-    if type ==# 1
-        if "" ==# findfile(dirpath)
-            let path = "/" . join(split(dirpath,"/")[0:-2],"/")
-            call system("mkdir " . path)
-            call system("touch " . dirpath)
-            "call writefile([],dirpath)
-            echo dirpath . "没有这个文件现在新建这个文件"
-        else
-            "echo dirpath
-        endif
-    elseif type ==# 2
-        if "" ==# finddir(dirpath)
-            call system("mkdir " . dirpath)
-            echo dirpath . "没有这个文件夹现在新建这个文件夹"
-        else
-            "echo dirpath
-        endif
-    endif
-    return dirpath
-endfunction
-"}}}}}
-"编辑vimrc文件{{{{2
-"编辑vimrc文件
-nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
-nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("txl/keywords",1)<cr>
-nnoremap <leader>ee :tabnew<cr>:execute "e " . Homedir("txl/Extractioncode",1)<cr>
-nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("txl/plan",1)<cr>
-nnoremap <leader>tr :tabnew<cr>:execute "e " . Homedir("txl/transplant.txt",1)<cr>
-if g:homedir ==# "/d"
-    nnoremap <leader>eg :tabnew<cr>:execute "e " . Homedir("work/fund/vimrc/keywords",1)<cr>
-    nnoremap <leader>ef :tabnew<cr>:execute "e " . Homedir("work/fund/vimrc/plan",1)<cr>
-endif
-"加载vimrc文件
-nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
-nnoremap <leader>tt :source ~/.vimrc_tt<cr>
-
-if "" != finddir("/mnt/d")
-    nnoremap <leader>eb :tabnew<cr>:e /mnt/d/work/fund/vimrc/vimrc_computer.vim<cr>
-    nnoremap <leader>ef :tabnew<cr>:e  /mnt/d/work/fund/vimrc/plan<cr>
-    nnoremap <leader>eg :tabnew<cr>:e  /mnt/d/work/fund/vimrc/keywords<cr>
-endif
-""}}}}
 "{{{{{2 function! s:GrepOperator(type)           grep 函数扩展                 逗号 + g 调用
 nnoremap <leader>g :set operatorfunc=<SID>GrepOperator<cr>g@
 vnoremap <leader>g :<c-u>call <SID>GrepOperator(visualmode())<cr>
@@ -695,7 +727,7 @@ function! s:Copy2file(type)
     let templist = []
     let tempchar = ""
     let tempchar = @@
-    let relativepath = Homedir("txl/transplant.txt",1)
+    let relativepath = Txldir("txl/transplant.txt",1)
     let templist = split(tempchar,"\n")
     if  @@ ==# " "
         let templist = readfile(relativepath)
@@ -4664,8 +4696,8 @@ function! IsAddDiff()
     let isadddiff = "tangxinlou"
     let isadddiff1 = "tangxinlou"
     let tempchar = ""
-    let isdiffpatch = Homedir("txl/1.txt",1)
-    let diffshfile = Homedir("txl/diffdir.sh",1)
+    let isdiffpatch = Txldir("txl/1.txt",1)
+    let diffshfile = Txldir("txl/diffdir.sh",1)
     let idx1 = 0
     let idx2 = 0
     let curadddiff = []
@@ -4767,7 +4799,7 @@ function! CompareVersion()
     let curpath1 = copy(curpath)
     let versiondiff = []
     let versionstring = ""
-    let relativepath = Homedir("txl/version",1)
+    let relativepath = Txldir("txl/version",1)
     if len(curpath1) > 15
         echo "路径错误"
         return
@@ -5015,9 +5047,9 @@ function! s:DynamicDiff(type)
     let tempchar = @@
     let templist = split(tempchar,"\n")
 
-    let relativepath = Homedir("txl/left",1)
-    let relativepath1 = Homedir("txl/right",1)
-    let relativepath2 = Homedir("txl/1.patch",1)
+    let relativepath = Txldir("txl/left",1)
+    let relativepath1 = Txldir("txl/right",1)
+    let relativepath2 = Txldir("txl/1.patch",1)
     let templeft = readfile(relativepath)
     let tempright = readfile(relativepath1)
 
@@ -7071,7 +7103,7 @@ function! AnalyzeCode()
     let tail = 0
     let idx1 = 0
     let idj1 = 0
-    let relativepath = Homedir("txl/parse",1)
+    let relativepath = Txldir("txl/parse",1)
     let codefile = readfile(expand("%:p"))
     if count(codefile,"《《《《《《《") && count(codefile,"》》》》》》》")
         call Echom(10,0,'tangxinlou debug',6979, "之前修改过")

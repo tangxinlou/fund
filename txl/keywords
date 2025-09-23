@@ -643,7 +643,6 @@ service logcatd /system/bin/logcatd -L -b all -v threadtime -v usec -v printable
     oom_score_adjust -600
 
 }}}
-
 {{{0
 蓝牙修改代码小技巧
 hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, {0x8c, 0x58, 0x23, 0x47, 0x1b, 0x86})
