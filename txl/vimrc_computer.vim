@@ -627,6 +627,8 @@ nnoremap <F12>  : call CallStack(0,[],line('.'),0,"",[])<cr>
 "nnoremap <F12>  : call Exeample()<cr>
 nnoremap  <leader>temp : call  JoinTwoTables()<cr>
 nnoremap <leader>za  : call FoldSetting()<cr>
+nnoremap <leader>e.  : call OpenDirectoryList(1)<cr>
+nnoremap <leader>el  : call OpenDirectoryList(2)<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -12190,7 +12192,7 @@ function! LexiconizationCallback(...)
         elseif flag ==# "functioncall"
             let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
         elseif flag ==# "judge"
-            let dict["03string"] = flag . " " . string(ParsingJudge(string,[]))
+            let dict["03string"] = flag . " " . string(DecomposeTheExpression(SplitCharactersByBrackets(string)[1],[]))
         else
             "let dict["03string"] = flag . " " . string(SplitCodeString(string))
         endif
@@ -13010,6 +13012,7 @@ function! DeepDecisionFunction(...)
     let formalparametervalue = 35 "函数形参值"
     let flag = ""
     let leftstr = ""
+    let rightstr = ""
     let index = 0
     let codelist = []
     let calllist = []
@@ -13022,6 +13025,7 @@ function! DeepDecisionFunction(...)
             if count(codelist,"=") != 0
                 let index = index(codelist,"=")
                 let leftstr = codelist[:index -1]
+                let rightstr = codelist[index + 1:]
             endif
             if matchstr(leftstr,searchstr) != ""
                 if flag ==# "variabledefspecify"
@@ -13030,6 +13034,8 @@ function! DeepDecisionFunction(...)
                     else
                         let flag = "variablevalue"
                     endif
+                else
+                    let flag = "variableleft"
                 endif
                 return flag
             else
@@ -13149,23 +13155,22 @@ endfunction
 function! ParsingVariable(...)
 endfunction
 "}}}}}
-"{{{{{2 ParsingJudge(...)解析判断
-"echom ParsingJudge(getline(line('.')),[])
-function! ParsingJudge(...)
+"{{{{{2 DecomposeTheExpression(...)分割多个表达式，比如if 括号里面的，return 后面的，函数调用参数
+"echom DecomposeTheExpression(SplitCharactersByBrackets(getline(line('.')))[1],[])
+"echom DecomposeTheExpression(getline(line('.')),[])
+function! DecomposeTheExpression(...)
     let codestr = copy(a:1)
     let resultlist= deepcopy(a:2)
     let targetvar = ""
     let idx1 = 0
-    if count(codestr,'(') ==# 0
-        return []
-    endif
-    let targetvar = SplitCharactersByBrackets(codestr)
-    "call Echom(10,0,'tangxinlou debug',13230, targetvar,codestr)
-    let targetvar = SplitStringByStr(targetvar[1],["&&","||","!=",">=","<=","=="," < "," > "])
-    "call Echom(10,0,'tangxinlou debug',13233, targetvar)
+    let codelist = []
+    "call Echom(10,0,'tangxinlou debug',13230,codestr)
+    let targetvar = SplitStringByStr(codestr,["&&","||","!=",">=","<=","=="," < "," > "," + "])
     while idx1 < len(targetvar)
         if targetvar[idx1][0] ==# '('
-            let resultlist = ParsingJudge(targetvar[idx1],resultlist)
+            let codelist = SplitCharactersByBrackets(targetvar[idx1])
+            let resultlist = DecomposeTheExpression(codelist[1],resultlist)
+            let resultlist = DecomposeTheExpression(codelist[2],resultlist)
         else
             let resultlist = add(resultlist,targetvar[idx1])
         endif
@@ -13324,36 +13329,123 @@ endfunction
 "echo SplitCharactersByBrackets(getline(line('.')))
 function! SplitCharactersByBrackets(...)
       let strings = a:1
+      let resultlist = ["","",""]
+      let tailint = -1
+      let idx1 = 0
+      let strings = ClearBlank(strings)
+      let strings = split(strings,'\zs')
+      "call Echom(10,0,'tangxinlou debug',3649, strings)
+      let idx1 = 0
+      let srcint = 0
+      while idx1 < len(strings)
+          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
+          if strings[idx1] ==# "("
+              if idx1 ==# 0
+                  let resultlist[0] = ""
+              else
+                  let tailint = idx1 - 1
+                  let resultlist[0] = ClearBlank(join(strings[srcint:tailint],''))
+              endif
+              let srcint = idx1 + 1
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+              let tailint = idx1 -1
+              let resultlist[1] = ClearBlank(join(strings[srcint:tailint],''))
+              if idx1 ==# len(strings) - 1
+                  let resultlist[2] = ""
+              else
+                  let srcint = idx1 + 1
+                  let tailint = len(strings) - 1
+                  let resultlist[2] = ClearBlank(join(strings[srcint:tailint],''))
+              endif
+              let idx1 = len(strings) - 1
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
+"{{{{{3 SplitCharactersByBrackets1(...)分割字符串通过括号分割 括号中的丢弃
+"echo SplitCharactersByBrackets1(getline(line('.')))
+function! SplitCharactersByBrackets1(...)
+      let strings = a:1
+      let resultlist = ""
+      let tailint = -1
+      let idx1 = 0
+      let strings = ClearBlank(strings)
+      let strings = split(strings,'\zs')
+      let idx1 = 0
+      let srcint = 0
+      while idx1 < len(strings)
+          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
+          if strings[idx1] ==# "("
+              if idx1 ==# 0
+                  let resultlist = '(' 
+              else
+                  let tailint = idx1
+                  let resultlist = resultlist . ClearBlank(join(strings[srcint:tailint],''))
+                  let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+                  let srcint = idx1
+              endif
+          
+          endif
+          if idx1 ==# len(strings) -1 
+              let tailint = idx1
+              let resultlist = resultlist . ClearBlank(join(strings[srcint:tailint],''))
+          endif
+          let idx1 += 1
+      endwhile
+      return resultlist
+endfunction
+"}}}}}
+"{{{{{3 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
+"echo SplitCodeString(getline(line('.')))
+function! SplitCodeString(...)
+      let strings = a:1
       let resultlist = []
+      let srcint = -2
       let tailint = -1
       let idx1 = 0
       let strings = split(strings,'\zs')
-      let srcint = len(strings) - 1
+      let srcint = 0
+      let tailint = 0
+      let childstr = ""
       "call Echom(10,0,'tangxinlou debug',3649, strings)
-      let idx1 = len(strings) -1
-      while idx1 >= 0
+      while idx1 < len(strings)
           "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
-          if strings[idx1] ==# ")"
-              if srcint ==# idx1
-                  let resultlist = add(resultlist,"")
-              else
-                  let tailint = idx1 + 1
-                  let resultlist = insert(resultlist,ClearBlank(join(strings[tailint:srcint],'')))
-              endif
-              let srcint = idx1 - 1
-              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
-              let tailint = idx1 + 1
-              let resultlist = insert(resultlist,join(strings[tailint:srcint],''))
+          if strings[idx1] ==#  " "
               if idx1 ==# 0
-                  let resultlist = insert(resultlist,"")
               else
-                  let srcint = idx1 - 1
-                  let tailint = 0
-                  let resultlist = insert(resultlist,ClearBlank(join(strings[tailint:srcint],'')))
+                  if strings[idx1 -1] != " "
+                      let tailint = idx1 -1
+                      "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
+                      let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
+                      "let resultlist = add(resultlist,strings[srcint:tailint])
+                  endif
               endif
-              let idx1 = 0
+              let srcint = idx1 + 1
+          elseif strings[idx1] ==# "("
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+              "call Echom(10,0,'tangxinlou debug',3664, idx1)
+          elseif strings[idx1] ==# "<" && (strings[idx1 + 1] != " " && strings[idx1 + 1] != "=")
+              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
+          else
+              if idx1 ==# 0
+                  let srcint = 0
+              else
+                  if strings[idx1 -1] ==# " "
+                      let srcint = idx1
+                  endif
+              endif
           endif
-          let idx1 -= 1
+          if idx1 ==# len(strings) -1
+              let tailint = idx1
+              let childstr = ClearBlank(join(strings[srcint:tailint],''))
+              if childstr != ""
+                  let resultlist = add(resultlist,childstr)
+              endif
+              "let resultlist = add(resultlist,strings[srcint:tailint])
+          endif
+          let idx1 += 1
       endwhile
       return resultlist
 endfunction
@@ -13601,7 +13693,7 @@ function! ClearingStringsInCode(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2 JudgingCharacters(...)判断字符串中特定字符是不是在括号里面
+"{{{{{2 JudgingCharacters(...)判断字符串中特定字符,是不是在括号里面
 function! JudgingCharacters(...)
     let strings = a:1
     let strings = split(strings,'\zs')
@@ -13612,6 +13704,8 @@ function! JudgingCharacters(...)
             let flag = 0
         elseif strings[idx1] ==# '('
             let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+        elseif strings[idx1] ==# '<'
+            let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
         endif
         let idx1 += 1
     endwhile
@@ -13740,7 +13834,7 @@ function! ProcessingEqualSymbols(...)
             endif
         elseif string[idx1 - 1] ==# '!'
             if string[idx1] != '='
-                call Echom(10,0,'tangxinlou debug',13716, idx1)
+                "去除代码中的!
                 call remove(string,idx1 - 1)
                 let idx1 = 1
                 continue
@@ -13754,6 +13848,20 @@ function! ProcessingEqualSymbols(...)
             endif
         elseif string[idx1 - 1] ==# '|'
             if string[idx1] ==# ' ' || string[idx1] ==# '=' || string[idx1] ==# '|'
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        elseif string[idx1 - 1] ==# '?'
+            if string[idx1] ==# ' '
+            else
+                let string = insert(string, ' ', idx1)
+                let idx1 = 1
+                continue
+            endif
+        elseif string[idx1 - 1] ==# '+'
+            if string[idx1] ==# ' ' || string[idx1] ==# '='
             else
                 let string = insert(string, ' ', idx1)
                 let idx1 = 1
@@ -13783,6 +13891,22 @@ function! ProcessingEqualSymbols(...)
             endif
             if string[idx1] ==# '|'
                 if string[idx1 - 1] == ' ' ||  string[idx1 - 1] == '|'
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+            if string[idx1] ==# '+'
+                if string[idx1 - 1] == ' '
+                else
+                    let string = insert(string, ' ', idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+            if string[idx1] ==# '?'
+                if string[idx1 - 1] == ' '
                 else
                     let string = insert(string, ' ', idx1)
                     let idx1 = 1
@@ -13865,12 +13989,15 @@ function! SimplifyTheCodeModel(...)
     let string = ClearBlank(string)
     call Echom(10,0,'tangxinlou debug',13841, 4)
     let length = len(string)
-    let exclusions = ["new","class","if","for","switch","return"]
-    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@![.a-zA-Z]\+\>'
-    let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
+    let exclusions = ["new","class ","if","for","switch","return","extends"]
+    let pattern = '\<\(' . join(exclusions, '\|') . '\)\@![_a-zA-Z0-9]\+\>'
+    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
+    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
     "let pattern = '\C\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
     let result = substitute(string, pattern, 'X', 'g')
+    let result = substitute(result, ' ', '', 'g')
     call Echom(10,0,'tangxinlou debug',13844, 2)
+    let result = SplitCharactersByBrackets1(result)
     return result
 endfunction
 "}}}}}
@@ -14009,6 +14136,20 @@ function! SwitchBuff(...)
     return 0
 endfunction
 "}}}}}
+"{{{{{2 OpenDirectoryList(...) 打开目录列表
+function! OpenDirectoryList(...)
+    let mode = a:1
+    let path = ""
+    if mode ==# 1
+        let path = join(split(execute("pwd"),"\n"),'')
+        execute "edit" .  path
+    elseif mode ==# 2
+        let path = expand("%:p:h")
+        execute "tabnew"
+        execute "edit" .  path
+    endif
+endfunction
+"}}}}} 
 "}}}}}
 "}}}
 "{{{{  函数调用快速查找

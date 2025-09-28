@@ -651,4 +651,29 @@ Address 实际是一个6个成员的数组
 
 }}}  
 {{{0
+电脑相关
+{{{1
+1.给wsl 分配更多的核心
+/c/Users/admin/.wslconfig
+[wsl2]
+memory=24GB       # 推荐24GB内存，平衡性能与稳定性
+processors=20     # 占用20个逻辑处理器
+swap=20GB         # 缓冲内存溢出风险
+}}}
+{{{1
+2.常用shell 指令
+free  查看内存
+lscpu 查看cpu 核心
+du -h --max-depth=1    查看每个目录大小
+df -h 查看磁盘大小
+}}}
+{{{1
+3.查看window cpu 信息
+cmd  msinfo32  系统摘要
+处理器	Intel(R) Core(TM) Ultra 7 155H，1400 Mhz，16 个内核，22 个逻辑处理器
+}}}           
+
+}}}   
+
+{{{0
 }}}
