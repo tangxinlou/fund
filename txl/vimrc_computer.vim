@@ -1257,6 +1257,12 @@ function! DictTest()
     let char.1004 = "1234"
     echo sort(keys(nodeformat))
     let stringdict = string(char)
+    let txlstring = "txl3"
+    if txlstring[1] in ['a', 't', 'c']
+        call Echom(10,0,'tangxinlou debug',1262, 45)
+    else
+        call Echom(10,0,'tangxinlou debug',1264, 46)
+    endif
     echo list
     call Echom(10,0,'tangxinloudebug', list,"kdfjd")
     echo list[0:3]
@@ -2709,9 +2715,15 @@ function! GatherIntoRow(...)
         endif
         if idj1 > 0 && idj1 < len(tempchar) -1
             let tempchar[idj1] = join(split(tempchar[idj1]," "))
+            if tempchar[idj1][0] ==# '<' || tempchar[idj1][0] ==# '>'
+                let tempchar[idj1] = ' ' . tempchar[idj1]
+            endif
         endif
         if idj1 ==# len(tempchar) -1 && idj1 != 0
             let tempchar[idj1] = join(split(tempchar[idj1]," "))
+            if tempchar[idj1][0] ==# '<' || tempchar[idj1][0] ==# '>'
+                let tempchar[idj1] = ' ' . tempchar[idj1]
+            endif
         endif
         let idj1 += 1
     endwhile
@@ -9910,7 +9922,13 @@ function! SearcherlogChars()
     let searchwindowid = -1
     let tabinfodict = Parsetabinfo("tabwindict")
     let windlist = Parsetabinfo("windlist")
-    let grepfile = expand("%:p")
+    if expand("%:p") != ""
+        let grepfile = expand("%:p")
+    else
+        file ~/txl/1.txt
+        w!
+        let grepfile = expand("%:p")
+    endif
     let index = -1
     if len(g:greplog2list) !=  0
         "去除列表中多余数据
@@ -12185,18 +12203,19 @@ function! LexiconizationCallback(...)
     let end = linelist[1]
     let string = GatherIntoRow(linelist[0],linelist[1])
     "call Echom(10,0,'tangxinlou debug',12358, string,line)
-    let flag = IdentificationCodeComponents1(string,filetype)
-    if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
-        if flag ==# "functiondefinition"
-            "let dict["03string"] = flag . " " . string(ParsingFunctions(string))
-        elseif flag ==# "functioncall"
-            let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
-        elseif flag ==# "judge"
-            let dict["03string"] = flag . " " . string(DecomposeTheExpression(SplitCharactersByBrackets(string)[1],[]))
-        else
-            "let dict["03string"] = flag . " " . string(SplitCodeString(string))
-        endif
-    endif
+    "let flag = IdentificationCodeComponents1(string,filetype)
+    "if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
+    "    if flag ==# "functiondefinition"
+    "        "let dict["03string"] = flag . " " . string(ParsingFunctions(string))
+    "    elseif flag ==# "functioncall"
+    "        let dict["03string"] = flag . " " . string(ParsingFunctionCalls(string))
+    "    elseif flag ==# "judge"
+    "        let dict["03string"] = flag . " " . string(DecomposeTheExpression(SplitCharactersByBrackets(string)[1],[]))
+    "    else
+    "        "let dict["03string"] = flag . " " . string(SplitCodeString(string))
+    "    endif
+    "endif
+    let dict["03string"] = flag . " " . string(FineCodeSegmentation(string,[]))
     "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
@@ -13016,6 +13035,7 @@ function! DeepDecisionFunction(...)
     let index = 0
     let codelist = []
     let calllist = []
+    let expressionlist = []
     let idx1 = 0
     let flag = IdentificationCodeComponents1(codestring)
     let codestring = ClearCodeSemicolon(codestring)
@@ -13321,7 +13341,16 @@ function! DetermineCodeType(...)
     return 0
 endfunction
 "}}}}}
-
+"{{{{{2 IdentifyFunctionCalls(...)识别代码中的函数调用
+function! IdentifyFunctionCalls(...)
+    let codestring = copy(a:1)
+    let idx1 = 0
+    let expressionlist = DecomposeTheExpression(codestring,[])
+    while
+        let idx1 += 1
+    endwhile
+endfunction
+"}}}}}
 "}}}
 "{{{{  基础能力函数
 "{{{{{2 处理字符串
@@ -13379,71 +13408,17 @@ function! SplitCharactersByBrackets1(...)
           "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
           if strings[idx1] ==# "("
               if idx1 ==# 0
-                  let resultlist = '(' 
+                  let resultlist = '('
               else
                   let tailint = idx1
                   let resultlist = resultlist . ClearBlank(join(strings[srcint:tailint],''))
                   let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
                   let srcint = idx1
               endif
-          
-          endif
-          if idx1 ==# len(strings) -1 
-              let tailint = idx1
-              let resultlist = resultlist . ClearBlank(join(strings[srcint:tailint],''))
-          endif
-          let idx1 += 1
-      endwhile
-      return resultlist
-endfunction
-"}}}}}
-"{{{{{3 SplitCodeString(...)将字符串以符合代码的风格分割，括号里面是一个整体
-"echo SplitCodeString(getline(line('.')))
-function! SplitCodeString(...)
-      let strings = a:1
-      let resultlist = []
-      let srcint = -2
-      let tailint = -1
-      let idx1 = 0
-      let strings = split(strings,'\zs')
-      let srcint = 0
-      let tailint = 0
-      let childstr = ""
-      "call Echom(10,0,'tangxinlou debug',3649, strings)
-      while idx1 < len(strings)
-          "call Echom(10,0,'tangxinlou debug',3651, strings[idx1])
-          if strings[idx1] ==#  " "
-              if idx1 ==# 0
-              else
-                  if strings[idx1 -1] != " "
-                      let tailint = idx1 -1
-                      "call Echom(10,0,'tangxinlou debug',3656, tailint,strings[srcint:tailint])
-                      let resultlist = add(resultlist,ClearBlank(join(strings[srcint:tailint],'')))
-                      "let resultlist = add(resultlist,strings[srcint:tailint])
-                  endif
-              endif
-              let srcint = idx1 + 1
-          elseif strings[idx1] ==# "("
-              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
-              "call Echom(10,0,'tangxinlou debug',3664, idx1)
-          elseif strings[idx1] ==# "<" && (strings[idx1 + 1] != " " && strings[idx1 + 1] != "=")
-              let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
-          else
-              if idx1 ==# 0
-                  let srcint = 0
-              else
-                  if strings[idx1 -1] ==# " "
-                      let srcint = idx1
-                  endif
-              endif
           endif
           if idx1 ==# len(strings) -1
               let tailint = idx1
-              let childstr = ClearBlank(join(strings[srcint:tailint],''))
-              if childstr != ""
-                  let resultlist = add(resultlist,childstr)
-              endif
-              "let resultlist = add(resultlist,strings[srcint:tailint])
+              let resultlist = resultlist . ClearBlank(join(strings[srcint:tailint],''))
           endif
           let idx1 += 1
       endwhile
@@ -13781,7 +13756,7 @@ function! SplitStringByStr(...)
       return resultlist
 endfunction
 "}}}}}
-"{{{{{2 IsCompareStrings(...)比较字符串
+"{{{{{2 IsCompareStrings(...)比较字符串,或者比较字符串里面有没有目标字符
 function! IsCompareStrings(...)
     let code = a:1
     let targetstr = a:2
@@ -13816,14 +13791,18 @@ endfunction
 "}}}}}
 "{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的= && || !符号
 "echo ProcessingEqualSymbols(getline(line('.')))
+"echo match(getline(line('.')),'[-=!<>+&|,?]')
 function! ProcessingEqualSymbols(...)
     "{{{{{3 变量定义
     let string = copy(a:1)
     let idx1 = 0
     "}}}}
+    if match(string,'[-=!<>+&|,?]') ==# -1
+        return string
+    endif
     let string = split(string,'\zs')
     let idx1 = 1
-    "处理 == != >= <= -= += ! && ||
+    "处理 == != >= <= -= += ! && || , ?
     while  idx1 < len(string)
         if string[idx1 - 1] ==# '='
             if string[idx1] ==# ' ' || string[idx1] ==# '='
@@ -13839,6 +13818,28 @@ function! ProcessingEqualSymbols(...)
                 let idx1 = 1
                 continue
             endif
+        elseif string[idx1 - 1] ==# ','
+            "去除代码中的,后的空格
+
+            if idx1 >= 2
+                if string[idx1] ==# ' ' || string[idx1 - 2] ==# ' '
+                    if string[idx1] ==# ' '
+                        call remove(string,idx1)
+                    endif
+                    if string[idx1 - 2] ==# ' '
+                        call remove(string,idx1 - 2)
+                    endif
+                    let idx1 = 1
+                    continue
+                endif
+            else
+                if string[idx1] ==# ' '
+                    call remove(string,idx1)
+                    let idx1 = 1
+                    continue
+                endif
+            endif
+
         elseif string[idx1 - 1] ==# '&'
             if string[idx1] ==# ' ' || string[idx1] ==# '=' || string[idx1] ==# '&'
             else
@@ -14142,6 +14143,7 @@ function! OpenDirectoryList(...)
     let path = ""
     if mode ==# 1
         let path = join(split(execute("pwd"),"\n"),'')
+        execute "tabnew"
         execute "edit" .  path
     elseif mode ==# 2
         let path = expand("%:p:h")
@@ -14149,7 +14151,7 @@ function! OpenDirectoryList(...)
         execute "edit" .  path
     endif
 endfunction
-"}}}}} 
+"}}}}}
 "}}}}}
 "}}}
 "{{{{  函数调用快速查找
