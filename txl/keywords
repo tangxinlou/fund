@@ -553,16 +553,21 @@ btsnoop 日志大小限制
 {{{0
 ###玩pixel 5
 {{{1
-编译代码刷版本
+编译代码刷自己编译的版本版本
 1.repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-14.0_r1
 2.https://developers.google.com/android/drivers?hl=zh-cn  下载对应版本的驱动包  执行extract-google_devices-redfin.sh extract-qcom-redfin.sh
 3. make -j20 
 4.export ANDROID_PRODUCT_OUT=xxx/out/target/product/sailfish
 5.fastboot flashall -w
+刷商用版本
+https://developers.google.com/android/drivers?hl=zh-cn  选择对应型号的版本
+解压执行对应的bash 脚本
 }}} 
 
 {{{1
+magisk apk 下载地址https://github.com/topjohnwu/Magisk/releases
 magisk pixel 能替换编译的apk ，能push 自己写的工具apk
+fund\pixel\PixelModule  这个module 保存在这个目录
 1.刷机，根据build 号下载对应镜像
 2.root 下载magisk 制作root boot 镜像
 3.push 文件，只能替换不能新增，在/data/adb/modules/PixelMod 新加一个magisk 模块

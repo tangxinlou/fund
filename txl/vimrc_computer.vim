@@ -271,9 +271,9 @@ endfunction
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
-nnoremap <leader>eg :tabnew<cr>:execute "e " . Txldir("txl/keywords",1)<cr>
+nnoremap <leader>eg :tabnew<cr>:execute "e " . Txldir("txl/keywords",1)<cr>:setlocal foldlevel=1<cr>:call FoldSetting()<cr>
 nnoremap <leader>ee :tabnew<cr>:execute "e " . Txldir("txl/Extractioncode",1)<cr>
-nnoremap <leader>ef :tabnew<cr>:execute "e " . Txldir("txl/plan",1)<cr>
+nnoremap <leader>ef :tabnew<cr>:execute "e " . Txldir("txl/plan",1)<cr>:setlocal foldlevel=1<cr>:call FoldSetting()<cr>
 nnoremap <leader>tr :tabnew<cr>:execute "e " . Txldir("txl/transplant.txt",1)<cr>
 nnoremap <leader>eb :tabnew<cr>:execute "e " . Txldir("txl/vimrc_computer.vim",1)<cr>
 nnoremap <leader>es :tabnew<cr>:execute "e " . Txldir("study/bluetooth",1)<cr>
@@ -1262,6 +1262,18 @@ function! DictTest()
         call Echom(10,0,'tangxinlou debug',1262, 45)
     else
         call Echom(10,0,'tangxinlou debug',1264, 46)
+    endif
+    let string = "12345"
+    call Echom(10,0,'tangxinlou debug',1267, string[5:])
+    if string[0] != ""
+        call Echom(10,0,'tangxinlou debug',1268, string[0])
+    else
+        call Echom(10,0,'tangxinlou debug',1270, string[0])
+    endif
+    if string[5] != ""
+        call Echom(10,0,'tangxinlou debug',1273, string[5])
+    else
+        call Echom(10,0,'tangxinlou debug',1275, string[5])
     endif
     echo list
     call Echom(10,0,'tangxinloudebug', list,"kdfjd")
@@ -2729,7 +2741,6 @@ function! GatherIntoRow(...)
     endwhile
     let foldstring = join(tempchar,"\x00")
     let foldstring  = ClearingStringsInCode(foldstring)
-    let foldstring = ProcessingEqualSymbols(foldstring)
     let prvnum = FirstNonBlank(foldstring)
     if  matchstr(foldstring,"\\/\\*") != ""
         let foldstring = ClearingNotesInCode(foldstring)
@@ -2741,6 +2752,7 @@ function! GatherIntoRow(...)
     if prvnum != afternum
         let foldstring = repeat(" ",prvnum)  . foldstring[afternum:-1]
     endif
+    let foldstring = ProcessingEqualSymbols1(foldstring)
     return foldstring
 endfunction
 "}}}}}
@@ -13792,6 +13804,7 @@ endfunction
 "{{{{{2  ProcessingEqualSymbols(...) 处理字符串中的= && || !符号
 "echo ProcessingEqualSymbols(getline(line('.')))
 "echo match(getline(line('.')),'[-=!<>+&|,?]')
+"-+*/=!<>&|,?:
 function! ProcessingEqualSymbols(...)
     "{{{{{3 变量定义
     let string = copy(a:1)
@@ -13920,7 +13933,77 @@ function! ProcessingEqualSymbols(...)
     return join(string,"\x00")
 endfunction
 "}}}}}
-"{{{{{2 ClearCodeSemicolon(...)代码字符串末尾的分号
+"{{{{{2  ProcessingEqualSymbols1(...) 处理字符串中的= && || !符号
+"echo ProcessingEqualSymbols1(getline(line('.')))
+"echo match(getline(line('.')),'[-+*/=!<>&|,?:]')
+"echo  match("1 4 =yu",'[= ]')
+"-+*/=!<>&|,?:
+"if (1+2>=4*5&&1-5<=4/5||4==5|7&8) !(45!=56) (6<8 3>5) button->view if 4>5?34:37 case flag: defaute: test(value   ,    value2) private final Map<   BluetoothDevice  ,  RemoteCallbackList<IBluetoothMetadataListener>>
+function! ProcessingEqualSymbols1(...)
+    "{{{{{3 变量定义
+    let string = copy(a:1)
+    let idx1 = 0
+    let char = ""
+    let flag = 0
+    "}}}}
+    if match(string,'[-+*/=!<>&|,?:]') ==# -1
+        return string
+    endif
+    let index = -1000
+    let lastindex = 0
+    let index = match(string,'[-+*/=!&|,?:]',lastindex)
+    "call Echom(10,0,'tangxinlou debug',13955, string)
+    "call Echom(10,0,'tangxinlou debug',13940, index)
+    while index != -1
+        "call Echom(10,0,'tangxinlou debug',13943, string[index])
+        let char = string[index]
+        if match(char,'[-+*/=&|?:]') != -1
+            "这些符号前后只要是字母数字括号都前后加个空格
+            if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-za-z]') != -1)
+                let string = string[:index] . ' ' . string[index + 1:]
+            endif
+            if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+                if char ==# '-' && string[index + 1] ==# '>'
+                    "-> 这种情况-前面不加空格
+                else
+                    let string = string[:index - 1] . ' ' . string[index:]
+                endif
+            endif
+        elseif char ==# '!'
+            "除了！后面有=的情况，其余的情况都把！去掉
+            if !((index <= len(string) - 2) && (string[index + 1] ==# '='))
+                if index ==# 0
+                    let string = string[index + 1:]
+                else
+                    let string = string[:index - 1] . string[index + 1:]
+                endif
+                let index = index - 2
+            else
+                if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+                    let string = string[:index - 1] . ' ' . string[index:]
+                endif
+            endif
+        elseif char ==# ','
+            if (index <= len(string) - 2) && (string[index + 1] ==# ' ')
+                let string = string[:index] . string[index + 2:]
+                let index -= 1
+            endif
+            if (index >= 1) && (string[index - 1] ==# ' ')
+                let string = string[:index - 2] . string[index:]
+                let index = index -2
+            endif
+        endif
+        let lastindex = index + 1
+        let index = match(string,'[-+*/=!<>&|,?:]',lastindex)
+        "call Echom(10,0,'tangxinlou debug',13995, string)
+        "call Echom(10,0,'tangxinlou debug',13944, index)
+    endwhile
+    let string = HandlingAngleBrackets(string,'<')
+    let string = HandlingAngleBrackets(string,'>')
+    return string
+endfunction
+"}}}}}
+"{{{{{2 ClearCodeSemicolon(...)清除代码字符串末尾的分号
 function! ClearCodeSemicolon(...)
     let string = copy(a:1)
     let string = ClearBlank(string)
@@ -14000,6 +14083,66 @@ function! SimplifyTheCodeModel(...)
     call Echom(10,0,'tangxinlou debug',13844, 2)
     let result = SplitCharactersByBrackets1(result)
     return result
+endfunction
+"}}}}}
+"{{{{{2 HandlingAngleBrackets(...)处理代码中尖括号
+"echo HandlingAngleBrackets(getline(line('.')),'<')
+function! HandlingAngleBrackets(...)
+    let string = copy(a:1)
+    let char = a:2
+    let string = split(string,'\zs')
+    let index = -1000
+    let lastindex = 0
+    let idx1 = - 1
+    let index = index(string,char,lastindex)
+    let targetstr = ""
+    let flag = -1
+    while index != -1
+        let idx1 = FindCorrespondingBracketPosition(string,index,'<')
+        if idx1 ==# index
+            let flag = 0
+        elseif (idx1 - index) ==# 1
+        else
+            if char ==# '<'
+                let targetstr = ClearBlank(join(string[index + 1:idx1 - 1],"\x00"))
+            elseif char ==# '>'
+                let targetstr = ClearBlank(join(string[idx1 + 1:index - 1],"\x00"))
+            endif
+            let targetstr = SplitCodeString(targetstr)
+            if len(targetstr) ==# 1
+                let flag = 1
+            else
+                let flag = 0
+            endif
+        endif
+        if flag ==# 0
+            if string[index] ==# '>' && index >= 1 &&  string[index - 1] ==# '-'
+            else
+                if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-za-z]') != -1)
+                    let string = insert(string, ' ', index + 1)
+                endif
+                if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+                    let string = insert(string, ' ', index)
+                endif
+            endif
+        elseif flag ==# 1
+            if char ==# '<'
+                if (index <= len(string) - 2) && (string[index + 1] ==# ' ')
+                    call remove(string,index + 1)
+                    let index = index - 1
+                endif
+            elseif char ==# '>'
+                if (index >= 1) && (string[index - 1] ==# ' ')
+                    call remove(string,index - 1)
+                    let index = index - 2
+                endif
+            endif
+        endif
+        let lastindex = index + 1
+        let index = index(string,char,lastindex)
+        let flag = -1
+    endwhile
+    return join(string,"\x00")
 endfunction
 "}}}}}
 "}}}}}
