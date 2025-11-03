@@ -109,6 +109,9 @@ RE: 动态先收到；因为防止静态接收者所在进程没有运行，此�
 {{{0
 ###脚本优化
 脚本修改:
+
+{{{1
+遗留
 static void event_shut_down_stack(ProfileStopCallback stopProfiles);  不要判断成调用
 static int disable(void)  bluetooth.cc 中的这个接口 ystem/tools/bdtool/bdtool.c:273:', '   CALL_AND_WAIT(bt_interface->disable(, adapter_state_changed);) 这个明显不是调用的bluetooth.cc 需要过滤
  识别不到类名，优化
@@ -214,6 +217,28 @@ registerProfileService((ProfileService) msg.obj);
 
 20250910
 smp_key_distribution 这个函数通过<F10> 搜索的时候报错
+
+20251013 
+收集lambda 表达式写法
+new SimpleFileVisitor<Path>() {
+ 
+}}}
+
+{{{1
+新点子
+20251020
+在MergeLinesOfCode中去把struct 的最末行合并成一行 ,但是MergeLinesOfCode返回值格式最好不要变动[src,tail,[添加行]] 前两位依然是标准行的收尾，添加行可以放到数组后面
+20251023
+    public @interface SubrateRequestMode {} IdentificationCodeComponents1识别成了函数定义
+
+20251024
+    public GattDbElement() {}空函数下面一行自动添加了打印 
+    private static final UUID[] HID_UUIDS = { 识别成函数定义
+            new PendingIntent.CancelListener(){ 函数定义和lambda 表达式识别不分明
+    class ScannerMap extends ContextMap<IScannerCallback, PendingIntentInfo> {} 这种类声明需要识别下
+
+    private final Predicate<ScanResult> mLocationDenylistPredicate = (scanResult) -> { 表达式里面加了日志
+}}}
 
 }}}
 {{{0
@@ -421,5 +446,30 @@ import android.content.BroadcastReceiver;
 }}}
 }}}
 }}}
+
+
+
+
+
+
+./service/src/main/java/com/dsoftbus/service/DSoftBusService.java
+./sdk/src/main/java/com/dsoftbus/sdk/DSoftBusSDK.java
+./sdk/src/main/aidl/com/dsoftbus/sdk/IConnectCallback.aidl
+./sdk/src/main/java/com/dsoftbus/sdk/ConnectListener.java
+
+./common/src/main/aidl/com/dsoftbus/common/IDSoftBusApi.aidl 
+
+
+
+
+
+
+
+
+ 
+
+
+
+
 
 

@@ -337,6 +337,7 @@ set noignorecase
 set ruler
 set magic
 set fileformats=unix
+"set fileformats=dos
 set laststatus=2
 set statusline=%F
 set statusline+=%=
@@ -399,22 +400,36 @@ if &diff
 endif
 "}}}
 "快捷输入{{{{
-"iabbrev com tangxinlou@wingtech.com
-"iabbrev txl tangxinlou
-"iabbrev r r!
-iabbrev find find -iname '*mobilelog*'
-"iabbrev <expr> echo "call Echom(10,0,'tangxinlou debug',)" . "\<Left>"
+"{{{{{2   linux 常用命令
+"git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
+"git log --graph --pretty=oneline --abbrev-commit --decorate
+"repo sync --local-only
+"ssh -T git@github.com
+"git push origin --delete 分支  删除远程分析
+"git branch -D 分支 删除本地分析
+
+"grep -Esinr参数
+"-E 表示使用扩展的正则表达式进行匹配。
+"-s 表示禁止输出错误信息。
+"-o 表示只显示匹配的部分，而不是整行。
+"-i 表示忽略大小写进行匹配。
+"-n 表示显示匹配的行号。
+
+"find -type f -iname '*mobilelog*'
+"-type f  只搜文件
+"-type d  只搜目录
+"}}}}}
+"{{{{{2   快捷命令
+iabbrev find find -iname '*.java' -o -iname "*.aidl"
 iabbrev <expr> echo "call Echom(10,0,'tangxinlou debug'," . line('.') . ",)\<Left>"
 iabbrev findana find -iname 'analy.txt'
 iabbrev grep grep -Esinr --include=*{.c,.cc,.cpp,.java,.h}
 iabbrev vimg vimgrep! //j %:p
 iabbrev gitstatus git status .
 iabbrev gitreflog git reflog
-"git log --graph --pretty=oneline --abbrev-commit --decorate
 "查看这个commit 在哪些分支合入了
 iabbrev gitbranch git branch -a --contains
 "iabbrev gitlog git log --graph --oneline  --decorate
-"repo sync --local-only
 iabbrev gitadd git add --intent-to-add .
 iabbrev gitdiff git diff --binary > my_patch.patch
 iabbrev gitlog  git log --graph --oneline  --decorate  --date=format:\%Y-\%m-\%d --pretty=format:"\%cd \%cn \%H \%s"
@@ -429,9 +444,10 @@ iabbrev gitshow  git show --name-status
 iabbrev duh  du -h --max-depth=1
 iabbrev free  free -h
 iabbrev cpu  lscpu
+"<bar> 代替竖线
 iabbrev make  source build/envsetup.sh && make -j20 2>&1 <bar> tee build.log
 iabbrev repo  repo sync -c --optimized-fetch --no-tags
-"git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
+"}}}}}
 "}}}
 "auto command自动命令{{{
 ""创建空文件和自动注释
@@ -545,7 +561,7 @@ nnoremap <leader>lr :copen<cr>:set modifiable<cr>:r!ls -lR \| wc -l<cr>
 "内部ls命令
 nnoremap <leader>ll :ls<cr>
 "外部tree命令
-nnoremap <leader>tree   :copen<cr>:set modifiable<cr>:r!tree<cr><c-w>H
+"nnoremap <leader>tree   :copen<cr>:set modifiable<cr>:r!tree<cr><c-w>H
 "改变分割的终端窗口的尺寸
 nnoremap +  <c-w>+ 5
 nnoremap -  <c-w>- 5
@@ -629,6 +645,7 @@ nnoremap  <leader>temp : call  JoinTwoTables()<cr>
 nnoremap <leader>za  : call FoldSetting()<cr>
 nnoremap <leader>e.  : call OpenDirectoryList(1)<cr>
 nnoremap <leader>el  : call OpenDirectoryList(2)<cr>
+nnoremap <leader>tree :call Tree()<cr>
 "}}}
 "画图{{{{
 "inoremap  <Up>    <esc>kki^<esc>ji^<esc>ji^
@@ -2927,6 +2944,7 @@ function! IsComment(...)
         let col = a:2
     endif
 
+    silent call cursor(line,1)
     silent call cursor(line,col('$'))
     silent let startcursor = searchpos("@.*(", 'b',max([1, line('.') - 50]))
     if startcursor != [0,0]
@@ -3197,6 +3215,7 @@ endfunction
 "/* { */
 function! ClearBracket(...)
     "call Echom(10,0,'tangxinlou debug',2902, "begin")
+    let pos = getpos('.')
     setlocal modifiable
     syntax off
     silent! execute '%s/\r//ge'
@@ -3217,6 +3236,7 @@ function! ClearBracket(...)
     if a:0 ==# 0
         call HandlingParentheses()
     endif
+    call setpos('.',pos)
     "call Echom(10,0,'tangxinlou debug',2916, "end")
     "call input("22")
 endfunction
@@ -3239,7 +3259,7 @@ function! RestoreBuffer(...)
     let buf = bufnr('%')
     if has_key(s:content_cache, buf)
         " 先清空缓冲区（避免残留行）
-        silent! %delete _
+        "silent! %delete _
         call setline(1, s:content_cache[buf].lines)
         call setpos('.', s:content_cache[buf].folds)
         unlet s:content_cache[buf]
@@ -8058,7 +8078,7 @@ function! ExtractKeyCodes(...)
     setlocal foldmethod=syntax
     if a:0 ==# 0
         let realityline = line('.')
-        let filename = expand("%")
+        let filename = expand("%:p")
         let filetype =  IsFileType(filename)
         call Echom(10,0,'tangxinlou debug',8005, "begin")
         call SaveBuffer()
@@ -8073,11 +8093,11 @@ function! ExtractKeyCodes(...)
             silent tabnew
             call SwitchBuff(filename)
         else
-            let filename = expand("%")
+            let filename = expand("%:p")
         endif
+        call cursor(realityline,1)
         call SaveBuffer()
         call ClearBracket()
-        call cursor(realityline,1)
         let filetype =  IsFileType(filename)
         call Dbug1(10,0,'ExtractKeyCodes 62', realityline)
     endif
@@ -8246,7 +8266,7 @@ function! ExtractKeyCodes(...)
             call Echom(10,0,'tangxinlou debug',8188, "end")
         elseif a:0 == 2
             :q!
-            call cursor(cursorline,cursorcol)
+            "call cursor(cursorline,cursorcol)
         endif
         return[tempstring,functionlinefront,functionlineback,filename,realityline,linelist,flaglist,keylist,resultlist,codelist,currentstr]
 endfunction
@@ -8584,7 +8604,7 @@ function! AddDebugLog(...)
     endif
     echo "g:debugid" . g:debugid
 
-    let filename = expand("%") . ":" . (line + 1)
+    let filename = expand("%:t") . ":" . (line + 1)
     set noignorecase
     if search(" TAG = ") != 0
         let TAGchar = "TAG"
@@ -8680,7 +8700,7 @@ function! AddDebugLog(...)
             let lasttime = "lastLogTime" . g:debugid
             let currentTime = "currentTime" . g:debugid
             let packagechar  = packagechar   . "(" . TAGchar . ",\"" . filename ." " .  debugchar . g:debugid  . "\" + " . functionname . ");"
-            let tempfucline = copy(functionline) -1
+            let tempfucline = copy(functionline)
             if matchstr(getline(tempfucline),"  @") != ""
                 let tempfucline -= 1
                 while matchstr(getline(tempfucline),"  @") != ""
@@ -9197,7 +9217,7 @@ function! CallStack(...)
     let tempchar = ""
     let stackstring = ""
     let allstackstring = a:6
-    let path = expand("%")
+    let path = expand("%:p")
     let debugflag = "false"
     let calledstring = ""
     let index = -1
@@ -11776,13 +11796,15 @@ function! FouncAddLog(...)
     let mode = 0
     "}}}}
     let mode = input("1是加log2是删log")
-    let filetype = input("1是java2是cc3是cpp")
+    let filetype = input("1是java2是cc3是cpp4是配置")
     if filetype ==# 1
         let files = split(system("find -iname '*.java'"),"\n")
     elseif filetype ==# 2
         let files = split(system("find -iname '*.cc'"),"\n")
     elseif filetype ==# 3
         let files = split(system("find -iname '*.cpp'"),"\n")
+    elseif filetype ==# 4
+        let files = readfile(Homedir("txl/files",1))
     endif
     let g:debugid = 0
     while idx1 < len(files)
@@ -11857,6 +11879,9 @@ function! FileAddLog(...)
     let downBrackets = -1
     let tempint = -1
     let idj1 = -1
+    let modulelist = []
+    let linelist = []
+    let flag = ""
     "}}}}
 
     if a:0 ==# 0
@@ -11884,52 +11909,34 @@ function! FileAddLog(...)
     "call ClearBracket(1)
     let idx1 = 0
     while idx1 <= line('$')
-        let currentString  = getline(idx1)
         if IsComment(idx1) ==# 0
-            if (matchstr(currentString,") {") ==# ") {"  ||  matchstr(currentString,"){") ==# "){"  || matchstr(currentString,") override {") ==# ") override {"  || matchstr(currentString,") const {") ==# ") const {"   )
-                call cursor(idx1,1)
-                let tempchar = StandardCharacters(line('.'))
-                "call Echom(10,0,'tangxinlou debug', tempchar)
-                if CheckStringIsObtainOfList(tempchar,abnormallist)
+            let linelist = MergeLinesOfCode(idx1)
+            let idx1 = linelist[1]
+            call cursor(idx1,1)
+            let currentString  = GatherIntoRow(linelist[0],linelist[1])
+            let flag = IdentificationCodeComponents1(currentString)
+            if flag ==# "functiondefinition"
+                let targetline = idx1
+                let modulelist = ExtractKeyCodes(targetline)
+                let functionname = modulelist[0]
+                let fuclinesrc = modulelist[1]
+                let fuclinetail = modulelist[2]
+                let keycode = modulelist[-1]
+                let classfuc =  split(functionname,"▌")
+                let tempflag = -1
+                if ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "")
+                    let tempflag = 1
+                endif
+                "call Echom(10,0,'tangxinlou debug',functionname )
+                "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
+                "call Echom(10,0,'tangxinlou debug', fuclinesrc)
+                "call Echom(10,0,'tangxinlou debug', fuclinetail)
+                "call Echom(10,0,'tangxinlou debug', idx1)
+                if tempflag ==# 1
+                    let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
                 else
-                    if !CheckStringIsObtainOfList(tempchar,uncheck)
-                        if line('.') ==# idx1
-                            "call Echom(10,0,'tangxinlou debug',12327, idx1)
-                            let targetline = idx1
-                            let keylist = ExtractKeyCodes(idx1,3)
-                            let fucline = keylist[0]
-                            "call Echom(10,0,'tangxinlou debug',12330,fucline)
-                            let fuclinetail = fucline
-                            let functionname = keylist[1]
-                            let keycode = keylist[2]
-                            let classfuc =  split(functionname,"▌")
-                            let fucline =  MergeLinesOfCode(fucline)
-                            if fucline ==# []
-                                call Echom(10,2,'tangxinlou debug',11938,"选择函数出错", idx1,filename)
-                            endif
-                            "call Echom(10,0,'tangxinlou debug',fucline )
-                            let tempflag = -1
-                            if fucline != [] && ((classfuc[-1] != classfuc[-2]) &&  matchstr(keycode," interface ") ==# "")
-                                let tempflag = 1
-                            endif
-                            let fuclinesrc = fucline[0]
-                            "call Echom(10,0,'tangxinlou debug',functionname )
-                            "call Echom(10,0,'tangxinlou debug', classfuc[-1] != classfuc[-2])
-                            "call Echom(10,0,'tangxinlou debug', matchstr(keycode," interface ") ==# "")
-                            "call Echom(10,0,'tangxinlou debug', keycode )
-                            "call Echom(10,0,'tangxinlou debug', fuclinesrc)
-                            "call Echom(10,0,'tangxinlou debug', fuclinetail)
-                            "call Echom(10,0,'tangxinlou debug', idx1)
-                            if tempflag ==# 1
-                                let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
-                            else
-                                "call Echom(10,0,'tangxinlou debug', 12)
-                                call Dbug1(30,2,'FileAddLog 112',filename,idx1,tempchar)
-                                let idx1 =  AddDebugLog(targetline,functionname)
-                            endif
-                        else
-                        endif
-                    endif
+                    call Dbug1(30,2,'FileAddLog 112',filename,idx1,currentString)
+                    let idx1 =  AddDebugLog(targetline,functionname)
                 endif
                 if a:0 ==# 0
                     "call input("11")
@@ -11970,17 +11977,10 @@ function! FileAddLog(...)
                 else
                     call cursor(idx1,1)
                     let targetline = idx1
-                    let keylist = ExtractKeyCodes(idx1,3)
-                    let fucline = keylist[0]
-                    let fuclinetail = fucline
-                    let functionname = keylist[1]
-                    let keycode = keylist[2]
-                    let classfuc =  split(functionname,"▌")
-                    let fucline =  MergeLinesOfCode(fucline)
-                    let tempflag = -1
-                    let targetline = idx1
-                    let functionname = ExtractKeyCodes(targetline )
-                    let fuclinesrc = fucline[0]
+                    let modulelist = ExtractKeyCodes(targetline)
+                    let functionname = modulelist[0]
+                    let fuclinesrc = modulelist[1]
+                    let fuclinetail = modulelist[2]
                     let idx1 =  AddDebugLog(targetline,functionname,fuclinesrc,fuclinetail)
                 endif
                 if a:0 ==# 0
@@ -12214,6 +12214,9 @@ function! LexiconizationCallback(...)
     let start = linelist[0]
     let end = linelist[1]
     let string = GatherIntoRow(linelist[0],linelist[1])
+    let templist = []
+    let templist1 = []
+    let idx1 = 0
     "call Echom(10,0,'tangxinlou debug',12358, string,line)
     "let flag = IdentificationCodeComponents1(string,filetype)
     "if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
@@ -12227,7 +12230,18 @@ function! LexiconizationCallback(...)
     "        "let dict["03string"] = flag . " " . string(SplitCodeString(string))
     "    endif
     "endif
-    let dict["03string"] = flag . " " . string(FineCodeSegmentation(string,[]))
+    "let dict["03string"] = flag . " " . string(FineCodeSegmentation(string,[]))
+
+"    let templist = IsContainAll('\w*(.*)',FineCodeSegmentation(string,[]))
+"    if templist != []
+"        let idx1 = 0
+"        while idx1 < len(templist)
+"            let templist1 = ParsingFunctionCalls1(templist[idx1])
+"            let idx1 += 1
+"        endwhile
+"        let dict["03string"] = flag . " " . string(templist1)
+"    endif
+    let dict["03string"] = flag . " " . SimplifyTheCodeModel(string)
     "let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
@@ -12574,6 +12588,7 @@ function! MergeLinesOfCode(...)
     let filename = expand("%:t")
     let filetype =  IsFileType(filename)
     let foldstring =  []
+    let Simplifystr = ""
     let NonBlanklist = []
     let laststring = ""
     let needflag = 0
@@ -12763,6 +12778,7 @@ function! MergeLinesOfCode(...)
         else
             let linelist = [line,line]
         endif
+        let foldstring =  GatherIntoRow(linelist[0],linelist[1])
     endif
     silent call cursor(line,1)
     return linelist
@@ -12799,6 +12815,7 @@ function! IsFunction(...)
 endfunction
 "}}}}}
 "{{{{{2 function!  IdentificationCodeComponents1(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
+"echo  IdentificationCodeComponents1(getline(line('.')))
 function! IdentificationCodeComponents1(...)
     "{{{{{3 变量定义
     let codestring = copy(a:1)
@@ -12864,7 +12881,7 @@ function! IdentificationCodeComponents1(...)
     let headfile = 21
     let lambda = ["}.execute();"] "lambda表达式
     let staticfunc = ["static {"] "静态初始化代码
-    let log = [" Log"," log","tangxinlou debug","debugLog("]
+    let log = [' Log\.',' log\.',"tangxinlou debug","debugLog("]
     let unknown = [" };"]
     "变量
     let variableright = 28 "赋值右值
@@ -13151,7 +13168,7 @@ function! ParsingFunctions(...)
     return resultlist
 endfunction
 "}}}}}
-"{{{{{2 ParsingFunctionCalls(...)函数调用
+"{{{{{2 ParsingFunctionCalls(...)解析函数调用
 function! ParsingFunctionCalls(...)
     let funcode = copy(a:1)
     let resultlist = []
@@ -13183,11 +13200,71 @@ function! ParsingFunctionCalls(...)
     return resultlist
 endfunction
 "}}}}}
+"{{{{{2 ParsingFunctionCalls1(...)分解函数调用，分解到最基本单元
+"["函数名",["参数1","参数2"],["嵌套调用"],["依赖调用"]]
+"echo  ParsingFunctionCalls1(getline(line('.')))
+function! ParsingFunctionCalls1(...)
+    let funcode = copy(a:1)
+    let funcode = ClearCodeSemicolon(funcode)
+    let resultlist = []
+    let targetlist = []
+    let parameterlist = []
+    let relylist = []
+    let Nestinglist = []
+    let functionlist = ["函数名","参数","嵌套"]
+    let tempstr = ""
+    let idx1 = 0
+    let idy1 = 0
+    let idz1 = 0
+    "代码分割依赖调用
+    "代码分割嵌套调用
+    "代码填充参数
+    "["函数名",["参数1","参数2"],["嵌套1",嵌套2]]
+    "[主函数,依赖1，依赖2，依赖3]
+
+    "将整行代码分割成[函数，依赖，依赖] 样式
+    let targetlist = SplitCharactersByBrackets(funcode)
+    while targetlist != ['','','']
+        let functionlist[0] = targetlist[0]
+        let tempstr = copy(targetlist[2])
+        if targetlist[1] != ""
+            let functionlist[1] = SplitStringByStr(targetlist[1],',')
+        else
+            let functionlist[1] = []
+        endif
+        let functionlist[2] = []
+        let resultlist = add(resultlist,deepcopy(functionlist))
+        let targetlist = SplitCharactersByBrackets(tempstr)
+        if targetlist ==# ['','',''] && tempstr != ""
+            let resultlist = add(resultlist,tempstr)
+        endif
+    endwhile
+    "处理结果，把嵌套调用替换掉参数
+    while idx1 < len(resultlist)
+        let idy1 = 0
+        while idy1 < len(resultlist[idx1][1])
+            let templist = IsContainAll('\w*(.*)',FineCodeSegmentation(resultlist[idx1][1][idy1],[]))
+            let idz1 = 0
+            if len(templist) > 0
+                let resultlist[idx1][1][idy1] = ""
+            endif
+            while idz1 < len(templist)
+                "let resultlist[idx1][2] = add(resultlist[idx1][2],templist[idz1])
+                let resultlist[idx1][2] = ParsingFunctionCalls1(templist[idz1])
+                let idz1 += 1
+            endwhile
+            let idy1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
 "{{{{{2 ParsingVariable(...)解析变量
 function! ParsingVariable(...)
 endfunction
 "}}}}}
-"{{{{{2 DecomposeTheExpression(...)分割多个表达式，比如if 括号里面的，return 后面的，函数调用参数
+"{{{{{2 DecomposeTheExpression(...)分割成多个表达式，比如if 括号里面的，return 后面的，函数调用参数
 "echom DecomposeTheExpression(SplitCharactersByBrackets(getline(line('.')))[1],[])
 "echom DecomposeTheExpression(getline(line('.')),[])
 function! DecomposeTheExpression(...)
@@ -13197,7 +13274,7 @@ function! DecomposeTheExpression(...)
     let idx1 = 0
     let codelist = []
     "call Echom(10,0,'tangxinlou debug',13230,codestr)
-    let targetvar = SplitStringByStr(codestr,["&&","||","!=",">=","<=","=="," < "," > "," + "])
+    let targetvar = SplitStringByStr(codestr,["&&","||","!=",">=","<=","=="," < "," > "," + "," - "," * "," / "])
     while idx1 < len(targetvar)
         if targetvar[idx1][0] ==# '('
             let codelist = SplitCharactersByBrackets(targetvar[idx1])
@@ -13235,6 +13312,7 @@ function! ParsingVariableParameter(...)
 endfunction
 "}}}}}
 "{{{{{2 WhichFunctionIsIn(...) 解析代码关键词
+"echom  WhichFunctionIsIn("      case BTA_A2DP_SINK_SERVICE_ID: {","case")
 function! WhichFunctionIsIn(...)
     "{{{{{3 变量定义
     let codestring = copy(a:1)
@@ -13273,7 +13351,7 @@ function! WhichFunctionIsIn(...)
         let templist = split(codestring,'\.')
         return templist[-1]
     elseif flag ==# "case"
-        let tempchar = matchstr(codestring," case .*:")
+        let tempchar = matchstr(codestring,"case .*:")
         if tempchar  != ""
             return join(split(tempchar))
         else
@@ -13680,7 +13758,7 @@ function! ClearingStringsInCode(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2 JudgingCharacters(...)判断字符串中特定字符,是不是在括号里面
+"{{{{{2 JudgingCharacters(...)判断字符串中特定字符,是不是在括号()里面
 function! JudgingCharacters(...)
     let strings = a:1
     let strings = split(strings,'\zs')
@@ -13728,7 +13806,7 @@ function! SplitSearchResult(...)
     return resultstr
 endfunction
 "}}}}}
-"{{{{{3 SplitStringByStr(...)通过指定的字符串分割字符
+"{{{{{3 SplitStringByStr(...)通过指定的字符串分割字符 跨过< 和(
 "echo SplitStringByStr(getline(line('.')),["&&","||"])
 function! SplitStringByStr(...)
       let strings = a:1
@@ -13747,6 +13825,10 @@ function! SplitStringByStr(...)
           let targetstr = IsCompareStrings(strings,splitstr,idx1)
           if strings[idx1] ==# "("
               let idx1 = FindCorrespondingBracketPosition(strings,idx1,'(')
+          elseif strings[idx1] ==# "<"
+              if (strings[idx1 + 1] != " " && strings[idx1 + 1] != "=")
+                  let idx1 = FindCorrespondingBracketPosition(strings,idx1,'<')
+              endif
           elseif targetstr != ""
               let int = len(targetstr)
               let tailint = idx1 - 1
@@ -13957,12 +14039,12 @@ function! ProcessingEqualSymbols1(...)
     while index != -1
         "call Echom(10,0,'tangxinlou debug',13943, string[index])
         let char = string[index]
-        if match(char,'[-+*/=&|?:]') != -1
+        if match(char,'[-+*/=&|?]') != -1
             "这些符号前后只要是字母数字括号都前后加个空格
-            if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-za-z]') != -1)
+            if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-zA-Z()]') != -1)
                 let string = string[:index] . ' ' . string[index + 1:]
             endif
-            if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+            if (index >= 1) && (match(string[index - 1],'[0-9a-zA-Z()]') != -1)
                 if char ==# '-' && string[index + 1] ==# '>'
                     "-> 这种情况-前面不加空格
                 else
@@ -13979,7 +14061,7 @@ function! ProcessingEqualSymbols1(...)
                 endif
                 let index = index - 2
             else
-                if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+                if (index >= 1) && (match(string[index - 1],'[0-9a-zA-Z()]') != -1)
                     let string = string[:index - 1] . ' ' . string[index:]
                 endif
             endif
@@ -13992,7 +14074,25 @@ function! ProcessingEqualSymbols1(...)
                 let string = string[:index - 2] . string[index:]
                 let index = index -2
             endif
+        elseif char ==# ':'
+            if index ==# 0
+                if string[index + 1] != ':' && string[index + 1] != ' '
+                    let string = string[:index] . ' ' . string[index + 1:]
+                endif
+            elseif index ==# len(string) - 1 && string[index - 1] != ' '
+                if string[index - 1] != ':'
+                    let string = string[:index - 1] . ' ' . string[index:]
+                endif
+            else
+                if string[index + 1] != ':' && string[index - 1] != ':' && string[index + 1] != ' '
+                    let string = string[:index] . ' ' . string[index + 1:]
+                endif
+                if string[index + 1] != ':' && string[index - 1] != ':' && string[index - 1] != ' '
+                    let string = string[:index - 1] . ' ' . string[index:]
+                endif
+            endif
         endif
+
         let lastindex = index + 1
         let index = match(string,'[-+*/=!<>&|,?:]',lastindex)
         "call Echom(10,0,'tangxinlou debug',13995, string)
@@ -14003,7 +14103,7 @@ function! ProcessingEqualSymbols1(...)
     return string
 endfunction
 "}}}}}
-"{{{{{2 ClearCodeSemicolon(...)清除代码字符串末尾的分号
+"{{{{{2 ClearCodeSemicolon(...)清除代码字符串末尾的分号;
 function! ClearCodeSemicolon(...)
     let string = copy(a:1)
     let string = ClearBlank(string)
@@ -14066,21 +14166,17 @@ endfunction
 "}}}}}
 "{{{{{2 SimplifyTheCodeModel(...)简化代码模型
 "echo SimplifyTheCodeModel(getline(line('.')))
+"let pattern = '\<\(' . join(exclusions, '\|') . '\)\@![_a-zA-Z0-9]\+\>'
 function! SimplifyTheCodeModel(...)
-    call Echom(10,0,'tangxinlou debug',13837, 1)
     let string = copy(a:1)
-    call Echom(10,0,'tangxinlou debug',13839, 3)
     let string = ClearBlank(string)
-    call Echom(10,0,'tangxinlou debug',13841, 4)
     let length = len(string)
-    let exclusions = ["new","class ","if","for","switch","return","extends"]
-    let pattern = '\<\(' . join(exclusions, '\|') . '\)\@![_a-zA-Z0-9]\+\>'
-    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
-    "let pattern = '\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
-    "let pattern = '\C\<\(' . join(exclusions, '\|') . '\)\@!\a\+\>'
-    let result = substitute(string, pattern, 'X', 'g')
+    let result = ""
+    let exclusions = ["new","if","class","for","switch","implements","return","extends","break"]
+    let result = substitute(string, '\(\s\)\@<!class\(\s\)\@!', 'X', 'g')
+    let result = substitute(result, '\<\w\+\>','\=index(exclusions, submatch(0)) >= 0 ? submatch(0) : "X"', 'g')
     let result = substitute(result, ' ', '', 'g')
-    call Echom(10,0,'tangxinlou debug',13844, 2)
+
     let result = SplitCharactersByBrackets1(result)
     return result
 endfunction
@@ -14101,7 +14197,8 @@ function! HandlingAngleBrackets(...)
         let idx1 = FindCorrespondingBracketPosition(string,index,'<')
         if idx1 ==# index
             let flag = 0
-        elseif (idx1 - index) ==# 1
+        elseif abs(idx1 - index) ==# 1
+            let flag = 1
         else
             if char ==# '<'
                 let targetstr = ClearBlank(join(string[index + 1:idx1 - 1],"\x00"))
@@ -14118,10 +14215,10 @@ function! HandlingAngleBrackets(...)
         if flag ==# 0
             if string[index] ==# '>' && index >= 1 &&  string[index - 1] ==# '-'
             else
-                if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-za-z]') != -1)
+                if (index <= len(string) - 2) && (match(string[index + 1],'[0-9a-zA-Z()]') != -1)
                     let string = insert(string, ' ', index + 1)
                 endif
-                if (index >= 1) && (match(string[index - 1],'[0-9a-za-z]') != -1)
+                if (index >= 1) && (match(string[index - 1],'[0-9a-zA-Z()]') != -1)
                     let string = insert(string, ' ', index)
                 endif
             endif
@@ -14132,6 +14229,9 @@ function! HandlingAngleBrackets(...)
                     let index = index - 1
                 endif
             elseif char ==# '>'
+                if (index < len(string) - 1) && (string[index + 1] != ' ') && (string[index + 1] != '(')
+                    let string = insert(string, ' ', index + 1)
+                endif
                 if (index >= 1) && (string[index - 1] ==# ' ')
                     call remove(string,index - 1)
                     let index = index - 2
@@ -14143,6 +14243,12 @@ function! HandlingAngleBrackets(...)
         let flag = -1
     endwhile
     return join(string,"\x00")
+endfunction
+"}}}}}
+"{{{{{2 RecognizeSimplify(...)识别代码模型
+function! RecognizeSimplify(...)
+    let codestr = copy(a:1)
+    let Simplifystr = SimplifyTheCodeModel()
 endfunction
 "}}}}}
 "}}}}}
@@ -14205,16 +14311,39 @@ function! CheckStringIsObtainOfList(...)
     return uncheckflag
 endfunction
 "}}}}}
+"{{{{{3   IsContainAll(...) string list返回匹配的所有列表项,返回一个列表而不是最早的一项
+function! IsContainAll(...)
+    "{{{{{3 变量定义
+    let string = ""
+    let char = ""
+    let list = []
+    let idx1 = 0
+    let string = a:1
+    let list = a:2
+    let resultlist = []
+    "转义
+    let string = escape(string, '[]')
+    "}}}}
+    while idx1 < len(list)
+        let char = matchstr(list[idx1],string)
+        if char != ""
+            let resultlist = add(resultlist,list[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    return resultlist
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理字典
 "}}}}}
 "{{{{{2 处理数字
 "}}}}}
-"{{{{{2 处理文件名
+"{{{{{2 处理文件名,处理文件路径
 "{{{{{3 IsFileType(...) filetype 文件类型
 function! IsFileType(...)
-    let filename = a:1
-    let filetype = ""
+    let filename = copy(a:1)
+    let filetype = "unknow"
     if matchstr(filename,'/') != ""
         let filename = split(filename,'/')[-1]
     endif
@@ -14230,6 +14359,12 @@ function! IsFileType(...)
         let filetype = "vimrc"
     elseif matchstr(filename,'\.xml') != ""
         let filetype = "xml"
+    elseif matchstr(filename,'\.ini') != ""
+        let filetype = "ini"
+    elseif matchstr(filename,'\.apk') != ""
+        let filetype = "apk"
+    elseif matchstr(filename,'\.txt') != ""
+        let filetype = "text"
     endif
     return filetype
 endfunction
@@ -14251,10 +14386,17 @@ function! IsFilePath(...)
     return filepath
 endfunction
 "}}}}}
+"{{{{{3 Tree(...) 文件名得到文件路径
+function! Tree(...)
+    let filelist = split(system("tree"),"\n")
+
+    call Echom(10,0,'tangxinlou debug',14370, filelist)
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理行号相关
 "}}}}}
-"{{{{{2 打开文件
+"{{{{{2 处理文件(打开关闭切换修改)
 "{{{{{2 SwitchBuff(...) 切换buffer
 function! SwitchBuff(...)
     let filepath = a:1
@@ -14295,8 +14437,8 @@ function! OpenDirectoryList(...)
     endif
 endfunction
 "}}}}}
-"}}}}}
 "}}}
+"}}}}}
 "{{{{  函数调用快速查找
 "{{{{{2   WhichFunctionToCall(...) 此行调用哪个函数
 nnoremap <F3> :call WhichFunctionToCall(line('.'))<cr>
@@ -14349,6 +14491,55 @@ function! WhichFunctionToCall(...)
             let idx1 += 1
         endwhile
         call Echom(10,0,'tangxinlou debug',13856, codelist)
+    endif
+    return
+endfunction
+"}}}}}
+"{{{{{2   WhichFunctionToCall1(...) 此行调用哪个函数
+nnoremap <F3> :call WhichFunctionToCall1(line('.'))<cr>
+function! WhichFunctionToCall1(...)
+    "{{{{{3 变量定义
+    let line = a:1
+    let codestring =  ""
+    let calllist = []
+    let flag = ""
+    let idx1 = 0
+    let modulelist = []
+    let simplestr = ""
+    let upclasslist = ""
+    let callerstr = ""
+    let packagestr = ""
+    let funcstr = ""
+    "}}}}
+    "按照标准代码获取整行
+    let modulelist = ExtractKeyCodes(line)
+    let codestring = modulelist[-1]
+    let upclasslist =modulelist[-3][1]
+    let codelist = ParsingFunctionCalls1(codestring)
+    call Echom(10,0,'tangxinlou debug',14478, codelist)
+    let callerstr = split(codelist[0][0],'\.')
+    call Echom(10,0,'tangxinlou debug',14485, callerstr)
+    let functionlist = []
+    let classlist = []
+    let filterlist = []
+    if len(callerstr) ==# 1
+    elseif len(callerstr) ==# 2
+        "当前函数能调用到有三种情况
+        "1.当前文件添加了包名
+        "2.是当前类的子类
+        "3.是当前类文件同路径的其他类
+        "第一三种不需要管，主要第二种需要把packagestr 重新赋值
+        let packagestr = callerstr[0]
+        let funcstr = callerstr[1]
+        let packagestr = FuncToDefine(packagestr,modulelist)
+        call Echom(10,0,'tangxinlou debug',14490, packagestr)
+
+        let classlist =  CodeComponentSearch("","functiondefinition",packagestr)
+        let functionlist =  CodeComponentSearch("","functiondefinition",funcstr)
+        call Echom(10,0,'tangxinlou debug',14505, functionlist)
+        let filterlist = FilterTargetRows("包名",functionlist,packagestr)
+        call Echom(10,0,'tangxinlou debug',14495, filterlist)
+    elseif len(callerstr) > 2
     endif
     return
 endfunction
@@ -14488,15 +14679,16 @@ function! FuncToDefine(...)
         return packagestr
     endif
     "第二种函数参数
+    "call Echom(10,0,'tangxinlou debug',14636, functioncode)
     let resultstr = ParsingFunctions(functioncode)
-    if resultstr != []
+    if resultstr[2] != []
         let packagestr = FunctionParameters2Type(resultstr,searchstr)
-        "call Echom(10,0,'tangxinlou debug',13908, resultstr,packagestr)
+        call Echom(10,0,'tangxinlou debug',13908, resultstr,packagestr)
         return packagestr
     endif
     "第三种同路径的包名
     let resultstr = CodeComponentSearch(filepath,"class",searchstr)
-    "call Echom(10,0,'tangxinlou debug',13962, resultstr)
+    "call Echom(10,0,'tangxinlou debug',13962, resultstr,filepath,searchstr)
     if resultstr != []
         let resultstr = resultstr[0]
         let resultstr = SplitSearchResult(resultstr)[2]
@@ -14506,7 +14698,7 @@ function! FuncToDefine(...)
     endif
     "第四种包名
     let resultstr = CodeComponentSearch(filename,"import",searchstr)
-    call Echom(10,0,'tangxinlou debug',13971, resultstr)
+    "call Echom(10,0,'tangxinlou debug',13971, resultstr)
     if resultstr != []
         let resultstr = resultstr[0]
         let resultstr = SplitSearchResult(resultstr)[2]
@@ -14516,7 +14708,39 @@ function! FuncToDefine(...)
     endif
 endfunction
 "}}}}}
-
+"{{{{{2   FilterTargetRows(...) 过滤目标行
+"[tempstring,functionlinefront,functionlineback,filename,realityline,linelist,flaglist,keylist,resultlist,codelist,currentstr]
+function! FilterTargetRows(...)
+    "{{{{{3 变量定义
+    let flag = a:1
+    let rowslist = deepcopy(a:2)
+    let package = ""
+    let modulelist = []
+    let comparemodulelist = []
+    let idx1 = 0
+    let classname = ""
+    let resultlist = []
+    let filterlist = []
+    "}}}}
+    while idx1 < len(rowslist)
+        let codestring = SplitSearchResult(rowslist[idx1])
+        let comparemodulelist =  ExtractKeyCodes(codestring[1],codestring[0])
+        if flag ==# "包名"
+            let package = a:3
+            let classname = split(comparemodulelist[-3][2],"▌")[-1]
+            call Echom(10,0,'tangxinlou debug',14685, classname)
+            if package ==# classname
+                let resultlist = []
+                let resultlist = add(resultlist, rowslist[idx1])
+                let resultlist = add(resultlist, deepcopy(comparemodulelist))
+                let filterlist = add(filterlist,deepcopy(resultlist))
+            endif
+        endif
+        let idx1 += 1
+    endwhile
+    return filterlist
+endfunction
+"}}}}}
 "}}}
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表
@@ -14535,11 +14759,10 @@ endfunction
 "let item.lnum = 1229
 "let item.text = "Log.e(TAG, \"setActiveDeviceInternal(\" + device + \"): Cannot set as active"
 "call setqflist([item])
-"grep -Esinr参数
-"-E 表示使用扩展的正则表达式进行匹配。
-"-s 表示禁止输出错误信息。
-"-o 表示只显示匹配的部分，而不是整行。
-"-i 表示忽略大小写进行匹配。
-"-n 表示显示匹配的行号。
 "let splitStrings = map(strings, 'split(v:val, ",")')
 "linux screen 控制终端会话
+"树状图的竖线用tree的线
+"│   │   ├── generated
+"│   │   │   ├── ap_generated_sources
+"│   │   │   │   └── debug
+

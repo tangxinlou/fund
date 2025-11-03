@@ -29,8 +29,48 @@ LDAC	330~990kbps	有损压缩	仅为 PCM 的 23%~70%
 经过相位调整一个符号可以携带3bit 数据，蓝牙速度达到3Mbps/s
 小技巧：
 查看蓝牙打开代码时，bluetoothmanager 代码复杂可以跟踪mQuietEnable 变量
+		LMP Version: Reserved [12] 蓝牙5.3
+
 ########
 }}}
+{{{0
+###蓝牙参数
+调制方式有三个参数，调制指数h，带宽时间积，符号宽度
+调制指数抗干扰，带宽时间积避免信号是真，让信号平滑
+符号宽度就是采集数据的灵敏度
+
+说到灵敏度提一下蓝牙传输速度的制约条件
+蓝牙处于2.4G频率，它的承载是2.4g频率的电磁波,一个波传递一个二进制的话，它的速率可以达到2.4Gbps，
+但是受到天线硬件灵敏度的至于，天线识别不到这么短时间的电流变化所以定位1us波变换一次，也就是一个波形维持1us，传递一个符号也就是符号速率是
+1s = 1000ms = 1000 * 1000us = 1000000us 也就是符号速率1Msym/s 1s传递1000000个符号（这个符号速率收到带宽限制，
+符号速率再快就失真而蓝牙的带宽是1M）这里的码元宽度就是1us
+
+相同带宽资源，传输距离，速率和实时性是个相悖关系，蓝牙主要是通过跳频来抗干扰，br 79个信道跳频，ble 3个广播信道不跳频，37个信道连接时跳频，同等条件下
+br 抗干扰比ble 强，但是ble 比br 实时高，可以很快就可以连上，ble简化了协议层,功耗也比br低
+ble 单个信道2m带宽，br单个信道，但是速率都是1Mbps就是因为ble 抗干扰差，调制是通过调整调制参数h，让ble 在电磁波阶段抗干扰一点
+总体可以这么理解，ble 2m带宽理论可以2Mbps速度，但是因为ble 主要是做实时性强的场景，带宽资源去加强了实时性
+ble 的降功耗操作主要是少跳频了
+
+模式,调制方式,速率,连接延迟,功耗
+br,GFSK,1Mbps,100-300ms,10-15mA
+edr2m,DQPSK,2Mbps,100-300ms,12-18mA
+edr3m,8DPSK,3Mbps,100-300ms,15-22mA 
+ble1m,GFSK,1Mbps,3-6ms,5-8mA 
+ble2m,GFSK,2Mbps,3-6ms,6-10mA 
+blecoded,GFSK,125Kbps,10-50ms,3-6mA
+
+
+总体抗干扰性edr > br > ble
+
+传输距离篇
+计算公式一般是通过弗里斯公式  d = λ/4π * √pt*Gt*Gr/Pr
+br 100m ble 500m  ble coded 2200
+发射功率,	功率越大，距离越远（20 dBm 为 Class 1 上限）理论 100 米 每加1db 增加1.12倍
+接收灵敏度	,灵敏度每提升 10 dB，距离增加约 3.16 倍（如 -90 dBm 比 -70 dBm 远 2.5 倍）,	-70 dBm → 40 米
+路径损耗 ,   公式 40 + 25log(d) 计算损耗，障碍物使损耗增加 10–20 dB,	室内损耗 60–80 dB
+天线增益 ,   每增加 3 dBi 增益，距离提升约 1.4 倍 ,5 dBi 天线 → 140 米
+
+}}} 
 {{{0
 ###蓝牙avrcp
 1. AVRCP 命令类型（Command Type）
@@ -278,6 +318,37 @@ new申请的空间拷贝的副本，释放的时候要用delete释放,mallow 申
 ########
 }}}
 {{{0
+###蓝牙问题
+{{{1
+###功能
+蓝牙重启(hw error,uart init fail,JE,NE)
+蓝牙播放无声
+蓝牙通话无声
+蓝牙无法发送文件
+蓝牙播放声音异常
+蓝牙通话声音异常
+}}} 
+{{{1
+###兼容
+多设备切换问题
+单外设播放无声
+单外设通话无声
+
+}}}
+{{{1
+###压测
+超时断开
+连接失败
+多设备切换
+}}}
+{{{1
+###标准
+连接速度慢
+播放延时
+文件传输速度
+}}}
+}}} 
+{{{0
 ###代码要点
 new申请的空间拷贝的副本，释放的时候要用delete释放,mallow 申请的可以用free 释放
 常量地址是常量区，只读，任何通过指针取修改内容都是报段错误
@@ -361,6 +432,8 @@ int* p = new int;        // 堆内存
 }}}
 {{{0
 ###c语言考点
+大小端
+0x12345678 大端 87654321 小端
 一、变量与常量
 考点1：变量的存储位置
 问题：以下变量分别存储在哪个内存区？
@@ -563,7 +636,6 @@ btsnoop 日志大小限制
 https://developers.google.com/android/drivers?hl=zh-cn  选择对应型号的版本
 解压执行对应的bash 脚本
 }}} 
-
 {{{1
 magisk apk 下载地址https://github.com/topjohnwu/Magisk/releases
 magisk pixel 能替换编译的apk ，能push 自己写的工具apk
@@ -616,7 +688,6 @@ magiskpolicy --live "allow * * *"
 ########
 }}}
 }}}
-
 {{{1
 配置 
 让pixel 完整输出日志
@@ -648,6 +719,7 @@ service logcatd /system/bin/logcatd -L -b all -v threadtime -v usec -v printable
     oom_score_adjust -600
 
 }}}
+
 {{{0
 蓝牙修改代码小技巧
 hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, {0x8c, 0x58, 0x23, 0x47, 0x1b, 0x86})
@@ -679,6 +751,22 @@ cmd  msinfo32  系统摘要
 }}}           
 
 }}}   
-
 {{{0
+基本代码能力
+操作字符
+操作字符串
+操作行
+操作文件
+操作数据库
+}}}    
+{{{0
+玩转creative 耳机
+1.下载设置creative 耳机的apk https://apkpure.net/cn/creative/com.creative.apps.creative/download
+耳机支持le audio 能力：
+btif_update_remote_properties: class of device (cod) is 0x244404  耳机上报能力cod
+0x244404  ->> 001001000100010000000100  bit 14 是1 支持le audio 
+
+}}}
+{{{0
+
 }}}

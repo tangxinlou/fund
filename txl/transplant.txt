@@ -1,45 +1,11 @@
-function! GetPotionFold(lnum)
-    let line = copy(a:lnum)
-    let templine = line('.')
-    let tempcol = col('.')
-    let cursor = []
-    let tempchar = ""
-    let length = 3
-    let foldnr = -1
-    let currentstr = getline(a:lnum)
-    if a:lnum ==# 1
-        let g:foldmarker = 0
-    endif
-    if currentstr  =~? '\v^\s*$'
-        let foldnr = -1
-    elseif  currentstr   =~? '^```c' || currentstr  =~? '^```'
-        let foldnr = 0
-    elseif  currentstr  =~? "^<<<<<<<<<<<<<<<<" || currentstr  =~? "^>>>>>>>>>>>>>>>"
-        let foldnr = 0
-    elseif currentstr =~? '^{{{'  || currentstr  =~? '^}}}'
-        if currentstr =~? '^{{{' "}}}
-            let tempchar = getline(a:lnum)
-            let length = len(tempchar)
-            let foldnr = str2nr(tempchar[3])  + 1
-            let g:foldmarker = foldnr
-        else
-            call cursor(line,1)
-            let cursor = searchpairpos('{{{', '', '}}}', 'b')
-            if cursor != []
-                let tempchar = getline(cursor[0])
-                let length = len(tempchar)
-                let foldnr = str2nr(tempchar[3]) + 2
-            endif
-        endif
-    elseif getline('.') =~? '^\s*\├' || getline('.') =~? '^\s*\└'
-        if matchstr(currentstr,"▌") ==# "▌"
-            let foldnr = count(split(currentstr,'▌'),'│  ')
-        else
-            let foldnr = count(split(currentstr),'│  ')
-        endif
-    else
-       let foldnr = g:foldmarker + 1
-    endif
-    call cursor(templine,tempcol)
-    return foldnr
-endfunction
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World! 2" />
+</LinearLayout>

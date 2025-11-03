@@ -1,0 +1,12 @@
+《《《《《《《
+第 1 章 结果上报  流程图
+
+      |btm_inq.cc                              |bta_dm_device_search.cc      |btif_dm.cc                        |      
+      |                                        |                             |                                  |      
+      |btm_process_inq_results_standard:32     |》》                         |                                  |      
+      |                                        |                             |                                  |      
+      |                                        |bta_dm_inq_results_cb:48     |》》                              |      
+      |                                        |                             |                                  |      
+      |                                        |                             |btif_dm_search_devices_evt:63     |      
+ 
+》》》》》》》
