@@ -25,12 +25,16 @@
  adb shell "rm -rf /sdcard/logs"
  adb shell "cp -rf /data/misc/logd /sdcard/logs"
 
+ adb shell "rm -rf /sdcard/record"
+ adb shell "mkdir /sdcard/record"
+ adb shell "cp -rf /sdcard/Movies/*.mp4 /sdcard/record/"
+ 
+
  rd /s /q log
  md log
  adb pull /sdcard/logs ./log/logs
- adb pull /sdcard/Movies  ./log/Movies
+ adb pull /sdcard/record  ./log/record
  adb pull /sdcard/bt_logs ./log/bt_logs
 
- adb shell "rm -rf /sdcard/Movies"
  
  

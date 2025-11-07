@@ -1,7 +1,7 @@
 "设置标志位
-let g:vimrcid = 134
+let g:vimrcid = 137
 let mapleader = ","
-"{{{{{2   全局变量
+"全局变量{{{{{
 "{{{{{3   仓库
 let g:projectlist = ['vendor_vivo_bluetoothInteropConf',
             \ 'android_packages_apps_Bluetooth',
@@ -184,9 +184,11 @@ let g:FileEmptyDictionary = {"00interval":"0-0",
             \"04childnode":[],
             \}
 let g:foldmarker = 0
+let g:jumprecordlist = [] "跟踪跳转记录
+let g:codelist = []       "跟踪跳转记录 AddJumpRecord
 "}}}}}
 "}}}}}
-"{{{{{2   Homedir(...) 家目录
+"Homedir(...) 家目录{{{{{
 if join(split(system("uname"))) ==# "Linux"
     let g:homedir = $HOME
 else
@@ -229,7 +231,7 @@ function! Homedir(...)
     return dirpath
 endfunction
 "}}}}}
-"{{{{{2   Txldir(...) 配置目录
+"Txldir(...) 配置目录{{{{{
 if join(split(system("uname"))) ==# "Linux"
     if "" != finddir("/mnt/d")
         let g:txldir = "/mnt/d/work/fund"
@@ -267,19 +269,21 @@ function! Txldir(...)
     return dirpath
 endfunction
 "}}}}}
-"编辑vimrc文件{{{{2
+"快捷打开文件{{{{2
 "编辑vimrc文件
 nnoremap <leader>ev :tabnew<cr>:e $MYVIMRC<cr>
 nnoremap <leader>et :tabnew<cr>:e ~/.vimrc_tt<cr>
+"加载vimrc文件
+nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
+nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+"打开txl配置文件
 nnoremap <leader>eg :tabnew<cr>:execute "e " . Txldir("txl/keywords",1)<cr>:setlocal foldlevel=1<cr>:call FoldSetting()<cr>
 nnoremap <leader>ee :tabnew<cr>:execute "e " . Txldir("txl/Extractioncode",1)<cr>
 nnoremap <leader>ef :tabnew<cr>:execute "e " . Txldir("txl/plan",1)<cr>:setlocal foldlevel=1<cr>:call FoldSetting()<cr>
 nnoremap <leader>tr :tabnew<cr>:execute "e " . Txldir("txl/transplant.txt",1)<cr>
 nnoremap <leader>eb :tabnew<cr>:execute "e " . Txldir("txl/vimrc_computer.vim",1)<cr>
 nnoremap <leader>es :tabnew<cr>:execute "e " . Txldir("study/bluetooth",1)<cr>
-"加载vimrc文件
-nnoremap <leader>sv :source $MYVIMRC<cr>:syntax match javaFunction '\<\h\w*\>\ze\s*('<cr>
-nnoremap <leader>tt :source ~/.vimrc_tt<cr>
+
 ""}}}}
 "设置作者和版权信息{{{{
 map <F6> :call TitleDet()<cr>
@@ -388,6 +392,15 @@ set ambiwidth=single
 "syntax match javaFunction '\<\h\w*\>\ze\s*('
 "hi link javaFunction Function
 "}}}}}
+ "NETRW 操作和设置{{{{
+let g:netrw_liststyle = 3
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+highlight netrwDir cterm=bold ctermfg=blue gui=bold guifg=#4A90E2
+highlight netrwMarkFile ctermfg=red ctermbg=yellow guifg=red guibg=yellow
+highlight netrwTargetDir ctermfg=red ctermbg=yellow guifg=red guibg=yellow
+"highlight netrwTargetDir cterm=bold ctermfg=white ctermbg=blue gui=bold guifg=white guibg=blue
+""}}}} 
 "vimdiff 颜色配置{{{
 if &diff
     "colorscheme morning
@@ -399,7 +412,7 @@ if &diff
     syntax off
 endif
 "}}}
-"快捷输入{{{{
+"快捷输入和常用指令{{{{
 "{{{{{2   linux 常用命令
 "git log --oneline  --decorate --date=format:\%Y-\%m-\%d --pretty=format:"\%cd+\%an+\%H+\%s"
 "git log --graph --pretty=oneline --abbrev-commit --decorate
@@ -418,6 +431,10 @@ endif
 "find -type f -iname '*mobilelog*'
 "-type f  只搜文件
 "-type d  只搜目录
+
+"vim 命令
+"verbose map mt 查看当前的这个映射键
+"echo "Current highlight group: " . synIDattr(synID(line("."), col("."), 1), "name") 查看光标的单词是什么高亮类型
 "}}}}}
 "{{{{{2   快捷命令
 iabbrev find find -iname '*.java' -o -iname "*.aidl"
@@ -873,7 +890,7 @@ function! Shellfunc(...)
      let path = ""
      let idx1 = 0
      let mode = ""
-     let mode = input("1是删除2是复制")
+     let mode = input("1是删除2是复制类似代码路径位置")
      let command = ""
      let tempchar = ""
      if mode ==# "1"
@@ -2356,6 +2373,7 @@ function! SmartFileSwitching(...)
     setlocal foldmethod=syntax
     let &foldlevel=100
     silent execute  "normal! m`"
+    call AddJumpRecord()
 endfunction
 "}}}}}
 "{{{{{2 ParseTimestamp(...) 解析时间戳
@@ -3377,6 +3395,11 @@ endfunction
 "{{{{{2 StandardCharacters(...)返回当前行标准格式字符
 function! StandardCharacters(...)
     let realityline = a:1
+    let filename = expand('%')
+    let filetype =  IsFileType(filename)
+    if matchstr("javacccpphead",filetype) ==# ""
+        return getline(realityline)
+    endif
     let numberlist = MergeLinesOfCode(realityline)
     if numberlist ==# []
         return ""
@@ -5409,10 +5432,10 @@ function! ModifyCorrespondingCommit(...)
     "call append(line("."),templist1)
 endfunction
 "}}}}}
-"{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + add 调用
+"{{{{{2 function! AddNotes(...)      在diff patch 文件每个修改处添加注释                  普通模式下 逗号 + note 调用
 let g:addnoteflag = 0
 let g:bugchar = ""
-nnoremap <leader>add :call AddNotes()<cr>
+nnoremap <leader>note :call AddNotes()<cr>
 function! AddNotes(...)
     "{{{{{3 变量定义
     if g:bugchar ==# ""
@@ -8731,7 +8754,8 @@ function! AddDebugLog(...)
             let line = line  + 5
 
             if search("import \.*.Log;") ==# 0
-                silent execute "normal! gg"
+                "silent execute "normal! gg"
+                call cursor(1,1)
                 call search("^package ")
                 call append(line('.'),"import android.util.Log;")
                 let line += 1
@@ -10366,7 +10390,7 @@ endfunction
 "每行每列添加空格，增加可读性，保存时把空格消除不影响功能
 "{{{{{2   VisualiZationcsv(...) 可视化表格文件
 "call VisualiZationcsv(2,",")
-nnoremap <F2>  :call VisualiZationcsv(1,',')<cr>
+nnoremap <leader>csv  :call VisualiZationcsv(1,',')<cr>
 function! VisualiZationcsv(...)
     "{{{{{3 变量定义
     let dimensional1 = []   "一维表格
@@ -14434,6 +14458,7 @@ function! OpenDirectoryList(...)
         let path = expand("%:p:h")
         execute "tabnew"
         execute "edit" .  path
+        let g:netrw_localcopycmdopt = ' -rf '
     endif
 endfunction
 "}}}}}
@@ -14741,6 +14766,89 @@ function! FilterTargetRows(...)
     return filterlist
 endfunction
 "}}}}}
+"}}}
+"{{{{  动态添加代码
+"{{{{{2 AddCode() 动态添加包名
+nnoremap <leader>add :call AddCode()<cr>
+function! AddCode(...)
+    "let filelist = split(system("find -type f -iname " . "*nrf*"),"\n")
+    "let packagestr = input("输入包名")
+    let packagestr = @@
+    let packagestr = split(packagestr,"\n")
+    call AddPackAge(packagestr)
+endfunction
+"}}}}}
+"{{{{{2 AddPackAge() 动态添加包名
+function! AddPackAge(...)
+    let package = a:1
+    let filename = ""
+    let currentfile = expand("%")
+    let line = line('.')
+    let col = col('.')
+    let idx1 = 0
+    if a:0 ==# 2
+        let filename = a:2
+        if currentfile != filename
+            :tabnew
+            SwitchBuff(filename)
+        endif
+    else
+        let filename = currentfile
+    endif
+    if type(package) ==# 1
+        if search(package) ==# 0
+            call cursor(1,1)
+            call search("^package ")
+            call append(line('.'),package)
+            let line += 1
+        endif
+        call cursor(line,col)
+    elseif type(package) ==# 3
+        while idx1 < len(package)
+            if search(package[idx1]) ==# 0
+                call cursor(1,1)
+                call search("^package ")
+                call append(line('.'),package[idx1])
+                let line += 1
+            endif
+            let idx1 += 1
+        endwhile
+        call cursor(line,col)
+    endif
+endfunction
+"}}}}}
+
+"}}}
+"{{{{  跳转记录跟踪
+"{{{{{2 AddJumpRecord() 添加跳转记录
+function! AddJumpRecord(...)
+    let filename = expand('%')
+    let line = line('.')
+    let col = col('.')
+    let codestr = StandardCharacters(line)
+    let resultstr = filename . ":"  . line . ":" . "▌    " . ClearBlank(codestr)
+    if count(g:codelist,codestr) ==# 0
+        let g:jumprecordlist = insert(g:jumprecordlist,resultstr)
+        let g:codelist = insert(g:codelist,resultstr)
+        if len(g:jumprecordlist) <= 200
+        else
+            let g:jumprecordlist = g:jumprecordlist[0:199]
+            let g:codelist =  g:codelist[0:199]
+        endif
+    endif
+endfunction
+"}}}}}
+
+"{{{{{2 ShowJumpRecord() 添加跳转记录
+nnoremap <F2> :call ShowJumpRecord()<cr>
+function! ShowJumpRecord(...)
+    :tabnew
+    let g:jumprecordlist = ListAddSpaces(g:jumprecordlist,"▌")
+    call append(1,g:jumprecordlist)
+endfunction
+"}}}}}
+
+
 "}}}
 "winnr() 窗口id
 "tabpagebuflist() 缓冲区列表

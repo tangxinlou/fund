@@ -29,7 +29,10 @@ LDAC	330~990kbps	有损压缩	仅为 PCM 的 23%~70%
 经过相位调整一个符号可以携带3bit 数据，蓝牙速度达到3Mbps/s
 小技巧：
 查看蓝牙打开代码时，bluetoothmanager 代码复杂可以跟踪mQuietEnable 变量
-		LMP Version: Reserved [12] 蓝牙5.3
+		LMP Version: Reserved [12] 蓝牙版本5.3
+
+hfp msbc 码率64kbps 采样率16K 接近cd 音质
+hfp cvsd 码率64kbps 采样率8K，传统电话的音质
 
 ########
 }}}
@@ -559,6 +562,8 @@ if (/* 条件 */) {
 }}}
  {{{0
 ###协议栈加堆栈
+
+"Log.d(tag, Log.getStackTraceString(new Throwable("Call stack trace:")));
  packages/modules/Bluetooth/system/stack/Android.bp
 cc_library_static {
     name: "libbt-stack-core",
@@ -626,12 +631,13 @@ btsnoop 日志大小限制
 {{{0
 ###玩pixel 5
 {{{1
-编译代码刷自己编译的版本版本
+编译代码刷自己编译的版本版本                                                                                    
 1.repo init -u https://aosp.tuna.tsinghua.edu.cn/platform/manifest -b android-14.0_r1
 2.https://developers.google.com/android/drivers?hl=zh-cn  下载对应版本的驱动包  执行extract-google_devices-redfin.sh extract-qcom-redfin.sh
 3. make -j20 
 4.export ANDROID_PRODUCT_OUT=xxx/out/target/product/sailfish
 5.fastboot flashall -w
+
 刷商用版本
 https://developers.google.com/android/drivers?hl=zh-cn  选择对应型号的版本
 解压执行对应的bash 脚本
@@ -687,7 +693,6 @@ magiskpolicy --live "allow * * *"
 
 ########
 }}}
-}}}
 {{{1
 配置 
 让pixel 完整输出日志
@@ -717,8 +722,13 @@ service logcatd /system/bin/logcatd -L -b all -v threadtime -v usec -v printable
     group log
     task_profiles ServiceCapacityLow
     oom_score_adjust -600
-
 }}}
+{{{1
+###magisk 操作步骤
+1.https://developer.android.google.cn/tools/releases/platform-tools?hl=zh-cn  下载adb 工具 把工具包拷贝到adb 目录
+2.给pixel 刷商用版本
+}}}  
+
 
 {{{0
 蓝牙修改代码小技巧

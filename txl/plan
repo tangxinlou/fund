@@ -238,6 +238,11 @@ new SimpleFileVisitor<Path>() {
     class ScannerMap extends ContextMap<IScannerCallback, PendingIntentInfo> {} 这种类声明需要识别下
 
     private final Predicate<ScanResult> mLocationDenylistPredicate = (scanResult) -> { 表达式里面加了日志
+
+20251104 开发一个切换窗口的快速方式，每次手动切换tab很麻烦
+
+20251104 开发一个动态添加代码的接口，如添加包名（产看文件是否已经有包名，没有就添加，有就不添加）
+re:20251105 已经添加了包名的代码，后续继续扩展添加各种代码的函数
 }}}
 
 }}}
@@ -444,32 +449,139 @@ import android.content.BroadcastReceiver;
     };
             registerReceiver(this.mReceiver, new IntentFilter("android.bluetooth.device.action.FOUND"));
 }}}
+{{{2
+### 7 添加侧边栏
+
+res/layout/activity_nrf.xml
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_menu"/> 
+
+res/menu/nav_menu.xml
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="首页"/>
+    <item
+        android:id="@+id/nav_profile"
+        android:title="个人资料"/>
+    <item
+        android:id="@+id/nav_settings"
+        android:title="设置"/>
+</menu>
+
+
+代码
+import androidx.drawerlayout.widget.DrawerLayout;
+        navigationView = findViewById(R.id.nav_view);
+
+     private void setupDrawerLayout() {
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.nav_home) {
+                    Toast.makeText(NrfActivity.this, "首页", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_profile) {
+                    Toast.makeText(NrfActivity.this, "个人资料", Toast.LENGTH_SHORT).show();
+                } else if (id == R.id.nav_settings) {
+                    Toast.makeText(NrfActivity.this, "设置", Toast.LENGTH_SHORT).show();
+                }
+                drawerLayout.closeDrawers();
+                return true;
+            }
+        });
+    }
+
+
+}}}
+{{{2
+### 8 添加Handler 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+     private static final int MESSAGE_SERVICE_DISCONNECTED = 101; 
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+               case MESSAGE_SERVICE_DISCONNECTED: {
+                    int prevState = msg.arg1;
+                    int newState = msg.arg2;
+                   break;
+                }
+            }
+        }
+    };
+            Message msg = mHandler.obtainMessage(MESSAGE_BLUETOOTH_STATE_CHANGE, prevState, newState);
+            mHandler.sendMessage(msg);
+
+}}} 
+{{{2
+### 9 多线程同步java 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+    private final Object lock = new Object();
+    private CountDownLatch sharedLatch = null; // 共享变量
+唤醒处
+    public void signal() {
+        synchronized (lock) {
+            if (sharedLatch != null) {
+                sharedLatch.countDown();
+                sharedLatch = null; // 可选：置 null 表示已唤醒
+            }
+        }
+    }
+
+
+等待处
+
+    public void await() throws InterruptedException {
+        CountDownLatch localLatch; // 局部变量，避免阻塞期间持有锁
+        synchronized (lock) {
+            if (sharedLatch != null) {
+                // 如果已有共享 latch，直接使用（但通常是一次性的，这里仅示例）
+                localLatch = sharedLatch;
+            } else {
+                // 否则新建
+                localLatch = new CountDownLatch(1);
+                sharedLatch = localLatch; // 更新共享引用
+            }
+        }
+
+        // 等待操作在同步块外执行
+        boolean completed = localLatch.await(5, TimeUnit.SECONDS);
+        if (completed) {
+            System.out.println("任务完成");
+        } else {
+            System.out.println("超时");
+        }
+    }
+
+}}}  
+
+{{{2
+### 10 添加读写锁java 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
+                readWriteLock.readLock().lock();
+                readWriteLock.readLock().unlock();
+                readWriteLock.writeLock().lock();
+                readWriteLock.writeLock().unlock();
+
 }}}
 }}}
+}}}
 
+{{{0
+###互联apk
 
-
-
-
-
-./service/src/main/java/com/dsoftbus/service/DSoftBusService.java
-./sdk/src/main/java/com/dsoftbus/sdk/DSoftBusSDK.java
-./sdk/src/main/aidl/com/dsoftbus/sdk/IConnectCallback.aidl
-./sdk/src/main/java/com/dsoftbus/sdk/ConnectListener.java
-
-./common/src/main/aidl/com/dsoftbus/common/IDSoftBusApi.aidl 
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
+}}}
