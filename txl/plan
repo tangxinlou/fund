@@ -221,6 +221,32 @@ smp_key_distribution 这个函数通过<F10> 搜索的时候报错
 20251013 
 收集lambda 表达式写法
 new SimpleFileVisitor<Path>() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                getSharedPreferences(PHONEBOOK_ACCESS_PERMISSION_PREFERENCE_FILE,
+                        Context.MODE_PRIVATE);
+                getSharedPreferences(MESSAGE_ACCESS_PERMISSION_PREFERENCE_FILE,
+                        Context.MODE_PRIVATE);
+                getSharedPreferences(SIM_ACCESS_PERMISSION_PREFERENCE_FILE, Context.MODE_PRIVATE);
+                return null;
+            }
+        }.execute();
+
+ mPendingSockets.forEach(
+                    pendingSocket -> {
+                        handler.removeCallbacksAndMessages(pendingSocket);
+                        try {
+                            pendingSocket.close();
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to close socket", e);
+                        }
+                    });
+
+sendBroadcastMultiplePermissions(switchBufferSizeIntent, new String[] {
+                android.Manifest.permission.BLUETOOTH_CONNECT,
+                android.Manifest.permission.BLUETOOTH_PRIVILEGED
+        }, null);
  
 }}}
 
@@ -240,9 +266,29 @@ new SimpleFileVisitor<Path>() {
     private final Predicate<ScanResult> mLocationDenylistPredicate = (scanResult) -> { 表达式里面加了日志
 
 20251104 开发一个切换窗口的快速方式，每次手动切换tab很麻烦
+re:20251110 tab 切换换成cd的方式看代码，通过F2查看跳转记录
 
 20251104 开发一个动态添加代码的接口，如添加包名（产看文件是否已经有包名，没有就添加，有就不添加）
 re:20251105 已经添加了包名的代码，后续继续扩展添加各种代码的函数
+
+20251111 继续想个法子正确识别lambda 表达式，是否可以把lambda 当成一个函数？
+
+20251111  现在可以使用grep -E "\w+\s+\w+\s+\w+" 来过滤疑似函数定义和类定义的代码行,^\s+\w+\s+\w+\s+\w+  之后看看有什么可以应用
+
+20251111 原来处理一个文件，是打开文件逐行通过判断标准代码是多少行到多少行，换算成标准代码，然后判断标准代码是什么类型
+这样的好处是能精准判断某个类型代码是多少行，但是这样太慢了，后续能否把整个文件读取到内存中，化成一个字符串，然后根据规则，去掉
+整个字符串中的注释,子字符串等不符合标准代码的内容，然后根据{};等规则判断，去规整标准字符串  ，可以在getline 获取代码后，用|line| 的格式包裹内容，这样
+化成标准代码后，就可以证明什么这个代码是多少行的,以整个文件作为一个字符串去代码判断是否会更快？
+挑战点：searchpairpos 这个好像是作用整个文件的，是否有作用一个字符串的？，如果纯纯依赖循环读字符的话，效率可能会更低
+
+20251113 以后展示只能用json 格式打印了，正好字典{},列表[] 符合json ，然后打印是如下方式缩进
+{
+    'a':{
+         'b':[]
+        }
+    []
+        
+}
 }}}
 
 }}}
@@ -267,11 +313,13 @@ kdkfj
 }}}
 {{{1
 ### android studio
+#
 20241009
 1.file-settings-system settings-http proxy  内网需要设置代理不然一些东西下载不了，外网随意
 2.tools-sdk manager-android api 33
 3.tools-sdk manager-sdk tool -ndk 安装(勾选show package details，选择16的ndk)
 4.build-make project 编译成功
+
 20241011
 家里电脑android studio 下载 gradle 怎么都不成功
 1.file - settings - build - build tool - gradle 设置gradle 的版本 和jdk 的版本
@@ -279,6 +327,7 @@ kdkfj
 https://www.cnblogs.com/yyh888/p/18356064
 file - settings - build execution - build tools -gradle  随便下载不行要点击更新
 打开Android Studio，并打开您的项目。在顶部菜单中，选择 "File" -> "Project Structure"。在 "Project Structure" 窗口中，选择 "Project" 选项卡。在 "Project SDK" 部分，您将看到 "Gradle version" 的信息，它会显示当前项目使用的Gradle版本。
+
 20250609
 android studio 公司用不了
 C:\Users\72106341\.gradle  这个目录有很多软件默认配置，这里如果安装卸载过android studio 最好重新删掉一下
@@ -287,6 +336,11 @@ C:\Users\72106341\.gradle  这个目录有很多软件默认配置，这里如�
 在C:\Users\72106341\.gradle\gradle.properties  加下面两个属性
 org.gradle.windows.fs.nio.forceDefaultFileSystem=true
 org.gradle.windows.fs.nio.disableWatchService=true
+
+20251113 
+file - setting - Plugins 选择下载Ideavim 插件
+:re 这个插件四不像,很多指令不能用，不能打开空文件
+
 }}}
 {{{1
 ### apk 使用过程中的bug
@@ -303,9 +357,12 @@ org.gradle.windows.fs.nio.disableWatchService=true
 {{{2
 ### 2.添加一个activity
 2.1 创建SecondActivity.java,添加最简单activity 代码
+
+java
 package com.example.bluetooth;
 import android.os.Bundle;
 import android.app.Activity;
+
 public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -315,17 +372,8 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 }
-}}}
-{{{2
-### 2.2 在manifest 中添加SecondActivity
-        <activity
-            android:name="SecondActivity"
-            android:label="蓝牙自动化测试"
-            android:exported="true">
-        </activity>
-}}}
-{{{2
-### 2.3 添加最简layout activity_second.xml
+layout
+
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -337,7 +385,17 @@ public class MainActivity extends Activity {
         android:layout_height="wrap_content"
         android:text="Hello World!" />
 </LinearLayout>
+
+manifest
+       <activity
+            android:name="SecondActivity"
+            android:label="蓝牙自动化测试"
+            android:exported="true">
+        </activity>
+
+
 }}}
+
 {{{2
 ### 3 添加一个按钮
 3.1 java 代码添加按钮
@@ -579,6 +637,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 }}}
 }}}
+
+可扩展列表控件（ExpandableListView）
 }}}
 
 {{{0

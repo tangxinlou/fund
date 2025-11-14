@@ -731,10 +731,12 @@ service logcatd /system/bin/logcatd -L -b all -v threadtime -v usec -v printable
 
 
 {{{0
-蓝牙修改代码小技巧
+蓝牙代码修改阅读小技巧
 hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, {0x8c, 0x58, 0x23, 0x47, 0x1b, 0x86})
 hci::LeSetAdvertisingSetRandomAddressBuilder::Create(id, Address addr)
 Address 实际是一个6个成员的数组
+
+ ConnectionCompleteView connection_complete = ConnectionCompleteView::Create(packet);  调用的其实是hci_packets.pdl 中 packet ConnectionComplete : Event
 
 }}}  
 {{{0
@@ -768,6 +770,23 @@ cmd  msinfo32  系统摘要
 操作行
 操作文件
 操作数据库
+java
+String -> Byte[]  string.getBytes()
+Bytes.concat([],[]) 拼接Byte[]
+    public static byte[] concat(byte[]... arrays) {
+        int length = 0;
+        for (byte[] array : arrays) {
+            length += array.length;
+        }
+        byte[] result = new byte[length];
+        int pos = 0;
+        for (byte[] array : arrays) {
+            System.arraycopy(array, 0, result, pos, array.length);
+            pos += array.length;
+        }
+        return result;
+    }
+
 }}}    
 {{{0
 玩转creative 耳机

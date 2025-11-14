@@ -392,15 +392,24 @@ set ambiwidth=single
 "syntax match javaFunction '\<\h\w*\>\ze\s*('
 "hi link javaFunction Function
 "}}}}}
- "NETRW 操作和设置{{{{
+"NETRW 操作和设置{{{{
+"netrw 操作指南
+"查看当前目录 let b:
+"回到目录界面 ctrl-^
+"创建空目录 d
+"创建文件%
+"重命名 R
+"切换视图 i
+"mt 选择目录 mf 标记文件 mc 复制到对应目录，mm 移动到对应目录
 let g:netrw_liststyle = 3
 let g:netrw_banner = 0
 let g:netrw_winsize = 25
+let g:netrw_list_hide = '^\..*'
 highlight netrwDir cterm=bold ctermfg=blue gui=bold guifg=#4A90E2
 highlight netrwMarkFile ctermfg=red ctermbg=yellow guifg=red guibg=yellow
 highlight netrwTargetDir ctermfg=red ctermbg=yellow guifg=red guibg=yellow
 "highlight netrwTargetDir cterm=bold ctermfg=white ctermbg=blue gui=bold guifg=white guibg=blue
-""}}}} 
+""}}}}
 "vimdiff 颜色配置{{{
 if &diff
     "colorscheme morning
@@ -427,6 +436,8 @@ endif
 "-o 表示只显示匹配的部分，而不是整行。
 "-i 表示忽略大小写进行匹配。
 "-n 表示显示匹配的行号。
+"-w 匹配整个单词
+"-H 搜索单个文件也在前面显示文件名
 
 "find -type f -iname '*mobilelog*'
 "-type f  只搜文件
@@ -461,6 +472,7 @@ iabbrev gitshow  git show --name-status
 iabbrev duh  du -h --max-depth=1
 iabbrev free  free -h
 iabbrev cpu  lscpu
+iabbrev ,w  ^\s+\w+\s+\w+\s+\w+(
 "<bar> 代替竖线
 iabbrev make  source build/envsetup.sh && make -j20 2>&1 <bar> tee build.log
 iabbrev repo  repo sync -c --optimized-fetch --no-tags
@@ -650,8 +662,8 @@ nnoremap <leader>rm :echo "hello"
 nnoremap <leader>y :call AddLineNumber()<cr>
 "echo winheight('%') winwidth('%')
 nnoremap <leader>dd  :let tempchardretory = getline(line('.'))<cr>: execute " cd " . tempchardretory<cr>
-nnoremap <leader>log  :call append(line('.'),g:debuglist)
-nnoremap <leader>log1  :call append(line('.'),g:debuglist1)
+nnoremap <leader>log  :call append(line('.'),ListItemToString(g:debuglist))
+nnoremap <leader>log1  :call append(line('.'),ListItemToString(g:debuglist1))
 "临时快捷键
 "nnoremap <F12>  : noautocmd call SelectEntireCode()<cr>
 "nnoremap <F12>  : call SelectEntireCode()<cr>
@@ -1732,185 +1744,7 @@ function! SetFileType(...)
     endif
 endfunction
 "}}}}}
-"{{{{{2   ListTo1D(...)
-function! ListTo1D(...)
-    "{{{{{3 变量定义
-    let listof2d = a:1
-    let charinterval = a:2
-    let idx1 = 0
-    "}}}}
-    while idx1 < len(listof2d)
-        let listof2d[idx1] = join(listof2d[idx1],charinterval)
-        let idx1 += 1
-    endwhile
-    return  listof2d
-endfunction
-"}}}}}
-"{{{{{2   ListTo2D(...)
-function! ListTo2D(...)
-    "{{{{{3 变量定义
-    let listof1d = a:1
-    let charinterval = a:2
-    let idx1 = 0
-    "}}}}
-    while idx1 < len(listof1d)
-        let listof1d[idx1] = split(listof1d[idx1],charinterval,2)
-        let idx1 += 1
-    endwhile
-    return  listof1d
-endfunction
-"}}}}}
-"{{{{{2   ListAddSpaces(...)添加多余空格
-function! ListAddSpaces(...)
-    "{{{{{3 变量定义
-    let listof1d = a:1   "一维表格
-    let listof2d = []   "二维表格
-    let charinterval = a:2
-    let listlength = 0
-    let idx1 = 0
-    let idj1 = 0
-    "}}}}
-    "let listof1d = readfile("PEvaluepanel.txt")
-    let listof2d = ListTo2D(listof1d,charinterval)
-    "计算最长是多长
-    while idx1 < len(listof2d)
-        if listlength < len(listof2d[idx1])
-            let listlength =  len(listof2d[idx1])
-        endif
-        let idx1 += 1
-    endwhile
-    let listlength = repeat([" "],listlength)
-    "计算每列最大长度
-    let idx1 = 0
-    while idx1 < len(listof2d)
-        let idj1 = 0
-        while idj1 < len(listof2d[idx1])
-            if listlength[idj1] < strwidth(listof2d[idx1][idj1])
-                let listlength[idj1] = strwidth(listof2d[idx1][idj1])
-            endif
-            let idj1 += 1
-        endwhile
-        let idx1 += 1
-    endwhile
-    "添加空格
-    let idx1 = 0
-    let idj1 = 0
-    while idx1 < len(listof2d)
-        let idj1 = 0
-        while idj1 < len(listof2d[idx1])
-            let listof2d[idx1][idj1] = listof2d[idx1][idj1] . repeat(" ",listlength[idj1] - strwidth(listof2d[idx1][idj1]) + 5)
-            let idj1 +=1
-        endwhile
-        let idx1 += 1
-    endwhile
-    let listof1d = ListTo1D(listof2d ,charinterval)
-    "call append(line('.'),listof1d)
-    return listof1d
-endfunction
-"}}}}}
-"{{{{{2   ListRemoveSpaces(...) 去除多余空格
-function! ListRemoveSpaces(...)
-    "{{{{{3 变量定义
-    let listof1d = a:1   "一维表格
-    let listof2d = []   "二维表格
-    let charinterval = a:2
-    let idx1 = 0
-    let idj1 = 0
-    let templen = 0
-    "}}}}
-    "let listof1d = readfile("PEvaluepanel.txt")
-    let listof2d = ListTo2D(listof1d,charinterval)
 
-    while idx1 < len(listof2d)
-        let idj1 = 0
-        while idj1 < len(listof2d[idx1])
-            if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
-                "有些空口只有一个，去不掉
-                let templen = len(listof2d[idx1][idj1])
-                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
-                if templen  ==# len(listof2d[idx1][idj1])
-                    let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," ")[0]
-                endif
-            else
-                let listof2d[idx1][idj1] = ""
-            endif
-            let idj1 += 1
-        endwhile
-        let idx1 += 1
-    endwhile
-    let listof1d = ListTo1D(listof2d ,charinterval)
-    return  listof1d
-endfunction
-"}}}}}
-"{{{{{2   AdjustThePositionOfTwoColumns(...)  "调整两列的位置
-"{{{{{3 注释
-"调整两列的位置
-"}}}}
-function! AdjustThePositionOfTwoColumns(...)
-    "{{{{{3 变量定义
-    let filelist = a:1
-    let columnssrc = a:2
-    let columnstail = a:3
-    let idx1 = 0
-    let tempchar = ""
-    let charinterval = a:4
-    "}}}}
-    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
-    let filelist =  ListRemoveSpaces(filelist,charinterval)
-    let filelist = ListTo2D(filelist,charinterval)
-
-    while idx1 < len(filelist)
-        let tempchar = filelist[idx1][columnssrc]
-        let filelist[idx1][columnssrc] = filelist[idx1][columnstail]
-        let filelist[idx1][columnstail] = tempchar
-        let idx1 += 1
-    endwhile
-    let filelist = ListTo1D(filelist,charinterval)
-    let filelist  =  ListAddSpaces(filelist,charinterval)
-    return filelist
-endfunction
-"}}}}}
-"{{{{{2   GetOneOfTheColumns(...)  "获取单独一列
-"{{{{{3 注释
-"调整两列的位置
-"}}}}
-function! GetOneOfTheColumns(...)
-    "{{{{{3 变量定义
-    let filelist = copy(a:1)
-    let idx1 = 0
-    let charinterval = a:2
-    let columns = a:3
-    let templist = [" "]
-    let typelist = 0
-    let Clearchar = ""
-    "}}}}
-    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
-    let typelist = type(filelist[0])
-    let templist  =  repeat(templist,len(filelist))
-    if  typelist ==# 1
-        let filelist =  ListRemoveSpaces(filelist,charinterval)
-        let filelist = ListTo2D(filelist,charinterval)
-    endif
-    if a:0 ==# 4
-        let Clearchar = a:4
-        while idx1 < len(filelist)
-            if columns ==# -1
-                let filelist[idx1] = add(Clearchar[idx1]," ")
-            else
-                let filelist[idx1][columns] = Clearchar[idx1]
-            endif
-            let idx1 += 1
-        endwhile
-        return  filelist
-    else
-        while idx1 < len(filelist)
-            let templist[idx1] = filelist[idx1][columns]
-            let idx1 += 1
-        endwhile
-        return templist
-    endif
-endfunction
-"}}}}}
 "{{{{{2  WaveformGraph(...)  波形图
 "{{{{{3 注释
 "}}}}
@@ -2004,192 +1838,6 @@ function! SimplifySearchResults(...)
     let definition = add(definition,["XML"])
     let definition = add(definition,["<<<<<<<<<<<<<<<<"])
     let definition = extend(definition,resultlist[6])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-    let definition = ListTo1D(definition,"▌")
-    let definition = ListAddSpaces(definition,"▌")
-    if a:0 ==# 0
-        execute "normal! :r!date +\\%F-\\%T\<cr>"
-        call append(line('.'),definition)
-    else
-        return definition
-    endif
-endfunction
-"}}}}}
-"{{{{{2   SimplifySearchResults1(...) 简化搜索结果1
-function! SimplifySearchResults1(...)
-"140行1s都不到
-    "{{{{{3 变量定义
-    let searchs = "setA"
-    let command = ""
-
-    "list
-    let classdefinition = []  "类定义
-    let variabledef = []  "变量定义
-    let variabledefspecify  = [] "变量定义赋值
-    let functiondefinition = []       "函数定义
-    let variablespecify  = [] "变量赋值
-    let functioncall = []     "函数调用
-    let functiondeclaration = []  "函数申明
-    let Log = []              "打印
-    let judge = []            "判断
-    let Comment = []          "注释
-    let TEST = []             "test
-    let XML = []              "xml
-    let unknow = []           "未知
-
-    let filetype = ""
-    let srccode = ""
-    let targetcode = ""
-    let codelist = ""
-
-    let resultlist = [0,1,2,3,4,5,6,7,8,9,10,11,12]
-    let definition = []
-
-    let idx1 = 0
-    let flag = ""
-    let mode = 0
-
-    "}}}}
-    if a:0 ==# 0
-        let searchstarge = []
-        let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
-        let searchstarge =  system(command)
-        execute "normal! :r!date +\\%F-\\%T\<cr>"
-    else
-        let searchstarge = a:1
-        let mode = a:2
-        if a:0 ==# 3
-            let searchs = a:3
-        endif
-        if len(searchstarge) ==# 0
-            return []
-        endif
-    endif
-
-    let searchstarge = split(searchstarge,"\n")
-    while idx1 < len(searchstarge)
-        let codelist = split(searchstarge[idx1],":")
-        let srccode = join(codelist[2:])
-        let targetcode = [codelist[0] . ":" . codelist[1] . ":","   " . split(join(codelist[2:]),"^\\s\\+")[0]]
-        let filetype = IsFileType(codelist[0])
-
-        if  filetype != "xml"
-            if matchstr(codelist[0],"test") ==# ""
-                if matchstr(srccode,"注释") ==# ""
-                   let flag = IdentificationCodeComponents1(srccode,filetype)
-                   "let flag = DeepDecisionFunction(srccode,searchs )
-                   if matchstr(flag,"class") != ""
-                       let classdefinition = add(classdefinition,targetcode)
-                   elseif matchstr(flag,"variabledef") != ""
-                       let variabledef = add(variabledef,targetcode)
-                   elseif matchstr(flag,"variablespecify") != ""
-                       let variablespecify = add(variablespecify,targetcode)
-                   elseif matchstr(flag,"variabledefspecify") != ""
-                       let variabledefspecify = add(variabledefspecify,targetcode)
-                   elseif matchstr(flag,"functioncall") != ""
-                       let functioncall = add(functioncall,targetcode)
-                   elseif matchstr(flag,"functiondeclaration") != ""
-                       let functiondeclaration = add(functiondeclaration,targetcode)
-                   elseif matchstr(flag,"functiondefinition") != ""
-                       let functiondefinition = add(functiondefinition ,targetcode)
-                   elseif matchstr(flag,"log") != ""
-                       let Log = add(Log,targetcode)
-                   elseif matchstr(flag,"judge") != ""
-                       let judge = add(judge,targetcode)
-                   else
-                       let unknow  = add(unknow,targetcode)
-                   endif
-                else
-                    let Comment = add(Comment,targetcode)
-                endif
-            else
-                let TEST = add(TEST,targetcode)
-            endif
-
-        else
-            let XML = add(XML,targetcode)
-        endif
-        let idx1 += 1
-    endwhile
-
-    let resultlist[g:classdefinitionNUM] =  classdefinition
-    let resultlist[g:variabledefNUM] =  variabledef
-    let resultlist[g:variabledefspecifyNUM] = variabledefspecify
-    let resultlist[g:functiondefinitionNUM] =  functiondefinition
-    let resultlist[g:functioncallNUM] =  functioncall
-    let resultlist[g:variablespecifyNUM] = variablespecify
-    let resultlist[g:functiondeclarationNUM] = functiondeclaration
-    let resultlist[g:LogNUM] =  Log
-    let resultlist[g:judgeNUM] = judge
-    let resultlist[g:CommentNUM] = Comment
-    let resultlist[g:TESTNUM] =  TEST
-    let resultlist[g:XMLNUM] = XML
-    let resultlist[g:unknowNUM] = unknow
-    if mode ==# 1
-       return  resultlist
-    endif
-
-    "let resultlist = ResultClassification(searchstarge)
-    let definition = add(definition,["类定义"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:classdefinitionNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["函数定义"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:functiondefinitionNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["变量定义"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:variabledefNUM])
-    let definition = extend(definition,resultlist[g:variabledefspecifyNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["函数调用"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:functioncallNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["变量赋值"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:variablespecifyNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["判断"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:judgeNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["函数声明"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:functiondeclarationNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["打印"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:LogNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["注释"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:CommentNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["未知"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:unknowNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-
-    let definition = add(definition,["test"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:TESTNUM])
-    let definition = add(definition,[">>>>>>>>>>>>>>>"])
-
-    let definition = add(definition,["XML"])
-    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
-    let definition = extend(definition,resultlist[g:XMLNUM])
     let definition = add(definition,[">>>>>>>>>>>>>>>"])
     let definition = ListTo1D(definition,"▌")
     let definition = ListAddSpaces(definition,"▌")
@@ -2624,115 +2272,6 @@ function! FunctionList(...)
     endif
 endfunction
 "}}}
-"{{{{{2  SelectEntireCode(...) 每一个搜索结果就选中符合代码规范的完整一行
-"140行结果4.5s
-function! SelectEntireCode(...)
-    "{{{{{3 变量定义
-   " let searchs = "setActivedevice"
-    let searchs = "btif_hd_execute_service"
-    let command = ""
-    let searchstarge = ""
-    let tempchar = ""
-    let idx1 = 0
-    let result = ""
-    let filename = ""
-    let filetype = ""
-    let line = ""
-    let srcnum = -1
-    let tailnum = -1
-    let numberlist = []
-    let currentstrlist = [1,2,3]
-    let begintime = 0
-    let endtime = 0
-    let templist = []
-    syntax off
-    let filelist = []
-    "}}}}
-    if a:0 ==# 0
-        let searchstarge = []
-        let command = "grep -EsinR --include=*{.c,.cc,.java,.h,.xml} " . "'" . searchs . "'"
-        let searchstarge =  system(command)
-        let searchstarge = split(searchstarge,"\n")
-        call Dbug1(10,0,'SelectEntireCode 24', "+++")
-    else
-        let searchstarge = a:1
-        let searchstarge = split(searchstarge,"\n")
-        if len(searchstarge) ==# 0
-            return ""
-        endif
-    endif
-    let idx1 = 0
-    while idx1 < len(searchstarge)
-        let filename = split(searchstarge[idx1],":")[0]
-        let filetype = IsFileType(filename)
-        if matchstr("cccppjavahead",filetype) != "" && count(filelist,filename) ==# 0
-            let filelist = add(filelist,filename)
-        endif
-        let idx1 += 1
-    endwhile
-    silent tabnew
-    silent execute( "args " . join(filelist))
-    call Dbug1(10,0,'SelectEntireCode 25', "end")
-    let idx1  = 0
-    while idx1 < len(searchstarge)
-        let templist = split(searchstarge[idx1],":")
-        let currentstrlist[0] = templist[0]
-        let currentstrlist[1] = templist[1]
-        let currentstrlist[2] = templist[2]
-        if count(searchstarge[idx1],':') > 2
-            let currentstrlist[2] = join(templist[2:],':')
-        endif
-        let filename = currentstrlist[0]
-        let line = currentstrlist[1]
-        let filetype = IsFileType(filename)
-        if matchstr("cccppjava",filetype) != ""
-            if idx1 ==# 0
-                call Dbug1(10,0,'SelectEntireCode 26', filename)
-                call SwitchBuff(filename)
-            elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
-                call Dbug1(10,0,'SelectEntireCode 27', filename)
-                call SwitchBuff(filename)
-            endif
-            if matchstr(getline(line),"tangxinlou debug") != ""
-                "是加的debug 日志就忽略
-                "let idx1 += 1
-                "continue
-            else
-                silent setlocal foldmethod=syntax
-                let numberlist = MergeLinesOfCode(line)
-                if len(numberlist) != 0
-                    let srcnum = numberlist[0]
-                    let tailnum = numberlist[1]
-                    let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
-                    let searchstarge[idx1] = join(currentstrlist,":")
-                else
-
-                    let currentstrlist[2] = currentstrlist[2] . "注释"
-                    let searchstarge[idx1] = join(currentstrlist,":")
-                endif
-            endif
-
-        else
-        endif
-        if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
-            "silent execute "normal! :wq!\<cr>"
-            ":q!
-        elseif idx1 ==# (len(searchstarge) - 1)
-            "silent execute "normal! :wq!\<cr>"
-            :q!
-        endif
-
-        let idx1 += 1
-    endwhile
-    if a:0 ==# 0
-        call Dbug1(10,0,'SelectEntireCode 29', "---")
-        silent execute("syntax on")
-        call append(line('.'),searchstarge)
-    else
-        return join(searchstarge,"\n")
-    endif
-endfunction
-"}}}}}
 "{{{{{2 GatherIntoRow(...)多行变成一行
 function! GatherIntoRow(...)
     let srcnum = a:1
@@ -2791,7 +2330,7 @@ function! GatherIntoRow(...)
     return foldstring
 endfunction
 "}}}}}
-"{{{{{2 MergeLinesOfCode(...)判断那几行能合并成符合代码格式的一行
+"{{{{{2 MergeLinesOfCode1(...)判断那几行能合并成符合代码格式的一行
 "echo MergeLinesOfCode1(line('.'))
 function! MergeLinesOfCode1(...)
     let line = a:1
@@ -8166,6 +7705,10 @@ function! ExtractKeyCodes(...)
             let start = FindAnotherBracketPosition('}')
         elseif col <= 4
             if filetype ==# "java"
+                if col ==# 0
+                    let idx1 = 0
+                    break
+                endif
                 let idx1 = 0
                 let start = FindAnotherBracketPosition('}',1)
             else
@@ -8285,6 +7828,7 @@ function! ExtractKeyCodes(...)
             call Echom(10,0,'tangxinlou debug',8260,linelist)
             call Echom(10,0,'tangxinlou debug',8182,flaglist)
             call Echom(10,0,'tangxinlou debug',8176,keylist)
+            "let resultlist = ["函数位置"，"父类位置","父父类位置","函数index","父类index","父父类index"]
             call Echom(10,0,'tangxinlou debug',8177,resultlist)
             call Echom(10,0,'tangxinlou debug',8188, "end")
         elseif a:0 == 2
@@ -9641,6 +9185,7 @@ function! FindFiles(timer)
     if len(searchs) < 2
         return
     endif
+    let g:lastfilter = searchs
     let command = "find -type f -iname " . "'*" . searchs ."*'"
     echo command
     let searchstarge =  system(command)
@@ -9651,7 +9196,6 @@ function! FindFiles(timer)
     let clear =  repeat([""],g:lastfindlen)
     call setline(2, clear)
     call setline(2, searchstarge)
-    let g:lastfilter = searchs
     let g:lastfindlen = len(searchstarge)
     redraw
 endfunction
@@ -12022,7 +11566,7 @@ function! FileAddLog(...)
 endfunction
 "}}}}}
 "{{{{{2 function!  FouncDeleLog(...) 删除打印
-function! FouncDeleLog()
+function! FouncDeleLog(...)
     "{{{{{3 变量定义
     let filename = ""
     let idx1 = 0
@@ -12132,6 +11676,7 @@ endfunction
 "}}}}}
 "}}}
 "{{{{{ 自动分析代码
+"{{{{2 分析代码
 "{{{{{2  AutomaticCodeAnalysis()  自动分析代码
 function! AutomaticCodeAnalysis()
     "查找当前路径有哪些文件（java cc c h）
@@ -12242,7 +11787,7 @@ function! LexiconizationCallback(...)
     let templist1 = []
     let idx1 = 0
     "call Echom(10,0,'tangxinlou debug',12358, string,line)
-    "let flag = IdentificationCodeComponents1(string,filetype)
+    let flag = IdentificationCodeComponents1(string,filetype)
     "if matchstr(flag,'class\|functiondefinition\|variablespecify\|variabledefspecify\|judge\|functioncall') != ""
     "    if flag ==# "functiondefinition"
     "        "let dict["03string"] = flag . " " . string(ParsingFunctions(string))
@@ -12265,8 +11810,8 @@ function! LexiconizationCallback(...)
 "        endwhile
 "        let dict["03string"] = flag . " " . string(templist1)
 "    endif
-    let dict["03string"] = flag . " " . SimplifyTheCodeModel(string)
-    "let dict["03string"] = flag . " " . string
+    "let dict["03string"] = flag . " " . SimplifyTheCodeModel(string)
+    let dict["03string"] = flag . " " . string
     "let dict["03string"] = string
     if matchstr(flag,'class\|functiondefinition\|staticfunc') != ""
         let UpBracketslist = []
@@ -12321,6 +11866,32 @@ function! LoopPrinting1(...)
     return resultlist
 endfunction
 "}}}}}
+"}}}
+"{{{{2 分析文件关系
+"{{{{{3 AnalyzeFile() 分析文件
+function! AnalyzeFile(...)
+    let files = []
+    let files = EncapsulateDifferentFind('.',"file", '.' . 'java')
+    let idx1 = 0
+    let result = []
+    let classlist = []
+    let searchresultlist = []
+    while idx1 < len(files)
+        let result = GrepAllType(files[idx1],"class")
+        let classlist = extend(classlist,result)
+        let idx1 += 1
+    endwhile
+    let idx1 = 0
+    while idx1 < len(classlist)
+    let searchresultlist = SplitSearchResult(classlist[idx1])
+        let idx1 += 1
+    endwhile
+    let g:debuglist = classlist
+endfunction
+"}}}}}
+"}}}
+"}}}
+"{{{代码字符串模版判断
 "{{{{{2 function!  IdentificationCodeComponents(...) 识别当前行代码成分,是函数定义，调用，赋值，还是判断
 function! IdentificationCodeComponents(...)
     "{{{{{3 变量定义
@@ -12808,8 +12379,6 @@ function! MergeLinesOfCode(...)
     return linelist
 endfunction
 "}}}}}
-"}}}
-"{{{代码字符串模版判断
 "{{{{{2 IsFunction(...)当前字符串是否是函数
 function! IsFunction(...)
  let codestr = a:1
@@ -13816,20 +13385,6 @@ function! ClearAllBlank(...)
     return resultstr
 endfunction
 "}}}}}
-"{{{{{2 SplitSearchResult(...)分割搜索结果
-function! SplitSearchResult(...)
-    let strings = a:1
-    let resultstr = [1,2,3]
-    let codelist = split(strings,":")
-    let filename = codelist[0]
-    let line =  codelist[1]
-    let srccode = join(codelist[2:])
-    let resultstr[0]  = filename
-    let resultstr[1]  = str2nr(line)
-    let resultstr[2]  = srccode
-    return resultstr
-endfunction
-"}}}}}
 "{{{{{3 SplitStringByStr(...)通过指定的字符串分割字符 跨过< 和(
 "echo SplitStringByStr(getline(line('.')),["&&","||"])
 function! SplitStringByStr(...)
@@ -14358,6 +13913,198 @@ function! IsContainAll(...)
     return resultlist
 endfunction
 "}}}}}
+"{{{{{3   ListItemToString(...) 把列表每项都变成string
+function! ListItemToString(...)
+    "{{{{{3 变量定义
+    let list = deepcopy(a:1)
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(list)
+        let list[idx1] = string(list[idx1])
+        let idx1 += 1
+    endwhile
+    return list
+endfunction
+"}}}}}
+"{{{{{2   ListTo1D(...)
+function! ListTo1D(...)
+    "{{{{{3 变量定义
+    let listof2d = a:1
+    let charinterval = a:2
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(listof2d)
+        let listof2d[idx1] = join(listof2d[idx1],charinterval)
+        let idx1 += 1
+    endwhile
+    return  listof2d
+endfunction
+"}}}}}
+"{{{{{2   ListTo2D(...)
+function! ListTo2D(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1
+    let charinterval = a:2
+    let idx1 = 0
+    "}}}}
+    while idx1 < len(listof1d)
+        let listof1d[idx1] = split(listof1d[idx1],charinterval,2)
+        let idx1 += 1
+    endwhile
+    return  listof1d
+endfunction
+"}}}}}
+"{{{{{2   ListAddSpaces(...)添加多余空格
+function! ListAddSpaces(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1   "一维表格
+    let listof2d = []   "二维表格
+    let charinterval = a:2
+    let listlength = 0
+    let idx1 = 0
+    let idj1 = 0
+    "}}}}
+    "let listof1d = readfile("PEvaluepanel.txt")
+    let listof2d = ListTo2D(listof1d,charinterval)
+    "计算最长是多长
+    while idx1 < len(listof2d)
+        if listlength < len(listof2d[idx1])
+            let listlength =  len(listof2d[idx1])
+        endif
+        let idx1 += 1
+    endwhile
+    let listlength = repeat([" "],listlength)
+    "计算每列最大长度
+    let idx1 = 0
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            if listlength[idj1] < strwidth(listof2d[idx1][idj1])
+                let listlength[idj1] = strwidth(listof2d[idx1][idj1])
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    "添加空格
+    let idx1 = 0
+    let idj1 = 0
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            let listof2d[idx1][idj1] = listof2d[idx1][idj1] . repeat(" ",listlength[idj1] - strwidth(listof2d[idx1][idj1]) + 5)
+            let idj1 +=1
+        endwhile
+        let idx1 += 1
+    endwhile
+    let listof1d = ListTo1D(listof2d ,charinterval)
+    "call append(line('.'),listof1d)
+    return listof1d
+endfunction
+"}}}}}
+"{{{{{2   ListRemoveSpaces(...) 去除多余空格
+function! ListRemoveSpaces(...)
+    "{{{{{3 变量定义
+    let listof1d = a:1   "一维表格
+    let listof2d = []   "二维表格
+    let charinterval = a:2
+    let idx1 = 0
+    let idj1 = 0
+    let templen = 0
+    "}}}}
+    "let listof1d = readfile("PEvaluepanel.txt")
+    let listof2d = ListTo2D(listof1d,charinterval)
+
+    while idx1 < len(listof2d)
+        let idj1 = 0
+        while idj1 < len(listof2d[idx1])
+            if  len(split(listof2d[idx1][idj1]," \\{2,30}"))  != 0
+                "有些空口只有一个，去不掉
+                let templen = len(listof2d[idx1][idj1])
+                let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," \\{2,30}")[0]
+                if templen  ==# len(listof2d[idx1][idj1])
+                    let listof2d[idx1][idj1] = split(listof2d[idx1][idj1]," ")[0]
+                endif
+            else
+                let listof2d[idx1][idj1] = ""
+            endif
+            let idj1 += 1
+        endwhile
+        let idx1 += 1
+    endwhile
+    let listof1d = ListTo1D(listof2d ,charinterval)
+    return  listof1d
+endfunction
+"}}}}}
+"{{{{{2   AdjustThePositionOfTwoColumns(...)  "调整两列的位置
+"{{{{{3 注释
+"调整两列的位置
+"}}}}
+function! AdjustThePositionOfTwoColumns(...)
+    "{{{{{3 变量定义
+    let filelist = a:1
+    let columnssrc = a:2
+    let columnstail = a:3
+    let idx1 = 0
+    let tempchar = ""
+    let charinterval = a:4
+    "}}}}
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
+    let filelist =  ListRemoveSpaces(filelist,charinterval)
+    let filelist = ListTo2D(filelist,charinterval)
+
+    while idx1 < len(filelist)
+        let tempchar = filelist[idx1][columnssrc]
+        let filelist[idx1][columnssrc] = filelist[idx1][columnstail]
+        let filelist[idx1][columnstail] = tempchar
+        let idx1 += 1
+    endwhile
+    let filelist = ListTo1D(filelist,charinterval)
+    let filelist  =  ListAddSpaces(filelist,charinterval)
+    return filelist
+endfunction
+"}}}}}
+"{{{{{2   GetOneOfTheColumns(...)  "获取单独一列
+"{{{{{3 注释
+"调整两列的位置
+"}}}}
+function! GetOneOfTheColumns(...)
+    "{{{{{3 变量定义
+    let filelist = copy(a:1)
+    let idx1 = 0
+    let charinterval = a:2
+    let columns = a:3
+    let templist = [" "]
+    let typelist = 0
+    let Clearchar = ""
+    "}}}}
+    "let filelist = readfile(Homedir("work/fund/zhishu/panelPEvalue",1))
+    let typelist = type(filelist[0])
+    let templist  =  repeat(templist,len(filelist))
+    if  typelist ==# 1
+        let filelist =  ListRemoveSpaces(filelist,charinterval)
+        let filelist = ListTo2D(filelist,charinterval)
+    endif
+    if a:0 ==# 4
+        let Clearchar = a:4
+        while idx1 < len(filelist)
+            if columns ==# -1
+                let filelist[idx1] = add(Clearchar[idx1]," ")
+            else
+                let filelist[idx1][columns] = Clearchar[idx1]
+            endif
+            let idx1 += 1
+        endwhile
+        return  filelist
+    else
+        while idx1 < len(filelist)
+            let templist[idx1] = filelist[idx1][columns]
+            let idx1 += 1
+        endwhile
+        return templist
+    endif
+endfunction
+"}}}}}
 "}}}}}
 "{{{{{2 处理字典
 "}}}}}
@@ -14463,6 +14210,402 @@ function! OpenDirectoryList(...)
 endfunction
 "}}}}}
 "}}}
+"{{{{{2 处理shell 指令相关
+"{{{{{2   EncapsulateDifferentGrep(...) 封装grep指令
+function! EncapsulateDifferentGrep(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let greptype = a:2
+    let grepchar = a:3
+    let revertchar = '@' . grepchar
+    let revertgrepcmd = "grep -v "
+    let revertgrepcmd = "grep -v "  .  revertchar
+    if filename ==# ""
+        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    else
+        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    endif
+    let result = ""
+    "}}}}
+    if greptype ==# "fuc"
+        "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
+        let grepchar = '"' . grepchar  .'" '
+        let grepcmd = grepcmd . grepchar . filename
+        call Dbug1(10,0,'EncapsulateDifferentGrep 100', grepcmd,revertgrepcmd)
+        let result = system(grepcmd . " | " . revertgrepcmd)
+    elseif greptype ==# "class"
+        let grepchar = '"class ' . grepchar  .'" '
+        let grepcmd = grepcmd . grepchar . filename
+        call Dbug1(10,0,'EncapsulateDifferentGrep 101', grepcmd)
+        let result = system(grepcmd)
+    endif
+    return result
+endfunction
+"}}}}}
+"{{{{{2   EncapsulateDifferentFind(...) 封装find指令
+function! EncapsulateDifferentFind(...)
+    "{{{{{3 变量定义
+    let path = a:1
+    let findtype = a:2
+    let findchar = a:3
+    let result = ""
+    "}}}}
+    if findtype ==# "file"
+        let findcommand = "find -type f -iname " . "'*" . findchar ."*'"
+        call Dbug1(10,0,'EncapsulateDifferentFind 133', findcommand )
+        let result = system(findcommand)
+    endif
+    if result ==# ""
+        let result = []
+    else
+        let result = split(result,'\n')
+    endif
+    return result
+endfunction
+"}}}}}
+"{{{{{2   GrepAllType(...) 封装grep指令，根据类型搜索代码
+function! GrepAllType(...)
+    "{{{{{3 变量定义
+    let filename = a:1
+    let greptype = a:2
+    let grepchar = ""
+    let revertchar = '@' . grepchar
+    let revertgrepcmd = "grep -v "
+    let revertgrepcmd = "grep -v "  .  revertchar
+    if filename ==# ""
+        let grepcmd = "grep -EsnrH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    else
+        let grepcmd = "grep -EsnrH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
+    endif
+    let result = ""
+    "}}}}
+    if greptype ==# "fuc"
+    elseif greptype ==# "class"
+        let grepchar = '"class ' . '" '
+        let grepcmd = grepcmd . grepchar . filename
+        let result = system(grepcmd . " | " . revertgrepcmd)
+        "let result = system(grepcmd)
+    endif
+    if result ==# ""
+        let result = []
+    else
+        let result = split(result,'\n')
+    endif
+    return result
+endfunction
+"}}}}}
+"}}}}}
+"{{{{{2 处理搜索结果
+"{{{{{2 SplitSearchResult(...)分割搜索结果
+function! SplitSearchResult(...)
+    let strings = a:1
+    let resultstr = [1,2,3]
+    let codelist = split(strings,":")
+    let filename = codelist[0]
+    let line =  codelist[1]
+    let srccode = join(codelist[2:])
+    let resultstr[0]  = filename
+    let resultstr[1]  = str2nr(line)
+    let resultstr[2]  = srccode
+    return resultstr
+endfunction
+"}}}}}
+"{{{{{2  SelectEntireCode(...) 每一个搜索结果就选中符合代码规范的完整一行
+"140行结果4.5s
+function! SelectEntireCode(...)
+    "{{{{{3 变量定义
+   " let searchs = "setActivedevice"
+    let searchs = "btif_hd_execute_service"
+    let command = ""
+    let searchstarge = ""
+    let tempchar = ""
+    let idx1 = 0
+    let result = ""
+    let filename = ""
+    let filetype = ""
+    let line = ""
+    let srcnum = -1
+    let tailnum = -1
+    let numberlist = []
+    let currentstrlist = [1,2,3]
+    let begintime = 0
+    let endtime = 0
+    let templist = []
+    syntax off
+    let filelist = []
+    "}}}}
+    if a:0 ==# 0
+        let searchstarge = []
+        let command = "grep -EsinR --include=*{.c,.cc,.java,.h,.xml} " . "'" . searchs . "'"
+        let searchstarge =  system(command)
+        let searchstarge = split(searchstarge,"\n")
+        call Dbug1(10,0,'SelectEntireCode 24', "+++")
+    else
+        let searchstarge = a:1
+        let searchstarge = split(searchstarge,"\n")
+        if len(searchstarge) ==# 0
+            return ""
+        endif
+    endif
+    let idx1 = 0
+    while idx1 < len(searchstarge)
+        let filename = split(searchstarge[idx1],":")[0]
+        let filetype = IsFileType(filename)
+        if matchstr("cccppjavahead",filetype) != "" && count(filelist,filename) ==# 0
+            let filelist = add(filelist,filename)
+        endif
+        let idx1 += 1
+    endwhile
+    silent tabnew
+    silent execute( "args " . join(filelist))
+    call Dbug1(10,0,'SelectEntireCode 25', "end")
+    let idx1  = 0
+    while idx1 < len(searchstarge)
+        let templist = split(searchstarge[idx1],":")
+        let currentstrlist[0] = templist[0]
+        let currentstrlist[1] = templist[1]
+        let currentstrlist[2] = templist[2]
+        if count(searchstarge[idx1],':') > 2
+            let currentstrlist[2] = join(templist[2:],':')
+        endif
+        let filename = currentstrlist[0]
+        let line = currentstrlist[1]
+        let filetype = IsFileType(filename)
+        if matchstr("cccppjava",filetype) != ""
+            if idx1 ==# 0
+                call Dbug1(10,0,'SelectEntireCode 26', filename)
+                call SwitchBuff(filename)
+            elseif  idx1 > 0 &&  split(searchstarge[idx1 - 1],":")[0] != filename
+                call Dbug1(10,0,'SelectEntireCode 27', filename)
+                call SwitchBuff(filename)
+            endif
+            if matchstr(getline(line),"tangxinlou debug") != ""
+                "是加的debug 日志就忽略
+                "let idx1 += 1
+                "continue
+            else
+                silent setlocal foldmethod=syntax
+                let numberlist = MergeLinesOfCode(line)
+                if len(numberlist) != 0
+                    let srcnum = numberlist[0]
+                    let tailnum = numberlist[1]
+                    let currentstrlist[2] = GatherIntoRow(srcnum,tailnum)
+                    let searchstarge[idx1] = join(currentstrlist,":")
+                else
+
+                    let currentstrlist[2] = currentstrlist[2] . "注释"
+                    let searchstarge[idx1] = join(currentstrlist,":")
+                endif
+            endif
+
+        else
+        endif
+        if idx1 != (len(searchstarge) - 1) &&  split(searchstarge[idx1 + 1],":")[0] != filename
+            "silent execute "normal! :wq!\<cr>"
+            ":q!
+        elseif idx1 ==# (len(searchstarge) - 1)
+            "silent execute "normal! :wq!\<cr>"
+            :q!
+        endif
+
+        let idx1 += 1
+    endwhile
+    if a:0 ==# 0
+        call Dbug1(10,0,'SelectEntireCode 29', "---")
+        silent execute("syntax on")
+        call append(line('.'),searchstarge)
+    else
+        return join(searchstarge,"\n")
+    endif
+endfunction
+"}}}}}
+"{{{{{2   SimplifySearchResults1(...) 简化搜索结果1
+function! SimplifySearchResults1(...)
+"140行1s都不到
+    "{{{{{3 变量定义
+    let searchs = "setA"
+    let command = ""
+
+    "list
+    let classdefinition = []  "类定义
+    let variabledef = []  "变量定义
+    let variabledefspecify  = [] "变量定义赋值
+    let functiondefinition = []       "函数定义
+    let variablespecify  = [] "变量赋值
+    let functioncall = []     "函数调用
+    let functiondeclaration = []  "函数申明
+    let Log = []              "打印
+    let judge = []            "判断
+    let Comment = []          "注释
+    let TEST = []             "test
+    let XML = []              "xml
+    let unknow = []           "未知
+
+    let filetype = ""
+    let srccode = ""
+    let targetcode = ""
+    let codelist = ""
+
+    let resultlist = [0,1,2,3,4,5,6,7,8,9,10,11,12]
+    let definition = []
+
+    let idx1 = 0
+    let flag = ""
+    let mode = 0
+
+    "}}}}
+    if a:0 ==# 0
+        let searchstarge = []
+        let command = "grep -EsinR --include=*{.c,.cc,.java,.h} " . "'" . searchs . "'"
+        let searchstarge =  system(command)
+        execute "normal! :r!date +\\%F-\\%T\<cr>"
+    else
+        let searchstarge = a:1
+        let mode = a:2
+        if a:0 ==# 3
+            let searchs = a:3
+        endif
+        if len(searchstarge) ==# 0
+            return []
+        endif
+    endif
+
+    let searchstarge = split(searchstarge,"\n")
+    while idx1 < len(searchstarge)
+        let codelist = split(searchstarge[idx1],":")
+        let srccode = join(codelist[2:])
+        let targetcode = [codelist[0] . ":" . codelist[1] . ":","   " . split(join(codelist[2:]),"^\\s\\+")[0]]
+        let filetype = IsFileType(codelist[0])
+
+        if  filetype != "xml"
+            if matchstr(codelist[0],"test") ==# ""
+                if matchstr(srccode,"注释") ==# ""
+                   let flag = IdentificationCodeComponents1(srccode,filetype)
+                   "let flag = DeepDecisionFunction(srccode,searchs )
+                   if matchstr(flag,"class") != ""
+                       let classdefinition = add(classdefinition,targetcode)
+                   elseif matchstr(flag,"variabledef") != ""
+                       let variabledef = add(variabledef,targetcode)
+                   elseif matchstr(flag,"variablespecify") != ""
+                       let variablespecify = add(variablespecify,targetcode)
+                   elseif matchstr(flag,"variabledefspecify") != ""
+                       let variabledefspecify = add(variabledefspecify,targetcode)
+                   elseif matchstr(flag,"functioncall") != ""
+                       let functioncall = add(functioncall,targetcode)
+                   elseif matchstr(flag,"functiondeclaration") != ""
+                       let functiondeclaration = add(functiondeclaration,targetcode)
+                   elseif matchstr(flag,"functiondefinition") != ""
+                       let functiondefinition = add(functiondefinition ,targetcode)
+                   elseif matchstr(flag,"log") != ""
+                       let Log = add(Log,targetcode)
+                   elseif matchstr(flag,"judge") != ""
+                       let judge = add(judge,targetcode)
+                   else
+                       let unknow  = add(unknow,targetcode)
+                   endif
+                else
+                    let Comment = add(Comment,targetcode)
+                endif
+            else
+                let TEST = add(TEST,targetcode)
+            endif
+
+        else
+            let XML = add(XML,targetcode)
+        endif
+        let idx1 += 1
+    endwhile
+
+    let resultlist[g:classdefinitionNUM] =  classdefinition
+    let resultlist[g:variabledefNUM] =  variabledef
+    let resultlist[g:variabledefspecifyNUM] = variabledefspecify
+    let resultlist[g:functiondefinitionNUM] =  functiondefinition
+    let resultlist[g:functioncallNUM] =  functioncall
+    let resultlist[g:variablespecifyNUM] = variablespecify
+    let resultlist[g:functiondeclarationNUM] = functiondeclaration
+    let resultlist[g:LogNUM] =  Log
+    let resultlist[g:judgeNUM] = judge
+    let resultlist[g:CommentNUM] = Comment
+    let resultlist[g:TESTNUM] =  TEST
+    let resultlist[g:XMLNUM] = XML
+    let resultlist[g:unknowNUM] = unknow
+    if mode ==# 1
+       return  resultlist
+    endif
+
+    "let resultlist = ResultClassification(searchstarge)
+    let definition = add(definition,["类定义"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:classdefinitionNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["函数定义"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:functiondefinitionNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["变量定义"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:variabledefNUM])
+    let definition = extend(definition,resultlist[g:variabledefspecifyNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["函数调用"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:functioncallNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["变量赋值"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:variablespecifyNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["判断"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:judgeNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["函数声明"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:functiondeclarationNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["打印"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:LogNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["注释"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:CommentNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["未知"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:unknowNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+
+    let definition = add(definition,["test"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:TESTNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+
+    let definition = add(definition,["XML"])
+    let definition = add(definition,["<<<<<<<<<<<<<<<<"])
+    let definition = extend(definition,resultlist[g:XMLNUM])
+    let definition = add(definition,[">>>>>>>>>>>>>>>"])
+    let definition = ListTo1D(definition,"▌")
+    let definition = ListAddSpaces(definition,"▌")
+    if a:0 ==# 0
+        execute "normal! :r!date +\\%F-\\%T\<cr>"
+        call append(line('.'),definition)
+    else
+        return definition
+    endif
+endfunction
+"}}}}}
+"}}}}}
 "}}}}}
 "{{{{  函数调用快速查找
 "{{{{{2   WhichFunctionToCall(...) 此行调用哪个函数
@@ -14620,58 +14763,6 @@ endfunction
 function! CallFindDefine(...)
     "{{{{{3 变量定义
     "}}}}
-endfunction
-"}}}}}
-"{{{{{2   EncapsulateDifferentGrep(...) 封装grep指令
-function! EncapsulateDifferentGrep(...)
-    "{{{{{3 变量定义
-    let filename = a:1
-    let greptype = a:2
-    let grepchar = a:3
-    let revertchar = '@' . grepchar
-    let revertgrepcmd = "grep -v "
-    let revertgrepcmd = "grep -v "  .  revertchar
-    if filename ==# ""
-        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
-    else
-        let grepcmd = "grep -EsnrwH --binary-files=without-match --include=*{.c,.cc,.cpp,.java,.h} "
-    endif
-    let result = ""
-    "}}}}
-    if greptype ==# "fuc"
-        "let grepchar = '"' . grepchar . '\(|' . grepchar . ' |' . grepchar. ',' .'"'
-        let grepchar = '"' . grepchar  .'" '
-        let grepcmd = grepcmd . grepchar . filename
-        call Dbug1(10,0,'EncapsulateDifferentGrep 100', grepcmd,revertgrepcmd)
-        let result = system(grepcmd . " | " . revertgrepcmd)
-    elseif greptype ==# "class"
-        let grepchar = '"class ' . grepchar  .'" '
-        let grepcmd = grepcmd . grepchar . filename
-        call Dbug1(10,0,'EncapsulateDifferentGrep 101', grepcmd)
-        let result = system(grepcmd)
-    endif
-    return result
-endfunction
-"}}}}}
-"{{{{{2   EncapsulateDifferentFind(...) 封装find指令
-function! EncapsulateDifferentFind(...)
-    "{{{{{3 变量定义
-    let path = a:1
-    let greptype = a:2
-    let grepchar = a:3
-    let result = ""
-    "}}}}
-    if greptype ==# "file"
-        let findcommand = "find -type f -iname " . "'*" . grepchar ."*'"
-        call Dbug1(10,0,'EncapsulateDifferentFind 133', findcommand )
-        let result = system(findcommand)
-    endif
-    if result ==# ""
-        let result = []
-    else
-        let result = split(result,'\n')
-    endif
-    return result
 endfunction
 "}}}}}
 "{{{{{2   FuncToDefine(...) 函数调用时找包名
